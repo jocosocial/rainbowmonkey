@@ -11,7 +11,7 @@ import 'package:cruisemonkey/main.dart';
 
 void main() {
   testWidgets('Drawer', (WidgetTester tester) async {
-    await tester.pumpWidget(new CruiseMonkey());
+    await tester.pumpWidget(const CruiseMonkey());
 
     // Check that the drawer starts closed.
     expect(find.text('CruiseMonkey'), findsOneWidget);
