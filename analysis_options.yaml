@@ -26,7 +26,6 @@ linter:
     - always_specify_types
     - annotate_overrides
     - avoid_catches_without_on_clauses
-    - avoid_catching_errors
     - avoid_classes_with_only_static_members # add a private constructor when you hit this
     - avoid_empty_else
     - avoid_function_literals_in_foreach_calls
@@ -76,7 +75,6 @@ linter:
     - prefer_const_constructors_in_immutables
     - prefer_const_declarations
     - prefer_const_literals_to_create_immutables
-    - prefer_constructors_over_static_methods
     - prefer_contains
     - prefer_final_fields
     - prefer_final_locals
