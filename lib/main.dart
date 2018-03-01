@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'models.dart';
 
-void main() => runApp(new CruiseMonkey());
+void main() => runApp(const CruiseMonkey());
 
 class CruiseMonkey extends StatefulWidget {
   const CruiseMonkey({Key key, this.title}) : super(key: key);
@@ -25,7 +25,7 @@ class _CruiseMonkeyState extends State<CruiseMonkey> {
       ),
       home: new Scaffold(
         appBar: new AppBar(
-          title: new Text('CruiseMonkey'),
+          title: const Text('CruiseMonkey'),
         ),
         drawer: new Drawer(
           child: new ListView(
@@ -34,9 +34,9 @@ class _CruiseMonkeyState extends State<CruiseMonkey> {
                 accountName: new Text(_currentUser?.name ?? 'Not logged in'),
                 accountEmail: new Text(_currentUser?.email ?? ''),
               ),
-              new AboutListTile(
-                aboutBoxChildren: <Widget>[
-                  new Text('A project of the Seamonkey Social group.'),
+              const AboutListTile(
+                aboutBoxChildren: const <Widget>[
+                  const Text('A project of the Seamonkey Social group.'),
                 ],
               ),
             ],
