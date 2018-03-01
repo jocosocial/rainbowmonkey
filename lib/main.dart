@@ -49,21 +49,7 @@ class _CruiseMonkeyState extends State<CruiseMonkey> {
               ],
             ),
           ),
-          drawer: new Drawer(
-            child: new ListView(
-              children: <Widget>[
-                new UserAccountsDrawerHeader(
-                  accountName: new Text(_currentUser?.name ?? 'Not logged in'),
-                  accountEmail: new Text(_currentUser?.email ?? ''),
-                ),
-                const AboutListTile(
-                  aboutBoxChildren: const <Widget>[
-                    const Text('A project of the Seamonkey Social group.'),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          drawer: new CruiseMonkeyDrawer(currentUser: _currentUser),
           body: new TabBarView(
             children: <Widget>[
               new CalendarView(twitarr: widget.twitarr),
@@ -75,47 +61,76 @@ class _CruiseMonkeyState extends State<CruiseMonkey> {
   }
 }
 
-class CalendarView extends StatefulWidget {
-  const CalendarView({
+class CruiseMonkeyDrawer extends StatelessWidget {
+  const CruiseMonkeyDrawer({
+    Key key,
+    this.currentUser,
+  }) : super(key: key);
+
+  final User currentUser;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Drawer(
+      child: new ListView(
+        children: <Widget>[
+          new UserAccountsDrawerHeader(
+            accountName: new Text(currentUser?.name ?? 'Not logged in'),
+            accountEmail: new Text(currentUser?.email ?? ''),
+          ),
+          const AboutListTile(
+            aboutBoxChildren: const <Widget>[
+              const Text('A project of the Seamonkey Social group.'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+abstract class DynamicView<T> extends StatefulWidget {
+  const DynamicView({
     Key key,
     @required this.twitarr,
   }) : assert(twitarr != null),
        super(key: key);
 
   final Twitarr twitarr;
-
-  @override
-  _CalendarViewState createState() => new _CalendarViewState();
 }
 
-class _CalendarViewState extends State<CalendarView> {
-  Calendar _calendar;
+abstract class DynamicViewState<T, W extends DynamicView<T>> extends State<W> {
+  T _data;
+
+  ValueListenable<T> getDataSource(Twitarr twitarr);
+  Widget buildView(BuildContext context, T data);
 
   @override
   void initState() {
     super.initState();
-    widget.twitarr.calendar.addListener(_updateCalendar);
-    _calendar = widget.twitarr.calendar.value;
+    final ValueListenable<T> source = getDataSource(widget.twitarr)
+      ..addListener(_updateData);
+    _data = source.value;
   }
 
   @override
-  void didUpdateWidget(CalendarView oldWidget) {
+  void didUpdateWidget(W oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.twitarr != oldWidget.twitarr) {
-      oldWidget.twitarr.calendar.removeListener(_updateCalendar);
-      widget.twitarr.calendar.addListener(_updateCalendar);
+      getDataSource(oldWidget.twitarr).removeListener(_updateData);
+      getDataSource(widget.twitarr).addListener(_updateData);
     }
   }
 
   @override
   void dispose() {
-    widget.twitarr.calendar.removeListener(_updateCalendar);
+    getDataSource(widget.twitarr).removeListener(_updateData);
     super.dispose();
   }
 
-  void _updateCalendar() {
+  void _updateData() {
     setState(() {
-      _calendar = widget.twitarr.calendar.value;
+      _data = getDataSource(widget.twitarr).value;
     });
   }
 
@@ -126,23 +141,41 @@ class _CalendarViewState extends State<CalendarView> {
       firstChild: const Center(
         child: const CircularProgressIndicator(),
       ),
-      secondChild: _calendar == null ?
-        const Placeholder() :
-        new ListView.builder(
-          itemBuilder: (BuildContext context, int index) {
-            DateTime lastTime;
-            if (index > 0)
-              lastTime = _calendar.events[index - 1].startTime;
-            return new TimeSlice(
-              event: _calendar.events[index],
-              lastStartTime: lastTime,
-              favorited: false,
-              onFavorite: (bool newValue) { /* TODO */ },
-            );
-          },
-          itemCount: _calendar.events.length,
-        ),
-      crossFadeState: _calendar == null ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+      secondChild: _data == null ? new Container() : buildView(context, _data),
+      crossFadeState: _data == null ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+    );
+  }
+}
+
+class CalendarView extends DynamicView<Calendar> {
+  const CalendarView({
+    Key key,
+    @required Twitarr twitarr,
+  }) : super(key: key, twitarr: twitarr);
+
+  @override
+  _CalendarViewState createState() => new _CalendarViewState();
+}
+
+class _CalendarViewState extends DynamicViewState<Calendar, CalendarView> {
+  @override
+  ValueListenable<Calendar> getDataSource(Twitarr twitarr) => twitarr.calendar;
+
+  @override
+  Widget buildView(BuildContext context, Calendar data) {
+    return new ListView.builder(
+      itemBuilder: (BuildContext context, int index) {
+        DateTime lastTime;
+        if (index > 0)
+          lastTime = data.events[index - 1].startTime;
+        return new TimeSlice(
+          event: data.events[index],
+          lastStartTime: lastTime,
+          favorited: false,
+          onFavorite: (bool newValue) { /* TODO */ },
+        );
+      },
+      itemCount: data.events.length,
     );
   }
 }
