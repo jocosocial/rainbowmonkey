@@ -1,44 +1,19 @@
-// This is a basic Flutter widget test.
-// To perform an interaction with a widget in your test, use the WidgetTester utility that Flutter
-// provides. For example, you can send tap and scroll gestures. You can also use WidgetTester to
-// find child widgets in the widget tree, read text, and verify that the values of widget properties
-// are correct.
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
-import 'package:cruisemonkey/network.dart';
 import 'package:cruisemonkey/models.dart';
 
+import 'mocks.dart';
+
 void main() {
-  testWidgets('Drawer', (WidgetTester tester) async {
-    final Twitarr twitarr = new TestTwitarr();
-    await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr));
-
-    // Check that the drawer starts closed.
-    expect(find.text('CruiseMonkey'), findsOneWidget);
-    expect(find.text('Not logged in'), findsNothing);
-
-    // Open the drawer.
-    await tester.tap(find.byIcon(Icons.menu));
-    await tester.pump(const Duration(seconds: 1));
-
-    // Check that now we can see the text "not logged in", and can still see the appbar title.
-    expect(find.text('CruiseMonkey'), findsOneWidget);
-    expect(find.text('Not logged in'), findsOneWidget);
-
-    await tester.pumpWidget(const Placeholder());
-    twitarr.dispose();
-  });
-
   testWidgets('Calendar (Updating)', (WidgetTester tester) async {
     final TestTwitarr twitarr = new TestTwitarr();
     await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr));
 
     expect(find.byIcon(Icons.event), findsOneWidget);
     await tester.tap(find.byIcon(Icons.event));
+    await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -195,14 +170,6 @@ void main() {
     await tester.pumpWidget(const Placeholder());
     twitarr.dispose();
   });
-}
-
-class TestTwitarr extends Twitarr {
-  @override
-  ValueNotifier<Calendar> calendar = new ValueNotifier<Calendar>(null);
-
-  @override
-  void dispose() { }
 }
 
 T getFirst<T>(Type ancestor, { Type of, WidgetTester using }) {
