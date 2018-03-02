@@ -1,12 +1,5 @@
 import 'package:flutter/foundation.dart';
 
-class User {
-  const User({ this.name, this.email });
-
-  final String name;
-  final String email;
-}
-
 class Event {
   Event({
     @required this.id,

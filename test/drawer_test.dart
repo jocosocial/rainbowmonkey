@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
-import 'package:cruisemonkey/network.dart';
+import 'package:cruisemonkey/src/network/network.dart';
 
 import 'mocks.dart';
 

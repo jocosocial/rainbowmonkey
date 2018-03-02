@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import 'json.dart';
-import 'models.dart';
+import '../json.dart';
+import '../models/calendar.dart';
 
 /// An interface for communicating with the server.
 abstract class Twitarr {
