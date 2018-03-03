@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
-import 'package:cruisemonkey/network.dart';
+import 'package:cruisemonkey/src/network/network.dart';
+import 'package:cruisemonkey/src/views/deck_plans.dart';
 
 import 'mocks.dart';
 
@@ -15,7 +16,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.directions_boat));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
-    final double height = tester.getRect(find.byType(InformationView)).height / 10.0;
+    final double height = tester.getRect(find.byType(DeckPlanView)).height / 10.0;
 
     expectOpacities(tester, <double>[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 

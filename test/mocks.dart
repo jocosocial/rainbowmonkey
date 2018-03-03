@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:cruisemonkey/network.dart';
-import 'package:cruisemonkey/models.dart';
+import 'package:cruisemonkey/src/network/network.dart';
+import 'package:cruisemonkey/src/models/calendar.dart';
 
 class TestTwitarr extends Twitarr {
   @override
