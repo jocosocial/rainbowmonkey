@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../dynamic.dart';
+import '../progress.dart';
 
 class KaraokeView extends StatefulWidget {
   const KaraokeView({
@@ -24,24 +25,27 @@ class _KaraokeViewState extends State<KaraokeView> {
 
   static String catalogResource = 'resources/JoCoKaraokeSongCatalog.txt';
 
-  static List<Song> _songs;
+  static final ProgressValueNotifier<List<Song>> _songs = new ProgressValueNotifier<List<Song>>(null);
 
   static bool _initStarted = false;
-  Future<void> initSongs(AssetBundle bundle) async {
+  Future<void> initSongs(AssetBundle bundle) {
     // TODO(ianh): This doesn't support handling the case of the asset bundle
     // changing, since we only run it once even if the bundle is different.
     if (_initStarted)
-      return null;
+      return new Future<void>.value(null);
     _initStarted = true;
-    _songs = await bundle.loadStructuredData<List<Song>>(
+    _songs.startProgress();
+    return bundle.loadStructuredData<List<Song>>(
       catalogResource,
       (String data) => compute<String, List<Song>>(_parser, data),
-    );
-    if (mounted) {
-      setState(() {
-        // we've updated the catalog
-      });
-    }
+    ).then<void>((List<Song> songs) {
+      _songs.value = songs;
+      if (mounted) {
+        setState(() {
+          // we've updated the catalog
+        });
+      }
+    });
   }
 
   static List<Song> _parser(String data) {
@@ -62,7 +66,7 @@ class _KaraokeViewState extends State<KaraokeView> {
   void _filter(String filter) {
     final List<String> keywords = filter.toLowerCase().split(' ');
     setState(() {
-      _filteredList = _songs.where((Song song) => song.matches(keywords)).toList();
+      _filteredList = _songs.value.where((Song song) => song.matches(keywords)).toList();
       _scrollController.jumpTo(0.0);
     });
   }
@@ -70,9 +74,9 @@ class _KaraokeViewState extends State<KaraokeView> {
   @override
   Widget build(BuildContext context) {
     return new LoadingScreen(
-      ready: _songs != null,
+      progress: _songs,
       builder: (BuildContext context) {
-        final List<Song> list = _filteredList ?? _songs;
+        final List<Song> list = _filteredList ?? _songs.value;
         return new Padding(
           padding: const EdgeInsets.all(8.0),
           child: new Column(

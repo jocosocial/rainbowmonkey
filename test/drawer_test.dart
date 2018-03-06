@@ -8,7 +8,8 @@ import 'mocks.dart';
 
 void main() {
   testWidgets('Drawer', (WidgetTester tester) async {
-    final Twitarr twitarr = new TestTwitarr();
+    final Twitarr twitarr = new TestTwitarr()
+      ..calendar.startProgress();
     await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr));
 
     // Check that the drawer starts closed.

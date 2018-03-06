@@ -1,14 +1,18 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/network/network.dart';
+import 'package:cruisemonkey/src/progress.dart';
 
 import 'mocks.dart';
 
 void main() {
-  testWidgets('Calendar (Updating)', (WidgetTester tester) async {
-    final TestTwitarr twitarr = new TestTwitarr();
+  testWidgets('Calendar', (WidgetTester tester) async {
+    final TestTwitarr twitarr = new TestTwitarr()
+      ..calendar.startProgress();
     await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr));
 
     expect(find.byIcon(Icons.event), findsOneWidget);
@@ -89,7 +93,8 @@ void main() {
     expect(find.text('-1:00pm'), findsOneWidget);
     expect(find.text('Coconuts'), findsOneWidget);
 
-    final TestTwitarr twitarr2 = new TestTwitarr();
+    final TestTwitarr twitarr2 = new TestTwitarr()
+      ..calendar.startProgress();
     await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr2));
     expect(find.text('Coconuts'), findsOneWidget);
 
@@ -168,6 +173,56 @@ void main() {
     expect(find.text('-12:23am'), findsOneWidget);
 
     await tester.pumpWidget(const Placeholder());
+    twitarr.dispose();
+  });
+
+  testWidgets('Calendar (no reload on return)', (WidgetTester tester) async {
+    int index = 0;
+    final Twitarr twitarr = new AutoupdatingTestTwitarr(
+      calendarGetter: () {
+        final CompleterWithProgress<Calendar> completer = new CompleterWithProgress<Calendar>();
+        new Future<void>.delayed(const Duration(seconds: 10)).then((void data) {
+          index += 1;
+          completer.complete(new Calendar(events: <Event>[
+            new Event(
+              id: 'test$index',
+              title: 'Test$index',
+              location: 'Test $index',
+              official: false,
+              startTime: new DateTime(2000, index, index, 0, 0),
+              endTime: new DateTime(2000, index, index, 0, 10),
+            ),
+          ]));
+        });
+        return completer.future;
+      },
+    );
+    await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr));
+    final HitTestResult result1 = tester.hitTestOnBinding(tester.getCenter(find.byType(CircularProgressIndicator)));
+    await tester.pump(const Duration(seconds: 6));
+    final HitTestResult result2 = tester.hitTestOnBinding(tester.getCenter(find.byType(CircularProgressIndicator)));
+    expect(result1.path.map((HitTestEntry entry) => entry.target),
+           result2.path.map((HitTestEntry entry) => entry.target));
+
+    await tester.pump(const Duration(seconds: 6));
+    final HitTestResult result3 = tester.hitTestOnBinding(tester.getCenter(find.byType(CircularProgressIndicator)));
+    expect(result2.path.map((HitTestEntry entry) => entry.target),
+           isNot(result3.path.map((HitTestEntry entry) => entry.target)));
+
+    await tester.pump(const Duration(seconds: 600));
+
+    final HitTestResult result4 = tester.hitTestOnBinding(tester.getCenter(find.byType(CircularProgressIndicator)));
+    expect(result3.path.map((HitTestEntry entry) => entry.target),
+           result4.path.map((HitTestEntry entry) => entry.target));
+
+    await tester.pump(const Duration(seconds: 10));
+
+    final HitTestResult result5 = tester.hitTestOnBinding(tester.getCenter(find.byType(CircularProgressIndicator)));
+    expect(result4.path.map((HitTestEntry entry) => entry.target),
+           result5.path.map((HitTestEntry entry) => entry.target));
+
+    await tester.pumpWidget(const Placeholder());
+    await tester.pump(const Duration(seconds: 10)); // give time for the final future above to get canceled
     twitarr.dispose();
   });
 }
