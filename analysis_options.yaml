@@ -37,7 +37,6 @@ linter:
     - await_only_futures
     - camel_case_types
     - cancel_subscriptions
-    - cascade_invocations
     - close_sinks
     - comment_references
     - constant_identifier_names
@@ -63,7 +62,6 @@ linter:
     - package_api_docs
     - package_names
     - package_prefixed_library_names
-    - parameter_assignments
     - prefer_adjacent_string_concatenation
     - prefer_asserts_in_initializer_lists
     - prefer_bool_in_asserts

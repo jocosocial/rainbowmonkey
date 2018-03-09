@@ -2,414 +2,362 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-enum ProgressStatus {
-  /// No attempt has been made to obtain any data.
-  ///
-  /// [Progress.progressValue] and [Progress.progressTarget] are 0.0.
-  /// [Progress.lastError] is the empty string.
-  idle,
+enum _ProgressIndex { idle, starting, active, failed, successful }
 
-  /// An attempt to obtain data is under way, though no data is yet available.
-  ///
-  /// [Progress.progressValue] and [Progress.progressTarget] represent the
-  /// current state. If they are both 0.0, then the progress is indeterminate.
-  /// If they are greater than zero, then their precise meaning is undefined but
-  /// is probably bytes to be transferred. The fraction of progress is
-  /// [Progress.progressValue] divided by [Progress.progressTarget].
-  ///
-  /// [Progress.lastError] may have an error message from a previous attempt.
-  active,
-
-  /// An attempt to obtain data was under way, but it failed.
-  ///
-  /// [Progress.progressValue] and [Progress.progressTarget] represent the last
-  /// effort's incomplete results (e.g. what fraction of the data was obtained).
-  ///
-  /// [Progress.lastError] should have an error message from the failed attempt.
-  failed,
-
-  /// Data is available.
-  ///
-  /// [Progress.progressValue] and [Progress.progressTarget] should be equal,
-  /// though the precise meaning of the numbers is not defined.
-  ///
-  /// [Progress.lastError] may have an error message from a previous attempt.
-  complete,
-
-  /// Old data is available, and another attempt to obtain data is under way.
-  ///
-  /// [Progress.progressValue] and [Progress.progressTarget] represent the
-  /// current state. If they are both 0.0, then the progress is indeterminate.
-  /// If they are greater than zero, then their precise meaning is undefined but
-  /// is probably bytes to be transferred. The fraction of progress is
-  /// [Progress.progressValue] divided by [Progress.progressTarget].
-  ///
-  /// [Progress.lastError] may have an error message from a previous attempt.
-  updating,
+abstract class ProgressValue<T> {
+  const ProgressValue();
+  _ProgressIndex get _index;
+  bool operator <(ProgressValue<dynamic> other) => _index.index < other._index.index;
+  bool operator >(ProgressValue<dynamic> other) => _index.index > other._index.index;
+  bool operator <=(ProgressValue<dynamic> other) => _index.index <= other._index.index;
+  bool operator >=(ProgressValue<dynamic> other) => _index.index >= other._index.index;
 }
 
-abstract class Progress implements Listenable {
-  factory Progress._() => null; // this is a mixin and an interface
+class IdleProgress extends ProgressValue<Null> {
+  const IdleProgress();
+  @override
+  _ProgressIndex get _index => _ProgressIndex.idle;
+}
 
-  ProgressStatus get progressStatus => _progressStatus;
-  ProgressStatus _progressStatus = ProgressStatus.idle;
+class StartingProgress extends ProgressValue<Null> {
+  const StartingProgress();
+  @override
+  _ProgressIndex get _index => _ProgressIndex.starting;
+}
 
-  double get progressValue => _progressValue;
-  double _progressValue = 0.0;
+class ActiveProgress extends ProgressValue<Null> {
+  const ActiveProgress(
+    this.progress,
+    this.target,
+  ) : assert(progress != null),
+      assert(target != null),
+      assert(progress >= 0.0),
+      assert(target > 0.0),
+      assert(progress <= target);
+  final double progress;
+  final double target;
+  @override
+  _ProgressIndex get _index => _ProgressIndex.active;
+}
 
-  double get progressTarget => _progressTarget;
-  double _progressTarget = 0.0;
+class FailedProgress extends ProgressValue<Null> {
+  const FailedProgress(this.error, [ this.stackTrace ]);
+  final Exception error;
+  final StackTrace stackTrace;
+  @override
+  _ProgressIndex get _index => _ProgressIndex.failed;
+}
 
-  String get lastError => _lastError;
-  String _lastError = '';
+class SuccessfulProgress<T> extends ProgressValue<T> {
+  const SuccessfulProgress(this.value);
+  final T value;
+  @override
+  _ProgressIndex get _index => _ProgressIndex.successful;
+}
 
-  List<Progress> _forwardingTargets;
+typedef Future<T> ProgressCallback<T>(ProgressController<T> controller);
+typedef B Converter<A, B>(A value);
 
-  @mustCallSuper
-  @protected
-  void updatedProgress() {
-    if (_forwardingTargets != null)
-      _forwardingTargets.forEach(_forwardProgressTo);
+abstract class Progress<T> implements ValueListenable<ProgressValue<T>> {
+  factory Progress(ProgressCallback<T> completer) {
+    final ProgressController<T> controller = new ProgressController<T>();
+    controller.start();
+    completer(controller).then<void>(controller.complete, onError: controller.completeError);
+    return controller.progress;
   }
 
-  /// Propagate all progress changes to the given target.
-  ///
-  /// To propagate only progress values (e.g. because the load has several
-  /// stages), use [ProgressCompleter.absorbProgress].
-  void forwardProgress(Progress target) {
-    assert(() {
-      final Set<Progress> seen = new Set<Progress>()
-        ..add(this);
-      void process(Progress candidate) {
-        if (seen.contains(candidate))
-          throw new StateError('Progress.forwardProgress called in a manner that would create a cycle');
-        seen.add(candidate);
-        if (candidate._forwardingTargets != null)
-          candidate._forwardingTargets.forEach(process);
+  factory Progress.deferred(ProgressCallback<T> completer) {
+    final ProgressController<T> controller = new ProgressController<T>();
+    completer(controller).then<void>(controller.complete, onError: controller.completeError);
+    return controller.progress;
+  }
+
+  factory Progress.fromFuture(Future<T> future) {
+    final ProgressController<T> controller = new ProgressController<T>();
+    controller.start();
+    future.then<void>(controller.complete, onError: controller.completeError);
+    return controller.progress;
+  }
+
+  factory Progress.completed(T value) {
+    final ProgressController<T> controller = new ProgressController<T>();
+    controller.complete(value);
+    return controller.progress;
+  }
+
+  const factory Progress.idle() = _IdleProgress;
+
+  static Progress<T> convert<F, T>(Progress<F> progress, Converter<F, T> converter) {
+    return new Progress<T>.deferred((ProgressController<T> completer) async {
+      final Completer<T> innerCompleter = new Completer<T>();
+      void _listener() {
+        final ProgressValue<F> newValue = progress.value;
+        if (newValue is SuccessfulProgress<F>) {
+          innerCompleter.complete(converter(newValue.value));
+        } else {
+          completer._update(newValue as ProgressValue<T>); // TODO(ianh): Find a more type-safe solution
+        }
       }
-      process(target);
-      return true;
-    }());
-    _forwardingTargets ??= <Progress>[];
-    _forwardingTargets.add(target);
-    _forwardProgressTo(target);
-  }
-
-  void _forwardProgressTo(Progress target) {
-    target
-      .._progressStatus = progressStatus
-      .._progressValue = progressValue
-      .._progressTarget = progressTarget
-      .._lastError = lastError
-      ..updatedProgress();
-  }
-}
-
-/// A mixin for classes that control classes that mix in [Progress].
-abstract class ProgressCompleter {
-  factory ProgressCompleter._() => null; // this is a mixin
-
-  /// The [Progress] instance to be controlled.
-  ///
-  /// Must never return null.
-  Progress get progress;
-
-  void startProgress() {
-    switch (progress.progressStatus) {
-      case ProgressStatus.idle:
-      case ProgressStatus.active:
-      case ProgressStatus.failed:
-        progress._progressStatus = ProgressStatus.active;
-        break;
-      case ProgressStatus.complete:
-      case ProgressStatus.updating:
-        progress._progressStatus = ProgressStatus.updating;
-        break;
-    }
-    progress
-      .._progressValue = 0.0
-      .._progressTarget = 0.0
-      ..updatedProgress();
-  }
-
-  void setProgress(double value, double target) {
-    assert(value != null);
-    assert(target != null);
-    assert(value <= target);
-    switch (progress.progressStatus) {
-      case ProgressStatus.idle:
-      case ProgressStatus.active:
-      case ProgressStatus.failed:
-        progress._progressStatus = ProgressStatus.active;
-        break;
-      case ProgressStatus.complete:
-      case ProgressStatus.updating:
-        progress._progressStatus = ProgressStatus.updating;
-        break;
-    }
-    progress
-      .._progressValue = value
-      .._progressTarget = target
-      ..updatedProgress();
-  }
-
-  void failProgress(String error) {
-    assert(error != null);
-    switch (progress.progressStatus) {
-      case ProgressStatus.idle:
-      case ProgressStatus.active:
-      case ProgressStatus.failed:
-        progress._progressStatus = ProgressStatus.failed;
-        break;
-      case ProgressStatus.complete:
-      case ProgressStatus.updating:
-        progress._progressStatus = ProgressStatus.complete;
-        break;
-    }
-    progress
-      .._lastError = error
-      ..updatedProgress();
-  }
-
-  void completeProgress() {
-    progress
-      .._progressStatus = ProgressStatus.complete
-      .._progressValue = progress.progressTarget
-      ..updatedProgress();
-  }
-
-  /// This forwards changes to the `source` object's [Progress.progressValue]
-  /// and [Progress.progressTarget] until the [Progress.progressStatus] becomes
-  /// [ProgressStatus.idle], [ProgressStatus.failed], or [ProgressStatus.complete].
-  ///
-  /// The given object must have a status of [ProgressStatus.active] or
-  /// [ProgressStatus.updating] when the method is called.
-  void absorbProgress(Progress source) {
-    assert(source.progressStatus == ProgressStatus.active ||
-           source.progressStatus == ProgressStatus.updating);
-    void forwarded() {
-      switch (source.progressStatus) {
-        case ProgressStatus.idle:
-        case ProgressStatus.failed:
-        case ProgressStatus.complete:
-          source.removeListener(forwarded);
-          break;
-        case ProgressStatus.updating:
-        case ProgressStatus.active:
-          progress
-            .._progressValue = source.progressValue
-            .._progressTarget = source.progressTarget
-            ..updatedProgress();
-          break;
+      _listener();
+      progress.addListener(_listener);
+      try {
+        return await innerCompleter.future;
+      } finally {
+        progress.removeListener(_listener);
       }
-    }
-    source.addListener(forwarded);
+    });
   }
 }
 
-class FutureWithProgress<T> extends Object with Progress, ChangeNotifier implements Future<T> {
-  FutureWithProgress._();
+class _LazyValueNotifier<T> extends ValueNotifier<T> {
+  _LazyValueNotifier({
+    this.onAdd,
+    this.onRemove,
+    T value,
+  }) : super(value);
 
-  final Completer<T> _completer = new Completer<T>();
-
-  @override
-  Stream<T> asStream() => _completer.future.asStream();
-
-  @override
-  Future<T> catchError(Function onError, { bool test(dynamic error) }) {
-    return _completer.future.catchError(onError, test: test);
-  }
-
-  @override
-  Future<E> then<E>(FutureOr<E> f(T value), { Function onError }) {
-    return _completer.future.then<E>(f, onError: onError);
-  }
-
-  @override
-  Future<T> timeout(Duration timeLimit, { FutureOr<T> onTimeout() }) {
-    return _completer.future.timeout(timeLimit, onTimeout: onTimeout);
-  }
-
-  @override
-  Future<T> whenComplete(dynamic action()) {
-    return _completer.future.whenComplete(action);
-  }
-
-  @override
-  void updatedProgress() {
-    notifyListeners();
-    super.updatedProgress();
-  }
-}
-
-class CompleterWithProgress<T> extends Object with ProgressCompleter implements Completer<T> {
-  CompleterWithProgress() {
-    startProgress();
-  }
-
-  @override
-  FutureWithProgress<T> get future => _future;
-  final FutureWithProgress<T> _future = new FutureWithProgress<T>._();
-
-  @override
-  bool get isCompleted => _future._completer.isCompleted;
-
-  @override
-  void complete([ FutureOr<T> value ]) {
-    _future._completer.complete(value);
-    if (value is Future) {
-      final Future<T> future = value;
-      future.then( // ignore: cascade_invocations, https://github.com/dart-lang/sdk/issues/32407
-        (T value) => completeProgress(),
-        onError: (Object error, StackTrace stackTrace) => failProgress(error.toString())
-      );
-    } else {
-      completeProgress();
-    }
-  }
-
-  @override
-  void completeError(Object error, [ StackTrace stackTrace ]) {
-    _future._completer.completeError(error, stackTrace);
-    failProgress(error.toString());
-  }
-
-  @override
-  Progress get progress => _future;
-}
-
-abstract class ProgressValueListenable<T> implements ValueListenable<T>, Progress { }
-
-abstract class _LazyValueNotifier<T> extends ValueNotifier<T> with Progress {
-  _LazyValueNotifier() : super(null);
-
-  @protected
-  void start();
-
-  @protected
-  void stop();
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
 
   @override
   void addListener(VoidCallback listener) {
-    if (!hasListeners)
-      start();
+    if (!hasListeners && onAdd != null)
+      onAdd();
     super.addListener(listener);
-    assert(hasListeners);
   }
 
   @override
   void removeListener(VoidCallback listener) {
-    assert(hasListeners);
     super.removeListener(listener);
-    if (!hasListeners)
-      stop();
-  }
-
-  @override
-  void dispose() {
-    if (hasListeners)
-      stop();
-    super.dispose();
-  }
-
-  @override
-  void updatedProgress() {
-    notifyListeners();
-    super.updatedProgress();
+    if (!hasListeners && onRemove != null)
+      onRemove();
   }
 }
 
-abstract class _ProgressValueNotifierMixin<T> extends ValueNotifier<T> implements ProgressCompleter {
-  factory _ProgressValueNotifierMixin._() => null; // this is a mixin
+class _Progress<T> extends _LazyValueNotifier<ProgressValue<T>> implements Progress<T> {
+  _Progress({
+    VoidCallback onAdd,
+    VoidCallback onRemove,
+    ProgressValue<T> value,
+  }) : super(onAdd: onAdd, onRemove: onRemove, value: value);
+}
 
-  bool _silenceListeners = false;
+class ProgressController<T> {
+  ProgressController();
 
-  @override
-  set value(T newValue) { // ignore: avoid_setters_without_getters
-    _silenceListeners = true;
-    try {
-      super.value = newValue;
-    } finally {
-      _silenceListeners = false;
+  Progress<T> get progress => _progress;
+  final _Progress<T> _progress = new _Progress<T>(value: const IdleProgress());
+
+  void _update(ProgressValue<T> next) {
+    assert(_progress.value._index.index <= next._index.index);
+    assert(_progress.value._index.index <= _ProgressIndex.active.index);
+    _progress.value = next;
+  }
+
+  void start() {
+    _update(const StartingProgress());
+  }
+
+  void advance(double progress, double target) {
+    _update(new ActiveProgress(progress, target));
+  }
+
+  Future<R> chain<R>(Progress<R> subprogress, { int steps = 1 }) async {
+    assert(steps != null);
+    double startingStep = 0.0;
+    final ProgressValue<T> currentProgress = _progress.value;
+    if (currentProgress is ActiveProgress)
+      startingStep = currentProgress.progress;
+    assert(steps >= startingStep + 1.0);
+    final Completer<R> completer = new Completer<R>();
+    void _listener() {
+      switch (subprogress.value._index) {
+        case _ProgressIndex.idle:
+          break;
+        case _ProgressIndex.starting:
+          final StartingProgress newValue = subprogress.value;
+          if (_progress.value._index.index < newValue._index.index)
+            _update(newValue);
+          break;
+        case _ProgressIndex.active:
+          final ActiveProgress newValue = subprogress.value;
+          advance(startingStep + newValue.progress / newValue.target, steps.toDouble());
+          break;
+        case _ProgressIndex.failed:
+          final FailedProgress newValue = subprogress.value;
+          completer.completeError(newValue.error, newValue.stackTrace);
+          break;
+        case _ProgressIndex.successful:
+          final SuccessfulProgress<R> newValue = subprogress.value;
+          completer.complete(newValue.value);
+          break;
+      }
     }
-    completeProgress();
+    _listener();
+    subprogress.addListener(_listener);
+    try {
+      return await completer.future;
+    } finally {
+      subprogress.removeListener(_listener);
+    }
   }
 
-  @override
-  void notifyListeners() {
-    if (!_silenceListeners)
-      super.notifyListeners();
+  void completeError(dynamic error, StackTrace stackTrace) {
+    _update(new FailedProgress(error is Exception ? error : new Exception(error.toString()), stackTrace));
+  }
+
+  void complete(T value) {
+    _update(new SuccessfulProgress<T>(value));
   }
 }
 
-class PollingValueNotifier<T> extends _LazyValueNotifier<T>
-  with ProgressCompleter, _ProgressValueNotifierMixin<T>
-  implements ProgressValueListenable<T> {
+class _IdleProgress implements Progress<Null> {
+  const _IdleProgress();
 
-  PollingValueNotifier({
-    this.getter,
-    this.interval,
-  });
+  @override
+  ProgressValue<Null> get value => const IdleProgress();
 
-  final ValueGetter<FutureWithProgress<T>> getter;
+  @override
+  void addListener(VoidCallback listener) { }
 
-  final Duration interval;
+  @override
+  void removeListener(VoidCallback listener) { }
+}
+
+abstract class ContinuousProgress<T> implements Listenable {
+  ContinuousProgress() {
+    _best = new _Progress<T>(
+      onAdd: _handleAdd,
+      onRemove: _handleRemove,
+      value: const IdleProgress(),
+    );
+  }
+
+  Progress<T> get current => _current;
+  Progress<T> _current = const Progress<Null>.idle(); // ignore: prefer_final_fields, https://github.com/dart-lang/sdk/issues/34417
+
+  Progress<T> get best => _best;
+  _Progress<T> _best;
+
+  void _handleAdd() {}
+  void _handleRemove() {}
+}
+
+class MutableContinuousProgress<T> extends ContinuousProgress<T> with ChangeNotifier {
+  MutableContinuousProgress();
+
+  /// Resets the best progress (and current progress) to idle.
+  ///
+  /// Useful in the case of the best value becoming obsolete (e.g. if it
+  /// represents current user state but the user logs out).
+  void reset() {
+    addProgress(const Progress<Null>.idle());
+    _best.value = _current.value;
+    notifyListeners();
+  }
+
+  void addProgress(Progress<T> newProgress) {
+    _current.removeListener(_update);
+    _current = newProgress;
+    _update();
+    _current.addListener(_update);
+    notifyListeners();
+  }
+
+  void _update() {
+    final ProgressValue<T> newValue = _current.value;
+    if (newValue >= _best.value) {
+      _best.value = newValue;
+      if (newValue._index.index > _ProgressIndex.active.index) {
+        assert(newValue is! IdleProgress);
+        _handleDone(); // also removes the listener
+      }
+    }
+  }
+
+  @protected
+  @mustCallSuper
+  void _handleDone() {
+    addProgress(const Progress<Null>.idle());
+  }
+}
+
+class PeriodicProgress<T> extends MutableContinuousProgress<T> {
+  PeriodicProgress(
+    this.duration,
+    this.onTick, {
+    this.onCancel,
+  }) : assert(duration > Duration.zero),
+       assert(onTick != null);
+
+  final Duration duration;
+  final ProgressCallback<T> onTick;
+  final VoidCallback onCancel;
 
   Timer _timer;
-  FutureWithProgress<T> _future;
+  int _listenerCount = 0;
+  bool _active = false;
+
+  Progress<T> triggerUnscheduledUpdate() => _start();
 
   @override
-  void start() {
-    _timer = new Timer.periodic(interval, _tick);
-    _tick(_timer);
+  void addProgress(Progress<T> newProgress) {
+    _cancel();
+    _active = true;
+    super.addProgress(newProgress);
   }
 
   @override
-  void stop() {
-    _timer.cancel();
-    _timer = null;
-    _future = null;
-  }
-
-  void _tick(Timer timer) {
-    assert(timer == _timer);
-    if (_future == null) {
-      _future = getter();
-      assert(_future != null, '$runtimeType getter returned null.\nThe getter must not return null. This getter was:\n$getter');
-      _future
-        ..then<void>(_update, onError: _error)
-        ..whenComplete(() { _future = null; });
-      startProgress();
-      absorbProgress(_future);
+  void _handleAdd() {
+    assert(_listenerCount >= 0);
+    if (_listenerCount == 0 && _timer == null) {
+      Timer.run(_tick);
+      _timer = new Timer.periodic(duration, _tick);
     }
+    _listenerCount += 1;
   }
 
-  void _update(T newValue) { // ignore: use_setters_to_change_properties
-    if (_future != null)
-      value = newValue;
+  bool _scheduledMicrotask = false;
+
+  @override
+  void _handleRemove() {
+    _listenerCount -= 1;
+    if (_listenerCount == 0 && !_scheduledMicrotask) {
+      _scheduledMicrotask = true;
+      scheduleMicrotask(() {
+        _scheduledMicrotask = false;
+        if (_listenerCount == 0) {
+          _cancel();
+          _timer.cancel();
+          _timer = null;
+        }
+      });
+    }
+    assert(_listenerCount >= 0);
   }
 
-  void _error(Object error, StackTrace stackTrace) {
-    if (_future != null)
-      failProgress(error.toString());
+  void _tick([ Timer timer ]) {
+    if (!_active)
+      _start();
+  }
+
+  Progress<T> _start() {
+    final Progress<T> newProgress = new Progress<T>(onTick);
+    addProgress(newProgress); // sets _active to true
+    assert(_active);
+    return newProgress;
   }
 
   @override
-  Progress get progress => this;
-}
+  void _handleDone() {
+    super._handleDone();
+    _active = false;
+  }
 
-class ProgressValueNotifier<T> extends ValueNotifier<T>
-  with Progress, ProgressCompleter, _ProgressValueNotifierMixin<T>
-  implements ProgressValueListenable<T> {
-
-  ProgressValueNotifier(T value) : super(value);
-
-  @override
-  Progress get progress => this;
-
-  @override
-  void updatedProgress() {
-    notifyListeners();
-    super.updatedProgress();
+  void _cancel() {
+    if (_active && onCancel != null) {
+      onCancel();
+      _active = false;
+    }
   }
 }

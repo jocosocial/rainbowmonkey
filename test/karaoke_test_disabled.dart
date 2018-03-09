@@ -11,7 +11,7 @@ import 'package:cruisemonkey/src/views/karaoke.dart';
 
 Future<void> main() async {
   final AssetBundle bundle = new TestAssetBundle();
-  await const KaraokeView().createState().initSongs(bundle);
+  const KaraokeView().createState().initSongs(bundle);
 
   testWidgets('Karaoke', (WidgetTester tester) async {
     await tester.pumpWidget(

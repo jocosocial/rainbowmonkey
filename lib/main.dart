@@ -1,34 +1,45 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'src/logic/cruise.dart';
+import 'src/logic/disk_store.dart';
 import 'src/models/user.dart';
-import 'src/network/network.dart';
+import 'src/progress.dart';
 import 'src/views/calendar.dart';
 import 'src/views/deck_plans.dart';
+import 'src/views/drawer.dart';
 import 'src/views/karaoke.dart';
+import 'src/widgets.dart';
 
 void main() {
-  runApp(new CruiseMonkey(
-    // TODO(ianh): replace with configurable option
-    twitarr: new RestTwitarr(baseUrl: 'http://drang.prosedev.com:3000/'),
+  runApp(new CruiseMonkeyApp(
+    cruiseModel: new CruiseModel(
+      store: new DiskDataStore(),
+    ),
   ));
 }
 
-class CruiseMonkey extends StatefulWidget {
-  const CruiseMonkey({
+class CruiseMonkeyApp extends StatelessWidget {
+  const CruiseMonkeyApp({
     Key key,
-    @required this.twitarr,
-  }) : assert(twitarr != null),
-       super(key: key);
+    this.cruiseModel,
+  }) : super(key: key);
 
-  final Twitarr twitarr;
+  final CruiseModel cruiseModel;
 
   @override
-  _CruiseMonkeyState createState() => new _CruiseMonkeyState();
+  Widget build(BuildContext context) {
+    return new Cruise(
+      cruiseModel: cruiseModel,
+      child: const CruiseMonkeyHome(),
+    );
+  }
 }
 
-class _CruiseMonkeyState extends State<CruiseMonkey> {
-  User _currentUser;
+class CruiseMonkeyHome extends StatelessWidget {
+  const CruiseMonkeyHome({
+    Key key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -37,66 +48,58 @@ class _CruiseMonkeyState extends State<CruiseMonkey> {
       theme: new ThemeData(
         primarySwatch: Colors.teal,
         accentColor: Colors.greenAccent,
+        inputDecorationTheme: const InputDecorationTheme(
+          border: const OutlineInputBorder(),
+        ),
       ),
       home: new DefaultTabController(
         length: 3,
         child: new Scaffold(
           appBar: new AppBar(
+            leading: ValueListenableBuilder<ProgressValue<User>>(
+              valueListenable: Cruise.of(context).user.best,
+              builder: (BuildContext context, ProgressValue<User> value, Widget child) {
+                return new Badge(
+                  enabled: value is FailedProgress,
+                  child: new Builder(
+                    builder: (BuildContext context) {
+                      return new IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () { Scaffold.of(context).openDrawer(); },
+                        tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
             title: const Text('CruiseMonkey'),
-            bottom: new TabBar(
-              tabs: <Widget>[
-                new Tab(
+            bottom: const TabBar(
+              tabs: const <Widget>[
+                const Tab(
                   text: 'Calendar',
-                  icon: new Icon(Icons.event),
+                  icon: const Icon(Icons.event),
                 ),
-                new Tab(
+                const Tab(
                   text: 'Deck Plans',
-                  icon: new Icon(Icons.directions_boat),
+                  icon: const Icon(Icons.directions_boat),
                 ),
-                new Tab(
+                const Tab(
                   text: 'Karaoke Song List',
-                  icon: new Icon(Icons.library_music),
+                  icon: const Icon(Icons.library_music),
                 ),
               ],
             ),
           ),
-          drawer: new CruiseMonkeyDrawer(currentUser: _currentUser),
-          body: new TabBarView(
-            children: <Widget>[
-              new CalendarView(twitarr: widget.twitarr),
+          drawer: const CruiseMonkeyDrawer(),
+          body: const TabBarView(
+            children: const <Widget>[
+              const CalendarView(),
               const DeckPlanView(),
               const KaraokeView(),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class CruiseMonkeyDrawer extends StatelessWidget {
-  const CruiseMonkeyDrawer({
-    Key key,
-    this.currentUser,
-  }) : super(key: key);
-
-  final User currentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    return new Drawer(
-      child: new ListView(
-        children: <Widget>[
-          new UserAccountsDrawerHeader(
-            accountName: new Text(currentUser?.name ?? 'Not logged in'),
-            accountEmail: new Text(currentUser?.email ?? ''),
-          ),
-          const AboutListTile(
-            aboutBoxChildren: const <Widget>[
-              const Text('A project of the Seamonkey Social group.'),
-            ],
-          ),
-        ],
       ),
     );
   }

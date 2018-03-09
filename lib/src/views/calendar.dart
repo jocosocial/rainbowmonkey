@@ -1,40 +1,34 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../dynamic.dart';
 import '../models/calendar.dart';
-import '../network/network.dart';
-import '../progress.dart';
+import '../widgets.dart';
 
-class CalendarView extends DynamicView<Calendar> {
+class CalendarView extends StatelessWidget {
   const CalendarView({
     Key key,
-    @required Twitarr twitarr,
-  }) : super(key: key, twitarr: twitarr);
+  }) : super(key: key);
 
   @override
-  _CalendarViewState createState() => new _CalendarViewState();
-}
-
-class _CalendarViewState extends DynamicViewState<Calendar, CalendarView> {
-  @override
-  ProgressValueListenable<Calendar> getDataSource(Twitarr twitarr) => twitarr.calendar;
-
-  @override
-  Widget buildView(BuildContext context, Calendar data) {
-    return new ListView.builder(
-      itemBuilder: (BuildContext context, int index) {
-        DateTime lastTime;
-        if (index > 0)
-          lastTime = data.events[index - 1].startTime;
-        return new TimeSlice(
-          event: data.events[index],
-          lastStartTime: lastTime,
-          favorited: false,
-          onFavorite: (bool newValue) { /* TODO */ },
+  Widget build(BuildContext context) {
+    return new ContinuousProgressBuilder<Calendar>(
+      progress: Cruise.of(context).calendar,
+      builder: (BuildContext context, Calendar calendar) {
+        return new ListView.builder(
+          itemBuilder: (BuildContext context, int index) {
+            DateTime lastTime;
+            if (index > 0)
+              lastTime = calendar.events[index - 1].startTime;
+            return new TimeSlice(
+              event: calendar.events[index],
+              lastStartTime: lastTime,
+              favorited: false,
+              onFavorite: (bool newValue) { /* TODO */ },
+            );
+          },
+          itemCount: calendar.events.length,
         );
       },
-      itemCount: data.events.length,
     );
   }
 }

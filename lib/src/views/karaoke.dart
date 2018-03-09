@@ -1,11 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../dynamic.dart';
 import '../progress.dart';
+import '../widgets.dart';
+
+typedef bool Filter<T>(T element);
 
 class KaraokeView extends StatefulWidget {
   const KaraokeView({
@@ -24,27 +24,24 @@ class _KaraokeViewState extends State<KaraokeView> {
   }
 
   static String catalogResource = 'resources/JoCoKaraokeSongCatalog.txt';
-
-  static final ProgressValueNotifier<List<Song>> _songs = new ProgressValueNotifier<List<Song>>(null);
+  static Progress<List<Song>> _songs;
 
   static bool _initStarted = false;
-  Future<void> initSongs(AssetBundle bundle) {
+  void initSongs(AssetBundle bundle) async {
     // TODO(ianh): This doesn't support handling the case of the asset bundle
     // changing, since we only run it once even if the bundle is different.
-    if (_initStarted)
-      return new Future<void>.value(null);
+    // (that should only matter for tests though, in normal execution the bundle won't change)
+    if (_initStarted) {
+      assert(_songs != null);
+      return;
+    }
+    assert(_songs == null);
     _initStarted = true;
-    _songs.startProgress();
-    return bundle.loadStructuredData<List<Song>>(
-      catalogResource,
-      (String data) => compute<String, List<Song>>(_parser, data),
-    ).then<void>((List<Song> songs) {
-      _songs.value = songs;
-      if (mounted) {
-        setState(() {
-          // we've updated the catalog
-        });
-      }
+    _songs = new Progress<List<Song>>((ProgressController<List<Song>> completer) async {
+      return await bundle.loadStructuredData<List<Song>>(
+        catalogResource,
+        (String data) => compute<String, List<Song>>(_parser, data),
+      );
     });
   }
 
@@ -60,42 +57,48 @@ class _KaraokeViewState extends State<KaraokeView> {
     return songs;
   }
 
-  List<Song> _filteredList;
+  Filter<Song> _filter;
   final ScrollController _scrollController = new ScrollController();
 
-  void _filter(String filter) {
-    final List<String> keywords = filter.toLowerCase().split(' ');
+  void _applyFilter(String query) {
     setState(() {
-      _filteredList = _songs.value.where((Song song) => song.matches(keywords)).toList();
+      query = query.trim();
+      if (query.isEmpty) {
+        _filter = null;
+      } else {
+        final List<String> keywords = query.toLowerCase().split(' ');
+        _filter = (Song song) => song.matches(keywords);
+      }
       _scrollController.jumpTo(0.0);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return new LoadingScreen(
+    return new ProgressBuilder<List<Song>>(
       progress: _songs,
-      builder: (BuildContext context) {
-        final List<Song> list = _filteredList ?? _songs.value;
+      builder: (BuildContext context, List<Song> songList) {
+        if (_filter != null)
+          songList = songList.where(_filter).toList();
         return new Padding(
           padding: const EdgeInsets.all(8.0),
           child: new Column(
             children: <Widget>[
               new TextField(
-                decoration: new InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Search',
-                  suffixIcon: new Icon(Icons.search),
+                  suffixIcon: const Icon(Icons.search),
                 ),
-                onChanged: _filter,
+                onChanged: _applyFilter,
               ),
               new Expanded(
                 child: new Scrollbar(
                   child: new ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(8.0),
-                    itemCount: list.length,
+                    itemCount: songList.length,
                     itemBuilder: (BuildContext context, int index) {
-                      final Song song = list[index];
+                      final Song song = songList[index];
                       return new ListTile(
                         title: new Text(song.title),
                         subtitle: new Text(song.artist),

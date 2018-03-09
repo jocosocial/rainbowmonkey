@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
-import 'package:cruisemonkey/src/network/network.dart';
+import 'package:cruisemonkey/src/widgets.dart';
 import 'package:cruisemonkey/src/views/deck_plans.dart';
 
 import 'mocks.dart';
 
 void main() {
   testWidgets('Deck Plans', (WidgetTester tester) async {
-    final Twitarr twitarr = new TestTwitarr()
-      ..calendar.startProgress();
-    await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr));
+    final TestCruiseModel model = new TestCruiseModel();
+    await tester.pumpWidget(
+      new Cruise(
+        cruiseModel: model,
+        child: const CruiseMonkeyHome(),
+      ),
+    );
 
     expect(find.byIcon(Icons.directions_boat), findsOneWidget);
     await tester.tap(find.byIcon(Icons.directions_boat));
@@ -66,7 +70,7 @@ void main() {
     expectOpacities(tester, <double>[0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
     await tester.pumpWidget(const Placeholder());
-    twitarr.dispose();
+    model.dispose();
   });
 }
 

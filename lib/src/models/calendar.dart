@@ -24,6 +24,9 @@ class Event {
   final String location;
   final DateTime startTime;
   final DateTime endTime;
+
+  @override
+  String toString() => 'Event("$title")';
 }
 
 class Calendar {
@@ -52,4 +55,7 @@ class Calendar {
 
   List<Event> _events;
   List<Event> get events => _events;
+
+  @override
+  String toString() => 'Calendar($events)';
 }
