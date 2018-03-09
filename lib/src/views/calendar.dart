@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../dynamic.dart';
 import '../models/calendar.dart';
 import '../network/network.dart';
+import '../progress.dart';
 
 class CalendarView extends DynamicView<Calendar> {
   const CalendarView({
@@ -17,7 +18,7 @@ class CalendarView extends DynamicView<Calendar> {
 
 class _CalendarViewState extends DynamicViewState<Calendar, CalendarView> {
   @override
-  ValueListenable<Calendar> getDataSource(Twitarr twitarr) => twitarr.calendar;
+  ProgressValueListenable<Calendar> getDataSource(Twitarr twitarr) => twitarr.calendar;
 
   @override
   Widget buildView(BuildContext context, Calendar data) {
@@ -71,9 +72,8 @@ class TimeSlice extends StatelessWidget {
       new Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
       new Text(event.location, style: const TextStyle(fontStyle: FontStyle.italic)),
     ];
-    if (event.description != null) {
+    if (event.description != null)
       eventDetails.add(new Text(event.description));
-    }
     final DateTime lastTime = lastStartTime?.toLocal();
     final DateTime lastDay = lastTime != null ? new DateTime(lastTime.year, lastTime.month, lastTime.day) : null;
     final DateTime startTime = event.startTime.toLocal();

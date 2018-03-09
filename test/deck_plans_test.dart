@@ -9,7 +9,8 @@ import 'mocks.dart';
 
 void main() {
   testWidgets('Deck Plans', (WidgetTester tester) async {
-    final Twitarr twitarr = new TestTwitarr();
+    final Twitarr twitarr = new TestTwitarr()
+      ..calendar.startProgress();
     await tester.pumpWidget(new CruiseMonkey(twitarr: twitarr));
 
     expect(find.byIcon(Icons.directions_boat), findsOneWidget);
