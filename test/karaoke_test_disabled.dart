@@ -1,3 +1,5 @@
+// Disabled because of https://github.com/flutter/flutter/issues/15731
+
 import 'dart:convert';
 import 'dart:typed_data';
 
