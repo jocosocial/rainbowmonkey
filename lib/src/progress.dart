@@ -319,7 +319,9 @@ abstract class _LazyValueNotifier<T> extends ValueNotifier<T> with Progress {
   }
 }
 
-abstract class _ProgressValueNotifierMixin<T> implements ValueNotifier<T>, ProgressCompleter {
+abstract class _ProgressValueNotifierMixin<T> extends ValueNotifier<T> implements ProgressCompleter {
+  factory _ProgressValueNotifierMixin._() => null; // this is a mixin
+
   bool _silenceListeners = false;
 
   @override
