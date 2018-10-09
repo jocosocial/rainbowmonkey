@@ -277,6 +277,54 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     model.dispose();
   });
+
+  testWidgets('Calendar model - sorting 1', (WidgetTester tester) async {
+    final Calendar a = Calendar(events: <Event>[
+      Event(
+        id: 'id',
+        title: 'title2',
+        official: true,
+        location: 'A',
+        startTime: DateTime(1999),
+        endTime: DateTime(2000),
+      ),
+      Event(
+        id: 'id',
+        title: 'title1',
+        official: true,
+        location: 'A',
+        startTime: DateTime(1999),
+        endTime: DateTime(2000),
+      ),
+    ]);
+    expect(a.events, hasLength(2));
+    expect(a.events.first.title, 'title1');
+    expect(a.events.last.title, 'title2');
+  });
+
+  testWidgets('Calendar model - sorting 2', (WidgetTester tester) async {
+    final Calendar a = Calendar(events: <Event>[
+      Event(
+        id: 'id',
+        title: 'title2',
+        official: true,
+        location: 'A',
+        startTime: DateTime(1999),
+        endTime: DateTime(2000),
+      ),
+      Event(
+        id: 'id',
+        title: 'title1',
+        official: true,
+        location: 'B',
+        startTime: DateTime(1999),
+        endTime: DateTime(2000),
+      ),
+    ]);
+    expect(a.events, hasLength(2));
+    expect(a.events.first.title, 'title2');
+    expect(a.events.last.title, 'title1');
+  });
 }
 
 T getFirst<T>(Type ancestor, { Type of, WidgetTester using }) {

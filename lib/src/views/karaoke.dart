@@ -12,6 +12,11 @@ class KaraokeView extends StatefulWidget {
     Key key,
   }) : super(key: key);
 
+  @visibleForTesting
+  static Progress<void> get loadStatus {
+    return Progress.convert<List<Song>, void>(_KaraokeViewState._songs, (List<Song> songs) => null);
+  }
+
   @override
   _KaraokeViewState createState() => new _KaraokeViewState();
 }
@@ -25,6 +30,7 @@ class _KaraokeViewState extends State<KaraokeView> {
 
   static String catalogResource = 'resources/JoCoKaraokeSongCatalog.txt';
   static Progress<List<Song>> _songs;
+  static AssetBundle _songBundle;
 
   static bool _initStarted = false;
   void initSongs(AssetBundle bundle) async {
@@ -32,11 +38,14 @@ class _KaraokeViewState extends State<KaraokeView> {
     // changing, since we only run it once even if the bundle is different.
     // (that should only matter for tests though, in normal execution the bundle won't change)
     if (_initStarted) {
+      assert(_songBundle == bundle);
       assert(_songs != null);
       return;
     }
+    assert(_songBundle == null);
     assert(_songs == null);
     _initStarted = true;
+    _songBundle = bundle;
     _songs = new Progress<List<Song>>((ProgressController<List<Song>> completer) async {
       return await bundle.loadStructuredData<List<Song>>(
         catalogResource,
@@ -50,8 +59,9 @@ class _KaraokeViewState extends State<KaraokeView> {
     final List<Song> songs = <Song>[];
     for (String line in lines) {
       final List<String> parts = line.split('\t');
-      if (parts.length >= 2)
+      if (parts.length >= 2) {
         songs.add(new Song(parts[1], parts[0]));
+      }
     }
     songs.sort();
     return songs;

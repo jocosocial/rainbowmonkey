@@ -1,5 +1,4 @@
-// Disabled because of https://github.com/flutter/flutter/issues/15731
-
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -8,10 +7,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/views/karaoke.dart';
+import 'package:cruisemonkey/src/progress.dart';
 
 Future<void> main() async {
   final AssetBundle bundle = new TestAssetBundle();
   const KaraokeView().createState().initSongs(bundle);
+  final Completer<void> completer = new Completer<void>();
+  final Progress<void> status = KaraokeView.loadStatus;
+  void listener() {
+    if (status.value is SuccessfulProgress) {
+      completer.complete();
+      status.removeListener(listener);
+    }
+  }
+  status.addListener(listener);
+  await completer.future;
 
   testWidgets('Karaoke', (WidgetTester tester) async {
     await tester.pumpWidget(
@@ -35,6 +45,28 @@ Future<void> main() async {
     expect(find.byType(ListTile), findsNWidgets(1));
     expect(find.text('I Feel Fantastic'), findsNothing);
     expect(find.text('Alexander Hamilton'), findsOneWidget);
+  });
+
+  testWidgets('Song', (WidgetTester tester) async {
+    final List<Song> songs = <Song>[
+      const Song('bb', 'aa'),
+      const Song('aa', 'bb'),
+      const Song('aa', 'aa'),
+      const Song('bb', 'bb'),
+    ];
+    expect(songs, const <Song>[
+      Song('bb', 'aa'),
+      Song('aa', 'bb'),
+      Song('aa', 'aa'),
+      Song('bb', 'bb'),
+    ]);
+    songs.sort();
+    expect(songs, const <Song>[
+      Song('aa', 'aa'),
+      Song('aa', 'bb'),
+      Song('bb', 'aa'),
+      Song('bb', 'bb'),
+    ]);
   });
 }
 
