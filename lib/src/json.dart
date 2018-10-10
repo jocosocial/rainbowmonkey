@@ -146,16 +146,16 @@ class Json {
         return this[name];
     }
     if (invocation.isSetter)
-      return this[_symbolName(invocation.memberName)] = invocation.positionalArguments[0];
+      return this[_symbolName(invocation.memberName, stripEquals: true)] = invocation.positionalArguments[0];
     return super.noSuchMethod(invocation);
   }
 
   // Workaround for https://github.com/dart-lang/sdk/issues/28372
-  String _symbolName(Symbol symbol) {
+  String _symbolName(Symbol symbol, { bool stripEquals = false }) {
     // WARNING: Assumes a fixed format for Symbol.toString which is *not*
     // guaranteed anywhere.
     final String s = '$symbol';
-    return s.substring(8, s.length - 2);
+    return s.substring(8, s.length - (2 + (stripEquals ? 1 : 0)));
   }
 
   bool operator <(dynamic other) {
@@ -220,32 +220,32 @@ class Json {
 
   dynamic operator |(dynamic other) {
     if (other.runtimeType != Json)
-      return _value | other;
-    return _value | other._value;
+      return _value.toInt() | other;
+    return _value.toInt() | other._value.toInt();
   }
 
   dynamic operator ^(dynamic other) {
     if (other.runtimeType != Json)
-      return _value ^ other;
-    return _value ^ other._value;
+      return _value.toInt() ^ other;
+    return _value.toInt() ^ other._value.toInt();
   }
 
   dynamic operator &(dynamic other) {
     if (other.runtimeType != Json)
-      return _value & other;
-    return _value & other._value;
+      return _value.toInt() & other;
+    return _value.toInt() & other._value.toInt();
   }
 
   dynamic operator <<(dynamic other) {
     if (other.runtimeType != Json)
-      return _value << other;
-    return _value << other._value;
+      return _value.toInt() << other;
+    return _value.toInt() << other._value.toInt();
   }
 
   dynamic operator >>(dynamic other) {
     if (other.runtimeType != Json)
-      return _value >> other;
-    return _value >> other._value;
+      return _value.toInt() >> other;
+    return _value.toInt() >> other._value.toInt();
   }
 
   @override
