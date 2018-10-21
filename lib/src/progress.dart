@@ -7,10 +7,12 @@ enum _ProgressIndex { idle, starting, active, failed, successful }
 abstract class ProgressValue<T> {
   const ProgressValue();
   _ProgressIndex get _index;
-  bool operator <(ProgressValue<dynamic> other) => _index.index < other._index.index;
-  bool operator >(ProgressValue<dynamic> other) => _index.index > other._index.index;
-  bool operator <=(ProgressValue<dynamic> other) => _index.index <= other._index.index;
-  bool operator >=(ProgressValue<dynamic> other) => _index.index >= other._index.index;
+  bool operator <(ProgressValue<dynamic> other) => compareTo(other) < 0;
+  bool operator >(ProgressValue<dynamic> other) => compareTo(other) > 0;
+  bool operator <=(ProgressValue<dynamic> other) => compareTo(other) <= 0;
+  bool operator >=(ProgressValue<dynamic> other) => compareTo(other) >= 0;
+  @protected
+  int compareTo(ProgressValue<dynamic> other) => _index.index - other._index.index;
 }
 
 class IdleProgress extends ProgressValue<Null> {
@@ -38,6 +40,15 @@ class ActiveProgress extends ProgressValue<Null> {
   final double target;
   @override
   _ProgressIndex get _index => _ProgressIndex.active;
+  @override
+  int compareTo(ProgressValue<dynamic> other) {
+    int result = super.compareTo(other);
+    if (result == 0) {
+      final ActiveProgress typedOther = other;
+      result = ((progress / target) - (typedOther.progress / typedOther.target)).sign.toInt();
+    }
+    return result;
+  }
 }
 
 class FailedProgress extends ProgressValue<Null> {
