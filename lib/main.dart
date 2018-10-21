@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/models/user.dart';
+import 'src/network/rest.dart';
 import 'src/progress.dart';
 import 'src/views/calendar.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/drawer.dart';
 import 'src/views/karaoke.dart';
+import 'src/views/settings.dart';
 import 'src/widgets.dart';
 
 void main() {
   runApp(new CruiseMonkeyApp(
     cruiseModel: new CruiseModel(
+      twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://drang.prosedev.com:3000/'),
       store: new DiskDataStore(),
     ),
   ));
@@ -101,6 +104,9 @@ class CruiseMonkeyHome extends StatelessWidget {
           ),
         ),
       ),
+      routes: <String, WidgetBuilder>{
+        '/settings': (BuildContext context) => const Settings(),
+      },
     );
   }
 }

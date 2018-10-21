@@ -3,8 +3,6 @@
 # http://dart-lang.github.io/linter/lints/
 
 analyzer:
-  language:
-    enableSuperMixins: true
   strong-mode:
     implicit-dynamic: false
     implicit-casts: false

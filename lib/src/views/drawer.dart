@@ -180,6 +180,14 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     ));
 
     tiles.add(const Divider());
+    tiles.add(ListTile(
+      leading: const Icon(Icons.settings),
+      title: const Text('Settings'),
+      onTap: () {
+        Navigator.pop(context); // drawer
+        Navigator.pushNamed(context, '/settings');
+      },
+    ));
     tiles.add(const AboutListTile(
       aboutBoxChildren: const <Widget>[
         const Text('A project of the Seamonkey Social group.'),

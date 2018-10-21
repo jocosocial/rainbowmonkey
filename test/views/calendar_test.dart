@@ -7,7 +7,7 @@ import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
-import 'mocks.dart';
+import '../mocks.dart';
 
 void main() {
   testWidgets('Calendar', (WidgetTester tester) async {

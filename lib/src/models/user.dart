@@ -24,6 +24,9 @@ class Credentials {
   final String password;
   final String key;
   final DateTime loginTimestamp;
+
+  @override
+  String toString() => '$runtimeType($username)';
 }
 
 class User {

@@ -2,7 +2,7 @@ import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/user.dart';
-//import 'package:cruisemonkey/src/network/twitarr.dart';
+import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:flutter/foundation.dart';
 
@@ -114,7 +114,14 @@ class TestDataStore implements DataStore {
   }
 }
 
-class TestCruiseModel implements CruiseModel {
+class TestTwitarrConfiguration extends TwitarrConfiguration {
+  const TestTwitarrConfiguration();
+
+  @override
+  Twitarr createTwitarr() => null;
+}
+
+class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   TestCruiseModel({
     MutableContinuousProgress<User> user,
     MutableContinuousProgress<Calendar> calendar,
@@ -129,6 +136,14 @@ class TestCruiseModel implements CruiseModel {
 
   @override
   final DataStore store = const TestDataStore();
+
+  @override
+  TwitarrConfiguration get twitarrConfiguration => const TestTwitarrConfiguration();
+
+  @override
+  void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
+    assert(newConfiguration is TestTwitarrConfiguration);
+  }
 
   @override
   Progress<Credentials> createAccount({
@@ -164,5 +179,6 @@ class TestCruiseModel implements CruiseModel {
   void dispose() {
     user.dispose();
     calendar.dispose();
+    super.dispose();
   }
 }

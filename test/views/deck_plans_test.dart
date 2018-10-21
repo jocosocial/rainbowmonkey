@@ -5,7 +5,7 @@ import 'package:cruisemonkey/main.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 import 'package:cruisemonkey/src/views/deck_plans.dart';
 
-import 'mocks.dart';
+import '../mocks.dart';
 
 void main() {
   testWidgets('Deck Plans', (WidgetTester tester) async {

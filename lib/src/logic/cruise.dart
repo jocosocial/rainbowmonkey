@@ -5,19 +5,23 @@ import 'package:flutter/foundation.dart';
 
 import '../models/calendar.dart';
 import '../models/user.dart';
-import '../network/rest.dart'; // TODO(ianh): not depend directly on this
 import '../network/twitarr.dart';
 import '../progress.dart';
 import 'store.dart';
 
-class CruiseModel {
+// TODO(ianh): Move polling logic into RestTwitarr class
+
+class CruiseModel extends ChangeNotifier {
   CruiseModel({
+    @required TwitarrConfiguration twitarrConfiguration,
+    @required this.store,
     this.frequentPollInterval = const Duration(seconds: 30), // e.g. twitarr
     this.rarePollInterval = const Duration(seconds: 600), // e.g. calendar
-    @required this.store,
-  }) : assert(frequentPollInterval != null),
-       assert(rarePollInterval != null),
-       assert(store != null) {
+  }) : assert(twitarrConfiguration != null),
+       assert(store != null),
+       assert(frequentPollInterval != null),
+       assert(rarePollInterval != null) {
+    _twitarr = twitarrConfiguration.createTwitarr();
     _user = new PeriodicProgress<User>(rarePollInterval, _updateUser);
     _calendar = new PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
     _restoreCredentials();
@@ -27,10 +31,18 @@ class CruiseModel {
   final Duration frequentPollInterval;
   final DataStore store;
 
-  // TODO(ianh): replace with configurable option
-  final Twitarr _twitarr = new RestTwitarr(
-    baseUrl: 'http://drang.prosedev.com:3000/',
-  );
+  Twitarr _twitarr;
+  TwitarrConfiguration get twitarrConfiguration => _twitarr.configuration;
+  void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
+    final Twitarr oldTwitarr = _twitarr;
+    final Progress<User> logoutProgress = oldTwitarr.logout();
+    logoutProgress.asFuture().whenComplete(oldTwitarr.dispose);
+    _currentCredentials = null;
+    _pendingCredentials = null;
+    _user.reset();
+    _twitarr = newConfiguration.createTwitarr();
+    notifyListeners();
+  }
 
   bool _alive = true;
 
@@ -82,7 +94,7 @@ class CruiseModel {
   }
 
   void _saveCredentials() {
-    final ProgressValue<Credentials> progress = _pendingCredentials.value;
+    final ProgressValue<Credentials> progress = _pendingCredentials?.value;
     if (progress is SuccessfulProgress<Credentials>) {
       _currentCredentials = progress.value;
       store.saveCredentials(_currentCredentials);
@@ -122,11 +134,13 @@ class CruiseModel {
     return completer.chain<Calendar>(_twitarr.getCalendar());
   }
 
+  @override
   void dispose() {
     _alive = false;
     _pendingCredentials?.removeListener(_saveCredentials);
     _user.dispose();
     _calendar.dispose();
     _twitarr.dispose();
+    super.dispose();
   }
 }

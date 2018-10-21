@@ -5,7 +5,7 @@ import '../models/user.dart';
 import '../progress.dart';
 
 class ServerError implements Exception {
-  ServerError(this.messages);
+  const ServerError(this.messages);
 
   final List<String> messages;
 
@@ -20,8 +20,18 @@ class InvalidUsernameOrPasswordError implements Exception {
   String toString() => 'Server did not recognize the username or password.';
 }
 
+@immutable
+abstract class TwitarrConfiguration {
+  const TwitarrConfiguration();
+  Twitarr createTwitarr();
+}
+
 /// An interface for communicating with the server.
 abstract class Twitarr {
+  const Twitarr();
+
+  TwitarrConfiguration get configuration;
+
   Progress<User> createAccount({
     @required String username,
     @required String password,

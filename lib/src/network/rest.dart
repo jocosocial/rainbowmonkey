@@ -10,15 +10,41 @@ import '../progress.dart';
 import 'form_data.dart';
 import 'twitarr.dart';
 
+class RestTwitarrConfiguration extends TwitarrConfiguration {
+  const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
+
+  final String baseUrl;
+
+  @override
+  Twitarr createTwitarr() => RestTwitarr(baseUrl: baseUrl);
+
+  @override
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != runtimeType)
+      return false;
+    final RestTwitarrConfiguration typedOther = other;
+    return typedOther.baseUrl == baseUrl;
+  }
+
+  @override
+  int get hashCode => baseUrl.hashCode;
+
+  @override
+  String toString() => 'Twitarr(REST $baseUrl)';
+}
+
 /// An implementation of [Twitarr] that uses the /api/v2/ HTTP protocol
 /// implemented by <https://github.com/seamonkeysocial/twitarr>.
 class RestTwitarr implements Twitarr {
-  RestTwitarr({ this.baseUrl }) {
+  RestTwitarr({ @required this.baseUrl }) : assert(baseUrl != null) {
     _client = new HttpClient();
     _parsedBaseUrl = Uri.parse(baseUrl);
   }
 
   final String baseUrl;
+
+  @override
+  TwitarrConfiguration get configuration => RestTwitarrConfiguration(baseUrl: baseUrl);
 
   HttpClient _client;
   Uri _parsedBaseUrl;

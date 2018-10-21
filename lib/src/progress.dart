@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'utils.dart';
+
 enum _ProgressIndex { idle, starting, active, failed, successful }
 
 abstract class ProgressValue<T> {
@@ -118,6 +120,8 @@ abstract class Progress<T> implements ValueListenable<ProgressValue<T>> {
       }
     });
   }
+
+  Future<T> asFuture();
 }
 
 class _LazyValueNotifier<T> extends ValueNotifier<T> {
@@ -151,6 +155,25 @@ class _Progress<T> extends _LazyValueNotifier<ProgressValue<T>> implements Progr
     VoidCallback onRemove,
     ProgressValue<T> value,
   }) : super(onAdd: onAdd, onRemove: onRemove, value: value);
+
+  @override
+  Future<T> asFuture() {
+    if (value is SuccessfulProgress<T>) {
+      final SuccessfulProgress<T> typedValue = value;
+      return Future<T>.value(typedValue.value);
+    }
+    return valueListenableToFutureAdapter<ProgressValue<T>>(this, (ProgressValue<T> value) {
+      if (value is SuccessfulProgress<T>)
+        return true;
+      if (value is FailedProgress)
+        throw value.error;
+      return false;
+    }).then<T>((ProgressValue<T> value) {
+      assert(value is SuccessfulProgress<T>);
+      final SuccessfulProgress<T> typedValue = value;
+      return typedValue.value;
+    });
+  }
 }
 
 class ProgressController<T> {
@@ -233,6 +256,9 @@ class _IdleProgress implements Progress<Null> {
 
   @override
   void removeListener(VoidCallback listener) { }
+
+  @override
+  Future<Null> asFuture() => Completer<Null>().future;
 }
 
 abstract class ContinuousProgress<T> implements Listenable {
@@ -370,5 +396,11 @@ class PeriodicProgress<T> extends MutableContinuousProgress<T> {
       onCancel();
       _active = false;
     }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 }

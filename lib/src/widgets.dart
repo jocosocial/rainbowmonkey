@@ -7,22 +7,17 @@ import 'progress.dart';
 const Duration animationDuration = const Duration(milliseconds: 100);
 const Curve animationCurve = Curves.fastOutSlowIn;
 
-class Cruise extends InheritedWidget {
+class Cruise extends InheritedNotifier<CruiseModel> {
   const Cruise({
     Key key,
-    @required this.cruiseModel,
+    CruiseModel cruiseModel,
     @required Widget child,
-  }) : super(key: key, child: child);
-
-  final CruiseModel cruiseModel;
+  }) : super(key: key, child: child, notifier: cruiseModel);
 
   static CruiseModel of(BuildContext context) {
     final Cruise widget = context.inheritFromWidgetOfExactType(Cruise);
-    return widget?.cruiseModel;
+    return widget?.notifier;
   }
-
-  @override
-  bool updateShouldNotify(Cruise old) => cruiseModel != old.cruiseModel;
 }
 
 typedef Widget ActiveProgressBuilder(BuildContext context, double progress, double target);

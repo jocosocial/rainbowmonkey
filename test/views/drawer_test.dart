@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cruisemonkey/main.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
-import 'mocks.dart';
+import '../mocks.dart';
 
 void main() {
   testWidgets('Drawer', (WidgetTester tester) async {
