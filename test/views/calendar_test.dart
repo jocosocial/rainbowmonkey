@@ -96,6 +96,41 @@ void main() {
     expect(find.text('-12:00am'), findsOneWidget);
     expect(find.text('Sunday March 10'), findsNothing);
     expect(find.text('null'), findsNothing);
+    expect(tester.getRect(find.text('Actual Event')).bottom, lessThan(tester.getRect(find.text('Shadow Event')).top));
+    expect(tester.getRect(find.text('Shadow Event')).left, equals(tester.getRect(find.text('Actual Event')).left));
+
+    model1.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
+      new Event(
+        id: 'a',
+        title: 'Actual Event',
+        location: 'Apple Deck',
+        official: true,
+        startTime: new DateTime(2019, 3, 9, 20, 00),
+        endTime: new DateTime(2019, 3, 10, 00, 00),
+      ),
+      new Event(
+        id: 'b',
+        title: 'Shadow Event',
+        location: 'Banana Deck',
+        description: 'Eat some food.',
+        official: false,
+        startTime: new DateTime(2019, 3, 9, 20, 00),
+        endTime: new DateTime(2019, 3, 9, 21, 30),
+      ),
+    ])));
+    await tester.pump();
+    expect(find.text('Saturday March 9'), findsOneWidget);
+    expect(find.text('Test A'), findsNothing);
+    expect(find.text('Actual Event'), findsOneWidget);
+    expect(find.text('Apple Deck'), findsOneWidget);
+    expect(find.text('8:00pm'), findsNWidgets(2));
+    expect(find.text('-12:00am'), findsOneWidget);
+    expect(find.text('Shadow Event'), findsOneWidget);
+    expect(find.text('Banana Deck'), findsOneWidget);
+    expect(find.text('Eat some food.'), findsOneWidget);
+    expect(find.text('-9:30pm'), findsOneWidget);
+    expect(find.text('Sunday March 10'), findsNothing);
+    expect(find.text('null'), findsNothing);
     expect(tester.getRect(find.text('Shadow Event')).bottom, lessThan(tester.getRect(find.text('Actual Event')).top));
     expect(tester.getRect(find.text('Shadow Event')).left, equals(tester.getRect(find.text('Actual Event')).left));
 

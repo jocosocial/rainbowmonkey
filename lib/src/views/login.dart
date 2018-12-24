@@ -19,8 +19,8 @@ class _LoginDialogState extends State<LoginDialog> {
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
 
   bool get _valid {
-    return User.isValidUsername(_username.text) &&
-           User.isValidPassword(_password.text);
+    return AuthenticatedUser.isValidUsername(_username.text) &&
+           AuthenticatedUser.isValidPassword(_password.text);
   }
 
   @override
@@ -53,11 +53,12 @@ class _LoginDialogState extends State<LoginDialog> {
                     alignment: AlignmentDirectional.topStart,
                     child: new TextFormField(
                       controller: _username,
+                      autofocus: true,
                       decoration: const InputDecoration(
                         labelText: 'User name',
                       ),
                       validator: (String name) {
-                        if (!User.isValidUsername(name))
+                        if (!AuthenticatedUser.isValidUsername(name))
                           return 'User names are be alphabetic and at least three characters long.';
                       },
                     ),
@@ -74,7 +75,7 @@ class _LoginDialogState extends State<LoginDialog> {
                         labelText: 'Password',
                       ),
                       validator: (String password) {
-                        if (!User.isValidPassword(password))
+                        if (!AuthenticatedUser.isValidPassword(password))
                           return 'Passwords are at least six characters long.';
                       },
                     ),
@@ -86,16 +87,6 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
       ),
       actions: <Widget>[
-        new FlatButton(
-          onPressed: () {
-            Cruise.of(context).login(
-              username: 'aaa',
-              password: 'aaaaaa',
-            );
-            Navigator.pop(context);
-          },
-          child: const Text('TEST AAA'),
-        ),
         new FlatButton(
           onPressed: _valid ? () {
             Cruise.of(context).login(

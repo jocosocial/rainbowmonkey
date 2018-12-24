@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+@immutable
 class Event {
   Event({
     @required this.id,
@@ -29,20 +30,23 @@ class Event {
   String toString() => 'Event("$title")';
 }
 
+@immutable
 class Calendar {
-  Calendar({
+  factory Calendar({
     @required List<Event> events,
-  }) : assert(events != null) {
-    _events = events.toList()
+  }) {
+    assert(events != null);
+    return Calendar._(
+      events.toList()
       ..sort((Event a, Event b) {
         if (a.startTime.isBefore(b.startTime))
           return -1;
         if (a.startTime.isAfter(b.startTime))
           return 1;
         if (a.endTime.isBefore(b.endTime))
-          return 1;
-        if (a.endTime.isAfter(b.endTime))
           return -1;
+        if (a.endTime.isAfter(b.endTime))
+          return 1;
         if (a.official && !b.official)
           return -1;
         if (b.official && !a.official)
@@ -50,10 +54,13 @@ class Calendar {
         if (a.location != b.location)
           return a.location.compareTo(b.location);
         return a.title.compareTo(b.title);
-      });
+      })
+    );
   }
 
-  List<Event> _events;
+  const Calendar._(this._events);
+
+  final List<Event> _events;
   List<Event> get events => _events;
 
   @override

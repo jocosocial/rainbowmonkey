@@ -1,3 +1,8 @@
+import 'dart:ui' show hashValues;
+
+import 'package:flutter/foundation.dart';
+
+@immutable
 class Credentials {
   const Credentials({
     this.username,
@@ -29,12 +34,48 @@ class Credentials {
   String toString() => '$runtimeType($username)';
 }
 
+@immutable
 class User {
-  const User({ this.username, this.email, this.credentials });
+  const User({
+    @required this.username,
+    this.displayName,
+  }) : assert(username != null),
+       assert(username != '');
 
   final String username;
-  final String email;
+  final String displayName;
 
+  bool sameAs(User other) => username == other.username;
+
+  @override
+  String toString() {
+    if (displayName == username || displayName == '')
+      return '@$username';
+    return '$displayName (@$username)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != runtimeType)
+      return false;
+    final User typedOther = other;
+    return username == typedOther.username
+        || displayName == typedOther.displayName;
+  }
+
+  @override
+  int get hashCode => hashValues(username, displayName);
+}
+
+class AuthenticatedUser extends User {
+  const AuthenticatedUser({
+    String username,
+    String displayName,
+    this.email,
+    this.credentials,
+  }) : super(username: username, displayName: displayName);
+
+  final String email;
   final Credentials credentials;
 
   static bool isValidUsername(String username) {

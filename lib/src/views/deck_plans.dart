@@ -3,10 +3,25 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class DeckPlanView extends StatefulWidget {
+import '../widgets.dart';
+
+class DeckPlanView extends StatefulWidget implements View {
   const DeckPlanView({
     Key key,
   }) : super(key: key);
+
+  @override
+  Widget buildTab(BuildContext context) {
+    return const Tab(
+      text: 'Deck Plans',
+      icon: const Icon(Icons.directions_boat),
+    );
+  }
+
+  @override
+  Widget buildFab(BuildContext context) {
+    return null;
+  }
 
   @override
   _DeckPlanViewState createState() => new _DeckPlanViewState();

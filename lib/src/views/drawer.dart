@@ -17,15 +17,15 @@ class CruiseMonkeyDrawer extends StatefulWidget {
 }
 
 class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
-  ContinuousProgress<User> _user;
-  Progress<User> _bestUser;
-  ProgressValue<User> _bestUserValue;
+  ContinuousProgress<AuthenticatedUser> _user;
+  Progress<AuthenticatedUser> _bestUser;
+  ProgressValue<AuthenticatedUser> _bestUserValue;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final ContinuousProgress<User> oldUser = _user;
-    final ContinuousProgress<User> newUser = Cruise.of(context).user;
+    final ContinuousProgress<AuthenticatedUser> oldUser = _user;
+    final ContinuousProgress<AuthenticatedUser> newUser = Cruise.of(context).user;
     if (oldUser != newUser) {
       _user?.removeListener(_handleNewUser);
       _user = newUser;
@@ -35,8 +35,8 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
   }
 
   void _handleNewUser() {
-    final Progress<User> oldBestUser = _bestUser;
-    final Progress<User> newBestUser = _user?.best;
+    final Progress<AuthenticatedUser> oldBestUser = _bestUser;
+    final Progress<AuthenticatedUser> newBestUser = _user?.best;
     if (oldBestUser != newBestUser) {
       _bestUser?.removeListener(_handleUserUpdate);
       _bestUser = newBestUser;
@@ -68,7 +68,7 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    final ProgressValue<User> _bestUserValue = this._bestUserValue; // https://github.com/dart-lang/sdk/issues/34480
+    final ProgressValue<AuthenticatedUser> _bestUserValue = this._bestUserValue; // https://github.com/dart-lang/sdk/issues/34480
 
     Widget header;
     bool loggedIn;
@@ -94,18 +94,18 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
         key: _errorHeader,
         child: new Align(
           alignment: Alignment.bottomCenter,
-          child: new Text('Last error: ${_bestUserValue.error}'),
+          child: new Text('Last error while logging in:\n${wrapError(_bestUserValue.error)}'),
         ),
       );
       loggedIn = false;
     } else {
-      User user;
-      if (_bestUserValue is SuccessfulProgress<User>)
+      AuthenticatedUser user;
+      if (_bestUserValue is SuccessfulProgress<AuthenticatedUser>)
         user = _bestUserValue.value;
       if (user != null) {
         header = new UserAccountsDrawerHeader(
           key: _userHeader,
-          accountName: new Text(user.username ?? '<unknown username>'),
+          accountName: new Text(user.toString()),
           accountEmail: new Text(user.email ?? ''),
         );
         loggedIn = true;

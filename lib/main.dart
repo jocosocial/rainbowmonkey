@@ -10,13 +10,14 @@ import 'src/views/calendar.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/drawer.dart';
 import 'src/views/karaoke.dart';
+import 'src/views/seamail.dart';
 import 'src/views/settings.dart';
 import 'src/widgets.dart';
 
 void main() {
   runApp(new CruiseMonkeyApp(
     cruiseModel: new CruiseModel(
-      twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://drang.prosedev.com:3000/'),
+      twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
       store: new DiskDataStore(),
     ),
   ));
@@ -44,6 +45,13 @@ class CruiseMonkeyHome extends StatelessWidget {
     Key key,
   }) : super(key: key);
 
+  static const List<View> pages = <View>[
+    const CalendarView(),
+    const DeckPlanView(),
+    const KaraokeView(),
+    const SeamailView(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -56,52 +64,47 @@ class CruiseMonkeyHome extends StatelessWidget {
         ),
       ),
       home: new DefaultTabController(
-        length: 3,
-        child: new Scaffold(
-          appBar: new AppBar(
-            leading: ValueListenableBuilder<ProgressValue<User>>(
-              valueListenable: Cruise.of(context).user.best,
-              builder: (BuildContext context, ProgressValue<User> value, Widget child) {
-                return new Badge(
-                  enabled: value is FailedProgress,
-                  child: new Builder(
-                    builder: (BuildContext context) {
-                      return new IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () { Scaffold.of(context).openDrawer(); },
-                        tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                      );
-                    },
+        length: 4,
+        child: new Builder(
+          builder: (BuildContext context) {
+            final TabController tabController = DefaultTabController.of(context);
+            return new AnimatedBuilder(
+              animation: tabController,
+              builder: (BuildContext context, Widget child) {
+                return new Scaffold(
+                  appBar: new AppBar(
+                    leading: ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
+                      valueListenable: Cruise.of(context).user.best,
+                      builder: (BuildContext context, ProgressValue<AuthenticatedUser> value, Widget child) {
+                        return new Badge(
+                          enabled: value is FailedProgress,
+                          child: new Builder(
+                            builder: (BuildContext context) {
+                              return new IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () { Scaffold.of(context).openDrawer(); },
+                                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                    title: const Text('CruiseMonkey'),
+                    bottom: new TabBar(
+                      isScrollable: true,
+                      tabs: pages.map((View page) => page.buildTab(context)).toList(),
+                    ),
+                  ),
+                  drawer: const CruiseMonkeyDrawer(),
+                  floatingActionButton: pages[tabController.index].buildFab(context),
+                  body: const TabBarView(
+                    children: pages,
                   ),
                 );
               },
-            ),
-            title: const Text('CruiseMonkey'),
-            bottom: const TabBar(
-              tabs: const <Widget>[
-                const Tab(
-                  text: 'Calendar',
-                  icon: const Icon(Icons.event),
-                ),
-                const Tab(
-                  text: 'Deck Plans',
-                  icon: const Icon(Icons.directions_boat),
-                ),
-                const Tab(
-                  text: 'Karaoke Song List',
-                  icon: const Icon(Icons.library_music),
-                ),
-              ],
-            ),
-          ),
-          drawer: const CruiseMonkeyDrawer(),
-          body: const TabBarView(
-            children: const <Widget>[
-              const CalendarView(),
-              const DeckPlanView(),
-              const KaraokeView(),
-            ],
-          ),
+            );
+          },
         ),
       ),
       routes: <String, WidgetBuilder>{

@@ -4,10 +4,23 @@ import 'package:flutter/material.dart';
 import '../models/calendar.dart';
 import '../widgets.dart';
 
-class CalendarView extends StatelessWidget {
+class CalendarView extends StatelessWidget implements View {
   const CalendarView({
     Key key,
   }) : super(key: key);
+
+  @override
+  Widget buildTab(BuildContext context) {
+    return const Tab(
+      text: 'Calendar',
+      icon: const Icon(Icons.event),
+    );
+  }
+
+  @override
+  Widget buildFab(BuildContext context) {
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {

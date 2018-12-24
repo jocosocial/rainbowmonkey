@@ -7,10 +7,23 @@ import '../widgets.dart';
 
 typedef bool Filter<T>(T element);
 
-class KaraokeView extends StatefulWidget {
+class KaraokeView extends StatefulWidget implements View {
   const KaraokeView({
     Key key,
   }) : super(key: key);
+
+  @override
+  Widget buildTab(BuildContext context) {
+    return const Tab(
+      text: 'Karaoke',
+      icon: const Icon(Icons.library_music),
+    );
+  }
+
+  @override
+  Widget buildFab(BuildContext context) {
+    return null;
+  }
 
   @visibleForTesting
   static Progress<void> get loadStatus {

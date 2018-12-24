@@ -25,13 +25,13 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
 
   bool get _valid {
-    return User.isValidUsername(_username.text) &&
-           User.isValidDisplayName(_username.text) &&
-           User.isValidPassword(_password1.text) &&
+    return AuthenticatedUser.isValidUsername(_username.text) &&
+           AuthenticatedUser.isValidDisplayName(_username.text) &&
+           AuthenticatedUser.isValidPassword(_password1.text) &&
            (_password1.text == _password2.text) &&
-           User.isValidEmail(_email.text) &&
-           User.isValidSecurityQuestion(_securityQuestion.text) &&
-           User.isValidSecurityAnswer(_securityAnswer.text);
+           AuthenticatedUser.isValidEmail(_email.text) &&
+           AuthenticatedUser.isValidSecurityQuestion(_securityQuestion.text) &&
+           AuthenticatedUser.isValidSecurityAnswer(_securityAnswer.text);
   }
 
   void _createAccount() async {
@@ -112,9 +112,9 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                         labelText: 'User name',
                       ),
                       validator: (String name) {
-                        if (!User.isValidUsername(name))
+                        if (!AuthenticatedUser.isValidUsername(name))
                           return 'User names must be alphabetic and at least three characters long.';
-                        if (!User.isValidDisplayName(name))
+                        if (!AuthenticatedUser.isValidDisplayName(name))
                           return 'User names are also used as display names, which must be no more than 40 characters long.';
                       },
                     ),
@@ -131,7 +131,7 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                         labelText: 'Password',
                       ),
                       validator: (String password) {
-                        if (!User.isValidPassword(password))
+                        if (!AuthenticatedUser.isValidPassword(password))
                           return 'Passwords must be at least six characters long.';
                       },
                     ),
@@ -166,7 +166,7 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                         helperText: 'Only visible to administrators.',
                       ),
                       validator: (String email) {
-                        if (!User.isValidEmail(email))
+                        if (!AuthenticatedUser.isValidEmail(email))
                           return 'E-mail is not valid.';
                       },
                     ),
@@ -182,7 +182,7 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                         labelText: 'Security question',
                       ),
                       validator: (String securityQuestion) {
-                        if (!User.isValidSecurityQuestion(securityQuestion))
+                        if (!AuthenticatedUser.isValidSecurityQuestion(securityQuestion))
                           return 'You need a security question.';
                       },
                     ),
@@ -198,7 +198,7 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                         labelText: 'Security answer',
                       ),
                       validator: (String securityAnswer) {
-                        if (!User.isValidSecurityAnswer(securityAnswer))
+                        if (!AuthenticatedUser.isValidSecurityAnswer(securityAnswer))
                           return 'You need a security answer.';
                       },
                     ),
@@ -211,19 +211,15 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
       ),
       actions: <Widget>[
         new FlatButton(
-          onPressed: () {
-            _username.text = 'aaa';
-            _password1.text = 'aaaaaa';
-            _password2.text = 'aaaaaa';
-            _email.text = 'test@example.com';
-            _securityQuestion.text = 'Aaaa?';
-            _securityAnswer.text = 'aaaa';
-          },
-          child: const Text('TEST AAA'),
-        ),
-        new FlatButton(
           onPressed: _valid ? _createAccount : null,
           child: const Text('CREATE ACCOUNT'),
+        ),
+        new FlatButton(
+          onPressed: () async {
+            if (await Navigator.maybePop(context) && mounted)
+              Navigator.pop(context);
+          },
+          child: const Text('CANCEL'),
         ),
       ],
     );

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -24,15 +26,17 @@ typedef Widget ActiveProgressBuilder(BuildContext context, double progress, doub
 typedef Widget FailedProgressBuilder(BuildContext context, Exception error, StackTrace stackTrace);
 typedef Widget SuccessfulProgressBuilder<T>(BuildContext context, T value);
 typedef Widget WrapBuilder(BuildContext context, Widget main, Widget secondary);
+typedef Widget FadeWrapperBuilder(BuildContext context, Widget child);
 
-Widget _defaultActiveBuilder(BuildContext context, double progress, double target) {
-  assert(target != 0.0);
-  return new Center(key: ProgressBuilder.activeKey, child: new CircularProgressIndicator(value: progress / target));
-}
-
-Widget _defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
-  assert(error != null);
-  return new Center(key: ProgressBuilder.failedKey, child: new Text('$error'));
+String wrapError(Exception error) {
+  if (error is SocketException) {
+    final SocketException e = error;
+    if (e.osError.errorCode == 113)
+      return 'Cannot reach server (${e.address.host}:${e.port}).';
+    if (e.osError.errorCode == 101)
+      return 'Network is offline (are you in airplane mode?).';
+  }
+  return error.toString();
 }
 
 Widget _defaultSecondaryActiveBuilder(BuildContext context, double progress, double target) {
@@ -66,6 +70,15 @@ Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
   );
 }
 
+Widget _defaultFadeWrapper(BuildContext context, Widget child) {
+  return new AnimatedSwitcher(
+    duration: animationDuration,
+    switchInCurve: animationCurve,
+    switchOutCurve: animationCurve,
+    child: child,
+  );
+}
+
 class _ActiveKey extends LocalKey { const _ActiveKey(); }
 class _FailedKey extends LocalKey { const _FailedKey(); }
 
@@ -76,14 +89,16 @@ class ProgressBuilder<T> extends StatelessWidget {
     this.nullChild: const SizedBox.expand(),
     this.idleChild: const SizedBox.expand(),
     this.startingChild: const Center(key: activeKey, child: const CircularProgressIndicator()),
-    this.activeBuilder: _defaultActiveBuilder,
-    this.failedBuilder: _defaultFailedBuilder,
+    this.activeBuilder: defaultActiveBuilder,
+    this.failedBuilder: defaultFailedBuilder,
     @required this.builder,
+    this.fadeWrapper: _defaultFadeWrapper,
   }) : assert(idleChild != null),
        assert(startingChild != null),
        assert(activeBuilder != null),
        assert(failedBuilder != null),
        assert(builder != null),
+       assert(fadeWrapper != null),
        super(key: key);
 
   final Progress<T> progress;
@@ -94,9 +109,30 @@ class ProgressBuilder<T> extends StatelessWidget {
   final ActiveProgressBuilder activeBuilder;
   final FailedProgressBuilder failedBuilder;
   final SuccessfulProgressBuilder<T> builder;
+  final FadeWrapperBuilder fadeWrapper;
 
   static const Key activeKey = const _ActiveKey();
   static const Key failedKey = const _FailedKey();
+
+  static Widget defaultActiveBuilder(BuildContext context, double progress, double target) {
+    assert(target != 0.0);
+    return new Center(key: ProgressBuilder.activeKey, child: new CircularProgressIndicator(value: progress / target));
+  }
+
+  static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
+    assert(error != null);
+    return new Center(
+      key: ProgressBuilder.failedKey,
+      child: new Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          const Icon(Icons.warning, size: 72.0),
+          new Text(wrapError(error), textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,12 +156,7 @@ class ProgressBuilder<T> extends StatelessWidget {
         } else {
           result = failedBuilder(context, new Exception('$value'), null);
         }
-        return new AnimatedSwitcher(
-          duration: animationDuration,
-          switchInCurve: animationCurve,
-          switchOutCurve: animationCurve,
-          child: result,
-        );
+        return fadeWrapper(context, result);
       },
     );
   }
@@ -138,13 +169,14 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
     this.nullChild: const SizedBox.expand(),
     this.idleChild: const SizedBox.expand(),
     this.startingChild: const Center(child: const CircularProgressIndicator()),
-    this.activeBuilder: _defaultActiveBuilder,
-    this.failedBuilder: _defaultFailedBuilder,
+    this.activeBuilder: ProgressBuilder.defaultActiveBuilder,
+    this.failedBuilder: ProgressBuilder.defaultFailedBuilder,
     @required this.builder,
     this.secondaryStartingChild: const CircularProgressIndicator(key: ProgressBuilder.activeKey),
     this.secondaryActiveBuilder: _defaultSecondaryActiveBuilder,
     this.secondaryFailedBuilder: _defaultSecondaryFailedBuilder,
     this.wrap: _defaultWrap,
+    this.fadeWrapper: _defaultFadeWrapper,
   }) : assert(idleChild != null),
        assert(startingChild != null),
        assert(activeBuilder != null),
@@ -154,6 +186,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
        assert(secondaryActiveBuilder != null),
        assert(secondaryFailedBuilder != null),
        assert(wrap != null),
+       assert(fadeWrapper != null),
        super(key: key);
 
   final ContinuousProgress<T> progress;
@@ -168,6 +201,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
   final ActiveProgressBuilder secondaryActiveBuilder;
   final FailedProgressBuilder secondaryFailedBuilder;
   final WrapBuilder wrap;
+  final FadeWrapperBuilder fadeWrapper;
 
   @override
   Widget build(BuildContext context) {
@@ -203,16 +237,60 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
                 }
               }
               result ??= const SizedBox.shrink();
-              return new AnimatedSwitcher(
-                duration: animationDuration,
-                switchInCurve: animationCurve,
-                switchOutCurve: animationCurve,
-                child: result,
-              );
+              return fadeWrapper(context, result);
             },
           ),
         );
       },
+    );
+  }
+}
+
+class ProgressDialog<T> extends StatefulWidget {
+  const ProgressDialog({
+    Key key,
+    this.progress,
+  }) : super(key: key);
+
+  final Progress<T> progress;
+
+  @override
+  _ProgressDialogState<T> createState() => new _ProgressDialogState<T>();
+}
+
+class _ProgressDialogState<T> extends State<ProgressDialog<T>> with SingleTickerProviderStateMixin {
+  @override
+  void initState() {
+    super.initState();
+    widget.progress.asFuture().then((T value) {
+      if (mounted)
+        Navigator.pop<T>(context, value);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new Dialog(
+      child: new AnimatedSize(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.fastOutSlowIn,
+        vsync: this,
+        child: new IntrinsicWidth(
+          child: new IntrinsicHeight(
+            child: new Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ProgressBuilder<T>(
+                progress: widget.progress,
+                builder: (BuildContext context, T value) {
+                  return const Center(
+                    child: const Icon(Icons.check, size: 60.0),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -265,4 +343,9 @@ class Badge extends StatelessWidget {
       ],
     );
   }
+}
+
+abstract class View implements Widget {
+  Widget buildFab(BuildContext context);
+  Widget buildTab(BuildContext context);
 }

@@ -4,6 +4,7 @@ description: The client application for the cruise, for Android and iOS. Connect
 dependencies:
   flutter:
     sdk: flutter
+  path_provider: any
 
 dev_dependencies:
   flutter_test:

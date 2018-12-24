@@ -21,7 +21,7 @@ class Settings extends StatelessWidget {
           RadioListTile<TwitarrConfiguration>(
             title: const Text('prosedev.com test server'),
             groupValue: Cruise.of(context).twitarrConfiguration,
-            value: const RestTwitarrConfiguration(baseUrl: 'http://drang.prosedev.com:3000/'),
+            value: const RestTwitarrConfiguration(baseUrl: 'http://drang.prosedev.com:3000/api/v2/'),
             onChanged: (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
           ),
           RadioListTile<TwitarrConfiguration>(

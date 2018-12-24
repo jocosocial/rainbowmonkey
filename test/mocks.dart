@@ -1,104 +1,16 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/models/seamail.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:flutter/foundation.dart';
-
-/*
-class TestTwitarr implements Twitarr {
-  @override
-  ValueNotifier<Credentials> credentials = new ValueNotifier<Credentials>(null);
-
-  @override
-  Progress<Credentials> createAccount({
-    @required String username,
-    @required String password,
-    @required String email,
-    @required String securityQuestion,
-    @required String securityAnswer,
-  }) {
-    throw new Exception('not implemented');
-  }
-
-  @override
-  Progress<Credentials> login(Credentials credentials) {
-    throw new Exception('not implemented');
-  }
-
-  @override
-  Progress<Credentials> logout() {
-    throw new Exception('not implemented');
-  }
-
-  @override
-  Progress<User> get user => userCompleter.progress;
-  ProgressCompleter<User> userCompleter = new ProgressCompleter<User>();
-
-  @override
-  Progress<Calendar> get calendar => calendarCompleter.progress;
-  ProgressCompleter<Calendar> calendarCompleter = new ProgressCompleter<Calendar>();
-
-  @override
-  void dispose() {
-    credentials.dispose();
-  }
-}
-
-class AutoupdatingTestTwitarr implements Twitarr {
-  AutoupdatingTestTwitarr({
-    this.calendarGetter,
-    this.calendarInterval: const Duration(seconds: 600),
-  }) {
-    _calendar = new PollingProgress<Calendar>(
-      getter: calendarGetter,
-      interval: calendarInterval,
-    );
-  }
-
-  final ValueGetter<CancelableProgress<Calendar>> calendarGetter;
-  final Duration calendarInterval;
-
-  @override
-  ValueNotifier<Credentials> credentials = new ValueNotifier<Credentials>(null);
-
-  @override
-  Progress<Credentials> createAccount({
-    @required String username,
-    @required String password,
-    @required String email,
-    @required String securityQuestion,
-    @required String securityAnswer,
-  }) {
-    throw new Exception('not implemented');
-  }
-
-  @override
-  Progress<Credentials> login(Credentials credentials) {
-    throw new Exception('not implemented');
-  }
-
-  @override
-  Progress<Credentials> logout() {
-    throw new Exception('not implemented');
-  }
-
-  @override
-  Progress<User> get user => _userCompleter.progress;
-  ProgressCompleter<User> _userCompleter;
-
-  @override
-  Progress<Calendar> get calendar => _calendar;
-  PollingProgress<Calendar> _calendar;
-
-  @override
-  void dispose() {
-    credentials.dispose();
-    _calendar.dispose();
-  }
-}
-*/
+import 'package:flutter/widgets.dart';
 
 class TestDataStore implements DataStore {
   const TestDataStore();
@@ -123,9 +35,9 @@ class TestTwitarrConfiguration extends TwitarrConfiguration {
 
 class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   TestCruiseModel({
-    MutableContinuousProgress<User> user,
+    MutableContinuousProgress<AuthenticatedUser> user,
     MutableContinuousProgress<Calendar> calendar,
-  }) : user = user ?? MutableContinuousProgress<User>(),
+  }) : user = user ?? MutableContinuousProgress<AuthenticatedUser>(),
        calendar = calendar ?? MutableContinuousProgress<Calendar>();
 
   @override
@@ -133,6 +45,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
 
   @override
   final Duration frequentPollInterval = const Duration(minutes: 1);
+
+  @override
+  final Duration maxSeamailUpdateDelay = null;
 
   @override
   final DataStore store = const TestDataStore();
@@ -170,10 +85,38 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
-  final MutableContinuousProgress<User> user;
+  final MutableContinuousProgress<AuthenticatedUser> user;
+
+  @override
+  AuthenticatedUser get currentUser => null;
 
   @override
   final MutableContinuousProgress<Calendar> calendar;
+
+  @override
+  Seamail get seamail => _seamail;
+  final TestSeamail _seamail = new TestSeamail();
+
+  @override
+  void updateSeamail() { }
+
+  @override
+  Progress<SeamailThread> newSeamail(Set<User> users, String subject, String message) => null;
+
+  @override
+  Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) {
+    return callback();
+  }
+
+  @override
+  void heardAboutUserPhoto(String username, DateTime lastUpdate) {
+  }
+
+  @override
+  Widget avatarFor(User user, { double size: 40.0 }) => null;
+
+  @override
+  Progress<List<User>> getUserList(String searchTerm) => null;
 
   @override
   void dispose() {
@@ -181,4 +124,44 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     calendar.dispose();
     super.dispose();
   }
+}
+
+class TestSeamail implements Seamail {
+  TestSeamail();
+
+  @override
+  bool get active => hasListeners;
+
+  @override
+  Future<void> get untilActive => new Completer<void>().future;
+
+  @override
+  bool get hasListeners => null;
+  
+  @override
+  void addListener(VoidCallback listener) { }
+
+  @override
+  void removeListener(VoidCallback listener) { }
+
+  @override
+  void notifyListeners() { }
+
+  @override
+  void dispose() { }
+
+  @override
+  SeamailThread operator[](int index) => null;
+
+  @override
+  int get length => 0;
+
+  @override
+  SeamailThread threadById(String id) => null;
+
+  @override
+  DateTime get lastUpdate => null;
+
+  @override
+  void update(DateTime timestamp, SeamailUpdateCallback updateCallback) { }
 }

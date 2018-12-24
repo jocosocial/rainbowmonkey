@@ -30,8 +30,8 @@ void main() {
     expect(c.key, 'C');
     expect(c.loginTimestamp, DateTime(2001));
   });
-  testWidgets('User model', (WidgetTester tester) async {
-    const User a = User(
+  testWidgets('AuthenticatedUser model', (WidgetTester tester) async {
+    const AuthenticatedUser a = AuthenticatedUser(
       username: 'u',
       email: 'e',
     );
@@ -39,53 +39,53 @@ void main() {
     expect(a.email, 'e');
     expect(a.credentials, isNull);
   });
-  testWidgets('User.isValidUsername', (WidgetTester tester) async {
-    expect(User.isValidUsername(''), isFalse);
-    expect(User.isValidUsername('fo'), isFalse);
-    expect(User.isValidUsername('foo'), isTrue);
-    expect(User.isValidUsername(' foo'), isFalse);
-    expect(User.isValidUsername('foo '), isFalse);
-    expect(User.isValidUsername('f&o-o'), isTrue);
-    expect(User.isValidUsername('f+o=o'), isFalse);
+  testWidgets('AuthenticatedUser.isValidUsername', (WidgetTester tester) async {
+    expect(AuthenticatedUser.isValidUsername(''), isFalse);
+    expect(AuthenticatedUser.isValidUsername('fo'), isFalse);
+    expect(AuthenticatedUser.isValidUsername('foo'), isTrue);
+    expect(AuthenticatedUser.isValidUsername(' foo'), isFalse);
+    expect(AuthenticatedUser.isValidUsername('foo '), isFalse);
+    expect(AuthenticatedUser.isValidUsername('f&o-o'), isTrue);
+    expect(AuthenticatedUser.isValidUsername('f+o=o'), isFalse);
   });
-  testWidgets('User.isValidPassword', (WidgetTester tester) async {
-    expect(User.isValidPassword(''), isFalse);
-    expect(User.isValidPassword('fo'), isFalse);
-    expect(User.isValidPassword('foo'), isFalse);
-    expect(User.isValidPassword(' foo'), isFalse);
-    expect(User.isValidPassword('foo '), isFalse);
-    expect(User.isValidPassword('f&o-o'), isFalse);
-    expect(User.isValidPassword('      '), isTrue);
+  testWidgets('AuthenticatedUser.isValidPassword', (WidgetTester tester) async {
+    expect(AuthenticatedUser.isValidPassword(''), isFalse);
+    expect(AuthenticatedUser.isValidPassword('fo'), isFalse);
+    expect(AuthenticatedUser.isValidPassword('foo'), isFalse);
+    expect(AuthenticatedUser.isValidPassword(' foo'), isFalse);
+    expect(AuthenticatedUser.isValidPassword('foo '), isFalse);
+    expect(AuthenticatedUser.isValidPassword('f&o-o'), isFalse);
+    expect(AuthenticatedUser.isValidPassword('      '), isTrue);
   });
-  testWidgets('User.isValidDisplayName', (WidgetTester tester) async {
-    expect(User.isValidDisplayName(null), isTrue);
-    expect(User.isValidDisplayName(''), isFalse);
-    expect(User.isValidDisplayName('fo'), isFalse);
-    expect(User.isValidDisplayName('foo'), isTrue);
-    expect(User.isValidDisplayName(' foo'), isTrue);
-    expect(User.isValidDisplayName('foo '), isTrue);
-    expect(User.isValidDisplayName('f&o-o'), isTrue);
-    expect(User.isValidDisplayName('f+o=o'), isFalse);
-    expect(User.isValidDisplayName('x' * 40), isTrue);
-    expect(User.isValidDisplayName('x' * 41), isFalse);
+  testWidgets('AuthenticatedUser.isValidDisplayName', (WidgetTester tester) async {
+    expect(AuthenticatedUser.isValidDisplayName(null), isTrue);
+    expect(AuthenticatedUser.isValidDisplayName(''), isFalse);
+    expect(AuthenticatedUser.isValidDisplayName('fo'), isFalse);
+    expect(AuthenticatedUser.isValidDisplayName('foo'), isTrue);
+    expect(AuthenticatedUser.isValidDisplayName(' foo'), isTrue);
+    expect(AuthenticatedUser.isValidDisplayName('foo '), isTrue);
+    expect(AuthenticatedUser.isValidDisplayName('f&o-o'), isTrue);
+    expect(AuthenticatedUser.isValidDisplayName('f+o=o'), isFalse);
+    expect(AuthenticatedUser.isValidDisplayName('x' * 40), isTrue);
+    expect(AuthenticatedUser.isValidDisplayName('x' * 41), isFalse);
   });
-  testWidgets('User.isValidEmail', (WidgetTester tester) async {
-    expect(User.isValidEmail(''), isFalse);
-    expect(User.isValidEmail('test@example.com'), isTrue);
-    expect(User.isValidEmail('test+foo@bar.example.test'), isTrue);
-    expect(User.isValidEmail(' test@example.com'), isFalse);
-    expect(User.isValidEmail('test@example.com '), isFalse);
-    expect(User.isValidEmail('test%example.com'), isFalse);
-    expect(User.isValidEmail('test@invalid'), isFalse);
-    expect(User.isValidEmail('test @example.com'), isFalse);
-    expect(User.isValidEmail('test@ example.com'), isFalse);
+  testWidgets('AuthenticatedUser.isValidEmail', (WidgetTester tester) async {
+    expect(AuthenticatedUser.isValidEmail(''), isFalse);
+    expect(AuthenticatedUser.isValidEmail('test@example.com'), isTrue);
+    expect(AuthenticatedUser.isValidEmail('test+foo@bar.example.test'), isTrue);
+    expect(AuthenticatedUser.isValidEmail(' test@example.com'), isFalse);
+    expect(AuthenticatedUser.isValidEmail('test@example.com '), isFalse);
+    expect(AuthenticatedUser.isValidEmail('test%example.com'), isFalse);
+    expect(AuthenticatedUser.isValidEmail('test@invalid'), isFalse);
+    expect(AuthenticatedUser.isValidEmail('test @example.com'), isFalse);
+    expect(AuthenticatedUser.isValidEmail('test@ example.com'), isFalse);
   });
-  testWidgets('User.isValidSecurityQuestion', (WidgetTester tester) async {
-    expect(User.isValidSecurityQuestion(''), isFalse);
-    expect(User.isValidSecurityQuestion('a'), isTrue);
+  testWidgets('AuthenticatedUser.isValidSecurityQuestion', (WidgetTester tester) async {
+    expect(AuthenticatedUser.isValidSecurityQuestion(''), isFalse);
+    expect(AuthenticatedUser.isValidSecurityQuestion('a'), isTrue);
   });
-  testWidgets('User.isValidSecurityAnswer', (WidgetTester tester) async {
-    expect(User.isValidSecurityAnswer(''), isFalse);
-    expect(User.isValidSecurityAnswer('a'), isTrue);
+  testWidgets('AuthenticatedUser.isValidSecurityAnswer', (WidgetTester tester) async {
+    expect(AuthenticatedUser.isValidSecurityAnswer(''), isFalse);
+    expect(AuthenticatedUser.isValidSecurityAnswer('a'), isTrue);
   });
 }
