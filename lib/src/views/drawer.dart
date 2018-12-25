@@ -66,6 +66,17 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
   static final Key _userHeader = new UniqueKey();
   static final Key _idleHeader = new UniqueKey();
 
+  void _addItem(List<Widget> tiles, { @required bool condition, @required Widget child, Widget alternative }) {
+    tiles.add(AnimatedCrossFade(
+      duration: animationDuration,
+      firstCurve: animationCurve,
+      secondCurve: animationCurve,
+      firstChild: child,
+      secondChild: alternative ?? const SizedBox.shrink(),
+      crossFadeState: condition ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final ProgressValue<AuthenticatedUser> _bestUserValue = this._bestUserValue; // https://github.com/dart-lang/sdk/issues/34480
@@ -131,12 +142,30 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
       switchOutCurve: animationCurve,
     ));
 
-    tiles.add(AnimatedCrossFade(
-      duration: animationDuration,
-      firstCurve: animationCurve,
-      secondCurve: animationCurve,
-      firstChild: const SizedBox.shrink(),
-      secondChild: new ListTile(
+    _addItem(
+      tiles,
+      condition: loggedIn,
+      child: new ListTile(
+        leading: const Icon(Icons.clear),
+        title: const Text('Log out'),
+        onTap: loggedIn ? () { Cruise.of(context).logout(); } : null,
+      ),
+      alternative: new ListTile(
+        leading: const Icon(Icons.account_circle),
+        title: const Text('Log in'),
+        onTap: loggedIn ? null : () {
+          showDialog<void>(
+            context: context,
+            builder: (BuildContext context) => const LoginDialog(),
+          );
+        }
+      ),
+    );
+
+    _addItem(
+      tiles,
+      condition: !loggedIn,
+      child: new ListTile(
         leading: const Icon(Icons.person_add),
         title: const Text('Create account'),
         onTap: loggedIn ? null : () {
@@ -147,48 +176,37 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
           );
         },
       ),
-      crossFadeState: loggedIn ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-    ));
-    tiles.add(AnimatedCrossFade(
-      duration: animationDuration,
-      firstCurve: animationCurve,
-      secondCurve: animationCurve,
-      firstChild: const SizedBox.shrink(),
-      secondChild: new ListTile(
-        leading: const Icon(Icons.account_circle),
-        title: const Text('Log in'),
-        onTap: loggedIn ? null : () {
-          showDialog<void>(
-            context: context,
-            builder: (BuildContext context) => const LoginDialog(),
-          );
-        }
-      ),
-      crossFadeState: loggedIn ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-    ));
+    );
 
-    tiles.add(AnimatedCrossFade(
-      duration: animationDuration,
-      firstCurve: animationCurve,
-      secondCurve: animationCurve,
-      firstChild: new ListTile(
-        leading: const Icon(Icons.clear),
-        title: const Text('Log out'),
-        onTap: loggedIn ? () { Cruise.of(context).logout(); } : null,
+    _addItem(
+      tiles,
+      condition: loggedIn,
+      child: new ListTile(
+        leading: const Icon(Icons.person),
+        title: const Text('Edit Profile'),
+        onTap: loggedIn ? () {
+          Navigator.pop(context); // drawer
+          Navigator.pushNamed(context, '/profile');
+        } : null,
       ),
-      secondChild: const SizedBox.shrink(),
-      crossFadeState: loggedIn ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-    ));
+    );
 
     tiles.add(const Divider());
-    tiles.add(ListTile(
-      leading: const Icon(Icons.settings),
-      title: const Text('Settings'),
-      onTap: () {
-        Navigator.pop(context); // drawer
-        Navigator.pushNamed(context, '/settings');
-      },
-    ));
+
+    assert(() {
+      // Settings screen only shows up in debug builds,
+      // because it's really just debug settings.
+      tiles.add(ListTile(
+        leading: const Icon(Icons.settings),
+        title: const Text('Settings'),
+        onTap: () {
+          Navigator.pop(context); // drawer
+          Navigator.pushNamed(context, '/settings');
+        },
+      ));
+      return true;
+    }());
+
     tiles.add(const AboutListTile(
       aboutBoxChildren: const <Widget>[
         const Text('A project of the Seamonkey Social group.'),

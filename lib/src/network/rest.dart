@@ -88,10 +88,10 @@ class RestTwitarr implements Twitarr {
     return new Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
       final String result = await completer.chain<String>(
         _requestUtf8(
-          'POST', 
-          'api/v2/user/new', 
-          body: utf8.encode(body), 
-          contentType: new ContentType('application', 'json')
+          'POST',
+          'api/v2/user/new',
+          body: utf8.encode(body),
+          contentType: new ContentType('application', 'json', charset: 'utf-8'),
         )
       );
       final dynamic data = Json.parse(result);
@@ -170,18 +170,17 @@ class RestTwitarr implements Twitarr {
       username: user.username.toString(),
       email: user.email.toString(),
       displayName: user.display_name.toString(),
-      // other available fields:
-      //  - is_admin
-      //  - status ("active")
-      //  - email_public
-      //  - vcard_public
-      //  - current_location
-      //  - last_login
-      //  - empty_password
-      //  - room_number
-      //  - real_name
-      //  - home_location
-      //  - unnoticed_alerts
+      currentLocation: user.current_location.toString(),
+      roomNumber: user.room_number.toString(),
+      realName: user.real_name.toString(),
+      homeLocation: user.home_location.toString(),
+      // isvCardPublic: user['vcard_public?'].toBoolean(),
+      // isEmailPublic: user['email_public?'].toBoolean(),
+      // isAdmin: user.isAdmin.toBoolean(),
+      // status: user.status.toString(),
+      // lastLogin: user.last_login.toString(), // TODO(ianh): parse to DateTime
+      // emptyPassword: user['empty_password?'].toBoolean(),
+      // unnoticedAlerts: user.unnoticed_alerts.toBoolean(),
       credentials: credentials,
     );
   }
@@ -202,7 +201,7 @@ class RestTwitarr implements Twitarr {
     final dynamic data = Json.parse(rawEventData);
     final dynamic values = data.event.asIterable().single;
     if (values.status != 'ok')
-      throw const FormatException('status invalid');
+      throw FormatException('status "${values.status}" is not ok');
     if (values.total_count != (values.events.asIterable() as Iterable<dynamic>).length)
       throw const FormatException('total_count invalid');
     return new Calendar(events: (values.events.asIterable() as Iterable<dynamic>).map<Event>((dynamic value) {
@@ -370,6 +369,65 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<void> updateProfile({
+    @required Credentials credentials,
+    String currentLocation,
+    String displayName,
+    String email,
+    bool emailPublic,
+    String homeLocation,
+    String realName,
+    String roomNumber,
+    bool vcardPublic,
+  }) {
+    assert(credentials != null);
+    final FormData body = new FormData()
+      ..add('key', credentials.key);
+    if (currentLocation != null) {
+      body.add('current_location', currentLocation);
+    }
+    if (displayName != null) {
+      assert(AuthenticatedUser.isValidDisplayName(displayName));
+      body.add('display_name', displayName);
+    }
+    if (email != null) {
+      assert(AuthenticatedUser.isValidEmail(email));
+      body.add('email', email);
+    }
+    if (emailPublic != null) {
+      body.add('email_public?', emailPublic ? 'true' : 'false');
+    }
+    if (homeLocation != null) {
+      body.add('home_location', homeLocation);
+    }
+    if (realName != null) {
+      body.add('real_name', realName);
+    }
+    if (roomNumber != null) {
+      body.add('room_number', roomNumber);
+    }
+    if (vcardPublic != null) {
+      body.add('vcard_public?', vcardPublic ? 'true' : 'false');
+    }
+    return new Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
+      final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/profile?${body.toUrlEncoded()}'));
+      final dynamic data = Json.parse(result);
+      _checkForCommonServerErrors(data, desiredStatus: 'Updated');
+    });
+  }
+
+  @override
+  Progress<void> updatePassword({
+    @required Credentials credentials,
+    @required String oldPassword,
+    @required String newPassword,
+  }) {
+    assert(credentials != null);
+    assert(AuthenticatedUser.isValidPassword(newPassword));
+    return null;
+  }
+
+  @override
   Progress<List<User>> getUserList(String searchTerm) {
     return new Progress<List<User>>((ProgressController<List<User>> completer) async {
       final FormData body = new FormData()
@@ -449,8 +507,8 @@ class RestTwitarr implements Twitarr {
     if (body != null) {
       if (contentType != null)
         request.headers.contentType = contentType;
-      
-      // TODO: Once puma fixes chunked requests, remove the chunkedTransferEncoding and contentLength headers - https://github.com/puma/puma/issues/1492 
+
+      // TODO(ianh): Remove the next two lines once Puma can handle chunked encoding, https://github.com/puma/puma/issues/1492
       request.headers.chunkedTransferEncoding = false;
       request.headers.contentLength = body.length;
 
@@ -466,13 +524,13 @@ class RestTwitarr implements Twitarr {
     return response;
   }
 
-  void _checkForCommonServerErrors(dynamic data) {
+  void _checkForCommonServerErrors(dynamic data, { String desiredStatus = 'ok' }) {
     if (data['errors'] != null)
       throw new ServerError(data.errors.asIterable().map<String>((Json value) => value.toString()).toList() as List<String>);
     if (data.status == 'key not valid')
       throw const ServerError(<String>['An authentication error occurred: the key the server provided is being refused for some reason. Try logging out and logging back in.']);
-    if (data.status != 'ok')
-      throw const FormatException('status invalid');
+    if (data.status != desiredStatus)
+      throw FormatException('status "${data.status}" is not "$desiredStatus"');
   }
 
   @override

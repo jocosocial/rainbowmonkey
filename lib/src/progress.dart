@@ -165,8 +165,13 @@ class _Progress<T> extends _LazyValueNotifier<ProgressValue<T>> implements Progr
     return valueListenableToFutureAdapter<ProgressValue<T>>(this, (ProgressValue<T> value) {
       if (value is SuccessfulProgress<T>)
         return true;
-      if (value is FailedProgress)
-        throw value.error;
+      if (value is FailedProgress) {
+        assert(() {
+          print('Lost this stack trace:\n${value.error}\n${value.stackTrace}');
+          return true;
+        }());
+        throw value.error; // TODO(ianh): throw with stack trace once https://github.com/dart-lang/sdk/issues/35494 is fixed
+      }
       return false;
     }).then<T>((ProgressValue<T> value) {
       assert(value is SuccessfulProgress<T>);
@@ -197,6 +202,7 @@ class ProgressController<T> {
   }
 
   Future<R> chain<R>(Progress<R> subprogress, { int steps = 1 }) async {
+    assert(subprogress != null);
     assert(steps != null);
     double startingStep = 0.0;
     final ProgressValue<T> currentProgress = _progress.value;
@@ -275,6 +281,13 @@ abstract class ContinuousProgress<T> implements Listenable {
 
   Progress<T> get best => _best;
   _Progress<T> _best;
+
+  T get currentValue {
+    final ProgressValue<T> currentProgress = best.value;
+    if (currentProgress is SuccessfulProgress<T>)
+      return currentProgress.value;
+    return null;
+  }
 
   void _handleAdd() {}
   void _handleRemove() {}
