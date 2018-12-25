@@ -429,6 +429,8 @@ class RestTwitarr implements Twitarr {
     if (body != null) {
       if (contentType != null)
         request.headers.contentType = contentType;
+
+      request.headers.contentLength = body.length;
       request.add(body);
     }
     final HttpClientResponse response = await request.close();
