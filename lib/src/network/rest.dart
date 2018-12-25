@@ -181,7 +181,7 @@ class RestTwitarr implements Twitarr {
       // lastLogin: user.last_login.toString(), // TODO(ianh): parse to DateTime
       // emptyPassword: user['empty_password?'].toBoolean(),
       // unnoticedAlerts: user.unnoticed_alerts.toBoolean(),
-      credentials: credentials,
+      credentials: credentials.copyWith(username: user.username.toString()),
     );
   }
 
@@ -417,6 +417,43 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<void> uploadAvatar({
+    @required Credentials credentials,
+    @required Uint8List bytes,
+    @required PhotoManager photoManager,
+  }) {
+    assert(credentials != null);
+    final FormData body = new FormData()
+      ..add('key', credentials.key)
+      ..addFile('file', 'avatar.jpeg', bytes, ContentType('image', 'jpeg'));
+    final MultipartFormData encoded = body.toMultipartEncoded();
+    return new Progress<void>((ProgressController<void> completer) async {
+      final String result = await completer.chain<String>(_requestUtf8(
+        'POST', 'api/v2/user/photo',
+        bodyParts: encoded.body,
+        contentType: encoded.contentType,
+      ));
+      final dynamic data = Json.parse(result);
+      _checkForCommonServerErrors(data, statusIsHumanReadable: true);
+    });
+  }
+
+  @override
+  Progress<void> resetAvatar({
+    @required Credentials credentials,
+    @required PhotoManager photoManager
+  }) {
+    assert(credentials != null);
+    final FormData body = new FormData()
+      ..add('key', credentials.key);
+    return new Progress<void>((ProgressController<void> completer) async {
+      final String result = await completer.chain<String>(_requestUtf8('DELETE', 'api/v2/user/photo?${body.toUrlEncoded()}'));
+      final dynamic data = Json.parse(result);
+      _checkForCommonServerErrors(data);
+    });
+  }
+
+  @override
   Progress<void> updatePassword({
     @required Credentials credentials,
     @required String oldPassword,
@@ -453,9 +490,9 @@ class RestTwitarr implements Twitarr {
     }).toList();
   }
 
-  Progress<String> _requestUtf8(String method, String path, { List<int> body, ContentType contentType }) {
+  Progress<String> _requestUtf8(String method, String path, { List<int> body, List<Uint8List> bodyParts, ContentType contentType }) {
     return new Progress<String>((ProgressController<String> completer) async {
-      final HttpClientResponse response = await _requestInternal<String>(completer, method, path, body, contentType);
+      final HttpClientResponse response = await _requestInternal<String>(completer, method, path, body, bodyParts, contentType);
       int count = 0;
       return await response
         .map((List<int> bytes) {
@@ -470,9 +507,9 @@ class RestTwitarr implements Twitarr {
     });
   }
 
-  Progress<Uint8List> _requestBytes(String method, String path, { List<int> body, ContentType contentType }) {
+  Progress<Uint8List> _requestBytes(String method, String path, { List<int> body, List<Uint8List> bodyParts, ContentType contentType }) {
     return new Progress<Uint8List>((ProgressController<Uint8List> completer) async {
-      final HttpClientResponse response = await _requestInternal<Uint8List>(completer, method, path, body, contentType);
+      final HttpClientResponse response = await _requestInternal<Uint8List>(completer, method, path, body, bodyParts, contentType);
       int count = 0;
       final List<List<int>> chunks = <List<int>>[];
       await response.forEach((List<int> chunk) {
@@ -493,24 +530,29 @@ class RestTwitarr implements Twitarr {
 
   final math.Random _random = math.Random();
 
-  Future<HttpClientResponse> _requestInternal<T>(ProgressController<T> completer, String method, String path, List<int> body, ContentType contentType) async {
-    assert(body != null || contentType == null);
+  Future<HttpClientResponse> _requestInternal<T>(ProgressController<T> completer, String method, String path, List<int> body, List<Uint8List> bodyParts, ContentType contentType) async {
+    assert(contentType != null || (body == null && bodyParts == null));
+    assert(body == null || bodyParts == null);
     final Uri url = _parsedBaseUrl.resolve(path);
+    final int length = body != null ? body.length
+                     : bodyParts != null ? bodyParts.fold(0, (int length, Uint8List part) => length + part.length)
+                     : null;
     assert(() {
-      debugPrint('>>> $method $url (body length: ${body?.length})');
+      debugPrint('>>> $method $url (body length: $length)');
       return true;
     }());
     await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
     final HttpClientRequest request = await _client.openUrl(method, url);
-    if (body != null) {
-      if (contentType != null)
-        request.headers.contentType = contentType;
-
-      // TODO(ianh): Remove the next two lines once Puma can handle chunked encoding, https://github.com/puma/puma/issues/1492
+    if (contentType != null)
+      request.headers.contentType = contentType;
+    if (length != null) {
+      // Beware: Puma (used by server) can't handle chunked encoding; see: https://github.com/puma/puma/issues/1492
       request.headers.chunkedTransferEncoding = false;
-      request.headers.contentLength = body.length;
-
-      request.add(body);
+      request.headers.contentLength = length;
+      if (body != null)
+        request.add(body);
+      if (bodyParts != null)
+        bodyParts.forEach(request.add);
     }
     final HttpClientResponse response = await request.close();
     if (response.statusCode != 200)
@@ -522,13 +564,16 @@ class RestTwitarr implements Twitarr {
     return response;
   }
 
-  void _checkForCommonServerErrors(dynamic data, { String desiredStatus = 'ok' }) {
+  void _checkForCommonServerErrors(dynamic data, { String desiredStatus = 'ok', bool statusIsHumanReadable = false }) {
     if (data['errors'] != null)
       throw new ServerError(data.errors.asIterable().map<String>((Json value) => value.toString()).toList() as List<String>);
     if (data.status == 'key not valid')
       throw const ServerError(<String>['An authentication error occurred: the key the server provided is being refused for some reason. Try logging out and logging back in.']);
-    if (data.status != desiredStatus)
+    if (data.status != desiredStatus) {
+      if (statusIsHumanReadable)
+        throw ServerError(<String>[data.status.toString()]);
       throw FormatException('status "${data.status}" is not "$desiredStatus"');
+    }
   }
 
   @override

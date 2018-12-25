@@ -167,7 +167,7 @@ class _Progress<T> extends _LazyValueNotifier<ProgressValue<T>> implements Progr
         return true;
       if (value is FailedProgress) {
         assert(() {
-          print('Lost this stack trace:\n${value.error}\n${value.stackTrace}');
+          debugPrint('Lost this stack trace:\n${value.error}\n${value.stackTrace}');
           return true;
         }());
         throw value.error; // TODO(ianh): throw with stack trace once https://github.com/dart-lang/sdk/issues/35494 is fixed

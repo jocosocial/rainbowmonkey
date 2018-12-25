@@ -116,6 +116,14 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
+  void addListenerForPhoto(String username, VoidCallback listener) {
+  }
+
+  @override
+  void removeListenerForPhoto(String username, VoidCallback listener) {
+  }
+
+  @override
   Widget avatarFor(User user, { double size: 40.0 }) => null;
 
   @override
@@ -129,6 +137,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     String roomNumber,
     bool vcardPublic,
   }) => null;
+
+  @override
+  Progress<void> uploadAvatar({ Uint8List image }) => null;
 
   @override
   Progress<void> updatePassword({

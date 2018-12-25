@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/user.dart';
 import '../network/twitarr.dart';
@@ -28,31 +32,7 @@ class Profile extends StatelessWidget {
               SliverList(
                 delegate: SliverChildListDelegate(
                   <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Stack(
-                        children: <Widget>[
-                          Center(
-                            child: SizedBox(
-                              height: 120.0,
-                              width: 120.0,
-                              child: Cruise.of(context).avatarFor(user),
-                            ),
-                          ),
-                          PositionedDirectional(
-                            end: 0.0,
-                            bottom: 0.0,
-                            child: IconButton(
-                              icon: const Icon(Icons.edit),
-                              tooltip: 'Select new image for avatar.',
-                              onPressed: () {
-                                // TODO(ianh): allow image to be changed.
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    AvatarEditor(user: user),
                     ProfileField(
                       title: 'Display name',
                       value: user.displayName,
@@ -124,6 +104,115 @@ class Profile extends StatelessWidget {
   }
 }
 
+class AvatarEditor extends StatefulWidget {
+  const AvatarEditor({
+    Key key,
+    this.user,
+  }) : super(key: key);
+
+  final AuthenticatedUser user;
+
+  @override
+  State<AvatarEditor> createState() => _AvatarEditorState();
+}
+
+class _AvatarEditorState extends State<AvatarEditor> {
+  bool _busy = false;
+  String _error = '';
+
+  void _updateImage(ImageSource source) async {
+    assert(!_busy);
+    try {
+      setState(() { _busy = true; _error = ''; });
+      final File file = await ImagePicker.pickImage(source: source);
+      if (file != null) {
+        final Uint8List bytes = await file.readAsBytes();
+        try {
+          await Cruise.of(context).uploadAvatar(image: bytes).asFuture();
+        } on UserFriendlyError catch (error) {
+          if (mounted)
+            setState(() { _error = error.toString(); });
+        }
+      }
+    } finally {
+      if (mounted)
+        setState(() { _busy = false; });
+    }
+  }
+
+  void _deleteImage() async {
+    assert(!_busy);
+    try {
+      setState(() { _busy = true; _error = ''; });
+      try {
+        await Cruise.of(context).uploadAvatar().asFuture();
+      } on UserFriendlyError catch (error) {
+        if (mounted)
+          setState(() { _error = error.toString(); });
+      }
+    } finally {
+      if (mounted)
+        setState(() { _busy = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData themeData = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: <Widget>[
+          Stack(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Center(
+                  child: SizedBox(
+                    height: 160.0,
+                    width: 160.0,
+                    child: Cruise.of(context).avatarFor(widget.user),
+                  ),
+                ),
+              ),
+              PositionedDirectional(
+                end: 0.0,
+                bottom: 0.0,
+                child: Column(
+                  children: <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.camera_alt),
+                      tooltip: 'Take photograph to use as new avatar.',
+                      onPressed: _busy ? null : () { _updateImage(ImageSource.camera); },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.image),
+                      tooltip: 'Select new image for avatar from gallery.',
+                      onPressed: _busy ? null : () { _updateImage(ImageSource.gallery); },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      tooltip: 'Revert to the default image.',
+                      onPressed: _busy ? null : _deleteImage,
+                    ),
+                  ],
+                ),
+              ),
+              Visibility(
+                visible: _busy,
+                child: const Center(
+                  child: const CircularProgressIndicator(),
+                ),
+              ),
+            ],
+          ),
+          Text(_error, style: themeData.textTheme.subhead.copyWith(color: themeData.errorColor), textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
 typedef ProgressValueSetter<T> = Progress<void> Function(T value);
 
 class ProfileField extends StatefulWidget {
@@ -161,9 +250,11 @@ class _ProfileFieldState extends State<ProfileField> {
       _progress = widget.onUpdate(value);
       await _progress.asFuture();
     } on UserFriendlyError catch (message) {
-      setState(() { _error = message.toString(); });
+      if (mounted)
+        setState(() { _error = message.toString(); });
     }
-    setState(() { _updating = false; });
+    if (mounted)
+      setState(() { _updating = false; });
   }
 
   @override

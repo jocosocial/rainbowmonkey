@@ -133,6 +133,15 @@ abstract class Twitarr {
     bool vcardPublic,
   });
 
+  Progress<void> uploadAvatar({
+    @required Credentials credentials,
+    @required Uint8List bytes,
+  });
+
+  Progress<void> resetAvatar({
+    @required Credentials credentials,
+  });
+
   Progress<void> updatePassword({
     @required Credentials credentials,
     @required String oldPassword,

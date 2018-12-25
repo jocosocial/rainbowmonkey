@@ -109,7 +109,13 @@ class NullCruiseModel implements CruiseModel {
   Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) => null;
 
   @override
-  void heardAboutUserPhoto(String username, DateTime lastUpdate) => null;
+  void heardAboutUserPhoto(String username, DateTime lastUpdate) { }
+
+  @override
+  void addListenerForPhoto(String username, VoidCallback listener) { }
+
+  @override
+  void removeListenerForPhoto(String username, VoidCallback listener) { }
 
   @override
   Widget avatarFor(User user, { double size: 40.0 }) => null;
@@ -125,6 +131,9 @@ class NullCruiseModel implements CruiseModel {
     String roomNumber,
     bool vcardPublic,
   }) => null;
+
+  @override
+  Progress<void> uploadAvatar({ Uint8List image }) => null;
 
   @override
   Progress<void> updatePassword({
