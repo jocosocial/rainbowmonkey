@@ -148,4 +148,9 @@ class AuthenticatedUser extends User {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L51
     return answer.isNotEmpty;
   }
+
+  static bool isValidRoomNumber(String roomNumber) {
+    assert(roomNumber != null);
+    return roomNumber.contains(new RegExp(r'^[0-9]+$'));
+  }
 }

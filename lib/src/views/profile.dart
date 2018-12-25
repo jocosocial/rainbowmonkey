@@ -28,12 +28,88 @@ class Profile extends StatelessWidget {
               SliverList(
                 delegate: SliverChildListDelegate(
                   <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Stack(
+                        children: <Widget>[
+                          Center(
+                            child: SizedBox(
+                              height: 120.0,
+                              width: 120.0,
+                              child: Cruise.of(context).avatarFor(user),
+                            ),
+                          ),
+                          PositionedDirectional(
+                            end: 0.0,
+                            bottom: 0.0,
+                            child: IconButton(
+                              icon: const Icon(Icons.edit),
+                              tooltip: 'Select new image for avatar.',
+                              onPressed: () {
+                                // TODO(ianh): allow image to be changed.
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ProfileField(
+                      title: 'Display name',
+                      value: user.displayName,
+                      onUpdate: (String value) {
+                        if (!AuthenticatedUser.isValidDisplayName(value))
+                          throw const LocalError('Your display name must be at least three characters long but shorter than 40 characters, and may only consist of letters and some minimal punctuation.');
+                        return Cruise.of(context).updateProfile(
+                          displayName: value,
+                        );
+                      },
+                    ),
+                    ProfileField(
+                      title: 'Real name',
+                      value: user.realName,
+                      onUpdate: (String value) {
+                        return Cruise.of(context).updateProfile(
+                          realName: value,
+                        );
+                      },
+                    ),
+                    ProfileField(
+                      title: 'E-mail address',
+                      value: user.email,
+                      onUpdate: (String value) {
+                        if (!AuthenticatedUser.isValidEmail(value))
+                          throw const LocalError('E-mail is not valid.');
+                        return Cruise.of(context).updateProfile(
+                          email: value,
+                        );
+                      },
+                    ),
                     ProfileField(
                       title: 'Current location',
                       value: user.currentLocation,
                       onUpdate: (String value) {
                         return Cruise.of(context).updateProfile(
                           currentLocation: value,
+                        );
+                      },
+                    ),
+                    ProfileField(
+                      title: 'Room number',
+                      value: user.roomNumber,
+                      onUpdate: (String value) {
+                        if (!AuthenticatedUser.isValidRoomNumber(value))
+                          throw const LocalError('Room number must be numeric.');
+                        return Cruise.of(context).updateProfile(
+                          roomNumber: value,
+                        );
+                      },
+                    ),
+                    ProfileField(
+                      title: 'Home location',
+                      value: user.homeLocation,
+                      onUpdate: (String value) {
+                        return Cruise.of(context).updateProfile(
+                          homeLocation: value,
                         );
                       },
                     ),
@@ -91,6 +167,12 @@ class _ProfileFieldState extends State<ProfileField> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _field.text = widget.value;
+  }
+
+  @override
   void didUpdateWidget(ProfileField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value && !_focusNode.hasFocus && !_updating)
@@ -101,22 +183,28 @@ class _ProfileFieldState extends State<ProfileField> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: SizedBox(
-        height: 96.0,
-        child: new Align(
-          alignment: AlignmentDirectional.topStart,
-          child: TextField(
+      child: Stack(
+        children: <Widget>[
+          TextField(
             controller: _field,
             focusNode: _focusNode,
             enabled: !_updating,
             decoration: InputDecoration(
               labelText: widget.title,
               errorText: _error,
-              suffix: _updating ? const CircularProgressIndicator() : null,
+              errorMaxLines: 5,
             ),
             onSubmitted: _update,
           ),
-        ),
+          Visibility(
+            visible: _updating,
+            child: const Positioned.fill(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
