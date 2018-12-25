@@ -22,12 +22,12 @@ Future<void> main() async {
       ),
     );
     expect(model.twitarrConfiguration, null);
-    await tester.tap(find.text('prosedev.com test server'));
+    await tester.tap(find.text('gbasden\'s server'));
     await tester.pump();
-    expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://drang.prosedev.com:3000/api/v2/'));
-    await tester.tap(find.text('example.com'));
+    expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'));
+    await tester.tap(find.text('hendusoone\'s server'));
     await tester.pump();
-    expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://example.com/'));
+    expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'));
   });
 }
 

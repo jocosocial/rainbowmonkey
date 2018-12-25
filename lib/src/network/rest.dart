@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -49,6 +50,12 @@ class RestTwitarr implements Twitarr {
   @override
   TwitarrConfiguration get configuration => RestTwitarrConfiguration(baseUrl: baseUrl);
 
+  @override
+  double debugLatency = 0.0;
+
+  @override
+  double debugReliability = 1.0;
+
   HttpClient _client;
   Uri _parsedBaseUrl;
 
@@ -82,11 +89,10 @@ class RestTwitarr implements Twitarr {
       final dynamic data = Json.parse(result);
       _checkForCommonServerErrors(data);
       final String key = data.key.toString();
-      return new AuthenticatedUser(
-        username: username,
-        // TODO(ianh): do something with the data.user field
-        credentials: new Credentials(
-          username: username,
+      return _createAuthenticatedUser(
+        data.user,
+        new Credentials(
+          username: data.user.username.toString(),
           password: password,
           key: key,
         ),
@@ -140,32 +146,36 @@ class RestTwitarr implements Twitarr {
     return new Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
       final FormData body = new FormData()
         ..add('key', credentials.key);
-      final String rawResult = await completer.chain<String>(_requestUtf8('GET', 'api/v2/user/whoami?${body.toUrlEncoded()}'));
+      final String rawResult = await completer.chain<String>(_requestUtf8('GET', 'api/v2/user/profile?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(rawResult);
       _checkForCommonServerErrors(data);
       photoManager.heardAboutUserPhoto(
         data.user.username.toString(),
         new DateTime.fromMicrosecondsSinceEpoch((data.user.last_photo_updated as Json).toInt()),
       );
-      return new AuthenticatedUser(
-        username: data.user.username.toString(),
-        email: data.user.email.toString(),
-        displayName: data.user.display_name.toString(),
-        // other available fields:
-        //  - is_admin
-        //  - status ("active")
-        //  - email_public
-        //  - vcard_public
-        //  - current_location
-        //  - last_login
-        //  - empty_password
-        //  - room_number
-        //  - real_name
-        //  - home_location
-        //  - unnoticed_alerts
-        credentials: credentials,
-      );
+      return _createAuthenticatedUser(data.user, credentials);
     });
+  }
+
+  AuthenticatedUser _createAuthenticatedUser(dynamic user, Credentials credentials) {
+    return new AuthenticatedUser(
+      username: user.username.toString(),
+      email: user.email.toString(),
+      displayName: user.display_name.toString(),
+      // other available fields:
+      //  - is_admin
+      //  - status ("active")
+      //  - email_public
+      //  - vcard_public
+      //  - current_location
+      //  - last_login
+      //  - empty_password
+      //  - room_number
+      //  - real_name
+      //  - home_location
+      //  - unnoticed_alerts
+      credentials: credentials,
+    );
   }
 
   @override
@@ -258,7 +268,7 @@ class RestTwitarr implements Twitarr {
           'POST',
           'api/v2/seamail?${body.toUrlEncoded()}',
           body: utf8.encode(jsonBody),
-          contentType: new ContentType('application', 'json'),
+          contentType: new ContentType('application', 'json', charset: 'utf-8'),
         ),
       );
       final dynamic data = Json.parse(result);
@@ -417,6 +427,8 @@ class RestTwitarr implements Twitarr {
     });
   }
 
+  final math.Random _random = math.Random();
+
   Future<HttpClientResponse> _requestInternal<T>(ProgressController<T> completer, String method, String path, List<int> body, ContentType contentType) async {
     assert(body != null || contentType == null);
     final Uri url = _parsedBaseUrl.resolve(path);
@@ -424,7 +436,7 @@ class RestTwitarr implements Twitarr {
       debugPrint('>>> $method $url (body length: ${body?.length})');
       return true;
     }());
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
     final HttpClientRequest request = await _client.openUrl(method, url);
     if (body != null) {
       if (contentType != null)
@@ -432,6 +444,10 @@ class RestTwitarr implements Twitarr {
       request.add(body);
     }
     final HttpClientResponse response = await request.close();
+    if (response.statusCode != 200)
+      throw new HttpServerError(response.statusCode, response.reasonPhrase, url);
+    if (_random.nextDouble() > debugReliability)
+      throw new HttpException('Network failure', uri: url);
     if (response.contentLength > 0)
       completer.advance(0.0, response.contentLength.toDouble());
     return response;

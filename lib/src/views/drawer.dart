@@ -107,6 +107,7 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
           key: _userHeader,
           accountName: new Text(user.toString()),
           accountEmail: new Text(user.email ?? ''),
+          currentAccountPicture: Cruise.of(context).avatarFor(user),
         );
         loggedIn = true;
       } else {

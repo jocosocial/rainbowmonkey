@@ -27,9 +27,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
        assert(store != null),
        assert(frequentPollInterval != null),
        assert(rarePollInterval != null) {
-    _twitarr = twitarrConfiguration.createTwitarr();
+    _setupTwitarr(twitarrConfiguration);
     _user = new PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
     _calendar = new PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
+    _seamail = new Seamail();
     _restoreCredentials();
   }
 
@@ -48,10 +49,39 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     final Twitarr oldTwitarr = _twitarr;
     final Progress<AuthenticatedUser> logoutProgress = oldTwitarr.logout();
     logoutProgress.asFuture().whenComplete(oldTwitarr.dispose);
+    _setupTwitarr(newConfiguration);
+    _reset();
+  }
+
+  void _setupTwitarr(TwitarrConfiguration configuration) {
+    _twitarr = configuration.createTwitarr();
+    _twitarr.debugLatency = _debugLatency;
+    _twitarr.debugReliability = _debugReliability;
+  }
+
+  double get debugLatency => _debugLatency;
+  double _debugLatency = 0.0;
+  set debugLatency(double value) {
+    _debugLatency = value;
+    _twitarr.debugLatency = value;
+    notifyListeners();
+  }
+
+  double get debugReliability => _debugReliability;
+  double _debugReliability = 1.0;
+  set debugReliability(double value) {
+    _debugReliability = value;
+    _twitarr.debugReliability = value;
+    notifyListeners();
+  }
+
+  void _reset() {
+    _cancelUpdateSeamail();
     _currentCredentials = null;
+    _pendingCredentials?.removeListener(_saveCredentials);
     _pendingCredentials = null;
+    _seamail = new Seamail();
     _user.reset();
-    _twitarr = newConfiguration.createTwitarr();
     notifyListeners();
   }
 
@@ -104,14 +134,12 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   Progress<Credentials> _updateCredentials(Progress<AuthenticatedUser> userProgress) {
-    _currentCredentials = null;
-    _user.reset();
+    _reset();
     _user.addProgress(userProgress);
     final Progress<Credentials> result = Progress.convert<AuthenticatedUser, Credentials>(
       userProgress,
       (AuthenticatedUser user) => user?.credentials,
     );
-    _pendingCredentials?.removeListener(_saveCredentials);
     _pendingCredentials = result;
     _pendingCredentials?.addListener(_saveCredentials);
     return result;
@@ -154,7 +182,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   Seamail get seamail => _seamail;
-  final Seamail _seamail = new Seamail();
+  Seamail _seamail;
   CancelationSignal _ongoingSeamailUpdate;
   Duration _seamailUpdateDelay = Duration.zero;
   bool _seamailUpdateScheduled = false;
@@ -162,8 +190,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   void updateSeamail() async {
     if (_seamailUpdateScheduled) {
       assert(_ongoingSeamailUpdate != null);
-      _ongoingSeamailUpdate.cancel();
-      _ongoingSeamailUpdate = null;
+      _cancelUpdateSeamail();
     } else if (_ongoingSeamailUpdate != null) {
       _seamailUpdateDelay = Duration.zero;
       return;
@@ -195,6 +222,12 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _ongoingSeamailUpdate = null;
     _seamailUpdateScheduled = false;
     updateSeamail(); // TAIL RECURSION
+  }
+
+  void _cancelUpdateSeamail() {
+    _ongoingSeamailUpdate?.cancel();
+    _ongoingSeamailUpdate = null;
+    _seamailUpdateScheduled = false;
   }
 
   Progress<SeamailThread> newSeamail(Set<User> users, String subject, String message) {
@@ -271,6 +304,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   void dispose() {
     _alive = false;
     _ongoingSeamailUpdate?.cancel();
+    _seamail.dispose();
+    _seamail = null;
     _pendingCredentials?.removeListener(_saveCredentials);
     _user.dispose();
     _calendar.dispose();

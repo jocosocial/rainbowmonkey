@@ -56,6 +56,12 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   TwitarrConfiguration get twitarrConfiguration => const TestTwitarrConfiguration();
 
   @override
+  double debugLatency = 0.0;
+
+  @override
+  double debugReliability = 1.0;
+
+  @override
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
     assert(newConfiguration is TestTwitarrConfiguration);
   }
@@ -137,7 +143,7 @@ class TestSeamail implements Seamail {
 
   @override
   bool get hasListeners => null;
-  
+
   @override
   void addListener(VoidCallback listener) { }
 

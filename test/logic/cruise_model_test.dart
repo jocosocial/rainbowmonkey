@@ -55,6 +55,7 @@ void main() {
         '--- waiting one hour',
         '--- login',
         'TestTwitarr(2).login aaa / bbb',
+        'notification',
         '--- idling',
         'TestDataStore.saveCredentials Credentials(aaa)',
         '--- waiting one hour',
@@ -102,6 +103,12 @@ class TestTwitarr extends Twitarr {
   TestTwitarr(this._configuration);
 
   final TestTwitarrConfiguration _configuration;
+
+  @override
+  double debugLatency = 0.0;
+
+  @override
+  double debugReliability = 1.0;
 
   @override
   TwitarrConfiguration get configuration => _configuration;
