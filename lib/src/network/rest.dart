@@ -71,14 +71,22 @@ class RestTwitarr implements Twitarr {
     assert(AuthenticatedUser.isValidEmail(email));
     assert(AuthenticatedUser.isValidSecurityQuestion(securityQuestion));
     assert(AuthenticatedUser.isValidSecurityAnswer(securityAnswer));
-    final FormData body = new FormData()
-      ..add('new_username', username)
-      ..add('new_password', password)
-      ..add('email', email)
-      ..add('security_question', securityQuestion)
-      ..add('security_answer', securityAnswer);
+    final String body = json.encode(<String, dynamic>{
+      'new_username': username,
+      'new_password': password,
+      'email': email,
+      'security_question': securityQuestion,
+      'security_answer': securityAnswer
+    });
     return new Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
-      final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/new?${body.toUrlEncoded()}'));
+      final String result = await completer.chain<String>(
+        _requestUtf8(
+          'POST', 
+          'api/v2/user/new', 
+          body: utf8.encode(body), 
+          contentType: new ContentType('application', 'json')
+        )
+      );
       final dynamic data = Json.parse(result);
       _checkForCommonServerErrors(data);
       final String key = data.key.toString();
@@ -429,8 +437,11 @@ class RestTwitarr implements Twitarr {
     if (body != null) {
       if (contentType != null)
         request.headers.contentType = contentType;
-
+      
+      // TODO: Once puma fixes chunked requests, remove the chunkedTransferEncoding and contentLength headers - https://github.com/puma/puma/issues/1492 
+      request.headers.chunkedTransferEncoding = false;
       request.headers.contentLength = body.length;
+
       request.add(body);
     }
     final HttpClientResponse response = await request.close();
