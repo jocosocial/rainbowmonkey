@@ -10,6 +10,7 @@ import 'src/views/calendar.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/drawer.dart';
 import 'src/views/karaoke.dart';
+import 'src/views/profile.dart';
 import 'src/views/seamail.dart';
 import 'src/views/settings.dart';
 import 'src/widgets.dart';
@@ -108,6 +109,7 @@ class CruiseMonkeyHome extends StatelessWidget {
         ),
       ),
       routes: <String, WidgetBuilder>{
+        '/profile': (BuildContext context) => const Profile(),
         '/settings': (BuildContext context) => const Settings(),
       },
     );

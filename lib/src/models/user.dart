@@ -39,11 +39,32 @@ class User {
   const User({
     @required this.username,
     this.displayName,
+    this.currentLocation,
+    this.roomNumber,
+    this.realName,
+    this.homeLocation,
   }) : assert(username != null),
        assert(username != '');
 
   final String username;
   final String displayName;
+
+  final String currentLocation;
+  final String roomNumber;
+  final String realName;
+  final String homeLocation;
+
+  // final bool isvCardPublic;
+
+  // final int numberOfTweets;
+  // final int numberOfMentions;
+
+  // final bool isEmailPublic;
+  // final bool isAdmin;
+  // final String status;
+  // final String lastLogin;
+  // final bool emptyPassword;
+  // final bool unnoticedAlerts;
 
   bool sameAs(User other) => username == other.username;
 
@@ -71,9 +92,20 @@ class AuthenticatedUser extends User {
   const AuthenticatedUser({
     String username,
     String displayName,
+    String currentLocation,
+    String roomNumber,
+    String realName,
+    String homeLocation,
     this.email,
     this.credentials,
-  }) : super(username: username, displayName: displayName);
+  }) : super(
+    username: username,
+    displayName: displayName,
+    currentLocation: currentLocation,
+    roomNumber: roomNumber,
+    realName: realName,
+    homeLocation: homeLocation,
+  );
 
   final String email;
   final Credentials credentials;

@@ -161,13 +161,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   ContinuousProgress<AuthenticatedUser> get user => _user;
   PeriodicProgress<AuthenticatedUser> _user;
 
-  AuthenticatedUser get currentUser {
-    final ProgressValue<AuthenticatedUser> currentProgress = user.best.value;
-    if (currentProgress is SuccessfulProgress<AuthenticatedUser>)
-      return currentProgress.value;
-    return null;
-  }
-
   Future<AuthenticatedUser> _updateUser(ProgressController<AuthenticatedUser> completer) async {
     if (_currentCredentials?.key != null)
       return await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
@@ -291,6 +284,39 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         );
       },
     );
+  }
+
+  Progress<void> updateProfile({
+    String currentLocation,
+    String displayName,
+    String email,
+    bool emailPublic,
+    String homeLocation,
+    String realName,
+    String roomNumber,
+    bool vcardPublic,
+  }) {
+    return new Progress<void>((ProgressController<void> completer) async {
+      await completer.chain(_twitarr.updateProfile(
+        credentials: _currentCredentials,
+        currentLocation: currentLocation,
+        displayName: displayName,
+        email: email,
+        emailPublic: emailPublic,
+        homeLocation: homeLocation,
+        realName: realName,
+        roomNumber: roomNumber,
+        vcardPublic: vcardPublic,
+      ));
+      _user.triggerUnscheduledUpdate(); // this is non-blocking for the caller
+    });
+  }
+
+  Progress<void> updatePassword({
+    @required String oldPassword,
+    @required String newPassword,
+  }) {
+    return null; // TODO(ianh): update password and update credentials
   }
 
   Progress<List<User>> getUserList(String searchTerm) {

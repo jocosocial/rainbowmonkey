@@ -94,9 +94,6 @@ class NullCruiseModel implements CruiseModel {
   final MutableContinuousProgress<AuthenticatedUser> user = null;
 
   @override
-  AuthenticatedUser get currentUser => null;
-
-  @override
   final MutableContinuousProgress<Calendar> calendar = null;
 
   @override
@@ -116,6 +113,24 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   Widget avatarFor(User user, { double size: 40.0 }) => null;
+
+  @override
+  Progress<void> updateProfile({
+    String currentLocation,
+    String displayName,
+    String email,
+    bool emailPublic,
+    String homeLocation,
+    String realName,
+    String roomNumber,
+    bool vcardPublic,
+  }) => null;
+
+  @override
+  Progress<void> updatePassword({
+    @required String oldPassword,
+    @required String newPassword,
+  }) => null;
 
   @override
   Progress<List<User>> getUserList(String searchTerm) => null;

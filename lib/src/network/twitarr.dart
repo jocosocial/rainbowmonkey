@@ -8,7 +8,9 @@ import '../models/seamail.dart';
 import '../models/user.dart';
 import '../progress.dart';
 
-class ServerError implements Exception {
+abstract class UserFriendlyError { }
+
+class ServerError implements Exception, UserFriendlyError {
   const ServerError(this.messages);
 
   final List<String> messages;
@@ -17,14 +19,14 @@ class ServerError implements Exception {
   String toString() => messages.join('\n');
 }
 
-class InvalidUsernameOrPasswordError implements Exception {
+class InvalidUsernameOrPasswordError implements Exception, UserFriendlyError {
   const InvalidUsernameOrPasswordError();
 
   @override
   String toString() => 'Server did not recognize the username or password.';
 }
 
-class HttpServerError implements Exception {
+class HttpServerError implements Exception, UserFriendlyError {
   const HttpServerError(this.statusCode, this.reasonPhrase, this.url);
 
   final int statusCode;
@@ -109,6 +111,24 @@ abstract class Twitarr {
   );
 
   Progress<Uint8List> fetchProfilePicture(String username);
+
+  Progress<void> updateProfile({
+    @required Credentials credentials,
+    String currentLocation,
+    String displayName,
+    String email,
+    bool emailPublic,
+    String homeLocation,
+    String realName,
+    String roomNumber,
+    bool vcardPublic,
+  });
+
+  Progress<void> updatePassword({
+    @required Credentials credentials,
+    @required String oldPassword,
+    @required String newPassword,
+  });
 
   Progress<List<User>> getUserList(String searchTerm);
 
