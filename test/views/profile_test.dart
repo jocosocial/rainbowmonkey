@@ -36,12 +36,13 @@ Future<void> main() async {
     expect(find.text('Current location'), findsOneWidget);
     expect(find.text('Hello'), findsNothing);
     expect(find.text('override location set'), findsNothing);
-    await tester.enterText(find.byType(TextField).at(0), 'Hello');
+    await tester.enterText(find.byType(TextField).at(3), 'Hello');
     twitarr.overrideCurrentLocation = 'override location set';
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
     expect(log, <String>[
       'LoggingTwitarr(0).login username / password',
+      'fetchProfilePicture',
       'updateProfile Hello/null/null/null/null/null/null/null',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)'
     ]);

@@ -10,6 +10,15 @@ import '../progress.dart';
 
 abstract class UserFriendlyError { }
 
+class LocalError implements Exception, UserFriendlyError {
+  const LocalError(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class ServerError implements Exception, UserFriendlyError {
   const ServerError(this.messages);
 

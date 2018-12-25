@@ -438,8 +438,6 @@ class RestTwitarr implements Twitarr {
           _requestUtf8('GET', 'user/autocomplete?${body.toUrlEncoded()}'),
         ),
       );
-      if (result == null) // TODO(ianh): remove this once https://github.com/flutter/flutter/pull/24848 lands
-        throw new Exception('Error');
       return result;
     });
   }
