@@ -314,7 +314,7 @@ class _AccountCreationStatus extends StatelessWidget {
       builder: (BuildContext context, Credentials value) {
         return new AlertDialog(
           title: const Text('Account created!'),
-          content: new Text('Your account username is "$username".'),
+          content: new Text('Your account username is "${value.username}".'),
           actions: <Widget>[
             new FlatButton(
               onPressed: () { Navigator.of(context).pop(true); },

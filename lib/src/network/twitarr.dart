@@ -24,6 +24,30 @@ class InvalidUsernameOrPasswordError implements Exception {
   String toString() => 'Server did not recognize the username or password.';
 }
 
+class HttpServerError implements Exception {
+  const HttpServerError(this.statusCode, this.reasonPhrase, this.url);
+
+  final int statusCode;
+  final String reasonPhrase;
+  final Uri url;
+
+  @override
+  String toString() {
+    switch (statusCode) {
+      case 500:
+      case 501:
+      case 502:
+      case 503:
+      case 504: return 'Server is having problems (it said "$reasonPhrase"). Try again later.';
+      case 401:
+      case 403: return 'There was an authentication problem (server said "$reasonPhrase"). Try logging in again.';
+      case 400:
+      case 405: return 'There is probably a bug (server said "$reasonPhrase"). Try again, maybe?';
+      default: return 'There was an unexpected error. The server said "$statusCode $reasonPhrase" in response to a request to: $url';
+    }
+  }
+}
+
 @immutable
 abstract class TwitarrConfiguration {
   const TwitarrConfiguration();
@@ -41,6 +65,12 @@ class CancelationSignal {
 /// An interface for communicating with the server.
 abstract class Twitarr {
   const Twitarr();
+
+  double get debugLatency;
+  set debugLatency(double value);
+
+  double get debugReliability;
+  set debugReliability(double value);
 
   TwitarrConfiguration get configuration;
 

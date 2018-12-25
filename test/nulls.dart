@@ -32,22 +32,22 @@ class NullCruiseModel implements CruiseModel {
   NullCruiseModel();
 
   // LISTENABLE
-  
+
   @override
   bool get hasListeners => null;
-  
+
   @override
   void addListener(VoidCallback listener) { }
-  
+
   @override
   void removeListener(VoidCallback listener) { }
-  
+
   @override
   void notifyListeners() { }
 
 
   // CRUISE MODEL
-  
+
   @override
   final Duration rarePollInterval = null;
 
@@ -65,6 +65,12 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) { }
+
+  @override
+  double debugLatency = 0.0;
+
+  @override
+  double debugReliability = 1.0;
 
   @override
   Progress<Credentials> createAccount({
