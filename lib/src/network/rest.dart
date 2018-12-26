@@ -430,12 +430,10 @@ class RestTwitarr implements Twitarr {
   @override
   Progress<List<User>> getUserList(String searchTerm) {
     return new Progress<List<User>>((ProgressController<List<User>> completer) async {
-      final FormData body = new FormData()
-        ..add('string', searchTerm);
       final List<User> result = await compute<String, List<User>>(
         _parseUserList,
         await completer.chain<String>(
-          _requestUtf8('GET', 'user/autocomplete?${body.toUrlEncoded()}'),
+          _requestUtf8('GET', 'api/v2/user/autocomplete/$searchTerm'),
         ),
       );
       return result;
