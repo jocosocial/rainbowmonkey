@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../models/seamail.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
+
 
 class SeamailView extends StatelessWidget implements View {
   const SeamailView({
@@ -82,21 +84,73 @@ class SeamailView extends StatelessWidget implements View {
           itemBuilder: (BuildContext context, int index) {
             if (index < threads.length) {
               final SeamailThread thread = threads[index];
-              return new ListTile(
-                leading: new CircleAvatar(child: new Text('${thread.users.length}')), // TODO(ianh): faces
-                title: new Text(thread.subject, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: new Text(
-                  '${thread.messageCount} message${thread.messageCount == 1 ? '' : "s"}',
-                  style: thread.unread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-                ),
+              return new GestureDetector(
                 onTap: () { showThread(context, thread); },
+                child: Container(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  decoration: new BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.grey[300])),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        child: Icon(
+                          thread.unread ? Icons.brightness_1 : null,
+                          color: Colors.red[500],
+                          size: 10,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.only(top: 8.0, bottom: 2.0),
+                              child: Text(
+                                '${thread.subject}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: (thread.unread ? FontWeight.bold : null),
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${thread.users}',
+                              style: TextStyle( fontSize: 13 ),
+                            ),
+                            Text(
+                              '${prettyTimestamp(thread.timestamp)} - ${thread.messageCount} message${thread.messageCount == 1 ? '' : "s"}',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
+              // return new ListTile(
+              //   leading: new CircleAvatar(child: new Text('${thread.users.length}')), // TODO(ianh): faces
+              //   title: new Text(thread.subject, maxLines: 1, overflow: TextOverflow.ellipsis),
+              //   subtitle: new Text(
+              //     '${thread.messageCount} message${thread.messageCount == 1 ? '' : "s"}',
+              //     style: thread.unread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+              //   ),
+              //   onTap: () { showThread(context, thread); },
+              // );
             }
-            return const ListTile(
-              leading: const CircleAvatar(child: const Icon(Icons.all_inclusive)),
-              title: const Text('Twitarr'),
-              // TODO(ianh): Twitarr
-            );
+            // return const ListTile(
+            //   leading: const CircleAvatar(child: const Icon(Icons.all_inclusive)),
+            //   title: const Text('Twitarr'),
+            //   // TODO(ianh): Twitarr
+            // );
           },
           itemCount: threads.length + 1,
         );
@@ -339,6 +393,22 @@ class ChatLine extends StatelessWidget {
       ],
     );
   }
+}
+
+String prettyTimestamp(DateTime timestamp) {
+  final DateTime now = DateTime.now();
+  final Duration duration = now.difference(timestamp);
+  if (duration.inMinutes < 1)
+    return 'just now';
+  if (duration.inMinutes < 59.5)
+    return '${duration.inMinutes.round()} ago';
+  if (now.day == timestamp.day)
+    return '${DateFormat("h:mm a' Today'").format(timestamp)}';
+  if ((now.day - 1) == timestamp.day)
+    return '${DateFormat("h:mm a' Yesterday'").format(timestamp)}';
+  if (duration.inDays < 7)
+    return '${DateFormat("h:mm a' on 'EEEEE").format(timestamp)}';
+  return '${DateFormat.yMMMMd("en_US").format(timestamp)}';
 }
 
 String prettyDuration(Duration duration) {
