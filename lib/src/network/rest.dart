@@ -63,6 +63,7 @@ class RestTwitarr implements Twitarr {
   Progress<AuthenticatedUser> createAccount({
     @required String username,
     @required String password,
+    @required String registrationCode,
     @required String email,
     @required String securityQuestion,
     @required String securityAnswer,
@@ -70,17 +71,20 @@ class RestTwitarr implements Twitarr {
     assert(username != null);
     assert(password != null);
     assert(email != null);
+    assert(registrationCode != null);
     assert(securityAnswer != null);
     assert(securityQuestion != null);
     assert(AuthenticatedUser.isValidUsername(username));
     assert(AuthenticatedUser.isValidDisplayName(username));
     assert(AuthenticatedUser.isValidPassword(password));
+    assert(AuthenticatedUser.isValidRegistrationCode(registrationCode));
     assert(AuthenticatedUser.isValidEmail(email));
     assert(AuthenticatedUser.isValidSecurityQuestion(securityQuestion));
     assert(AuthenticatedUser.isValidSecurityAnswer(securityAnswer));
     final String body = json.encode(<String, dynamic>{
       'new_username': username,
       'new_password': password,
+      'registration_code': registrationCode,
       'email': email,
       'security_question': securityQuestion,
       'security_answer': securityAnswer
@@ -95,7 +99,15 @@ class RestTwitarr implements Twitarr {
         )
       );
       final dynamic data = Json.parse(result);
-      _checkForCommonServerErrors(data);
+      final Json errors = data.errors as Json;
+      if (errors.valueType != Null) {
+        if (errors.isMap) {
+          throw FieldErrors(errors.toMap().map<String, List<String>>(
+            (String field, dynamic value) => MapEntry<String, List<String>>(field, (value as List<dynamic>).cast<String>())
+          ));
+        }
+        throw ServerError(errors.toList().cast<String>().where((String value) => value != null && value.isNotEmpty).toList());
+      }
       final String key = data.key.toString();
       return _createAuthenticatedUser(
         data.user,
@@ -122,11 +134,21 @@ class RestTwitarr implements Twitarr {
       final FormData body = FormData()
         ..add('username', username)
         ..add('password', password);
-      final String result = await completer.chain<String>(_requestUtf8('GET', 'api/v2/user/auth?${body.toUrlEncoded()}'), steps: 2);
+      final String result = await completer.chain<String>(
+        _requestUtf8(
+          'GET',
+          'api/v2/user/auth?${body.toUrlEncoded()}',
+          expectedStatusCodes: const <int>[200, 401],
+        ),
+        steps: 2,
+      );
       final dynamic data = Json.parse(result);
-      if (data.status == 'incorrect password or username')
+      if (data['status'] != null &&
+          (data.status == 'incorrect username or password' ||
+           data.status == 'incorrect password or username')) {
         throw const InvalidUsernameOrPasswordError();
-      _checkForCommonServerErrors(data);
+      }
+      _checkStatusIsOk(data);
       final String key = data.key.toString();
       return completer.chain<AuthenticatedUser>(getAuthenticatedUser(
         Credentials(
@@ -156,7 +178,7 @@ class RestTwitarr implements Twitarr {
         ..add('key', credentials.key);
       final String rawResult = await completer.chain<String>(_requestUtf8('GET', 'api/v2/user/profile?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(rawResult);
-      _checkForCommonServerErrors(data);
+      _checkStatusIsOk(data);
       photoManager.heardAboutUserPhoto(
         data.user.username.toString(),
         DateTime.fromMicrosecondsSinceEpoch((data.user.last_photo_updated as Json).toInt()),
@@ -167,21 +189,21 @@ class RestTwitarr implements Twitarr {
 
   AuthenticatedUser _createAuthenticatedUser(dynamic user, Credentials credentials) {
     return AuthenticatedUser(
-      username: user.username.toString(),
-      email: user.email.toString(),
-      displayName: user.display_name.toString(),
-      currentLocation: user.current_location.toString(),
-      roomNumber: user.room_number.toString(),
-      realName: user.real_name.toString(),
-      homeLocation: user.home_location.toString(),
-      // isvCardPublic: user['vcard_public?'].toBoolean(),
-      // isEmailPublic: user['email_public?'].toBoolean(),
-      // isAdmin: user.isAdmin.toBoolean(),
-      // status: user.status.toString(),
-      // lastLogin: user.last_login.toString(), // TODO(ianh): parse to DateTime
-      // emptyPassword: user['empty_password?'].toBoolean(),
-      // unnoticedAlerts: user.unnoticed_alerts.toBoolean(),
-      credentials: credentials.copyWith(username: user.username.toString()),
+      username: (user.username as Json).toScalar() as String,
+      email: (user.email as Json).toScalar() as String,
+      displayName: (user.display_name as Json).toScalar() as String,
+      currentLocation: (user.current_location as Json).toScalar() as String,
+      roomNumber: (user.room_number as Json).toScalar() as String,
+      realName: (user.real_name as Json).toScalar() as String,
+      homeLocation: (user.home_location as Json).toScalar() as String,
+      // isvCardPublic: (user['vcard_public?'] as Json).toBoolean(),
+      // isEmailPublic: (user['email_public?'] as Json).toBoolean(),
+      // isAdmin: (user.isAdminas Json).toBoolean(),
+      // status: (user.status as Json).toScalar() as String,
+      // lastLogin: (user.last_login as Json).toScalar() as String, // TODO(ianh): parse to DateTime
+      // emptyPassword: (user['empty_password?'] as Json).toBoolean(),
+      // unnoticedAlerts: (user.unnoticed_alertsas Json).toBoolean(),
+      credentials: credentials.copyWith(username: (user.username as Json).toScalar() as String),
     );
   }
 
@@ -199,7 +221,7 @@ class RestTwitarr implements Twitarr {
 
   static Calendar _parseCalendar(String rawEventData) {
     final dynamic data = Json.parse(rawEventData);
-    final dynamic values = data.event.asIterable().single;
+    final dynamic values = (data.event.asIterable() as Iterable<dynamic>).single;
     if (values.status != 'ok')
       throw FormatException('status "${values.status}" is not ok');
     if (values.total_count != (values.events.asIterable() as Iterable<dynamic>).length)
@@ -233,7 +255,7 @@ class RestTwitarr implements Twitarr {
       return;
     final dynamic data = Json.parse(rawResult);
     seamail.update(DateTime.fromMicrosecondsSinceEpoch((data.last_checked as Json).toInt()), (SeamailUpdater updater) {
-      for (dynamic thread in data.seamail_meta.asIterable()) {
+      for (dynamic thread in data.seamail_meta.asIterable() as Iterable<dynamic>) {
         final List<User> users = _parseUsersFromSeamailMeta(thread.users as Json, photoManager);
         final String id = thread.id.toString();
         updater.updateThread(id,
@@ -280,7 +302,7 @@ class RestTwitarr implements Twitarr {
       );
       final dynamic data = Json.parse(result);
       if (data['errors'] != null)
-        throw ServerError(data.errors.asIterable().map<String>((Json value) => value.toString()).toList() as List<String>);
+        throw ServerError((data.errors as Json).toList().cast<String>());
       final dynamic thread = data.seamail_meta;
       final String id = thread.id.toString();
       return SeamailThread(
@@ -298,7 +320,7 @@ class RestTwitarr implements Twitarr {
   }
 
   List<User> _parseUsersFromSeamailMeta(Json users, PhotoManager photoManager) {
-    return users.asIterable().map<User>((dynamic user) {
+    return (users.asIterable()).map<User>((dynamic user) {
       photoManager.heardAboutUserPhoto(
         user.username.toString(),
         DateTime.fromMicrosecondsSinceEpoch((user.last_photo_updated as Json).toInt()),
@@ -358,7 +380,7 @@ class RestTwitarr implements Twitarr {
         final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/seamail/${Uri.encodeComponent(id)}/new_message?$encodedBody'));
         final dynamic data = Json.parse(result);
         if (data['errors'] != null)
-          throw ServerError(data.errors.asIterable().map<String>((Json value) => value.toString()).toList() as List<String>);
+          throw ServerError((data.errors as Json).toList().cast<String>());
       });
     };
   }
@@ -412,7 +434,7 @@ class RestTwitarr implements Twitarr {
     return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
       final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/profile?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(result);
-      _checkForCommonServerErrors(data, desiredStatus: 'Updated');
+      _checkStatusIsOk(data, desiredStatus: 'Profile Updated.');
     });
   }
 
@@ -434,7 +456,7 @@ class RestTwitarr implements Twitarr {
         contentType: encoded.contentType,
       ));
       final dynamic data = Json.parse(result);
-      _checkForCommonServerErrors(data, statusIsHumanReadable: true);
+      _checkStatusIsOk(data, statusIsHumanReadable: true);
     });
   }
 
@@ -449,7 +471,7 @@ class RestTwitarr implements Twitarr {
     return Progress<void>((ProgressController<void> completer) async {
       final String result = await completer.chain<String>(_requestUtf8('DELETE', 'api/v2/user/photo?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(result);
-      _checkForCommonServerErrors(data);
+      _checkStatusIsOk(data);
     });
   }
 
@@ -467,12 +489,10 @@ class RestTwitarr implements Twitarr {
   @override
   Progress<List<User>> getUserList(String searchTerm) {
     return Progress<List<User>>((ProgressController<List<User>> completer) async {
-      final FormData body = FormData()
-        ..add('string', searchTerm);
       final List<User> result = await compute<String, List<User>>(
         _parseUserList,
         await completer.chain<String>(
-          _requestUtf8('GET', 'user/autocomplete?${body.toUrlEncoded()}'),
+          _requestUtf8('GET', 'api/v2/user/autocomplete/${Uri.encodeComponent(searchTerm)}'),
         ),
       );
       return result;
@@ -481,7 +501,7 @@ class RestTwitarr implements Twitarr {
 
   static List<User> _parseUserList(String rawData) {
     final dynamic data = Json.parse(rawData);
-    final Iterable<dynamic> values = data.names.asIterable() as Iterable<dynamic>;
+    final Iterable<dynamic> values = (data.names as Json).asIterable();
     return values.map<User>((dynamic value) {
       return User(
         username: value.username.toString(),
@@ -490,9 +510,22 @@ class RestTwitarr implements Twitarr {
     }).toList();
   }
 
-  Progress<String> _requestUtf8(String method, String path, { List<int> body, List<Uint8List> bodyParts, ContentType contentType }) {
+  Progress<String> _requestUtf8(String method, String path, {
+    List<int> body,
+    List<Uint8List> bodyParts,
+    ContentType contentType,
+    List<int> expectedStatusCodes = const <int>[200],
+  }) {
     return Progress<String>((ProgressController<String> completer) async {
-      final HttpClientResponse response = await _requestInternal<String>(completer, method, path, body, bodyParts, contentType);
+      final HttpClientResponse response = await _requestInternal<String>(
+        completer,
+        method,
+        path,
+        body,
+        bodyParts,
+        contentType,
+        expectedStatusCodes,
+      );
       int count = 0;
       return await response
         .map((List<int> bytes) {
@@ -507,9 +540,22 @@ class RestTwitarr implements Twitarr {
     });
   }
 
-  Progress<Uint8List> _requestBytes(String method, String path, { List<int> body, List<Uint8List> bodyParts, ContentType contentType }) {
+  Progress<Uint8List> _requestBytes(String method, String path, {
+    List<int> body,
+    List<Uint8List> bodyParts,
+    ContentType contentType,
+    List<int> expectedStatusCodes = const <int>[200],
+  }) {
     return Progress<Uint8List>((ProgressController<Uint8List> completer) async {
-      final HttpClientResponse response = await _requestInternal<Uint8List>(completer, method, path, body, bodyParts, contentType);
+      final HttpClientResponse response = await _requestInternal<Uint8List>(
+        completer,
+        method,
+        path,
+        body,
+        bodyParts,
+        contentType,
+        expectedStatusCodes,
+      );
       int count = 0;
       final List<List<int>> chunks = <List<int>>[];
       await response.forEach((List<int> chunk) {
@@ -530,7 +576,15 @@ class RestTwitarr implements Twitarr {
 
   final math.Random _random = math.Random();
 
-  Future<HttpClientResponse> _requestInternal<T>(ProgressController<T> completer, String method, String path, List<int> body, List<Uint8List> bodyParts, ContentType contentType) async {
+  Future<HttpClientResponse> _requestInternal<T>(
+    ProgressController<T> completer,
+    String method,
+    String path,
+    List<int> body,
+    List<Uint8List> bodyParts,
+    ContentType contentType,
+    List<int> expectedStatusCodes,
+  ) async {
     assert(contentType != null || (body == null && bodyParts == null));
     assert(body == null || bodyParts == null);
     final Uri url = _parsedBaseUrl.resolve(path);
@@ -542,31 +596,35 @@ class RestTwitarr implements Twitarr {
       return true;
     }());
     await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
-    final HttpClientRequest request = await _client.openUrl(method, url);
-    if (contentType != null)
-      request.headers.contentType = contentType;
-    if (length != null) {
-      // Beware: Puma (used by server) can't handle chunked encoding; see: https://github.com/puma/puma/issues/1492
-      request.headers.chunkedTransferEncoding = false;
-      request.headers.contentLength = length;
-      if (body != null)
-        request.add(body);
-      if (bodyParts != null)
-        bodyParts.forEach(request.add);
+    try {
+      final HttpClientRequest request = await _client.openUrl(method, url);
+      if (contentType != null)
+        request.headers.contentType = contentType;
+      if (length != null) {
+        // Beware: Puma (used by server) can't handle chunked encoding; see: https://github.com/puma/puma/issues/1492
+        request.headers.chunkedTransferEncoding = false;
+        request.headers.contentLength = length;
+        if (body != null)
+          request.add(body);
+        if (bodyParts != null)
+          bodyParts.forEach(request.add);
+      }
+      final HttpClientResponse response = await request.close();
+      if (!expectedStatusCodes.contains(response.statusCode))
+        throw HttpServerError(response.statusCode, response.reasonPhrase, url);
+      if (_random.nextDouble() > debugReliability)
+        throw const LocalError('Fake network failure');
+      if (response.contentLength > 0)
+        completer.advance(0.0, response.contentLength.toDouble());
+      return response;
+    } on SocketException catch (error) {
+      if (error.osError.errorCode == 111)
+        throw const ServerError(<String>['The server is down.']);
+      rethrow;
     }
-    final HttpClientResponse response = await request.close();
-    if (response.statusCode != 200)
-      throw HttpServerError(response.statusCode, response.reasonPhrase, url);
-    if (_random.nextDouble() > debugReliability)
-      throw HttpException('Network failure', uri: url);
-    if (response.contentLength > 0)
-      completer.advance(0.0, response.contentLength.toDouble());
-    return response;
   }
 
-  void _checkForCommonServerErrors(dynamic data, { String desiredStatus = 'ok', bool statusIsHumanReadable = false }) {
-    if (data['errors'] != null)
-      throw ServerError(data.errors.asIterable().map<String>((Json value) => value.toString()).toList() as List<String>);
+  void _checkStatusIsOk(dynamic data, { String desiredStatus = 'ok', bool statusIsHumanReadable = false }) {
     if (data.status == 'key not valid')
       throw const ServerError(<String>['An authentication error occurred: the key the server provided is being refused for some reason. Try logging out and logging back in.']);
     if (data.status != desiredStatus) {

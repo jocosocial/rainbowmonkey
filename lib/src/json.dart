@@ -84,6 +84,9 @@ class Json {
     return _value;
   }
 
+  bool get isMap => _value is Map;
+  bool get isList => _value is List;
+  bool get isScalar => _value == null || _value is num || _value is bool || _value is String;
   Type get valueType => (_value as Object).runtimeType;
 
   Map<String, dynamic> toMap() {
@@ -107,6 +110,11 @@ class Json {
     if (_value is List)
       return (_value as List<Json>).map<dynamic>((Json value) => value._unwrap()).toList();
     return <dynamic>[_unwrap()];
+  }
+
+  dynamic toScalar() {
+    assert(isScalar);
+    return _value;
   }
 
   List<dynamic> asIterable() {
@@ -142,8 +150,11 @@ class Json {
   dynamic noSuchMethod(Invocation invocation) {
     if (invocation.isGetter) {
       final String name = _symbolName(invocation.memberName);
-      if (_value is Map && (_value as Map<String, Json>).containsKey(name))
-        return this[name];
+      if (_value is Map) {
+        if ((_value as Map<String, Json>).containsKey(name))
+          return this[name];
+        return const Json._raw(null);
+      }
     }
     if (invocation.isSetter)
       return this[_symbolName(invocation.memberName, stripEquals: true)] = invocation.positionalArguments[0];

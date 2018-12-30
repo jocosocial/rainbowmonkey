@@ -259,6 +259,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                     if (_textController.text.isNotEmpty)
                       _submitCurrentMessage();
                   },
+                  textInputAction: TextInputAction.send,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),

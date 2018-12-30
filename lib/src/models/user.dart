@@ -128,7 +128,7 @@ class AuthenticatedUser extends User {
   }
 
   static bool isValidPassword(String password) {
-    // https://github.com/hendusoone/twitarr/blob/master/app/controllers/api/v2/user_controller.rb#L26
+    // https://github.com/hendusoone/twitarr/blob/master/app/controllers/api/v2/user_controller.rb#L71
     assert(password != null);
     return password.length >= 6;
   }
@@ -137,6 +137,12 @@ class AuthenticatedUser extends User {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L64
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L11
     return displayName == null || displayName.contains(RegExp(r'^[\w\. &-]{3,40}$'));
+  }
+
+  static bool isValidRegistrationCode(String registrationCode) {
+    assert(registrationCode != null);
+    // https://github.com/hendusoone/twitarr/blob/master/app/controllers/api/v2/user_controller.rb#L77
+    return registrationCode.isNotEmpty;
   }
 
   static bool isValidEmail(String email, { bool skipServerCheck: false }) {

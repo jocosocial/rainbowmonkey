@@ -35,6 +35,7 @@ class Profile extends StatelessWidget {
                     AvatarEditor(user: user),
                     ProfileField(
                       title: 'Display name',
+                      textCapitalization: TextCapitalization.words,
                       value: user.displayName,
                       onUpdate: (String value) {
                         if (!AuthenticatedUser.isValidDisplayName(value))
@@ -46,6 +47,7 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Real name',
+                      textCapitalization: TextCapitalization.words,
                       value: user.realName,
                       onUpdate: (String value) {
                         return Cruise.of(context).updateProfile(
@@ -55,6 +57,7 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'E-mail address',
+                      keyboardType: TextInputType.emailAddress,
                       value: user.email,
                       onUpdate: (String value) {
                         if (!AuthenticatedUser.isValidEmail(value))
@@ -66,6 +69,7 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Current location',
+                      textCapitalization: TextCapitalization.sentences,
                       value: user.currentLocation,
                       onUpdate: (String value) {
                         return Cruise.of(context).updateProfile(
@@ -75,6 +79,7 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Room number',
+                      keyboardType: TextInputType.number,
                       value: user.roomNumber,
                       onUpdate: (String value) {
                         if (!AuthenticatedUser.isValidRoomNumber(value))
@@ -86,6 +91,7 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Home location',
+                      textCapitalization: TextCapitalization.words,
                       value: user.homeLocation,
                       onUpdate: (String value) {
                         return Cruise.of(context).updateProfile(
@@ -116,9 +122,12 @@ class AvatarEditor extends StatefulWidget {
   State<AvatarEditor> createState() => _AvatarEditorState();
 }
 
-class _AvatarEditorState extends State<AvatarEditor> {
+class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClientMixin<AvatarEditor> {
   bool _busy = false;
   String _error = '';
+
+  @override
+  bool get wantKeepAlive => _busy || _error != '';
 
   void _updateImage(ImageSource source) async {
     assert(!_busy);
@@ -158,6 +167,7 @@ class _AvatarEditorState extends State<AvatarEditor> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final ThemeData themeData = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -220,6 +230,8 @@ class ProfileField extends StatefulWidget {
     Key key,
     this.title,
     this.value,
+    this.textCapitalization = TextCapitalization.none,
+    this.keyboardType,
     @required this.onUpdate,
   }) : assert(onUpdate != null),
        super(key: key);
@@ -228,26 +240,33 @@ class ProfileField extends StatefulWidget {
 
   final String value;
 
+  final TextCapitalization textCapitalization;
+
+  final TextInputType keyboardType;
+
   final ProgressValueSetter<String> onUpdate;
 
   @override
   State<ProfileField> createState() => _ProfileFieldState();
 }
 
-class _ProfileFieldState extends State<ProfileField> {
+class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClientMixin<ProfileField> {
   final TextEditingController _field = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
   String _error;
 
   bool _updating = false;
-  Progress<void> _progress;
+  Progress<void> _progress; // TODO(ianh): use this in the build method for the progress meter
 
-  void _update(String value) async {
+  @override
+  bool get wantKeepAlive => _updating || _error != null;
+
+  void _update() async {
     setState(() { _updating = true; });
     try {
       _error = null;
-      _progress = widget.onUpdate(value);
+      _progress = widget.onUpdate(_field.text);
       await _progress.asFuture();
     } on UserFriendlyError catch (message) {
       if (mounted)
@@ -261,6 +280,7 @@ class _ProfileFieldState extends State<ProfileField> {
   void initState() {
     super.initState();
     _field.text = widget.value;
+    _focusNode.addListener(_focusChange);
   }
 
   @override
@@ -271,7 +291,19 @@ class _ProfileFieldState extends State<ProfileField> {
   }
 
   @override
+  void dispose() {
+    _focusNode.removeListener(_focusChange);
+    super.dispose();
+  }
+
+  void _focusChange() {
+    if (!_focusNode.hasFocus)
+      _update();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Stack(
@@ -279,13 +311,14 @@ class _ProfileFieldState extends State<ProfileField> {
           TextField(
             controller: _field,
             focusNode: _focusNode,
+            keyboardType: widget.keyboardType,
+            textCapitalization: widget.textCapitalization,
             enabled: !_updating,
             decoration: InputDecoration(
               labelText: widget.title,
               errorText: _error,
               errorMaxLines: 5,
             ),
-            onSubmitted: _update,
           ),
           Visibility(
             visible: _updating,

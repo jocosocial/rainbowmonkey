@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
-import 'create_account.dart';
 import 'login.dart';
 
 class CruiseMonkeyDrawer extends StatefulWidget {
@@ -169,11 +168,8 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
         leading: const Icon(Icons.person_add),
         title: const Text('Create account'),
         onTap: loggedIn ? null : () {
-          showDialog<void>(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) => const CreateAccountDialog(),
-          );
+          Navigator.pop(context); // drawer
+          Navigator.pushNamed(context, '/create_account');
         },
       ),
     );
