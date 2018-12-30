@@ -134,7 +134,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
   void initState() {
     super.initState();
     // our build is dependent on the clock, so we have to rebuild occasionally:
-    _clock = new Timer.periodic(new Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
+    _clock = new Timer.periodic(const Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
   }
 
   @override

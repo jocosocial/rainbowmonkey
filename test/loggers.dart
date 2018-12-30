@@ -174,6 +174,23 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<void> uploadAvatar({
+    @required Credentials credentials,
+    @required Uint8List bytes,
+  }) {
+    log.add('uploadAvatar ${bytes.length} bytes');
+    return null;
+  }
+
+  @override
+  Progress<void> resetAvatar({
+    @required Credentials credentials,
+  }) {
+    log.add('resetAvatar');
+    return null;
+  }
+
+  @override
   Progress<void> updatePassword({
     @required Credentials credentials,
     @required String oldPassword,

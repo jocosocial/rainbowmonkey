@@ -81,11 +81,22 @@ class User {
       return false;
     final User typedOther = other;
     return username == typedOther.username
-        || displayName == typedOther.displayName;
+        && displayName == typedOther.displayName
+        && currentLocation == typedOther.currentLocation
+        && roomNumber == typedOther.roomNumber
+        && realName == typedOther.realName
+        && homeLocation == typedOther.homeLocation;
   }
 
   @override
-  int get hashCode => hashValues(username, displayName);
+  int get hashCode => hashValues(
+    username,
+    displayName,
+    currentLocation,
+    roomNumber,
+    realName,
+    homeLocation,
+  );
 }
 
 class AuthenticatedUser extends User {

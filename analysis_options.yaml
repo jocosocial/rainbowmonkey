@@ -5,12 +5,7 @@
 analyzer:
   strong-mode:
     implicit-dynamic: false
-    implicit-casts: false
-  errors:
-    # treat missing required parameters as a warning (not a hint)
-    missing_required_param: warning
-    # treat missing returns as a warning (not a hint)
-    missing_return: warning
+    # implicit-casts: false
   exclude:
     - 'flutter/**'
 
@@ -62,7 +57,6 @@ linter:
     - package_prefixed_library_names
     - prefer_adjacent_string_concatenation
     - prefer_asserts_in_initializer_lists
-    - prefer_bool_in_asserts
     - prefer_collection_literals
     - prefer_conditional_assignment
     - prefer_const_constructors
