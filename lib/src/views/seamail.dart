@@ -77,18 +77,18 @@ class SeamailView extends StatelessWidget implements View {
     // TODO(ianh): track the progress of loading the threads and show a spinner
     final Seamail threads = Cruise.of(context).seamail;
     // TODO(ianh): sort the threads by recency, newest at the top
-    return new AnimatedBuilder(
+    return AnimatedBuilder(
       animation: threads,
       builder: (BuildContext context, Widget child) {
-        return new ListView.builder(
+        return ListView.builder(
           itemBuilder: (BuildContext context, int index) {
             if (index < threads.length) {
               final SeamailThread thread = threads[index];
-              return new GestureDetector(
+              return GestureDetector(
                 onTap: () { showThread(context, thread); },
                 child: Container(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  decoration: new BoxDecoration(
+                  padding: EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
                     border: Border(bottom: BorderSide(color: Colors.grey[300])),
                   ),
                   child: Row(
@@ -100,14 +100,14 @@ class SeamailView extends StatelessWidget implements View {
                           color: Colors.red[500],
                           size: 10,
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
+                        padding: EdgeInsets.all(6),
                       ),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.only(top: 8.0, bottom: 2.0),
+                              padding: EdgeInsets.only(bottom: 2.0),
                               child: Text(
                                 '${thread.subject}',
                                 maxLines: 1,
