@@ -27,7 +27,7 @@ class Profile extends StatelessWidget {
           return CustomScrollView(
             slivers: <Widget>[
               SliverAppBar(
-                title: new Text('Edit Profile (@${user.username})'),
+                title: Text('Edit Profile (@${user.username})'),
               ),
               SliverList(
                 delegate: SliverChildListDelegate(
@@ -126,7 +126,7 @@ class _AvatarEditorState extends State<AvatarEditor> {
       setState(() { _busy = true; _error = ''; });
       final File file = await ImagePicker.pickImage(source: source);
       if (file != null) {
-        final Uint8List bytes = await file.readAsBytes();
+        final Uint8List bytes = await file.readAsBytes() as Uint8List;
         try {
           await Cruise.of(context).uploadAvatar(image: bytes).asFuture();
         } on UserFriendlyError catch (error) {
@@ -201,7 +201,7 @@ class _AvatarEditorState extends State<AvatarEditor> {
               Visibility(
                 visible: _busy,
                 child: const Center(
-                  child: const CircularProgressIndicator(),
+                  child: CircularProgressIndicator(),
                 ),
               ),
             ],

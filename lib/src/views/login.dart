@@ -10,13 +10,13 @@ class LoginDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _LoginDialogState createState() => new _LoginDialogState();
+  _LoginDialogState createState() => _LoginDialogState();
 }
 
 class _LoginDialogState extends State<LoginDialog> {
-  final TextEditingController _username = new TextEditingController();
-  final TextEditingController _password = new TextEditingController();
-  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  final TextEditingController _username = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool get _valid {
     return AuthenticatedUser.isValidUsername(_username.text) &&
@@ -25,17 +25,17 @@ class _LoginDialogState extends State<LoginDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return new AlertDialog(
+    return AlertDialog(
       title: const Text('Login'),
       contentPadding: const EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 0.0),
-      content: new DecoratedBox(
-        decoration: new BoxDecoration(
-          border: new Border(
+      content: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
             top: Divider.createBorderSide(context),
             bottom: Divider.createBorderSide(context),
           ),
         ),
-        child: new Form(
+        child: Form(
           key: _formKey,
           autovalidate: true,
           onChanged: () {
@@ -43,15 +43,15 @@ class _LoginDialogState extends State<LoginDialog> {
               /* need to recheck whether the submit button should be enabled */
             });
           },
-          child: new SingleChildScrollView(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 8.0),
-            child: new ListBody(
+            child: ListBody(
               children: <Widget>[
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _username,
                       autofocus: true,
                       decoration: const InputDecoration(
@@ -64,11 +64,11 @@ class _LoginDialogState extends State<LoginDialog> {
                     ),
                   ),
                 ),
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _password,
                       obscureText: true,
                       decoration: const InputDecoration(
@@ -87,7 +87,7 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
       ),
       actions: <Widget>[
-        new FlatButton(
+        FlatButton(
           onPressed: _valid ? () {
             Cruise.of(context).login(
               username: _username.text,

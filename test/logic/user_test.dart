@@ -4,7 +4,7 @@ import 'package:cruisemonkey/src/models/user.dart';
 
 void main() {
   testWidgets('Credentials model', (WidgetTester tester) async {
-    final Credentials a = new Credentials(
+    final Credentials a = Credentials(
       username: 'a',
       password: 'b',
       key: 'c',

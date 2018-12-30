@@ -18,7 +18,7 @@ class Seamail extends ChangeNotifier {
 
   bool get active => hasListeners;
   Future<void> get untilActive => _nextActive.future;
-  Completer<void> _nextActive = new Completer<void>();
+  Completer<void> _nextActive = Completer<void>();
 
   @override
   void addListener(VoidCallback listener) {
@@ -31,7 +31,7 @@ class Seamail extends ChangeNotifier {
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
     if (!hasListeners)
-      _nextActive = new Completer<void>();
+      _nextActive = Completer<void>();
   }
 
   final List<SeamailThread> _threads = <SeamailThread>[];
@@ -46,7 +46,7 @@ class Seamail extends ChangeNotifier {
   SeamailThread threadById(String id) {
     if (_threadsById.containsKey(id))
       return _threadsById[id];
-    final SeamailThread thread = new SeamailThread.placeholder(this, id);
+    final SeamailThread thread = SeamailThread.placeholder(this, id);
     _threadsById[id] = thread;
     _threads.add(thread);
     notifyListeners();
@@ -62,7 +62,7 @@ class Seamail extends ChangeNotifier {
     assert(!_openForUpdate);
     List<SeamailThread> allThreads;
     _openForUpdate = true;
-    final SeamailUpdater updater = new SeamailUpdater(this);
+    final SeamailUpdater updater = SeamailUpdater(this);
     updateCallback(updater);
     final Set<SeamailThread> deadThreads = updater._finalize();
     allThreads = _threads.toList();
@@ -100,7 +100,7 @@ class SeamailUpdater {
 
   Seamail _seamail;
 
-  final Set<SeamailThread> _pendingThreads = new Set<SeamailThread>();
+  final Set<SeamailThread> _pendingThreads = Set<SeamailThread>();
 
   void updateThread(String id, {
     @required List<User> users,
@@ -155,14 +155,14 @@ class SeamailThread extends ChangeNotifier {
   }
 
   void _initMessages() {
-    _messages = new PeriodicProgress<List<SeamailMessage>>(const Duration(seconds: 10), _updateMessages);
+    _messages = PeriodicProgress<List<SeamailMessage>>(const Duration(seconds: 10), _updateMessages);
   }
 
   final Seamail _seamail;
 
   final String id;
 
-  List<User> get users => new List<User>.unmodifiable(_users);
+  List<User> get users => List<User>.unmodifiable(_users);
   List<User> _users;
   set users(List<User> value) {
     assert(_seamail._openForUpdate);

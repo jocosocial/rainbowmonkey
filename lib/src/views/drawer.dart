@@ -13,7 +13,7 @@ class CruiseMonkeyDrawer extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<CruiseMonkeyDrawer> createState() => new _CruiseMonkeyDrawerState();
+  State<CruiseMonkeyDrawer> createState() => _CruiseMonkeyDrawerState();
 }
 
 class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
@@ -61,10 +61,10 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     super.dispose();
   }
 
-  static final Key _progressHeader = new UniqueKey();
-  static final Key _errorHeader = new UniqueKey();
-  static final Key _userHeader = new UniqueKey();
-  static final Key _idleHeader = new UniqueKey();
+  static final Key _progressHeader = UniqueKey();
+  static final Key _errorHeader = UniqueKey();
+  static final Key _userHeader = UniqueKey();
+  static final Key _idleHeader = UniqueKey();
 
   void _addItem(List<Widget> tiles, { @required bool condition, @required Widget child, Widget alternative }) {
     tiles.add(AnimatedCrossFade(
@@ -84,28 +84,28 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     Widget header;
     bool loggedIn;
     if (_bestUserValue is StartingProgress) {
-      header = new DrawerHeader(
+      header = DrawerHeader(
         key: _progressHeader,
         child: const Center(
-          child: const CircularProgressIndicator(),
+          child: CircularProgressIndicator(),
         ),
       );
       loggedIn = false;
     } else if (_bestUserValue is ActiveProgress) {
       final ActiveProgress activeProgress = _bestUserValue;
-      header = new DrawerHeader(
+      header = DrawerHeader(
         key: _progressHeader,
-        child: new Center(
-          child: new CircularProgressIndicator(value: activeProgress.progress / activeProgress.target),
+        child: Center(
+          child: CircularProgressIndicator(value: activeProgress.progress / activeProgress.target),
         ),
       );
       loggedIn = false;
     } else if (_bestUserValue is FailedProgress) {
-      header = new DrawerHeader(
+      header = DrawerHeader(
         key: _errorHeader,
-        child: new Align(
+        child: Align(
           alignment: Alignment.bottomCenter,
-          child: new Text('Last error while logging in:\n${wrapError(_bestUserValue.error)}'),
+          child: Text('Last error while logging in:\n${wrapError(_bestUserValue.error)}'),
         ),
       );
       loggedIn = false;
@@ -114,19 +114,19 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
       if (_bestUserValue is SuccessfulProgress<AuthenticatedUser>)
         user = _bestUserValue.value;
       if (user != null) {
-        header = new UserAccountsDrawerHeader(
+        header = UserAccountsDrawerHeader(
           key: _userHeader,
-          accountName: new Text(user.toString()),
-          accountEmail: new Text(user.email ?? ''),
+          accountName: Text(user.toString()),
+          accountEmail: Text(user.email ?? ''),
           currentAccountPicture: Cruise.of(context).avatarFor(user),
         );
         loggedIn = true;
       } else {
-        header = new DrawerHeader(
+        header = DrawerHeader(
           key: _idleHeader,
           child: const Align(
             alignment: Alignment.bottomCenter,
-            child: const Text('Not logged in'),
+            child: Text('Not logged in'),
           ),
         );
         loggedIn = false;
@@ -135,7 +135,7 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     assert(loggedIn != null);
 
     final List<Widget> tiles = <Widget>[];
-    tiles.add(new AnimatedSwitcher(
+    tiles.add(AnimatedSwitcher(
       child: header,
       duration: animationDuration,
       switchInCurve: animationCurve,
@@ -145,12 +145,12 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     _addItem(
       tiles,
       condition: loggedIn,
-      child: new ListTile(
+      child: ListTile(
         leading: const Icon(Icons.clear),
         title: const Text('Log out'),
         onTap: loggedIn ? () { Cruise.of(context).logout(); } : null,
       ),
-      alternative: new ListTile(
+      alternative: ListTile(
         leading: const Icon(Icons.account_circle),
         title: const Text('Log in'),
         onTap: loggedIn ? null : () {
@@ -165,7 +165,7 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     _addItem(
       tiles,
       condition: !loggedIn,
-      child: new ListTile(
+      child: ListTile(
         leading: const Icon(Icons.person_add),
         title: const Text('Create account'),
         onTap: loggedIn ? null : () {
@@ -181,7 +181,7 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     _addItem(
       tiles,
       condition: loggedIn,
-      child: new ListTile(
+      child: ListTile(
         leading: const Icon(Icons.person),
         title: const Text('Edit Profile'),
         onTap: loggedIn ? () {
@@ -208,13 +208,13 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     }());
 
     tiles.add(const AboutListTile(
-      aboutBoxChildren: const <Widget>[
-        const Text('A project of the Seamonkey Social group.'),
+      aboutBoxChildren: <Widget>[
+        Text('A project of the Seamonkey Social group.'),
       ],
     ));
     assert(_bestUserValue == this._bestUserValue); // https://github.com/dart-lang/sdk/issues/34480
-    return new Drawer(
-      child: new ListView(
+    return Drawer(
+      child: ListView(
         children: tiles,
       ),
     );

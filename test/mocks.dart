@@ -98,7 +98,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
 
   @override
   Seamail get seamail => _seamail;
-  final TestSeamail _seamail = new TestSeamail();
+  final TestSeamail _seamail = TestSeamail();
 
   @override
   void updateSeamail() { }
@@ -165,7 +165,7 @@ class TestSeamail implements Seamail {
   bool get active => hasListeners;
 
   @override
-  Future<void> get untilActive => new Completer<void>().future;
+  Future<void> get untilActive => Completer<void>().future;
 
   @override
   bool get hasListeners => null;

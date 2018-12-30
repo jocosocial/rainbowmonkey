@@ -16,7 +16,7 @@ class KaraokeView extends StatefulWidget implements View {
   Widget buildTab(BuildContext context) {
     return const Tab(
       text: 'Karaoke',
-      icon: const Icon(Icons.library_music),
+      icon: Icon(Icons.library_music),
     );
   }
 
@@ -31,7 +31,7 @@ class KaraokeView extends StatefulWidget implements View {
   }
 
   @override
-  _KaraokeViewState createState() => new _KaraokeViewState();
+  _KaraokeViewState createState() => _KaraokeViewState();
 }
 
 class _KaraokeViewState extends State<KaraokeView> {
@@ -59,7 +59,7 @@ class _KaraokeViewState extends State<KaraokeView> {
     assert(_songs == null);
     _initStarted = true;
     _songBundle = bundle;
-    _songs = new Progress<List<Song>>((ProgressController<List<Song>> completer) async {
+    _songs = Progress<List<Song>>((ProgressController<List<Song>> completer) async {
       return await bundle.loadStructuredData<List<Song>>(
         catalogResource,
         (String data) => compute<String, List<Song>>(_parser, data),
@@ -73,7 +73,7 @@ class _KaraokeViewState extends State<KaraokeView> {
     for (String line in lines) {
       final List<String> parts = line.split('\t');
       if (parts.length >= 2) {
-        songs.add(new Song(parts[1], parts[0]));
+        songs.add(Song(parts[1], parts[0]));
       }
     }
     songs.sort();
@@ -81,7 +81,7 @@ class _KaraokeViewState extends State<KaraokeView> {
   }
 
   Filter<Song> _filter;
-  final ScrollController _scrollController = new ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   void _applyFilter(String query) {
     setState(() {
@@ -98,33 +98,33 @@ class _KaraokeViewState extends State<KaraokeView> {
 
   @override
   Widget build(BuildContext context) {
-    return new ProgressBuilder<List<Song>>(
+    return ProgressBuilder<List<Song>>(
       progress: _songs,
       builder: (BuildContext context, List<Song> songList) {
         if (_filter != null)
           songList = songList.where(_filter).toList();
-        return new Padding(
+        return Padding(
           padding: const EdgeInsets.all(8.0),
-          child: new Column(
+          child: Column(
             children: <Widget>[
-              new TextField(
+              TextField(
                 decoration: const InputDecoration(
                   labelText: 'Search',
-                  suffixIcon: const Icon(Icons.search),
+                  suffixIcon: Icon(Icons.search),
                 ),
                 onChanged: _applyFilter,
               ),
-              new Expanded(
-                child: new Scrollbar(
-                  child: new ListView.builder(
+              Expanded(
+                child: Scrollbar(
+                  child: ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(8.0),
                     itemCount: songList.length,
                     itemBuilder: (BuildContext context, int index) {
                       final Song song = songList[index];
-                      return new ListTile(
-                        title: new Text(song.title),
-                        subtitle: new Text(song.artist),
+                      return ListTile(
+                        title: Text(song.title),
+                        subtitle: Text(song.artist),
                       );
                     },
                   ),

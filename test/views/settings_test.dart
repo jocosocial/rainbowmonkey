@@ -14,8 +14,8 @@ Future<void> main() async {
   testWidgets('Settings', (WidgetTester tester) async {
     final TestCruiseModel model = TestCruiseModel();
     await tester.pumpWidget(
-      new MaterialApp(
-        home: new Cruise(
+      MaterialApp(
+        home: Cruise(
           cruiseModel: model,
           child: const Settings(),
         ),

@@ -36,7 +36,7 @@ class Json {
   }
 
   factory Json.list(List<dynamic> input) {
-    return new Json._raw(input.map<Json>(_wrap).toList());
+    return Json._raw(input.map<Json>(_wrap).toList());
   }
 
   // (This differs from "real" JSON in that we don't allow duplicate keys.)
@@ -47,13 +47,13 @@ class Json {
       assert(!values.containsKey(name), 'Json.map keys must be unique strings');
       values[name] = _wrap(value);
     });
-    return new Json._raw(values);
+    return Json._raw(values);
   }
 
   const Json._raw(this._value);
 
   static Json parse(String value) {
-    return new Json(dart.json.decode(value));
+    return Json(dart.json.decode(value));
   }
 
   final dynamic _value;
@@ -62,18 +62,18 @@ class Json {
     if (value == null)
       return const Json._raw(null);
     if (value is num)
-      return new Json._raw(value.toDouble());
+      return Json._raw(value.toDouble());
     if (value is List)
-      return new Json.list(value);
+      return Json.list(value);
     if (value is Map)
-      return new Json.map(value);
+      return Json.map(value);
     if (value == true)
       return const Json._raw(true);
     if (value == false)
       return const Json._raw(false);
     if (value is Json)
       return value;
-    return new Json._raw(value.toString());
+    return Json._raw(value.toString());
   }
 
   dynamic _unwrap() {
@@ -113,7 +113,7 @@ class Json {
     if (_value is Map)
       return (_value as Map<String, Json>).values.toList();
     if (_value is List)
-      return (_value as List<Json>);
+      return _value as List<Json>;
     return const <Json>[];
   }
 
@@ -158,101 +158,117 @@ class Json {
     return s.substring(8, s.length - (2 + (stripEquals ? 1 : 0)));
   }
 
-  bool operator <(dynamic other) {
-    if (other.runtimeType != Json)
-      return (_value < other) as bool;
-    return (_value < other._value) as bool;
+  bool operator <(Object other) {
+    if (other.runtimeType != runtimeType)
+      return _value < other as bool;
+    final Json typedOther = other as Json;
+    return _value < typedOther._value as bool;
   }
 
-  bool operator <=(dynamic other) {
-    if (other.runtimeType != Json)
-      return (_value <= other) as bool;
-    return (_value <= other._value) as bool;
+  bool operator <=(Object other) {
+    if (other.runtimeType != runtimeType)
+      return _value <= other as bool;
+    final Json typedOther = other as Json;
+    return _value <= typedOther._value as bool;
   }
 
-  bool operator >(dynamic other) {
-    if (other.runtimeType != Json)
-      return (_value > other) as bool;
-    return (_value > other._value) as bool;
+  bool operator >(Object other) {
+    if (other.runtimeType != runtimeType)
+      return _value > other as bool;
+    final Json typedOther = other as Json;
+    return _value > typedOther._value as bool;
   }
 
-  bool operator >=(dynamic other) {
-    if (other.runtimeType != Json)
-      return (_value >= other) as bool;
-    return (_value >= other._value) as bool;
+  bool operator >=(Object other) {
+    if (other.runtimeType != runtimeType)
+      return _value >= other as bool;
+    final Json typedOther = other as Json;
+    return _value >= typedOther._value as bool;
   }
 
-  dynamic operator -(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator -(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value - other;
-    return _value - other._value;
+    final Json typedOther = other as Json;
+    return _value - typedOther._value;
   }
 
-  dynamic operator +(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator +(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value + other;
-    return _value + other._value;
+    final Json typedOther = other as Json;
+    return _value + typedOther._value;
   }
 
-  dynamic operator /(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator /(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value / other;
-    return _value / other._value;
+    final Json typedOther = other as Json;
+    return _value / typedOther._value;
   }
 
-  dynamic operator ~/(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator ~/(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value ~/ other;
-    return _value ~/ other._value;
+    final Json typedOther = other as Json;
+    return _value ~/ typedOther._value;
   }
 
-  dynamic operator *(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator *(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value * other;
-    return _value * other._value;
+    final Json typedOther = other as Json;
+    return _value * typedOther._value;
   }
 
-  dynamic operator %(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator %(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value % other;
-    return _value % other._value;
+    final Json typedOther = other as Json;
+    return _value % typedOther._value;
   }
 
-  dynamic operator |(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator |(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value.toInt() | other;
-    return _value.toInt() | other._value.toInt();
+    final Json typedOther = other as Json;
+    return _value.toInt() | typedOther._value.toInt();
   }
 
-  dynamic operator ^(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator ^(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value.toInt() ^ other;
-    return _value.toInt() ^ other._value.toInt();
+    final Json typedOther = other as Json;
+    return _value.toInt() ^ typedOther._value.toInt();
   }
 
-  dynamic operator &(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator &(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value.toInt() & other;
-    return _value.toInt() & other._value.toInt();
+    final Json typedOther = other as Json;
+    return _value.toInt() & typedOther._value.toInt();
   }
 
-  dynamic operator <<(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator <<(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value.toInt() << other;
-    return _value.toInt() << other._value.toInt();
+    final Json typedOther = other as Json;
+    return _value.toInt() << typedOther._value.toInt();
   }
 
-  dynamic operator >>(dynamic other) {
-    if (other.runtimeType != Json)
+  dynamic operator >>(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value.toInt() >> other;
-    return _value.toInt() >> other._value.toInt();
+    final Json typedOther = other as Json;
+    return _value.toInt() >> typedOther._value.toInt();
   }
 
   @override
-  bool operator ==(dynamic other) {
-    if (other.runtimeType != Json)
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType)
       return _value == other;
-    return _value == other._value;
+    final Json typedOther = other as Json;
+    return _value == typedOther._value;
   }
 
   @override

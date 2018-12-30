@@ -17,7 +17,7 @@ class Credentials {
     String key,
     DateTime loginTimestamp,
   }) {
-    return new Credentials(
+    return Credentials(
       username: username ?? this.username,
       password: password ?? this.password,
       key: key ?? this.key,
@@ -76,10 +76,10 @@ class User {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType)
       return false;
-    final User typedOther = other;
+    final User typedOther = other as User;
     return username == typedOther.username
         && displayName == typedOther.displayName
         && currentLocation == typedOther.currentLocation
@@ -124,7 +124,7 @@ class AuthenticatedUser extends User {
   static bool isValidUsername(String username) {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L10
     assert(username != null);
-    return username.contains(new RegExp(r'^[\w&-]{3,}$'));
+    return username.contains(RegExp(r'^[\w&-]{3,}$'));
   }
 
   static bool isValidPassword(String password) {
@@ -136,16 +136,16 @@ class AuthenticatedUser extends User {
   static bool isValidDisplayName(String displayName) {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L64
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L11
-    return displayName == null || displayName.contains(new RegExp(r'^[\w\. &-]{3,40}$'));
+    return displayName == null || displayName.contains(RegExp(r'^[\w\. &-]{3,40}$'));
   }
 
   static bool isValidEmail(String email, { bool skipServerCheck: false }) {
     assert(email != null);
     // https://html.spec.whatwg.org/#valid-e-mail-address
-    if (!email.contains(new RegExp(r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")))
+    if (!email.contains(RegExp(r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")))
       return false;
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L10
-    return skipServerCheck || email.contains(new RegExp(r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b', caseSensitive: false));
+    return skipServerCheck || email.contains(RegExp(r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b', caseSensitive: false));
   }
 
   static bool isValidSecurityQuestion(String question) {
@@ -162,6 +162,6 @@ class AuthenticatedUser extends User {
 
   static bool isValidRoomNumber(String roomNumber) {
     assert(roomNumber != null);
-    return roomNumber.contains(new RegExp(r'^[0-9]+$'));
+    return roomNumber.contains(RegExp(r'^[0-9]+$'));
   }
 }

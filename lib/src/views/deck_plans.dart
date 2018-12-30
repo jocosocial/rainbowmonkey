@@ -14,7 +14,7 @@ class DeckPlanView extends StatefulWidget implements View {
   Widget buildTab(BuildContext context) {
     return const Tab(
       text: 'Deck Plans',
-      icon: const Icon(Icons.directions_boat),
+      icon: Icon(Icons.directions_boat),
     );
   }
 
@@ -24,7 +24,7 @@ class DeckPlanView extends StatefulWidget implements View {
   }
 
   @override
-  _DeckPlanViewState createState() => new _DeckPlanViewState();
+  _DeckPlanViewState createState() => _DeckPlanViewState();
 }
 
 class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderStateMixin {
@@ -37,33 +37,33 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _currentLevel = new AnimationController(
+    _currentLevel = AnimationController(
       value: kMinDeck.toDouble(),
       lowerBound: kMinDeck.toDouble(),
       upperBound: kMaxDeck.toDouble(),
       vsync: this,
     );
-    _decks = new List<Widget>.generate(kMaxDeck - kMinDeck + 1,
-      (int index) => new Deck(
+    _decks = List<Widget>.generate(kMaxDeck - kMinDeck + 1,
+      (int index) => Deck(
         level: index + kMinDeck,
-        opacity: new _DeckAnimation(_currentLevel, (index + kMinDeck).toDouble()),
+        opacity: _DeckAnimation(_currentLevel, (index + kMinDeck).toDouble()),
       ),
       growable: false,
     );
-    _buttons = new List<Widget>.generate(kMaxDeck - kMinDeck + 1,
-      (int index) => new Expanded(
-        child: new AspectRatio(
+    _buttons = List<Widget>.generate(kMaxDeck - kMinDeck + 1,
+      (int index) => Expanded(
+        child: AspectRatio(
           aspectRatio: 1.0,
-          child: new InkResponse(
+          child: InkResponse(
             onTap: () {
               _goToDeck(index + kMinDeck);
             },
-            child: new FractionallySizedBox(
+            child: FractionallySizedBox(
               widthFactor: 0.75,
               heightFactor: 0.75,
-              child: new FittedBox(
+              child: FittedBox(
                 fit: BoxFit.contain,
-                child: new Text('${index + kMinDeck}'),
+                child: Text('${index + kMinDeck}'),
               ),
             ),
           ),
@@ -92,27 +92,27 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return new Row(
+    return Row(
       children: <Widget>[
-        new Expanded(
-          child: new GestureDetector(
+        Expanded(
+          child: GestureDetector(
             onScaleUpdate: (ScaleUpdateDetails details) {
               setState(() { _dynamicScale = details.scale; });
             },
             onScaleEnd: (ScaleEndDetails details) {
               setState(() { _scale = math.max(1.0, _scale * _dynamicScale); _dynamicScale = 1.0; });
             },
-            child: new LayoutBuilder(
+            child: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
-                return new SingleChildScrollView(
-                  child: new ConstrainedBox(
-                    constraints: new BoxConstraints(
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
                       minWidth: 0.0,
                       maxWidth: constraints.maxWidth,
                       minHeight: constraints.maxHeight,
                       maxHeight: constraints.maxHeight * math.max(1.0, _scale * _dynamicScale),
                     ),
-                    child: new Stack(
+                    child: Stack(
                       alignment: Alignment.center,
                       children: _decks,
                     ),
@@ -122,16 +122,16 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
             ),
           ),
         ),
-        new CustomPaint(
-          painter: new Elevator(
+        CustomPaint(
+          painter: Elevator(
             min: kMinDeck.toDouble(),
             max: kMaxDeck.toDouble(),
             level: _currentLevel,
             color: Theme.of(context).accentColor,
           ),
-          child: new DefaultTextStyle(
+          child: DefaultTextStyle(
             style: Theme.of(context).textTheme.button,
-            child: new GestureDetector(
+            child: GestureDetector(
               onVerticalDragStart: (DragStartDetails details) {
                 _currentLevel.stop();
               },
@@ -148,7 +148,7 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
                   _goToDeck(_currentLevel.value.round());
                 }
               },
-              child: new Column(
+              child: Column(
                 verticalDirection: VerticalDirection.up,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: _buttons,
@@ -182,11 +182,11 @@ class Elevator extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint = new Paint()
+    final Paint paint = Paint()
       ..color = Colors.black
       ..strokeWidth = size.width * inset
       ..style = PaintingStyle.stroke;
-    final Rect rect = new Rect.fromLTWH(
+    final Rect rect = Rect.fromLTWH(
       size.width * inset,
       size.width * inset + (size.height - size.width) * (1.0 - (level.value - min) / (max - min)),
       size.width * (1 - inset * 2.0),
@@ -217,11 +217,11 @@ class Deck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new FadeTransition(
+    return FadeTransition(
       opacity: opacity,
-      child: new Padding(
+      child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: new Image.asset('images/deck_$level.png'),
+        child: Image.asset('images/deck_$level.png'),
       ),
     );
   }

@@ -68,8 +68,8 @@ void main() {
   });
 
   testWidgets('Progress - fromFuture', (WidgetTester tester) async {
-    final Completer<int> c = new Completer<int>();
-    final Progress<int> p = new Progress<int>.fromFuture(c.future);
+    final Completer<int> c = Completer<int>();
+    final Progress<int> p = Progress<int>.fromFuture(c.future);
     expect(p.value, isInstanceOf<StartingProgress>());
     await tester.idle();
     expect(p.value, isInstanceOf<StartingProgress>());
@@ -80,7 +80,7 @@ void main() {
   });
 
   testWidgets('ProgressController - advance, completeError', (WidgetTester tester) async {
-    final ProgressController<int> c = new ProgressController<int>();
+    final ProgressController<int> c = ProgressController<int>();
     expect(c.progress.value, isInstanceOf<IdleProgress>());
     c.advance(1.0, 2.0);
     expect(c.progress.value, isInstanceOf<ActiveProgress>());
@@ -93,11 +93,11 @@ void main() {
   });
 
   testWidgets('ProgressController - start, completeError', (WidgetTester tester) async {
-    final ProgressController<int> c = new ProgressController<int>();
+    final ProgressController<int> c = ProgressController<int>();
     expect(c.progress.value, isInstanceOf<IdleProgress>());
     c.start();
     expect(c.progress.value, isInstanceOf<StartingProgress>());
-    final Exception e = new Exception('world');
+    final Exception e = Exception('world');
     c.completeError(e, null);
     expect(c.progress.value, isInstanceOf<FailedProgress>());
     expect((c.progress.value as FailedProgress).error, equals(e));

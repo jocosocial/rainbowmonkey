@@ -16,10 +16,10 @@ import 'src/views/settings.dart';
 import 'src/widgets.dart';
 
 void main() {
-  runApp(new CruiseMonkeyApp(
-    cruiseModel: new CruiseModel(
+  runApp(CruiseMonkeyApp(
+    cruiseModel: CruiseModel(
       twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
-      store: new DiskDataStore(),
+      store: DiskDataStore(),
     ),
   ));
 }
@@ -34,7 +34,7 @@ class CruiseMonkeyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Cruise(
+    return Cruise(
       cruiseModel: cruiseModel,
       child: const CruiseMonkeyHome(),
     );
@@ -47,41 +47,41 @@ class CruiseMonkeyHome extends StatelessWidget {
   }) : super(key: key);
 
   static const List<View> pages = <View>[
-    const CalendarView(),
-    const DeckPlanView(),
-    const KaraokeView(),
-    const SeamailView(),
+    CalendarView(),
+    DeckPlanView(),
+    KaraokeView(),
+    SeamailView(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
+    return MaterialApp(
       title: 'CruiseMonkey',
-      theme: new ThemeData(
+      theme: ThemeData(
         primarySwatch: Colors.teal,
         accentColor: Colors.greenAccent,
         inputDecorationTheme: const InputDecorationTheme(
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(),
         ),
       ),
-      home: new DefaultTabController(
+      home: DefaultTabController(
         length: 4,
-        child: new Builder(
+        child: Builder(
           builder: (BuildContext context) {
             final TabController tabController = DefaultTabController.of(context);
-            return new AnimatedBuilder(
+            return AnimatedBuilder(
               animation: tabController,
               builder: (BuildContext context, Widget child) {
-                return new Scaffold(
-                  appBar: new AppBar(
+                return Scaffold(
+                  appBar: AppBar(
                     leading: ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
                       valueListenable: Cruise.of(context).user.best,
                       builder: (BuildContext context, ProgressValue<AuthenticatedUser> value, Widget child) {
-                        return new Badge(
+                        return Badge(
                           enabled: value is FailedProgress,
-                          child: new Builder(
+                          child: Builder(
                             builder: (BuildContext context) {
-                              return new IconButton(
+                              return IconButton(
                                 icon: const Icon(Icons.menu),
                                 onPressed: () { Scaffold.of(context).openDrawer(); },
                                 tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
@@ -92,7 +92,7 @@ class CruiseMonkeyHome extends StatelessWidget {
                       },
                     ),
                     title: const Text('CruiseMonkey'),
-                    bottom: new TabBar(
+                    bottom: TabBar(
                       isScrollable: true,
                       tabs: pages.map((View page) => page.buildTab(context)).toList(),
                     ),

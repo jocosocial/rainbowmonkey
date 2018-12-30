@@ -10,15 +10,15 @@ import '../progress.dart';
 import 'store.dart';
 
 class DiskDataStore extends DataStore {
-  final MessageCodec<dynamic> _codec = new _CredentialsCodec();
+  final MessageCodec<dynamic> _codec = _CredentialsCodec();
 
   Future<File> get _config async {
-    return new File('${(await getApplicationDocumentsDirectory()).path}/config.dat');
+    return File('${(await getApplicationDocumentsDirectory()).path}/config.dat');
   }
 
   @override
   Progress<void> saveCredentials(Credentials value) {
-    return new Progress<void>((ProgressController<void> completer) async {
+    return Progress<void>((ProgressController<void> completer) async {
       final ByteData data = _codec.encodeMessage(value);
       await (await _config).writeAsBytes(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
     });
@@ -26,10 +26,10 @@ class DiskDataStore extends DataStore {
 
   @override
   Progress<Credentials> restoreCredentials() {
-    return new Progress<Credentials>((ProgressController<Credentials> completer) async {
+    return Progress<Credentials>((ProgressController<Credentials> completer) async {
       final File config = await _config;
       if (await config.exists()) {
-        final Credentials result = _codec.decodeMessage(new ByteData.view((await (await _config).readAsBytes() as Uint8List).buffer));
+        final Credentials result = _codec.decodeMessage(ByteData.view((await (await _config).readAsBytes() as Uint8List).buffer)) as Credentials;
         return result;
       }
       return null;
@@ -69,21 +69,21 @@ class _CredentialsCodec extends StandardMessageCodec {
   dynamic readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
       case _valueCredentials:
-        return new Credentials(
+        return Credentials(
           username: _readValue<String>(buffer),
           password: _readValue<String>(buffer),
           key: _readValue<String>(buffer),
           loginTimestamp: _readValue<DateTime>(buffer),
         );
       case _valueDateTime:
-        return new DateTime.fromMillisecondsSinceEpoch(_readValue<int>(buffer));
+        return DateTime.fromMillisecondsSinceEpoch(_readValue<int>(buffer));
       default:
         return super.readValueOfType(type, buffer);
     }
   }
 
   T _readValue<T>(ReadBuffer buffer) {
-    final T value = readValue(buffer);
+    final T value = readValue(buffer) as T;
     return value;
   }
 }

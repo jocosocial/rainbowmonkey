@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'logic/cruise.dart';
 import 'progress.dart';
 
-const Duration animationDuration = const Duration(milliseconds: 100);
+const Duration animationDuration = Duration(milliseconds: 100);
 const Curve animationCurve = Curves.fastOutSlowIn;
 
 class Cruise extends InheritedNotifier<CruiseModel> {
@@ -17,7 +17,7 @@ class Cruise extends InheritedNotifier<CruiseModel> {
   }) : super(key: key, child: child, notifier: cruiseModel);
 
   static CruiseModel of(BuildContext context) {
-    final Cruise widget = context.inheritFromWidgetOfExactType(Cruise);
+    final Cruise widget = context.inheritFromWidgetOfExactType(Cruise) as Cruise;
     return widget?.notifier;
   }
 }
@@ -41,12 +41,12 @@ String wrapError(Exception error) {
 
 Widget _defaultSecondaryActiveBuilder(BuildContext context, double progress, double target) {
   assert(target != 0.0);
-  return new CircularProgressIndicator(key: ProgressBuilder.activeKey, value: progress / target);
+  return CircularProgressIndicator(key: ProgressBuilder.activeKey, value: progress / target);
 
 }
 Widget _defaultSecondaryFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
   assert(error != null);
-  return new Tooltip(
+  return Tooltip(
     key: ProgressBuilder.failedKey,
     message: '$error',
     child: const Icon(Icons.error_outline),
@@ -55,13 +55,13 @@ Widget _defaultSecondaryFailedBuilder(BuildContext context, Exception error, Sta
 
 Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
   assert(main != null);
-  return new Stack(
+  return Stack(
     children: <Widget>[
       main,
-      new PositionedDirectional(
+      PositionedDirectional(
         end: 0.0,
         bottom: 0.0,
-        child: new Padding(
+        child: Padding(
           padding: const EdgeInsets.all(4.0),
           child: secondary,
         ),
@@ -71,7 +71,7 @@ Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
 }
 
 Widget _defaultFadeWrapper(BuildContext context, Widget child) {
-  return new AnimatedSwitcher(
+  return AnimatedSwitcher(
     duration: animationDuration,
     switchInCurve: animationCurve,
     switchOutCurve: animationCurve,
@@ -88,7 +88,7 @@ class ProgressBuilder<T> extends StatelessWidget {
     @required this.progress,
     this.nullChild: const SizedBox.expand(),
     this.idleChild: const SizedBox.expand(),
-    this.startingChild: const Center(key: activeKey, child: const CircularProgressIndicator()),
+    this.startingChild: const Center(key: activeKey, child: CircularProgressIndicator()),
     this.activeBuilder: defaultActiveBuilder,
     this.failedBuilder: defaultFailedBuilder,
     @required this.builder,
@@ -111,24 +111,24 @@ class ProgressBuilder<T> extends StatelessWidget {
   final SuccessfulProgressBuilder<T> builder;
   final FadeWrapperBuilder fadeWrapper;
 
-  static const Key activeKey = const _ActiveKey();
-  static const Key failedKey = const _FailedKey();
+  static const Key activeKey = _ActiveKey();
+  static const Key failedKey = _FailedKey();
 
   static Widget defaultActiveBuilder(BuildContext context, double progress, double target) {
     assert(target != 0.0);
-    return new Center(key: ProgressBuilder.activeKey, child: new CircularProgressIndicator(value: progress / target));
+    return Center(key: ProgressBuilder.activeKey, child: CircularProgressIndicator(value: progress / target));
   }
 
   static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
     assert(error != null);
-    return new Center(
+    return Center(
       key: ProgressBuilder.failedKey,
-      child: new Column(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           const Icon(Icons.warning, size: 72.0),
-          new Text(wrapError(error), textAlign: TextAlign.center),
+          Text(wrapError(error), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -138,7 +138,7 @@ class ProgressBuilder<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     if (progress == null)
       return nullChild;
-    return new ValueListenableBuilder<ProgressValue<T>>(
+    return ValueListenableBuilder<ProgressValue<T>>(
       valueListenable: progress,
       builder: (BuildContext context, ProgressValue<T> value, Widget child) {
         assert(child == null);
@@ -154,7 +154,7 @@ class ProgressBuilder<T> extends StatelessWidget {
         } else if (value is SuccessfulProgress<T>) {
           result = builder(context, value.value);
         } else {
-          result = failedBuilder(context, new Exception('$value'), null);
+          result = failedBuilder(context, Exception('$value'), null);
         }
         return fadeWrapper(context, result);
       },
@@ -168,7 +168,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
     @required this.progress,
     this.nullChild: const SizedBox.expand(),
     this.idleChild: const SizedBox.expand(),
-    this.startingChild: const Center(child: const CircularProgressIndicator()),
+    this.startingChild: const Center(child: CircularProgressIndicator()),
     this.activeBuilder: ProgressBuilder.defaultActiveBuilder,
     this.failedBuilder: ProgressBuilder.defaultFailedBuilder,
     @required this.builder,
@@ -207,9 +207,9 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     if (progress == null)
       return nullChild;
-    return new AnimatedBuilder(
+    return AnimatedBuilder(
       animation: progress,
-      child: new ProgressBuilder<T>(
+      child: ProgressBuilder<T>(
         progress: progress.best,
         idleChild: idleChild,
         startingChild: startingChild,
@@ -221,7 +221,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
         return wrap(
           context,
           child,
-          new ValueListenableBuilder<ProgressValue<T>>(
+          ValueListenableBuilder<ProgressValue<T>>(
             valueListenable: progress.current,
             child: child,
             builder: (BuildContext context, ProgressValue<T> value, Widget child) {
@@ -255,7 +255,7 @@ class ProgressDialog<T> extends StatefulWidget {
   final Progress<T> progress;
 
   @override
-  _ProgressDialogState<T> createState() => new _ProgressDialogState<T>();
+  _ProgressDialogState<T> createState() => _ProgressDialogState<T>();
 }
 
 class _ProgressDialogState<T> extends State<ProgressDialog<T>> with SingleTickerProviderStateMixin {
@@ -270,20 +270,20 @@ class _ProgressDialogState<T> extends State<ProgressDialog<T>> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    return new Dialog(
-      child: new AnimatedSize(
+    return Dialog(
+      child: AnimatedSize(
         duration: const Duration(milliseconds: 150),
         curve: Curves.fastOutSlowIn,
         vsync: this,
-        child: new IntrinsicWidth(
-          child: new IntrinsicHeight(
-            child: new Padding(
+        child: IntrinsicWidth(
+          child: IntrinsicHeight(
+            child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: ProgressBuilder<T>(
                 progress: widget.progress,
                 builder: (BuildContext context, T value) {
                   return const Center(
-                    child: const Icon(Icons.check, size: 60.0),
+                    child: Icon(Icons.check, size: 60.0),
                   );
                 },
               ),
@@ -318,22 +318,22 @@ class Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Stack(
+    return Stack(
       fit: StackFit.passthrough,
       children: <Widget>[
         child,
         Positioned.fill(
-          child: new Visibility(
+          child: Visibility(
             visible: enabled,
             child: const IgnorePointer(
-              child: const FractionallySizedBox(
+              child: FractionallySizedBox(
                 alignment: AlignmentDirectional(0.9, -0.9),
                 widthFactor: 0.25,
                 heightFactor: 0.25,
-                child: const DecoratedBox(
-                  decoration: const ShapeDecoration(
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
                     color: Colors.red,
-                    shape: const CircleBorder(),
+                    shape: CircleBorder(),
                   ),
                 ),
               ),

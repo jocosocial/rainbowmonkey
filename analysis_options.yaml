@@ -5,7 +5,7 @@
 analyzer:
   strong-mode:
     implicit-dynamic: false
-    # implicit-casts: false
+    implicit-casts: false
   exclude:
     - 'flutter/**'
 
@@ -79,19 +79,19 @@ linter:
     - sort_constructors_first
     - sort_unnamed_constructors_first
     - super_goes_last
-    - test_types_in_equals
+    # - test_types_in_equals # bad lint, see https://github.com/dart-lang/sdk/issues/35523
     - throw_in_finally
     - type_init_formals
     - unawaited_futures
     - unnecessary_brace_in_string_interps
-    # - unnecessary_const
+    - unnecessary_const
     - unnecessary_getters_setters
     - unnecessary_lambdas
-    # - unnecessary_new
+    - unnecessary_new
     - unnecessary_null_aware_assignments
     - unnecessary_null_in_if_null_operators
     - unnecessary_overrides
-    # - unnecessary_parenthesis
+    - unnecessary_parenthesis
     - unnecessary_statements
     - unnecessary_this
     - unrelated_type_equality_checks

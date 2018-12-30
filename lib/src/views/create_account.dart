@@ -12,17 +12,17 @@ class CreateAccountDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _CreateAccountDialogState createState() => new _CreateAccountDialogState();
+  _CreateAccountDialogState createState() => _CreateAccountDialogState();
 }
 
 class _CreateAccountDialogState extends State<CreateAccountDialog> {
-  final TextEditingController _username = new TextEditingController();
-  final TextEditingController _password1 = new TextEditingController();
-  final TextEditingController _password2 = new TextEditingController();
-  final TextEditingController _email = new TextEditingController();
-  final TextEditingController _securityQuestion = new TextEditingController();
-  final TextEditingController _securityAnswer = new TextEditingController();
-  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  final TextEditingController _username = TextEditingController();
+  final TextEditingController _password1 = TextEditingController();
+  final TextEditingController _password2 = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _securityQuestion = TextEditingController();
+  final TextEditingController _securityAnswer = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool get _valid {
     return AuthenticatedUser.isValidUsername(_username.text) &&
@@ -46,7 +46,7 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
     final bool close = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => new _AccountCreationStatus(
+      builder: (BuildContext context) => _AccountCreationStatus(
         username: _username.text,
         progress: progress,
       ),
@@ -57,17 +57,17 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return new AlertDialog(
+    return AlertDialog(
       title: const Text('Create Twitarr account'),
       contentPadding: const EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 0.0),
-      content: new DecoratedBox(
-        decoration: new BoxDecoration(
-          border: new Border(
+      content: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
             top: Divider.createBorderSide(context),
             bottom: Divider.createBorderSide(context),
           ),
         ),
-        child: new Form(
+        child: Form(
           key: _formKey,
           autovalidate: true,
           onChanged: () {
@@ -78,14 +78,14 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
           onWillPop: () async {
             return await showDialog<bool>(
               context: context,
-              builder: (BuildContext context) => new AlertDialog(
+              builder: (BuildContext context) => AlertDialog(
                 title: const Text('Cancel account creation?'),
                 actions: <Widget>[
-                  new FlatButton(
+                  FlatButton(
                     onPressed: () { Navigator.of(context).pop(true); },
                     child: const Text('YES'),
                   ),
-                  new FlatButton(
+                  FlatButton(
                     onPressed: () { Navigator.of(context).pop(false); },
                     child: const Text('NO'),
                   ),
@@ -93,20 +93,20 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
               ),
             ) == true;
           },
-          child: new SingleChildScrollView(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 8.0),
-            child: new ListBody(
+            child: ListBody(
               children: <Widget>[
                 const Text(
                   'To create an account on the Twitarr server, please fill in the '
                   'following fields, then press the "Create account" button below.'
                 ),
                 const SizedBox(height: 12.0),
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _username,
                       decoration: const InputDecoration(
                         labelText: 'User name',
@@ -120,11 +120,11 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                     ),
                   ),
                 ),
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _password1,
                       obscureText: true,
                       decoration: const InputDecoration(
@@ -137,11 +137,11 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                     ),
                   ),
                 ),
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _password2,
                       obscureText: true,
                       decoration: const InputDecoration(
@@ -155,11 +155,11 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                     ),
                   ),
                 ),
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _email,
                       decoration: const InputDecoration(
                         labelText: 'E-mail',
@@ -172,11 +172,11 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                     ),
                   ),
                 ),
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _securityQuestion,
                       decoration: const InputDecoration(
                         labelText: 'Security question',
@@ -188,11 +188,11 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
                     ),
                   ),
                 ),
-                new SizedBox(
+                SizedBox(
                   height: 96.0,
-                  child: new Align(
+                  child: Align(
                     alignment: AlignmentDirectional.topStart,
-                    child: new TextFormField(
+                    child: TextFormField(
                       controller: _securityAnswer,
                       decoration: const InputDecoration(
                         labelText: 'Security answer',
@@ -210,11 +210,11 @@ class _CreateAccountDialogState extends State<CreateAccountDialog> {
         ),
       ),
       actions: <Widget>[
-        new FlatButton(
+        FlatButton(
           onPressed: _valid ? _createAccount : null,
           child: const Text('CREATE ACCOUNT'),
         ),
-        new FlatButton(
+        FlatButton(
           onPressed: () async {
             if (await Navigator.maybePop(context) && mounted)
               Navigator.pop(context);
@@ -240,34 +240,34 @@ class _AccountCreationStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Widget idleStatus = new AlertDialog(
+    final Widget idleStatus = AlertDialog(
       title: const Text('Creating account...'),
       content: const Center(
         heightFactor: 1.5,
-        child: const CircularProgressIndicator(),
+        child: CircularProgressIndicator(),
       ),
       actions: <Widget>[
-        new FlatButton(
+        FlatButton(
           onPressed: () { Navigator.of(context).pop(true); },
           child: const Text('CANCEL'),
         ),
       ],
     );
-    return new ProgressBuilder<Credentials>(
+    return ProgressBuilder<Credentials>(
       progress: progress,
       idleChild: idleStatus,
       startingChild: idleStatus,
       activeBuilder: (BuildContext context, double progress, double target) {
-        return new AlertDialog(
+        return AlertDialog(
           title: const Text('Creating account...'),
-          content: new Center(
+          content: Center(
             heightFactor: 1.5,
-            child: new CircularProgressIndicator(
+            child: CircularProgressIndicator(
               value: progress / target,
             ),
           ),
           actions: <Widget>[
-            new FlatButton(
+            FlatButton(
               onPressed: () { Navigator.of(context).pop(true); },
               child: const Text('CANCEL'),
             ),
@@ -292,19 +292,19 @@ class _AccountCreationStatus extends StatelessWidget {
         } else {
           messages.add('An unexpected error occurred:\n$error');
         }
-        return new AlertDialog(
+        return AlertDialog(
           title: const Text('Account creation failed'),
-          content: new SingleChildScrollView(
-            child: new ListBody(
-              children: messages.map<Widget>((String message) => new Text(message)).toList(),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: messages.map<Widget>((String message) => Text(message)).toList(),
             ),
           ),
           actions: <Widget>[
-            new FlatButton(
+            FlatButton(
               onPressed: () { Navigator.of(context).pop(true); },
               child: const Text('CANCEL'),
             ),
-            new FlatButton(
+            FlatButton(
               onPressed: () { Navigator.of(context).pop(false); },
               child: const Text('BACK'),
             ),
@@ -312,11 +312,11 @@ class _AccountCreationStatus extends StatelessWidget {
         );
       },
       builder: (BuildContext context, Credentials value) {
-        return new AlertDialog(
+        return AlertDialog(
           title: const Text('Account created!'),
-          content: new Text('Your account username is "${value.username}".'),
+          content: Text('Your account username is "${value.username}".'),
           actions: <Widget>[
-            new FlatButton(
+            FlatButton(
               onPressed: () { Navigator.of(context).pop(true); },
               child: const Text('YAY!'),
             ),
