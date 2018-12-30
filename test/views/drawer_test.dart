@@ -8,9 +8,9 @@ import '../mocks.dart';
 
 void main() {
   testWidgets('Drawer', (WidgetTester tester) async {
-    final TestCruiseModel model = new TestCruiseModel();
+    final TestCruiseModel model = TestCruiseModel();
     await tester.pumpWidget(
-      new Cruise(
+      Cruise(
         cruiseModel: model,
         child: const CruiseMonkeyHome(),
       ),

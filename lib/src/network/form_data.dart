@@ -34,11 +34,11 @@ class FormData {
   }
 
   void add(String name, String value) {
-    _data.add(new _FormDataField(name, value));
+    _data.add(_FormDataField(name, value));
   }
 
   void addFile(String name, String filename, Uint8List bytes, ContentType contentType) {
-    _data.add(new _FormDataFile(name, filename, bytes, contentType));
+    _data.add(_FormDataFile(name, filename, bytes, contentType));
   }
 
   /// Returns the encoded data as a `x-www-form-urlencoded` string.
@@ -48,7 +48,7 @@ class FormData {
   /// Files are reduced to their file name. Use `toMultipartEncoded` for data
   /// containing files.
   String toUrlEncoded({ Encoding encoding: utf8 }) {
-    final StringBuffer result = new StringBuffer();
+    final StringBuffer result = StringBuffer();
     bool delimit = false;
     for (_FormDataItem item in _data) {
       if (delimit)
@@ -64,32 +64,32 @@ class FormData {
 
   MultipartFormData toMultipartEncoded() {
     final String boundary = _generateBoundary(70, math.Random.secure());
-    final Uint8List fullBoundary = utf8.encode('\r\n--$boundary');
-    final Uint8List contentDispositionHeader = utf8.encode('\r\nContent-Disposition: form-data; name="');
-    final Uint8List closeQuote = utf8.encode('"');
-    final Uint8List filenameParameter = utf8.encode('; filename="');
-    final Uint8List contentTypeHeader = utf8.encode('\r\nContent-Type: ');
-    final Uint8List blankLine = utf8.encode('\r\n\r\n');
-    final Uint8List finalBoundary = utf8.encode('--\r\n');
+    final Uint8List fullBoundary = utf8.encode('\r\n--$boundary') as Uint8List;
+    final Uint8List contentDispositionHeader = utf8.encode('\r\nContent-Disposition: form-data; name="') as Uint8List;
+    final Uint8List closeQuote = utf8.encode('"') as Uint8List;
+    final Uint8List filenameParameter = utf8.encode('; filename="') as Uint8List;
+    final Uint8List contentTypeHeader = utf8.encode('\r\nContent-Type: ') as Uint8List;
+    final Uint8List blankLine = utf8.encode('\r\n\r\n') as Uint8List;
+    final Uint8List finalBoundary = utf8.encode('--\r\n') as Uint8List;
     final List<Uint8List> parts = <Uint8List>[];
     for (_FormDataItem item in _data) {
       parts.add(fullBoundary);
       parts.add(contentDispositionHeader);
-      parts.add(utf8.encode(item.name));
+      parts.add(utf8.encode(item.name) as Uint8List);
       parts.add(closeQuote);
       if (item is _FormDataFile) {
         parts.add(filenameParameter);
-        parts.add(utf8.encode(item.value));
+        parts.add(utf8.encode(item.value) as Uint8List);
         parts.add(closeQuote);
         parts.add(contentTypeHeader);
-        parts.add(utf8.encode(item.contentType.value));
+        parts.add(utf8.encode(item.contentType.value) as Uint8List);
       }
       parts.add(blankLine);
       if (item is _FormDataFile) {
         parts.add(item.bytes);
       } else {
         assert(item is _FormDataField);
-        parts.add(utf8.encode(item.value));
+        parts.add(utf8.encode(item.value) as Uint8List);
       }
     }
     parts.add(fullBoundary);

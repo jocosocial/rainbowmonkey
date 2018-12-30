@@ -10,9 +10,9 @@ import 'package:cruisemonkey/src/views/karaoke.dart';
 import 'package:cruisemonkey/src/progress.dart';
 
 Future<void> main() async {
-  final AssetBundle bundle = new TestAssetBundle();
+  final AssetBundle bundle = TestAssetBundle();
   const KaraokeView().createState().initSongs(bundle);
-  final Completer<void> completer = new Completer<void>();
+  final Completer<void> completer = Completer<void>();
   final Progress<void> status = KaraokeView.loadStatus;
   void listener() {
     if (status.value is SuccessfulProgress) {
@@ -25,11 +25,11 @@ Future<void> main() async {
 
   testWidgets('Karaoke', (WidgetTester tester) async {
     await tester.pumpWidget(
-      new MaterialApp(
-        home: new DefaultAssetBundle(
+      MaterialApp(
+        home: DefaultAssetBundle(
           bundle: bundle,
           child: const Material(
-            child: const KaraokeView(),
+            child: KaraokeView(),
           ),
         ),
       ),
@@ -79,7 +79,7 @@ class TestAssetBundle extends CachingAssetBundle {
   @override
   Future<ByteData> load(String key) async {
     if (key == 'resources/JoCoKaraokeSongCatalog.txt')
-      return new ByteData.view(new Uint8List.fromList(utf8.encode(songs)).buffer);
+      return ByteData.view(Uint8List.fromList(utf8.encode(songs)).buffer);
     return null;
   }
 }

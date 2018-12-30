@@ -15,7 +15,7 @@ Future<void> main() async {
   testWidgets('Profile Editor', (WidgetTester tester) async {
     final List<String> log = <String>[];
     ProfileTestTwitarr twitarr;
-    final CruiseModel model = new CruiseModel(
+    final CruiseModel model = CruiseModel(
       twitarrConfiguration: ProfileTestTwitarrConfiguration(
         log,
         onTwitarr: (ProfileTestTwitarr value) {
@@ -26,8 +26,8 @@ Future<void> main() async {
     );
     await model.login(username: 'username', password: 'password').asFuture();
     await tester.pumpWidget(
-      new MaterialApp(
-        home: new Cruise(
+      MaterialApp(
+        home: Cruise(
           cruiseModel: model,
           child: const Profile(),
         ),

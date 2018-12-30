@@ -32,9 +32,9 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
        assert(rarePollInterval != null) {
     _restorePhotos(); // async
     _setupTwitarr(twitarrConfiguration);
-    _user = new PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
-    _calendar = new PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
-    _seamail = new Seamail();
+    _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
+    _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
+    _seamail = Seamail();
     _restoreCredentials();
   }
 
@@ -84,7 +84,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _currentCredentials = null;
     _pendingCredentials?.removeListener(_saveCredentials);
     _pendingCredentials = null;
-    _seamail = new Seamail();
+    _seamail = Seamail();
     _user.reset();
     notifyListeners();
   }
@@ -121,7 +121,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   void _restoreCredentials() {
-    _updateCredentials(new Progress<AuthenticatedUser>.deferred((ProgressController<AuthenticatedUser> completer) async {
+    _updateCredentials(Progress<AuthenticatedUser>.deferred((ProgressController<AuthenticatedUser> completer) async {
       final Credentials credentials = await completer.chain<Credentials>(store.restoreCredentials());
       if (credentials != null && _alive) {
         return await completer.chain<AuthenticatedUser>(
@@ -194,7 +194,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     }
     assert(_currentCredentials != null && _currentCredentials.key != null);
     assert(_ongoingSeamailUpdate == null);
-    final CancelationSignal signal = new CancelationSignal();
+    final CancelationSignal signal = CancelationSignal();
     _ongoingSeamailUpdate = signal;
     if (_seamail.active) {
       await _twitarr.updateSeamailThreads(_currentCredentials, _seamail, this, signal); // I/O
@@ -238,7 +238,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   Future<void> _photosBusy = Future<void>.value();
   Future<T> _queuePhotosWork<T>(AsyncCallback<T> callback) async {
     final Future<void> lastLock = _photosBusy;
-    final Completer<void> currentLock = new Completer<void>();
+    final Completer<void> currentLock = Completer<void>();
     _photosBusy = currentLock.future;
     T result;
     try {
@@ -321,15 +321,15 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 
   Widget avatarFor(User user, { double size: 40.0 }) {
     final String name = user.displayName ?? user.username;
-    List<String> names = name.split(new RegExp(r'[^A-Z]+'));
+    List<String> names = name.split(RegExp(r'[^A-Z]+'));
     if (names.length == 1)
       names = name.split(' ');
     if (names.length <= 2)
       names = name.split('');
-    return new Builder(
+    return Builder(
       builder: (BuildContext context) {
         final ThemeData theme = Theme.of(context);
-        final Color color = new Color(user.username.hashCode | 0xFF000000);
+        final Color color = Color(user.username.hashCode | 0xFF000000);
         TextStyle textStyle = theme.primaryTextTheme.subhead;
         switch (ThemeData.estimateBrightnessForColor(color)) {
           case Brightness.dark:
@@ -339,23 +339,23 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
             textStyle = textStyle.copyWith(color: theme.primaryColorDark);
             break;
         }
-        return new AnimatedContainer(
-          decoration: new ShapeDecoration(
+        return AnimatedContainer(
+          decoration: ShapeDecoration(
             shape: const CircleBorder(),
             color: color,
           ),
-          child: new ClipOval(
-            child: new Center(
-              child: new Text(
-                names.take(2).map<String>((String value) => new String.fromCharCode(value.runes.first)).join(''),
+          child: ClipOval(
+            child: Center(
+              child: Text(
+                names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
                 style: textStyle,
                 textScaleFactor: 1.0,
               ),
             ),
           ),
-          foregroundDecoration: new ShapeDecoration(
+          foregroundDecoration: ShapeDecoration(
             shape: const CircleBorder(),
-            image: new DecorationImage(image: new AvatarImage(user.username, this, _twitarr)),
+            image: DecorationImage(image: AvatarImage(user.username, this, _twitarr)),
           ),
           duration: const Duration(milliseconds: 250),
           height: size,
@@ -375,7 +375,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     String roomNumber,
     bool vcardPublic,
   }) {
-    return new Progress<void>((ProgressController<void> completer) async {
+    return Progress<void>((ProgressController<void> completer) async {
       await completer.chain(_twitarr.updateProfile(
         credentials: _currentCredentials,
         currentLocation: currentLocation,
@@ -392,7 +392,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   Progress<void> uploadAvatar({ Uint8List image }) {
-    return new Progress<void>((ProgressController<void> completer) async {
+    return Progress<void>((ProgressController<void> completer) async {
       if (image != null) {
         await completer.chain(_twitarr.uploadAvatar(
           credentials: _currentCredentials,
@@ -459,10 +459,10 @@ class AvatarImage extends ImageProvider<AvatarImage> {
   String toString() => '$runtimeType($username)';
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType)
       return false;
-    final AvatarImage typedOther = other;
+    final AvatarImage typedOther = other as AvatarImage;
     return username == typedOther.username
         && photoManager == typedOther.photoManager
         && twitarr == typedOther.twitarr;

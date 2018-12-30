@@ -11,9 +11,9 @@ import '../mocks.dart';
 
 void main() {
   testWidgets('Calendar', (WidgetTester tester) async {
-    final TestCruiseModel model1 = new TestCruiseModel();
+    final TestCruiseModel model1 = TestCruiseModel();
     await tester.pumpWidget(
-      new Cruise(
+      Cruise(
         cruiseModel: model1,
         child: const CruiseMonkeyHome(),
       ),
@@ -26,16 +26,16 @@ void main() {
 
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
-    model1.calendar.addProgress(new Progress<Calendar>((ProgressController<Calendar> completer) async {
+    model1.calendar.addProgress(Progress<Calendar>((ProgressController<Calendar> completer) async {
       await Future<void>.delayed(const Duration(milliseconds: 1500));
-      return new Calendar(events: <Event>[
-        new Event(
+      return Calendar(events: <Event>[
+        Event(
           id: 'a',
           title: 'Test A',
           location: 'Apple Deck',
           official: true,
-          startTime: new DateTime(2019, 3, 9, 20, 00),
-          endTime: new DateTime(2019, 3, 9, 21, 30),
+          startTime: DateTime(2019, 3, 9, 20, 00),
+          endTime: DateTime(2019, 3, 9, 21, 30),
         ),
       ]);
     }));
@@ -64,23 +64,23 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
-    model1.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
-      new Event(
+    model1.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: <Event>[
+      Event(
         id: 'a',
         title: 'Actual Event',
         location: 'Apple Deck',
         official: true,
-        startTime: new DateTime(2019, 3, 9, 20, 00),
-        endTime: new DateTime(2019, 3, 9, 21, 30),
+        startTime: DateTime(2019, 3, 9, 20, 00),
+        endTime: DateTime(2019, 3, 9, 21, 30),
       ),
-      new Event(
+      Event(
         id: 'b',
         title: 'Shadow Event',
         location: 'Banana Deck',
         description: 'Eat some food.',
         official: false,
-        startTime: new DateTime(2019, 3, 9, 20, 00),
-        endTime: new DateTime(2019, 3, 10, 00, 00),
+        startTime: DateTime(2019, 3, 9, 20, 00),
+        endTime: DateTime(2019, 3, 10, 00, 00),
       ),
     ])));
     await tester.pump();
@@ -99,23 +99,23 @@ void main() {
     expect(tester.getRect(find.text('Actual Event')).bottom, lessThan(tester.getRect(find.text('Shadow Event')).top));
     expect(tester.getRect(find.text('Shadow Event')).left, equals(tester.getRect(find.text('Actual Event')).left));
 
-    model1.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
-      new Event(
+    model1.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: <Event>[
+      Event(
         id: 'a',
         title: 'Actual Event',
         location: 'Apple Deck',
         official: true,
-        startTime: new DateTime(2019, 3, 9, 20, 00),
-        endTime: new DateTime(2019, 3, 10, 00, 00),
+        startTime: DateTime(2019, 3, 9, 20, 00),
+        endTime: DateTime(2019, 3, 10, 00, 00),
       ),
-      new Event(
+      Event(
         id: 'b',
         title: 'Shadow Event',
         location: 'Banana Deck',
         description: 'Eat some food.',
         official: false,
-        startTime: new DateTime(2019, 3, 9, 20, 00),
-        endTime: new DateTime(2019, 3, 9, 21, 30),
+        startTime: DateTime(2019, 3, 9, 20, 00),
+        endTime: DateTime(2019, 3, 9, 21, 30),
       ),
     ])));
     await tester.pump();
@@ -134,14 +134,14 @@ void main() {
     expect(tester.getRect(find.text('Shadow Event')).bottom, lessThan(tester.getRect(find.text('Actual Event')).top));
     expect(tester.getRect(find.text('Shadow Event')).left, equals(tester.getRect(find.text('Actual Event')).left));
 
-    model1.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
-      new Event(
+    model1.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: <Event>[
+      Event(
         id: 'c',
         title: 'Coconuts',
         location: 'Ship',
         official: true,
-        startTime: new DateTime(2019, 3, 9, 12, 00),
-        endTime: new DateTime(2019, 3, 9, 13, 00),
+        startTime: DateTime(2019, 3, 9, 12, 00),
+        endTime: DateTime(2019, 3, 9, 13, 00),
       ),
     ])));
     await tester.pump();
@@ -151,9 +151,9 @@ void main() {
     expect(find.text('Dragonfruit'), findsNothing);
     expect(find.text('Elderberry'), findsNothing);
 
-    final TestCruiseModel model2 = new TestCruiseModel();
+    final TestCruiseModel model2 = TestCruiseModel();
     await tester.pumpWidget(
-      new Cruise(
+      Cruise(
         cruiseModel: model2,
         child: const CruiseMonkeyHome(),
       ),
@@ -164,14 +164,14 @@ void main() {
     expect(find.text('Elderberry'), findsNothing);
 
     // update old calendar, check it has no effect
-    model1.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
-      new Event(
+    model1.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: <Event>[
+      Event(
         id: 'd',
         title: 'Dragonfruit',
         location: 'Ship',
         official: true,
-        startTime: new DateTime(2019, 3, 9, 12, 00),
-        endTime: new DateTime(2019, 3, 9, 13, 00),
+        startTime: DateTime(2019, 3, 9, 12, 00),
+        endTime: DateTime(2019, 3, 9, 13, 00),
       ),
     ])));
     await tester.pump();
@@ -179,15 +179,15 @@ void main() {
     expect(find.text('Dragonfruit'), findsNothing);
     expect(find.text('Elderberry'), findsNothing);
 
-    // update new calendar, check that it works
-    model2.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
-      new Event(
+    // update calendar, check that it works
+    model2.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: <Event>[
+      Event(
         id: 'e',
         title: 'Elderberry',
         location: 'Ship',
         official: true,
-        startTime: new DateTime(2019, 3, 9, 12, 00),
-        endTime: new DateTime(2019, 3, 9, 13, 00),
+        startTime: DateTime(2019, 3, 9, 12, 00),
+        endTime: DateTime(2019, 3, 9, 13, 00),
       ),
     ])));
     await tester.pump();
@@ -206,20 +206,20 @@ void main() {
   });
 
   testWidgets('Calendar (Details)', (WidgetTester tester) async {
-    final TestCruiseModel model = new TestCruiseModel();
-    model.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
-      new Event(
+    final TestCruiseModel model = TestCruiseModel();
+    model.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: <Event>[
+      Event(
         id: 'f',
         title: 'Fruit',
         location: 'Ship',
         official: false,
-        startTime: new DateTime(2019, 3, 12, 07, 00),
-        endTime: new DateTime(2019, 3, 13, 07, 00),
+        startTime: DateTime(2019, 3, 12, 07, 00),
+        endTime: DateTime(2019, 3, 13, 07, 00),
       ),
     ])));
 
     await tester.pumpWidget(
-      new Cruise(
+      Cruise(
         cruiseModel: model,
         child: const CruiseMonkeyHome(),
       ),
@@ -232,14 +232,14 @@ void main() {
     expect(find.text('all day'), findsOneWidget);
     expect(find.text('null'), findsNothing);
 
-    model.calendar.addProgress(new Progress<Calendar>.completed(new Calendar(events: <Event>[
-      new Event(
+    model.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: <Event>[
+      Event(
         id: 'g',
         title: 'Grapes',
         location: 'Ship',
         official: false,
-        startTime: new DateTime(2020, 12, 31, 12, 10),
-        endTime: new DateTime(2021, 1, 1, 00, 23),
+        startTime: DateTime(2020, 12, 31, 12, 10),
+        endTime: DateTime(2021, 1, 1, 00, 23),
       ),
     ])));
 
@@ -254,25 +254,25 @@ void main() {
 
   testWidgets('Calendar (no reload on return)', (WidgetTester tester) async {
     int index = 0;
-    final TestCruiseModel model = new TestCruiseModel(
-      calendar: new PeriodicProgress<Calendar>(const Duration(seconds: 1), (ProgressController<Calendar> completer) async {
-        await new Future<void>.delayed(const Duration(seconds: 10));
+    final TestCruiseModel model = TestCruiseModel(
+      calendar: PeriodicProgress<Calendar>(const Duration(seconds: 1), (ProgressController<Calendar> completer) async {
+        await Future<void>.delayed(const Duration(seconds: 10));
         index += 1;
-        return new Calendar(events: <Event>[
-          new Event(
+        return Calendar(events: <Event>[
+          Event(
             id: 'test$index',
             title: 'Test$index',
             location: 'Test $index',
             official: false,
-            startTime: new DateTime(2000, index, index, 0, 0),
-            endTime: new DateTime(2000, index, index, 0, 10),
+            startTime: DateTime(2000, index, index, 0, 0),
+            endTime: DateTime(2000, index, index, 0, 10),
           ),
         ]);
       }),
     );
 
     await tester.pumpWidget(
-      new Cruise(
+      Cruise(
         cruiseModel: model,
         child: const CruiseMonkeyHome(),
       ),

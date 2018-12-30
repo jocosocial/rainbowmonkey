@@ -13,7 +13,7 @@ class CalendarView extends StatelessWidget implements View {
   Widget buildTab(BuildContext context) {
     return const Tab(
       text: 'Calendar',
-      icon: const Icon(Icons.event),
+      icon: Icon(Icons.event),
     );
   }
 
@@ -24,15 +24,15 @@ class CalendarView extends StatelessWidget implements View {
 
   @override
   Widget build(BuildContext context) {
-    return new ContinuousProgressBuilder<Calendar>(
+    return ContinuousProgressBuilder<Calendar>(
       progress: Cruise.of(context).calendar,
       builder: (BuildContext context, Calendar calendar) {
-        return new ListView.builder(
+        return ListView.builder(
           itemBuilder: (BuildContext context, int index) {
             DateTime lastTime;
             if (index > 0)
               lastTime = calendar.events[index - 1].startTime;
-            return new TimeSlice(
+            return TimeSlice(
               event: calendar.events[index],
               lastStartTime: lastTime,
               favorited: false,
@@ -56,7 +56,7 @@ class TimeSlice extends StatelessWidget {
   }) : assert(event != null),
        assert(favorited != null),
        assert(onFavorite != null),
-       super(key: key ?? new Key(event.id));
+       super(key: key ?? Key(event.id));
 
   final Event event;
   final DateTime lastStartTime;
@@ -76,15 +76,15 @@ class TimeSlice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Widget> eventDetails = <Widget>[
-      new Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      new Text(event.location, style: const TextStyle(fontStyle: FontStyle.italic)),
+      Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      Text(event.location, style: const TextStyle(fontStyle: FontStyle.italic)),
     ];
     if (event.description != null)
-      eventDetails.add(new Text(event.description));
+      eventDetails.add(Text(event.description));
     final DateTime lastTime = lastStartTime?.toLocal();
-    final DateTime lastDay = lastTime != null ? new DateTime(lastTime.year, lastTime.month, lastTime.day) : null;
+    final DateTime lastDay = lastTime != null ? DateTime(lastTime.year, lastTime.month, lastTime.day) : null;
     final DateTime startTime = event.startTime.toLocal();
-    final DateTime startDay = new DateTime(startTime.year, startTime.month, startTime.day);
+    final DateTime startDay = DateTime(startTime.year, startTime.month, startTime.day);
     final DateTime endTime = event.endTime.toLocal();
     final bool allDay = endTime.difference(startTime) >= const Duration(days: 1);
     final List<Widget> times = <Widget>[];
@@ -92,33 +92,33 @@ class TimeSlice extends StatelessWidget {
       times.add(const Text('all day'));
     } else {
       times
-        ..add(new Text(_getHours(startTime)))
-        ..add(new Text('-${_getHours(endTime)}'));
+        ..add(Text(_getHours(startTime)))
+        ..add(Text('-${_getHours(endTime)}'));
     }
-    times.add(const Opacity(opacity: 0.0, child: const Text('-88:88pm')));
-    final Widget day = new Row(
+    times.add(const Opacity(opacity: 0.0, child: Text('-88:88pm')));
+    final Widget day = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        new Container(
+        Container(
           padding: const EdgeInsets.all(8.0),
           alignment: AlignmentDirectional.topStart,
-          child: new Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: times,
           ),
         ),
-        new Expanded(
-          child: new Container(
+        Expanded(
+          child: Container(
             padding: const EdgeInsets.all(8.0),
-            child: new ListBody(
+            child: ListBody(
               children: eventDetails,
             ),
           ),
         ),
-        new Semantics(
+        Semantics(
           checked: favorited,
-          child: new IconButton(
-            icon: new Icon(favorited ? Icons.favorite : Icons.favorite_border),
+          child: IconButton(
+            icon: Icon(favorited ? Icons.favorite : Icons.favorite_border),
             tooltip: 'Mark this event as interesting.',
             onPressed: () {
               onFavorite(!favorited);
@@ -154,14 +154,14 @@ class TimeSlice extends StatelessWidget {
         case 12: monthName = 'December'; break;
       }
       final int dayNumber = startDay.day;
-      return new ListBody(
+      return ListBody(
         children: <Widget>[
-          new Material(
+          Material(
             color: Theme.of(context).accentColor,
             textStyle: Theme.of(context).accentTextTheme.subhead,
-            child: new Container(
+            child: Container(
               padding: const EdgeInsets.all(12.0),
-              child: new Text('$dayOfWeek $monthName $dayNumber'),
+              child: Text('$dayOfWeek $monthName $dayNumber'),
             ),
           ),
           day,
