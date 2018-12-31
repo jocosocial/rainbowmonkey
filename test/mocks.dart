@@ -70,6 +70,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   Progress<Credentials> createAccount({
     @required String username,
     @required String password,
+    @required String registrationCode,
     @required String email,
     @required String securityQuestion,
     @required String securityAnswer,

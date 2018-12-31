@@ -67,11 +67,12 @@ class LoggingTwitarr extends Twitarr {
   Progress<AuthenticatedUser> createAccount({
     @required String username,
     @required String password,
+    @required String registrationCode,
     @required String email,
     @required String securityQuestion,
     @required String securityAnswer,
   }) {
-    log.add('LoggingTwitarr(${_configuration.id}).createAccount $username / $password / $email / $securityQuestion / $securityAnswer');
+    log.add('LoggingTwitarr(${_configuration.id}).createAccount $username / $password / $registrationCode / $email / $securityQuestion / $securityAnswer');
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
       email: email,

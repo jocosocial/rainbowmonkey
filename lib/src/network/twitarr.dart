@@ -35,6 +35,15 @@ class InvalidUsernameOrPasswordError implements Exception, UserFriendlyError {
   String toString() => 'Server did not recognize the username or password.';
 }
 
+class FieldErrors implements Exception {
+  const FieldErrors(this.fields);
+
+  final Map<String, List<String>> fields;
+
+  @override
+  String toString() => 'Account creation failed:\n$fields';
+}
+
 class HttpServerError implements Exception, UserFriendlyError {
   const HttpServerError(this.statusCode, this.reasonPhrase, this.url);
 
@@ -88,6 +97,7 @@ abstract class Twitarr {
   Progress<AuthenticatedUser> createAccount({
     @required String username,
     @required String password,
+    @required String registrationCode,
     @required String email,
     @required String securityQuestion,
     @required String securityAnswer,

@@ -92,6 +92,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   Progress<Credentials> createAccount({
     @required String username,
     @required String password,
+    @required String registrationCode,
     @required String email,
     @required String securityQuestion,
     @required String securityAnswer,
@@ -99,6 +100,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return _updateCredentials(_twitarr.createAccount(
       username: username,
       password: password,
+      registrationCode: registrationCode,
       email: email,
       securityQuestion: securityQuestion,
       securityAnswer: securityAnswer,

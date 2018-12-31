@@ -7,6 +7,7 @@ import 'src/models/user.dart';
 import 'src/network/rest.dart';
 import 'src/progress.dart';
 import 'src/views/calendar.dart';
+import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/drawer.dart';
 import 'src/views/karaoke.dart';
@@ -18,7 +19,7 @@ import 'src/widgets.dart';
 void main() {
   runApp(CruiseMonkeyApp(
     cruiseModel: CruiseModel(
-      twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
+      twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'),
       store: DiskDataStore(),
     ),
   ));
@@ -110,6 +111,7 @@ class CruiseMonkeyHome extends StatelessWidget {
       ),
       routes: <String, WidgetBuilder>{
         '/profile': (BuildContext context) => const Profile(),
+        '/create_account': (BuildContext context) => const CreateAccount(),
         '/settings': (BuildContext context) => const Settings(),
       },
     );

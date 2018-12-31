@@ -30,12 +30,6 @@ class Settings extends StatelessWidget {
                 title: Text('Server', style: theme.textTheme.body2.copyWith(color: theme.primaryColor)),
               ),
               RadioListTile<TwitarrConfiguration>(
-                title: const Text('gbasden\'s server'),
-                groupValue: Cruise.of(context).twitarrConfiguration,
-                value: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
-                onChanged: (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
-              ),
-              RadioListTile<TwitarrConfiguration>(
                 title: const Text('hendusoone\'s server'),
                 groupValue: Cruise.of(context).twitarrConfiguration,
                 value: const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'),
@@ -45,6 +39,12 @@ class Settings extends StatelessWidget {
                 title: const Text('hendusoone\'s development machine'),
                 groupValue: Cruise.of(context).twitarrConfiguration,
                 value: const RestTwitarrConfiguration(baseUrl: 'http://108.49.102.77:3000/'),
+                onChanged: (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
+              ),
+              RadioListTile<TwitarrConfiguration>(
+                title: const Text('gbasden\'s server'),
+                groupValue: Cruise.of(context).twitarrConfiguration,
+                value: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
                 onChanged: (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
               ),
               const Divider(),
