@@ -119,7 +119,7 @@ class AuthenticatedUser extends User {
   static bool isValidPassword(String password) {
     // https://github.com/hendusoone/twitarr/blob/master/app/controllers/api/v2/user_controller.rb#L26
     assert(password != null);
-    return password.length >= 5;
+    return password.length >= 6;
   }
 
   static bool isValidDisplayName(String displayName) {

@@ -18,7 +18,7 @@ import 'src/widgets.dart';
 void main() {
   runApp(new CruiseMonkeyApp(
     cruiseModel: new CruiseModel(
-      twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://localhost:3000/'),
+      twitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
       store: new DiskDataStore(),
     ),
   ));

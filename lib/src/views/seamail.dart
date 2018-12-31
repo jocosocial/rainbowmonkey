@@ -9,7 +9,6 @@ import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
 
-
 class SeamailView extends StatelessWidget implements View {
   const SeamailView({
     Key key,
