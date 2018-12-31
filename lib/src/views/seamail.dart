@@ -135,21 +135,8 @@ class SeamailView extends StatelessWidget implements View {
                   ),
                 ),
               );
-              // return new ListTile(
-              //   leading: new CircleAvatar(child: new Text('${thread.users.length}')), // TODO(ianh): faces
-              //   title: new Text(thread.subject, maxLines: 1, overflow: TextOverflow.ellipsis),
-              //   subtitle: new Text(
-              //     '${thread.messageCount} message${thread.messageCount == 1 ? '' : "s"}',
-              //     style: thread.unread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-              //   ),
-              //   onTap: () { showThread(context, thread); },
-              // );
             }
-            // return const ListTile(
-            //   leading: const CircleAvatar(child: const Icon(Icons.all_inclusive)),
-            //   title: const Text('Twitarr'),
-            //   // TODO(ianh): Twitarr
-            // );
+          // TODO(ianh): Twitarr
           },
           itemCount: threads.length + 1,
         );

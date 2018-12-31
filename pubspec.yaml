@@ -5,6 +5,7 @@ dependencies:
   flutter:
     sdk: flutter
   path_provider: any
+  image_picker: any
   intl: ^0.15.7
 
 dev_dependencies:
