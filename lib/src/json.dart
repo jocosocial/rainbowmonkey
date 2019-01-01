@@ -170,116 +170,100 @@ class Json {
   }
 
   bool operator <(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value < other as bool;
-    final Json typedOther = other as Json;
-    return _value < typedOther._value as bool;
+    if (other is Json)
+      return _value < other._value as bool;
+    return _value < other as bool;
   }
 
   bool operator <=(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value <= other as bool;
-    final Json typedOther = other as Json;
-    return _value <= typedOther._value as bool;
+    if (other is Json)
+      return _value <= other._value as bool;
+    return _value <= other as bool;
   }
 
   bool operator >(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value > other as bool;
-    final Json typedOther = other as Json;
-    return _value > typedOther._value as bool;
+    if (other is Json)
+      return _value > other._value as bool;
+    return _value > other as bool;
   }
 
   bool operator >=(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value >= other as bool;
-    final Json typedOther = other as Json;
-    return _value >= typedOther._value as bool;
+    if (other is Json)
+      return _value >= other._value as bool;
+    return _value >= other as bool;
   }
 
   dynamic operator -(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value - other;
-    final Json typedOther = other as Json;
-    return _value - typedOther._value;
+    if (other is Json)
+      return _value - other._value;
+    return _value - other;
   }
 
   dynamic operator +(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value + other;
-    final Json typedOther = other as Json;
-    return _value + typedOther._value;
+    if (other is Json)
+      return _value + other._value;
+    return _value + other;
   }
 
   dynamic operator /(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value / other;
-    final Json typedOther = other as Json;
-    return _value / typedOther._value;
+    if (other is Json)
+      return _value / other._value;
+    return _value / other;
   }
 
   dynamic operator ~/(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value ~/ other;
-    final Json typedOther = other as Json;
-    return _value ~/ typedOther._value;
+    if (other is Json)
+      return _value ~/ other._value;
+    return _value ~/ other;
   }
 
   dynamic operator *(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value * other;
-    final Json typedOther = other as Json;
-    return _value * typedOther._value;
+    if (other is Json)
+      return _value * other._value;
+    return _value * other;
   }
 
   dynamic operator %(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value % other;
-    final Json typedOther = other as Json;
-    return _value % typedOther._value;
+    if (other is Json)
+      return _value % other._value;
+    return _value % other;
   }
 
   dynamic operator |(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value.toInt() | other;
-    final Json typedOther = other as Json;
-    return _value.toInt() | typedOther._value.toInt();
+    if (other is Json)
+      return _value.toInt() | other._value.toInt();
+    return _value.toInt() | other;
   }
 
   dynamic operator ^(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value.toInt() ^ other;
-    final Json typedOther = other as Json;
-    return _value.toInt() ^ typedOther._value.toInt();
+    if (other is Json)
+      return _value.toInt() ^ other._value.toInt();
+    return _value.toInt() ^ other;
   }
 
   dynamic operator &(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value.toInt() & other;
-    final Json typedOther = other as Json;
-    return _value.toInt() & typedOther._value.toInt();
+    if (other is Json)
+      return _value.toInt() & other._value.toInt();
+    return _value.toInt() & other;
   }
 
   dynamic operator <<(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value.toInt() << other;
-    final Json typedOther = other as Json;
-    return _value.toInt() << typedOther._value.toInt();
+    if (other is Json)
+      return _value.toInt() << other._value.toInt();
+    return _value.toInt() << other;
   }
 
   dynamic operator >>(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value.toInt() >> other;
-    final Json typedOther = other as Json;
-    return _value.toInt() >> typedOther._value.toInt();
+    if (other is Json)
+      return _value.toInt() >> other._value.toInt();
+    return _value.toInt() >> other;
   }
 
   @override
   bool operator ==(Object other) {
-    if (other.runtimeType != runtimeType)
-      return _value == other;
-    final Json typedOther = other as Json;
-    return _value == typedOther._value;
+    if (other is Json)
+      return _value == other._value;
+    return _value == other;
   }
 
   @override
