@@ -1,12 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
-import 'package:cruisemonkey/src/models/seamail.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -130,29 +128,6 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
-  Future<void> updateSeamailThreads(
-    Credentials credentials,
-    Seamail seamail,
-    PhotoManager photoManager,
-    CancelationSignal cancelationSignal,
-  ) async {
-    log.add('updateSeamailThreads');
-  }
-
-  @override
-  Progress<SeamailThread> newSeamail(
-    Credentials credentials,
-    Seamail seamail,
-    PhotoManager photoManager,
-    Set<User> users,
-    String subject,
-    String message,
-  ) {
-    log.add('newSeamail');
-    return null;
-  }
-
-  @override
   Progress<Uint8List> fetchProfilePicture(String username) {
     log.add('fetchProfilePicture');
     return Progress<Uint8List>.completed(Uint8List.fromList(<int>[0]));
@@ -204,6 +179,54 @@ class LoggingTwitarr extends Twitarr {
   @override
   Progress<List<User>> getUserList(String searchTerm) {
     log.add('getUserList');
+    return null;
+  }
+
+  @override
+  Progress<SeamailSummary> getSeamailThreads({
+    @required Credentials credentials,
+  }) {
+    log.add('getSeamailThreads');
+    return null;
+  }
+
+  @override
+  Progress<SeamailSummary> getUnreadSeamailMessages({
+    @required Credentials credentials,
+    int freshnessToken,
+  }) {
+    log.add('getUnreadSeamailMessages');
+    return null;
+  }
+
+  @override
+  Progress<SeamailThreadSummary> getSeamailMessages({
+    @required Credentials credentials,
+    @required String threadId,
+    bool markRead = true,
+  }) {
+    log.add('getSeamailMessages');
+    return null;
+  }
+
+  @override
+  Progress<SeamailMessageSummary> postSeamailMessage({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String text,
+  }) {
+    log.add('postSeamailMessage');
+    return null;
+  }
+
+  @override
+  Progress<SeamailThreadSummary> createSeamailThread({
+    @required Credentials credentials,
+    @required Set<User> users,
+    @required String subject,
+    @required String text,
+  }) {
+    log.add('createSeamailThread');
     return null;
   }
 

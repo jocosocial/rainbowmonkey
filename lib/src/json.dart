@@ -117,7 +117,7 @@ class Json {
     return _value;
   }
 
-  List<dynamic> asIterable() {
+  Iterable<Json> asIterable() {
     if (_value is Map)
       return (_value as Map<String, Json>).values.toList();
     if (_value is List)
@@ -144,6 +144,10 @@ class Json {
 
   void operator []=(dynamic key, dynamic value) {
     _value[key] = _wrap(value);
+  }
+
+  bool hasKey(String key) {
+    return _value is Map && (_value as Map<String, Json>).containsKey(key);
   }
 
   @override

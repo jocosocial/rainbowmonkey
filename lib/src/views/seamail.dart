@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../models/seamail.dart';
+import '../logic/cruise.dart';
+import '../logic/seamail.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -19,11 +20,15 @@ class SeamailView extends StatelessWidget implements View {
     return AnimatedBuilder(
       animation: seamail,
       builder: (BuildContext context, Widget child) {
-        return const Tab(
+        return Tab(
           text: 'Seamail',
-          icon: Icon(Icons.mail),
+          icon: Badge(
+            child: child,
+            enabled: seamail.unreadCount > 0,
+          ),
         );
       },
+      child: const Icon(Icons.mail),
     );
   }
 
@@ -72,35 +77,42 @@ class SeamailView extends StatelessWidget implements View {
 
   @override
   Widget build(BuildContext context) {
-    // TODO(ianh): track the progress of loading the threads and show a spinner
-    final Seamail threads = Cruise.of(context).seamail;
-    // TODO(ianh): sort the threads by recency, newest at the top
-    return AnimatedBuilder(
-      animation: threads,
-      builder: (BuildContext context, Widget child) {
-        return ListView.builder(
-          itemBuilder: (BuildContext context, int index) {
-            if (index < threads.length) {
-              final SeamailThread thread = threads[index];
-              return ListTile(
-                leading: CircleAvatar(child: Text('${thread.users.length}')), // TODO(ianh): faces
-                title: Text(thread.subject, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text(
-                  '${thread.messageCount} message${thread.messageCount == 1 ? '' : "s"}',
-                  style: thread.unread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-                ),
-                onTap: () { showThread(context, thread); },
-              );
-            }
-            return const ListTile(
-              leading: CircleAvatar(child: Icon(Icons.all_inclusive)),
-              title: Text('Twitarr'),
-              // TODO(ianh): Twitarr
+    final Seamail seamail = Cruise.of(context).seamail;
+    return BusyIndicator(
+      busy: seamail.busy,
+      child: AnimatedBuilder(
+        animation: seamail,
+        builder: (BuildContext context, Widget child) {
+          final List<SeamailThread> threads = seamail.toList()
+            ..sort(
+              (SeamailThread a, SeamailThread b) {
+                return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
+              }
             );
-          },
-          itemCount: threads.length + 1,
-        );
-      },
+          return ListView.builder(
+            itemBuilder: (BuildContext context, int index) {
+              if (index < threads.length) {
+                final SeamailThread thread = threads[index];
+                return ListTile(
+                  leading: CircleAvatar(child: Text('${thread.users.length}')), // TODO(ianh): faces
+                  title: Text(thread.subject, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                    '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}',
+                    style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+                  ),
+                  onTap: () { showThread(context, thread); },
+                );
+              }
+              return const ListTile(
+                leading: CircleAvatar(child: Icon(Icons.all_inclusive)),
+                title: Text('Twitarr'),
+                // TODO(ianh): Twitarr
+              );
+            },
+            itemCount: threads.length + 1,
+          );
+        },
+      ),
     );
   }
 }
@@ -108,8 +120,9 @@ class SeamailView extends StatelessWidget implements View {
 class SeamailThreadView extends StatefulWidget {
   const SeamailThreadView({
     Key key,
-    this.thread,
-  }) : super(key: key);
+    @required this.thread,
+  }) : assert(thread != null),
+       super(key: key);
 
   final SeamailThread thread;
 
@@ -140,12 +153,27 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
     super.initState();
     // our build is dependent on the clock, so we have to rebuild occasionally:
     _clock = Timer.periodic(const Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
+    widget.thread.addListener(_update);
+  }
+
+  @override
+  void didUpdateWidget(SeamailThreadView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.thread != oldWidget.thread) {
+      widget.thread.removeListener(_update);
+      widget.thread.addListener(_update);
+    }
   }
 
   @override
   void dispose() {
+    widget.thread.removeListener(_update);
     _clock.cancel();
     super.dispose();
+  }
+
+  void _update() {
+    setState(() { /* thread updated */ });
   }
 
   void _submitMessage(String value) {
@@ -156,7 +184,6 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
       progress.asFuture().then((void value) {
         setState(() {
           _pending.remove(entry);
-          widget.thread.forceUpdate();
         });
       }, onError: (dynamic error, StackTrace stack) {
         setState(() {
@@ -177,7 +204,23 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final CruiseModel cruise = Cruise.of(context);
     final DateTime now = DateTime.now();
+    final List<User> users = widget.thread.users.toList();
+    final List<SeamailMessage> messages = widget.thread.messages?.toList() ?? const <SeamailMessage>[];
+    final List<MessageBubble> bubbles = <MessageBubble>[];
+    MessageBubble currentBubble = MessageBubble();
+    SeamailMessage lastMessage = const SeamailMessage(user: User.none());
+    for (SeamailMessage message in messages) {
+      if (!message.user.sameAs(lastMessage.user) ||
+          message.timestamp.difference(lastMessage.timestamp) > const Duration(minutes: 2)) {
+        currentBubble = MessageBubble();
+        bubbles.add(currentBubble);
+      }
+      currentBubble.messages.add(message);
+      lastMessage = message;
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.thread.subject), // TODO(ianh): faces
@@ -185,39 +228,66 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: ContinuousProgressBuilder<List<SeamailMessage>>(
-              progress: widget.thread.messages,
-              builder: (BuildContext context, List<SeamailMessage> messages) {
-                final List<MessageBubble> bubbles = <MessageBubble>[];
-                MessageBubble currentBubble = MessageBubble();
-                SeamailMessage lastMessage = const SeamailMessage(user: User.none());
-                for (SeamailMessage message in messages) {
-                  if (!message.user.sameAs(lastMessage.user) ||
-                      message.timestamp.difference(lastMessage.timestamp) > const Duration(minutes: 2)) {
-                    currentBubble = MessageBubble();
-                    bubbles.add(currentBubble);
-                  }
-                  currentBubble.messages.add(message);
-                  lastMessage = message;
-                }
-                return ListView.builder(
-                  reverse: true,
-                  itemBuilder: (BuildContext context, int index) {
-                    final int bubbleIndex = bubbles.length - (index + 1);
-                    final MessageBubble bubble = bubbles[bubbleIndex];
-                    return Tooltip(
-                      message: _tooltipFor(bubble.messages.first),
-                      child: ChatLine(
-                        key: ValueKey<int>(bubbleIndex),
-                        avatar: Cruise.of(context).avatarFor(bubble.messages.first.user),
-                        messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
-                        metadata: Text(prettyDuration(now.difference(bubble.messages.first.timestamp))),
-                      ),
+            child: BusyIndicator(
+              busy: widget.thread.busy,
+              child: ListView.builder(
+                reverse: true,
+                itemBuilder: (BuildContext context, int index) {
+                  // the very first item is the user list
+                  if (index == bubbles.length) {
+                    return ListBody(
+                      children: <Widget>[
+                        const SizedBox(height: 20.0),
+                        Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.display2),
+                        Center(
+                          child: DefaultTextStyle(
+                            style: theme.textTheme.subhead,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: users.map<Widget>(
+                                (User user) {
+                                  return Padding(
+                                    padding: const EdgeInsetsDirectional.only(top: 10.0, end: 60.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: <Widget>[
+                                        cruise.avatarFor(user, size: 60.0),
+                                        const SizedBox(width: 20.0),
+                                        Text(user.displayName),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              ).toList(),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 24.0, bottom: 48.0, left: 64.0, right: 64.0),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(width: 8.0, color: theme.dividerColor),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
-                  },
-                  itemCount: bubbles.length,
-                );
-              },
+                  }
+                  final int bubbleIndex = bubbles.length - (index + 1);
+                  final MessageBubble bubble = bubbles[bubbleIndex];
+                  return Tooltip(
+                    message: _tooltipFor(bubble.messages.first),
+                    child: ChatLine(
+                      key: ValueKey<int>(bubbleIndex),
+                      avatar: Cruise.of(context).avatarFor(bubble.messages.first.user),
+                      messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
+                      metadata: Text(prettyDuration(now.difference(bubble.messages.first.timestamp))),
+                    ),
+                  );
+                },
+                itemCount: bubbles.length + 1,
+              ),
             ),
           ),
           Column(
@@ -398,7 +468,7 @@ class _StartConversationViewState extends State<StartConversationView> {
   final TextEditingController _nextUser = TextEditingController();
   final Set<User> _users = Set<User>();
   final TextEditingController _subject = TextEditingController();
-  final TextEditingController _message = TextEditingController();
+  final TextEditingController _text = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Progress<List<User>> _autocompleteProgress;
@@ -421,7 +491,7 @@ class _StartConversationViewState extends State<StartConversationView> {
   bool get _valid {
     return _users.length >= 2
         && _subject.text.isNotEmpty
-        && _message.text.isNotEmpty;
+        && _text.text.isNotEmpty;
   }
 
   static const Widget _autocompletePlaceholder = SliverToBoxAdapter(
@@ -459,10 +529,10 @@ class _StartConversationViewState extends State<StartConversationView> {
         ? FloatingActionButton(
             child: const Icon(Icons.send),
             onPressed: () async {
-              final Progress<SeamailThread> progress = Cruise.of(context).newSeamail(
-                _users,
-                _subject.text,
-                _message.text,
+              final Progress<SeamailThread> progress = Cruise.of(context).seamail.postThread(
+                users: _users,
+                subject: _subject.text,
+                text: _text.text,
               );
               final SeamailThread thread = await showDialog<SeamailThread>(
                 context: context,
@@ -528,7 +598,7 @@ class _StartConversationViewState extends State<StartConversationView> {
                 child: Align(
                   alignment: AlignmentDirectional.topStart,
                   child: TextFormField(
-                    controller: _message,
+                    controller: _text,
                     decoration: const InputDecoration(
                       labelText: 'First message',
                     ),
@@ -682,6 +752,56 @@ class _StartConversationViewState extends State<StartConversationView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class BusyIndicator extends StatelessWidget {
+  const BusyIndicator({
+    Key key,
+    this.busy,
+    this.child,
+    this.busyIndicator: _defaultIndicator,
+    this.alignment: AlignmentDirectional.bottomEnd,
+  }) : super(key: key);
+
+  final ValueListenable<bool> busy;
+
+  final Widget child;
+
+  final Widget busyIndicator;
+
+  final AlignmentGeometry alignment;
+
+  static const Widget _defaultIndicator = Padding(
+    padding: EdgeInsets.all(4.0),
+    child: CircularProgressIndicator(),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        child,
+        Positioned.fill(
+          child: Align(
+            alignment: alignment,
+            child: IgnorePointer(
+              child: ValueListenableBuilder<bool>(
+                valueListenable: busy,
+                builder: (BuildContext context, bool busy, Widget child) {
+                  return AnimatedOpacity(
+                    opacity: busy ? 1.0 : 0.0,
+                    duration: kThemeChangeDuration,
+                    curve: Curves.easeInOut,
+                    child: busyIndicator,
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

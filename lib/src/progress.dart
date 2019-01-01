@@ -165,18 +165,15 @@ class _Progress<T> extends _LazyValueNotifier<ProgressValue<T>> implements Progr
     return valueListenableToFutureAdapter<ProgressValue<T>>(this, (ProgressValue<T> value) {
       if (value is SuccessfulProgress<T>)
         return true;
-      if (value is FailedProgress) {
-        assert(() {
-          debugPrint('Lost this stack trace:\n${value.error}\n${value.stackTrace}');
-          return true;
-        }());
-        throw value.error; // TODO(ianh): throw with stack trace once https://github.com/dart-lang/sdk/issues/35494 is fixed
-      }
+      if (value is FailedProgress)
+        return true;
       return false;
     }).then<T>((ProgressValue<T> value) {
-      assert(value is SuccessfulProgress<T>);
-      final SuccessfulProgress<T> typedValue = value as SuccessfulProgress<T>;
-      return typedValue.value;
+      if (value is SuccessfulProgress<T>)
+        return value.value;
+      assert(value is FailedProgress);
+      final FailedProgress typedValue = value as FailedProgress;
+      return Future<T>.error(typedValue.error, typedValue.stackTrace);
     });
   }
 }
@@ -349,6 +346,11 @@ class PeriodicProgress<T> extends MutableContinuousProgress<T> {
   bool _active = false;
 
   Progress<T> triggerUnscheduledUpdate() => _start();
+
+  void triggerUnscheduledUpdateIfListened() {
+    if (_listenerCount > 0)
+      triggerUnscheduledUpdate();
+  }
 
   @override
   void addProgress(Progress<T> newProgress) {

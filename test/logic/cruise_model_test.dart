@@ -12,10 +12,11 @@ void main() {
     final LoggingTwitarrConfiguration config1 = LoggingTwitarrConfiguration(1, log);
     final LoggingTwitarrConfiguration config2 = LoggingTwitarrConfiguration(2, log);
     final CruiseModel model = CruiseModel(
-      twitarrConfiguration: config1,
+      initialTwitarrConfiguration: config1,
       store: LoggingDataStore(log),
+      onError: (String error) { log.add('error: $error'); },
     );
-    model.addListener(() { log.add('notification'); });
+    model.addListener(() { log.add('model changed'); });
     expect(model.twitarrConfiguration, config1);
     log.add('--- select new configuration');
     model.selectTwitarrConfiguration(config2);
@@ -43,15 +44,17 @@ void main() {
         'LoggingDataStore.restoreCredentials',
         '--- select new configuration',
         'LoggingTwitarr(1).logout',
-        'notification',
+        'LoggingTwitarr(2).getCalendar',
+        'model changed',
         '--- idling',
         'LoggingTwitarr(1).dispose',
         '--- waiting one hour',
         '--- login',
         'LoggingTwitarr(2).login aaa / bbb',
-        'notification',
+        'model changed',
         '--- idling',
         'LoggingDataStore.saveCredentials Credentials(aaa)',
+        'model changed',
         '--- waiting one hour',
         '--- examining user',
         '--- idling',
