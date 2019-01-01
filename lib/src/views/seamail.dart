@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../models/seamail.dart';
 import '../models/user.dart';
@@ -16,12 +17,12 @@ class SeamailView extends StatelessWidget implements View {
   @override
   Widget buildTab(BuildContext context) {
     final Seamail seamail = Cruise.of(context).seamail;
-    return new AnimatedBuilder(
+    return AnimatedBuilder(
       animation: seamail,
       builder: (BuildContext context, Widget child) {
         return const Tab(
           text: 'Seamail',
-          icon: const Icon(Icons.mail),
+          icon: Icon(Icons.mail),
         );
       },
     );
@@ -32,14 +33,14 @@ class SeamailView extends StatelessWidget implements View {
     return ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
       valueListenable: Cruise.of(context).user.best,
       builder: (BuildContext context, ProgressValue<AuthenticatedUser> user, Widget child) {
-        const Widget icon = const Icon(Icons.add_comment); // maybe add_comment, or even just add;
+        const Widget icon = Icon(Icons.add_comment); // maybe add_comment, or even just add;
         if (user is SuccessfulProgress<AuthenticatedUser> && user.value != null) {
-          return new FloatingActionButton(
+          return FloatingActionButton(
             child: icon,
             onPressed: () { _createNewSeamail(context, user.value); },
           );
         }
-        return new FloatingActionButton(
+        return FloatingActionButton(
           child: icon,
           onPressed: null,
           backgroundColor: Colors.grey.shade200,
@@ -65,7 +66,7 @@ class SeamailView extends StatelessWidget implements View {
     Navigator.push<void>(
       context,
       MaterialPageRoute<void>(
-        builder: (BuildContext context) => new SeamailThreadView(thread: thread),
+        builder: (BuildContext context) => SeamailThreadView(thread: thread),
       ),
     );
   }
@@ -75,28 +76,67 @@ class SeamailView extends StatelessWidget implements View {
     // TODO(ianh): track the progress of loading the threads and show a spinner
     final Seamail threads = Cruise.of(context).seamail;
     // TODO(ianh): sort the threads by recency, newest at the top
-    return new AnimatedBuilder(
+    return AnimatedBuilder(
       animation: threads,
       builder: (BuildContext context, Widget child) {
-        return new ListView.builder(
+        return ListView.builder(
           itemBuilder: (BuildContext context, int index) {
             if (index < threads.length) {
               final SeamailThread thread = threads[index];
-              return new ListTile(
-                leading: new CircleAvatar(child: new Text('${thread.users.length}')), // TODO(ianh): faces
-                title: new Text(thread.subject, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: new Text(
-                  '${thread.messageCount} message${thread.messageCount == 1 ? '' : "s"}',
-                  style: thread.unread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-                ),
+              return GestureDetector(
                 onTap: () { showThread(context, thread); },
+                child: Container(
+                  padding: EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.grey[300])),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        child: Icon(
+                          thread.unread ? Icons.brightness_1 : null,
+                          color: Colors.red[500],
+                          size: 10,
+                        ),
+                        padding: EdgeInsets.all(6),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.only(bottom: 2.0),
+                              child: Text(
+                                '${thread.subject}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: (thread.unread ? FontWeight.bold : null),
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${thread.users}',
+                              style: TextStyle( fontSize: 13 ),
+                            ),
+                            Text(
+                              '${prettyTimestamp(thread.timestamp)} - ${thread.messageCount} message${thread.messageCount == 1 ? '' : "s"}',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }
-            return const ListTile(
-              leading: const CircleAvatar(child: const Icon(Icons.all_inclusive)),
-              title: const Text('Twitarr'),
-              // TODO(ianh): Twitarr
-            );
+          // TODO(ianh): Twitarr
           },
           itemCount: threads.length + 1,
         );
@@ -114,7 +154,7 @@ class SeamailThreadView extends StatefulWidget {
   final SeamailThread thread;
 
   @override
-  _SeamailThreadViewState createState() => new _SeamailThreadViewState();
+  _SeamailThreadViewState createState() => _SeamailThreadViewState();
 }
 
 class _PendingSend {
@@ -125,8 +165,8 @@ class _PendingSend {
 }
 
 class _SeamailThreadViewState extends State<SeamailThreadView> {
-  final TextEditingController _textController = new TextEditingController();
-  final Set<_PendingSend> _pending = new Set<_PendingSend>();
+  final TextEditingController _textController = TextEditingController();
+  final Set<_PendingSend> _pending = Set<_PendingSend>();
 
   Timer _clock;
 
@@ -134,7 +174,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
   void initState() {
     super.initState();
     // our build is dependent on the clock, so we have to rebuild occasionally:
-    _clock = new Timer.periodic(new Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
+    _clock = Timer.periodic(const Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
   }
 
   @override
@@ -145,7 +185,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
 
   void _submitMessage(String value) {
     final Progress<void> progress = widget.thread.send(value);
-    final _PendingSend entry = new _PendingSend(progress, value);
+    final _PendingSend entry = _PendingSend(progress, value);
     setState(() {
       _pending.add(entry);
       progress.asFuture().then((void value) {
@@ -183,28 +223,28 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
   @override
   Widget build(BuildContext context) {
     final DateTime now = DateTime.now();
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(widget.thread.subject), // TODO(ianh): faces
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.thread.subject), // TODO(ianh): faces
       ),
-      body: new Column(
+      body: Column(
         children: <Widget>[
-          new Expanded(
-            child: new ContinuousProgressBuilder<List<SeamailMessage>>(
+          Expanded(
+            child: ContinuousProgressBuilder<List<SeamailMessage>>(
               progress: widget.thread.messages,
               builder: (BuildContext context, List<SeamailMessage> messages) {
-                return new ListView.builder(
+                return ListView.builder(
                   reverse: true,
                   itemBuilder: (BuildContext context, int index) {
                     final int messageIndex = messages.length - (index + 1);
                     final SeamailMessage message = messages[messageIndex];
-                    return new Tooltip(
+                    return Tooltip(
                       message: _tooltipFor(message),
-                      child: new ChatLine(
-                        key: new ValueKey<int>(messageIndex),
+                      child: ChatLine(
+                        key: ValueKey<int>(messageIndex),
                         avatar: Cruise.of(context).avatarFor(message.user),
-                        message: new Text(_demangleText(message.text)),
-                        metadata: new Text(prettyDuration(now.difference(message.timestamp))),
+                        message: Text(_demangleText(message.text)),
+                        metadata: Text(prettyDuration(now.difference(message.timestamp))),
                       ),
                     );
                   },
@@ -213,24 +253,24 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
               },
             ),
           ),
-          new Column(
+          Column(
             mainAxisSize: MainAxisSize.min,
             children: _pending.map((_PendingSend entry) {
               if (entry.error != null) {
-                return new ListTile(
-                  key: new ObjectKey(entry),
+                return ListTile(
+                  key: ObjectKey(entry),
                   leading: const Icon(Icons.error, size: 40.0, color: Colors.red),
-                  title: new Text(entry.text),
-                  subtitle: new Text('Failed: ${entry.error}. Tap to retry.'),
+                  title: Text(entry.text),
+                  subtitle: Text('Failed: ${entry.error}. Tap to retry.'),
                   onTap: () {
                     _pending.remove(entry);
                     _submitMessage(entry.text);
                   },
                 );
               }
-              return new ListTile(
-                key: new ObjectKey(entry),
-                leading: new ProgressBuilder<void>(
+              return ListTile(
+                key: ObjectKey(entry),
+                leading: ProgressBuilder<void>(
                   progress: entry.progress,
                   nullChild: const Icon(Icons.error, size: 40.0, color: Colors.purple),
                   idleChild: const Icon(Icons.error, size: 40.0, color: Colors.orange),
@@ -238,15 +278,15 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                   failedBuilder: (BuildContext context, Exception error, StackTrace stackTrace) => const Icon(Icons.error, size: 40.0, color: Colors.pink),
                   builder: (BuildContext context, void value) => const Icon(Icons.error, size: 40.0, color: Colors.yellow),
                 ),
-                title: new Text(entry.text),
+                title: Text(entry.text),
               );
             }).toList(),
           ),
           const Divider(height: 0.0),
-          new Row(
+          Row(
             children: <Widget>[
-              new Expanded(
-                child: new TextField(
+              Expanded(
+                child: TextField(
                   controller: _textController,
                   onChanged: (String value) {
                     setState(() {
@@ -259,9 +299,10 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                     if (_textController.text.isNotEmpty)
                       _submitCurrentMessage();
                   },
+                  textInputAction: TextInputAction.send,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                    contentPadding: EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
                     hintText: 'Message',
                   ),
                 ),
@@ -296,39 +337,39 @@ class ChatLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Row(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
       children: <Widget>[
-        new Padding(
+        Padding(
           padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-          child: new Stack(
+          child: Stack(
             children: <Widget>[
               avatar,
               // in case the avatar doesn't have a baseline, create a fake one:
-              new Positioned.fill(
-                child: new Center(
-                  child: new Text('', style: Theme.of(context).textTheme.subhead),
+              Positioned.fill(
+                child: Center(
+                  child: Text('', style: Theme.of(context).textTheme.subhead),
                 ),
               ),
             ],
           ),
         ),
-        new Expanded(
-          child: new Padding(
+        Expanded(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(0.0, 20.0, 16.0, 8.0),
-            child: new Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                new DefaultTextStyle(
+                DefaultTextStyle(
                   style: Theme.of(context).textTheme.subhead,
                   textAlign: TextAlign.start,
                   child: message,
                 ),
                 const SizedBox(height: 4.0),
                 DefaultTextStyle.merge(
-                  style: new TextStyle(fontSize: 8.0, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 8.0, color: Colors.grey.shade500),
                   textAlign: TextAlign.end,
                   child: metadata,
                 ),
@@ -339,6 +380,22 @@ class ChatLine extends StatelessWidget {
       ],
     );
   }
+}
+
+String prettyTimestamp(DateTime timestamp) {
+  final DateTime now = DateTime.now();
+  final Duration duration = now.difference(timestamp);
+  if (duration.inMinutes < 1)
+    return 'just now';
+  if (duration.inMinutes < 59.5)
+    return '${duration.inMinutes.round()} ago';
+  if (now.day == timestamp.day)
+    return '${DateFormat("h:mm a' Today'").format(timestamp)}';
+  if ((now.day - 1) == timestamp.day)
+    return '${DateFormat("h:mm a' Yesterday'").format(timestamp)}';
+  if (duration.inDays < 7)
+    return '${DateFormat("h:mm a' on 'EEEEE").format(timestamp)}';
+  return '${DateFormat.yMMMMd("en_US").format(timestamp)}';
 }
 
 String prettyDuration(Duration duration) {
@@ -371,15 +428,15 @@ class StartConversationView extends StatefulWidget {
   final User currentUser;
 
   @override
-  _StartConversationViewState createState() => new _StartConversationViewState();
+  _StartConversationViewState createState() => _StartConversationViewState();
 }
 
 class _StartConversationViewState extends State<StartConversationView> {
-  final TextEditingController _nextUser = new TextEditingController();
-  final Set<User> _users = new Set<User>();
-  final TextEditingController _subject = new TextEditingController();
-  final TextEditingController _message = new TextEditingController();
-  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  final TextEditingController _nextUser = TextEditingController();
+  final Set<User> _users = Set<User>();
+  final TextEditingController _subject = TextEditingController();
+  final TextEditingController _message = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Progress<List<User>> _autocompleteProgress;
 
@@ -404,8 +461,8 @@ class _StartConversationViewState extends State<StartConversationView> {
         && _message.text.isNotEmpty;
   }
 
-  static const Widget _autocompletePlaceholder = const SliverToBoxAdapter(
-    child: const Text('Begin typing a username in the search field above, then select the specific user from the list here.'),
+  static const Widget _autocompletePlaceholder = SliverToBoxAdapter(
+    child: Text('Begin typing a username in the search field above, then select the specific user from the list here.'),
   );
 
   void _removeUser(User user) {
@@ -431,12 +488,12 @@ class _StartConversationViewState extends State<StartConversationView> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
+    return Scaffold(
+      appBar: AppBar(
         title: const Text('Start conversation'),
       ),
       floatingActionButton: _valid
-        ? new FloatingActionButton(
+        ? FloatingActionButton(
             child: const Icon(Icons.send),
             onPressed: () async {
               final Progress<SeamailThread> progress = Cruise.of(context).newSeamail(
@@ -446,7 +503,7 @@ class _StartConversationViewState extends State<StartConversationView> {
               );
               final SeamailThread thread = await showDialog<SeamailThread>(
                 context: context,
-                builder: (BuildContext context) => new ProgressDialog<SeamailThread>(
+                builder: (BuildContext context) => ProgressDialog<SeamailThread>(
                   progress: progress,
                 ),
               );
@@ -454,14 +511,14 @@ class _StartConversationViewState extends State<StartConversationView> {
                 Navigator.pop(context, thread);
             },
           )
-        : new FloatingActionButton(
+        : FloatingActionButton(
             child: const Icon(Icons.send),
             onPressed: null,
             backgroundColor: Colors.grey.shade200,
             foregroundColor: Colors.grey.shade400,
           ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-      body: new Form(
+      body: Form(
         key: _formKey,
         onChanged: () {
           setState(() {
@@ -471,14 +528,14 @@ class _StartConversationViewState extends State<StartConversationView> {
         onWillPop: () async {
           return await showDialog<bool>(
             context: context,
-            builder: (BuildContext context) => new AlertDialog(
+            builder: (BuildContext context) => AlertDialog(
               title: const Text('Abandon creating this conversation?'),
               actions: <Widget>[
-                new FlatButton(
+                FlatButton(
                   onPressed: () { Navigator.of(context).pop(true); },
                   child: const Text('YES'),
                 ),
-                new FlatButton(
+                FlatButton(
                   onPressed: () { Navigator.of(context).pop(false); },
                   child: const Text('NO'),
                 ),
@@ -486,14 +543,14 @@ class _StartConversationViewState extends State<StartConversationView> {
             ),
           ) == true;
         },
-        child: new CustomScrollView(
+        child: CustomScrollView(
           slivers: <Widget>[
-            new SliverPadding(
+            SliverPadding(
               padding: const EdgeInsets.fromLTRB(12.0, 20.0, 12.0, 0.0),
-              sliver: new SliverToBoxAdapter(
-                child: new Align(
+              sliver: SliverToBoxAdapter(
+                child: Align(
                   alignment: AlignmentDirectional.topStart,
-                  child: new TextFormField(
+                  child: TextFormField(
                     controller: _subject,
                     decoration: const InputDecoration(
                       labelText: 'Subject',
@@ -502,12 +559,12 @@ class _StartConversationViewState extends State<StartConversationView> {
                 ),
               ),
             ),
-            new SliverPadding(
+            SliverPadding(
               padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
-              sliver: new SliverToBoxAdapter(
-                child: new Align(
+              sliver: SliverToBoxAdapter(
+                child: Align(
                   alignment: AlignmentDirectional.topStart,
-                  child: new TextFormField(
+                  child: TextFormField(
                     controller: _message,
                     decoration: const InputDecoration(
                       labelText: 'First message',
@@ -516,24 +573,24 @@ class _StartConversationViewState extends State<StartConversationView> {
                 ),
               ),
             ),
-            new SliverPadding(
+            SliverPadding(
               padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 0.0),
-              sliver: new SliverToBoxAdapter(
-                child: new Text(
+              sliver: SliverToBoxAdapter(
+                child: Text(
                   'Participants',
                   style: Theme.of(context).textTheme.title,
                 ),
               ),
             ),
-            new SliverPadding(
+            SliverPadding(
               padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
-              sliver: new SliverToBoxAdapter(
-                child: new Align(
+              sliver: SliverToBoxAdapter(
+                child: Align(
                   alignment: AlignmentDirectional.topStart,
-                  child: new TextField(
+                  child: TextField(
                     controller: _nextUser,
                     decoration: const InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
+                      prefixIcon: Icon(Icons.search),
                       labelText: 'User name',
                     ),
                     onChanged: (String value) {
@@ -549,7 +606,7 @@ class _StartConversationViewState extends State<StartConversationView> {
                 ),
               ),
             ),
-            new SliverPadding(
+            SliverPadding(
               padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 12.0),
               sliver: ProgressBuilder<List<User>>(
                 // TODO(ianh): create a SliverStack, SliverAnimatedOpacity, SliverAnimatedSwitcher, etc
@@ -559,26 +616,26 @@ class _StartConversationViewState extends State<StartConversationView> {
                 idleChild: _autocompletePlaceholder,
                 startingChild: const SliverToBoxAdapter(
                   key: ProgressBuilder.activeKey,
-                  child: const Center(
-                    child: const Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: const CircularProgressIndicator()
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: CircularProgressIndicator()
                     ),
                   ),
                 ),
                 activeBuilder: (BuildContext context, double progress, double target) {
-                  return new SliverToBoxAdapter(
+                  return SliverToBoxAdapter(
                     key: ProgressBuilder.activeKey,
-                    child: new Center(
-                      child: new Padding(
+                    child: Center(
+                      child: Padding(
                         padding: const EdgeInsets.all(10.0),
-                        child: new CircularProgressIndicator(value: progress / target)
+                        child: CircularProgressIndicator(value: progress / target)
                       ),
                     ),
                   );
                 },
                 failedBuilder: (BuildContext context, Exception error, StackTrace stackTrace) {
-                  return new SliverToBoxAdapter(
+                  return SliverToBoxAdapter(
                     child: ProgressBuilder.defaultFailedBuilder(context, error, stackTrace),
                   );
                 },
@@ -586,20 +643,20 @@ class _StartConversationViewState extends State<StartConversationView> {
                   assert(users != null);
                   final Iterable<User> filteredUsers = users.where(_shouldShowUser);
                   if (filteredUsers.isEmpty) {
-                    return new SliverToBoxAdapter(
-                      child: new Padding(
+                    return SliverToBoxAdapter(
+                      child: Padding(
                         padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 6.0),
-                        child: new Text('No users match "${_nextUser.text}".', textAlign: TextAlign.center),
+                        child: Text('No users match "${_nextUser.text}".', textAlign: TextAlign.center),
                       ),
                     );
                   }
-                  return new SliverList(
-                    delegate: new SliverChildListDelegate(
+                  return SliverList(
+                    delegate: SliverChildListDelegate(
                       filteredUsers.map<Widget>((User user) {
                         return ListTile(
-                          key: new ValueKey<String>(user.username),
+                          key: ValueKey<String>(user.username),
                           leading: Cruise.of(context).avatarFor(user),
-                          title: new Text(user.toString()),
+                          title: Text(user.toString()),
                           onTap: () {
                             _addUser(user);
                             setState(() {
@@ -615,37 +672,37 @@ class _StartConversationViewState extends State<StartConversationView> {
                 fadeWrapper: (BuildContext context, Widget child) => child,
               ),
             ),
-            new SliverPadding(
+            SliverPadding(
               padding: const EdgeInsets.all(12.0),
-              sliver: new SliverToBoxAdapter(
-                child: new ListBody(
+              sliver: SliverToBoxAdapter(
+                child: ListBody(
                   children: <Widget>[
                     const Text('Selected users (tap to remove):'),
                     const SizedBox(
                       height: 8.0,
                     ),
-                    new Container(
-                      decoration: new ShapeDecoration(
+                    Container(
+                      decoration: ShapeDecoration(
                         shape: const StadiumBorder(
-                          side: const BorderSide(),
+                          side: BorderSide(),
                         ),
                         color: Theme.of(context).accentColor,
                       ),
                       height: 76.0,
-                      child: new ClipPath(
+                      child: ClipPath(
                         clipper: const ShapeBorderClipper(
-                          shape: const StadiumBorder(),
+                          shape: StadiumBorder(),
                         ),
-                        child: new ListView(
+                        child: ListView(
                           padding: const EdgeInsets.fromLTRB(4.0, 4.0, 4.0, 4.0),
                           scrollDirection: Axis.horizontal,
                           children: _users.map<Widget>((User user) {
-                            return new Padding(
-                              key: new ValueKey<String>(user.username),
+                            return Padding(
+                              key: ValueKey<String>(user.username),
                               padding: const EdgeInsets.all(4.0),
-                              child: new Tooltip(
+                              child: Tooltip(
                                 message: user.username.toString(),
-                                child: new GestureDetector(
+                                child: GestureDetector(
                                   onTap: user == widget.currentUser ? null : () { _removeUser(user); },
                                   child: Cruise.of(context).avatarFor(user, size: 60.0),
                                 ),
