@@ -298,7 +298,7 @@ class _CreateAccountState extends State<CreateAccount> {
                         ),
                       ),
                     ),
-                    Divider(),
+                    const Divider(),
                     ButtonBar(
                       children: <Widget>[
                         FlatButton(
