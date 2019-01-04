@@ -46,6 +46,14 @@ class User {
   }) : assert(username != null),
        assert(username != '');
 
+  const User.none(
+  ) : username = null,
+      displayName = null,
+      currentLocation = null,
+      roomNumber = null,
+      realName = null,
+      homeLocation = null;
+
   final String username;
   final String displayName;
 
