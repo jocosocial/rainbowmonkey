@@ -124,6 +124,11 @@ class _PendingSend {
   String error;
 }
 
+class MessageBubble {
+  MessageBubble();
+  final List<SeamailMessage> messages = <SeamailMessage>[];
+}
+
 class _SeamailThreadViewState extends State<SeamailThreadView> {
   final TextEditingController _textController = TextEditingController();
   final Set<_PendingSend> _pending = Set<_PendingSend>();
@@ -170,16 +175,6 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
     return '${message.user.toString()} • ${message.timestamp}';
   }
 
-  String _demangleText(String text) {
-    return text
-      .replaceAll('<br />', '\n')
-      .replaceAll('&#39;', '\'')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&lt;', '<') // must be after "<br />"
-      .replaceAll('&gt;', '>')
-      .replaceAll('&amp;', '&'); // must be last
-  }
-
   @override
   Widget build(BuildContext context) {
     final DateTime now = DateTime.now();
@@ -193,22 +188,34 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
             child: ContinuousProgressBuilder<List<SeamailMessage>>(
               progress: widget.thread.messages,
               builder: (BuildContext context, List<SeamailMessage> messages) {
+                final List<MessageBubble> bubbles = <MessageBubble>[];
+                MessageBubble currentBubble = MessageBubble();
+                SeamailMessage lastMessage = const SeamailMessage(user: User.none());
+                for (SeamailMessage message in messages) {
+                  if (!message.user.sameAs(lastMessage.user) ||
+                      message.timestamp.difference(lastMessage.timestamp) > const Duration(minutes: 2)) {
+                    currentBubble = MessageBubble();
+                    bubbles.add(currentBubble);
+                  }
+                  currentBubble.messages.add(message);
+                  lastMessage = message;
+                }
                 return ListView.builder(
                   reverse: true,
                   itemBuilder: (BuildContext context, int index) {
-                    final int messageIndex = messages.length - (index + 1);
-                    final SeamailMessage message = messages[messageIndex];
+                    final int bubbleIndex = bubbles.length - (index + 1);
+                    final MessageBubble bubble = bubbles[bubbleIndex];
                     return Tooltip(
-                      message: _tooltipFor(message),
+                      message: _tooltipFor(bubble.messages.first),
                       child: ChatLine(
-                        key: ValueKey<int>(messageIndex),
-                        avatar: Cruise.of(context).avatarFor(message.user),
-                        message: Text(_demangleText(message.text)),
-                        metadata: Text(prettyDuration(now.difference(message.timestamp))),
+                        key: ValueKey<int>(bubbleIndex),
+                        avatar: Cruise.of(context).avatarFor(bubble.messages.first.user),
+                        messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
+                        metadata: Text(prettyDuration(now.difference(bubble.messages.first.timestamp))),
                       ),
                     );
                   },
-                  itemCount: messages.length,
+                  itemCount: bubbles.length,
                 );
               },
             ),
@@ -284,19 +291,43 @@ class ChatLine extends StatelessWidget {
   const ChatLine({
     Key key,
     @required this.avatar,
-    @required this.message,
+    @required this.messages,
     @required this.metadata,
   }) : assert(avatar != null),
-       assert(message != null),
+       assert(messages != null),
        assert(metadata != null),
        super(key: key);
 
   final Widget avatar;
-  final Widget message;
+  final List<String> messages;
   final Widget metadata;
+
+  String _demangleText(String text) {
+    return text
+      .replaceAll('<br />', '\n')
+      .replaceAll('&#39;', '\'')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&lt;', '<') // must be after "<br />"
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&'); // must be last
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> lines = <Widget>[];
+    for (String message in messages) {
+      lines.add(DefaultTextStyle(
+        style: Theme.of(context).textTheme.subhead,
+        textAlign: TextAlign.start,
+        child: Text(_demangleText(message)),
+      ));
+    }
+    lines.add(const SizedBox(height: 4.0));
+    lines.add(DefaultTextStyle.merge(
+      style: TextStyle(fontSize: 8.0, color: Colors.grey.shade500),
+      textAlign: TextAlign.end,
+      child: metadata,
+    ));
     return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
@@ -321,19 +352,7 @@ class ChatLine extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                DefaultTextStyle(
-                  style: Theme.of(context).textTheme.subhead,
-                  textAlign: TextAlign.start,
-                  child: message,
-                ),
-                const SizedBox(height: 4.0),
-                DefaultTextStyle.merge(
-                  style: TextStyle(fontSize: 8.0, color: Colors.grey.shade500),
-                  textAlign: TextAlign.end,
-                  child: metadata,
-                ),
-              ],
+              children: lines,
             ),
           ),
         ),
