@@ -361,8 +361,8 @@ class RestTwitarr implements Twitarr {
     return (data.seamail.messages as Json).asIterable().map<SeamailMessage>((dynamic value) {
       return SeamailMessage(
         user: User(
-          username: value.author.toString(),
-          displayName: value.author_display_name.toString(),
+          username: value.author.username.toString(),
+          displayName: value.author.display_name.toString(),
         ),
         text: value.text.toString(),
         timestamp: DateTime.parse(value.timestamp.toString()),
