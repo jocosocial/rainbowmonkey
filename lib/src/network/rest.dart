@@ -361,8 +361,8 @@ class RestTwitarr implements Twitarr {
     return (data.seamail.messages as Json).asIterable().map<SeamailMessage>((dynamic value) {
       return SeamailMessage(
         user: User(
-          username: value.author.toString(),
-          displayName: value.author_display_name.toString(),
+          username: value.author.username.toString(),
+          displayName: value.author.display_name.toString(),
         ),
         text: value.text.toString(),
         timestamp: DateTime.parse(value.timestamp.toString()),
@@ -377,7 +377,7 @@ class RestTwitarr implements Twitarr {
           ..add('key', credentials.key)
           ..add('text', value);
         final String encodedBody = body.toUrlEncoded();
-        final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/seamail/${Uri.encodeComponent(id)}/new_message?$encodedBody'));
+        final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/seamail/${Uri.encodeComponent(id)}?$encodedBody'));
         final dynamic data = Json.parse(result);
         if (data['errors'] != null)
           throw ServerError((data.errors as Json).toList().cast<String>());
