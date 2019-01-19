@@ -27,6 +27,8 @@ class CalendarView extends StatelessWidget implements View {
     return ContinuousProgressBuilder<Calendar>(
       progress: Cruise.of(context).calendar,
       builder: (BuildContext context, Calendar calendar) {
+        if (calendar.events.isEmpty)
+          return iconAndLabel(icon: Icons.sentiment_neutral, message: 'Calendar is empty');
         return ListView.builder(
           itemBuilder: (BuildContext context, int index) {
             DateTime lastTime;

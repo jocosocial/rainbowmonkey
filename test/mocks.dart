@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:cruisemonkey/src/basic_types.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
+import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
-import 'package:cruisemonkey/src/models/seamail.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -38,16 +39,18 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     MutableContinuousProgress<AuthenticatedUser> user,
     MutableContinuousProgress<Calendar> calendar,
   }) : user = user ?? MutableContinuousProgress<AuthenticatedUser>(),
-       calendar = calendar ?? MutableContinuousProgress<Calendar>();
+       calendar = calendar ?? MutableContinuousProgress<Calendar>() {
+    _seamail = Seamail.empty();
+  }
+
+  @override
+  final ErrorCallback onError = null;
 
   @override
   final Duration rarePollInterval = const Duration(minutes: 10);
 
   @override
   final Duration frequentPollInterval = const Duration(minutes: 1);
-
-  @override
-  final Duration maxSeamailUpdateDelay = null;
 
   @override
   final DataStore store = const TestDataStore();
@@ -65,6 +68,10 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
     assert(newConfiguration is TestTwitarrConfiguration);
   }
+
+  @override
+  Seamail get seamail => _seamail;
+  Seamail _seamail;
 
   @override
   Progress<Credentials> createAccount({
@@ -96,16 +103,6 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
 
   @override
   final MutableContinuousProgress<Calendar> calendar;
-
-  @override
-  Seamail get seamail => _seamail;
-  final TestSeamail _seamail = TestSeamail();
-
-  @override
-  void updateSeamail() { }
-
-  @override
-  Progress<SeamailThread> newSeamail(Set<User> users, String subject, String message) => null;
 
   @override
   Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) {
@@ -157,44 +154,4 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     calendar.dispose();
     super.dispose();
   }
-}
-
-class TestSeamail implements Seamail {
-  TestSeamail();
-
-  @override
-  bool get active => hasListeners;
-
-  @override
-  Future<void> get untilActive => Completer<void>().future;
-
-  @override
-  bool get hasListeners => null;
-
-  @override
-  void addListener(VoidCallback listener) { }
-
-  @override
-  void removeListener(VoidCallback listener) { }
-
-  @override
-  void notifyListeners() { }
-
-  @override
-  void dispose() { }
-
-  @override
-  SeamailThread operator[](int index) => null;
-
-  @override
-  int get length => 0;
-
-  @override
-  SeamailThread threadById(String id) => null;
-
-  @override
-  DateTime get lastUpdate => null;
-
-  @override
-  void update(DateTime timestamp, SeamailUpdateCallback updateCallback) { }
 }

@@ -69,7 +69,7 @@ class Settings extends StatelessWidget {
                 title: Text('Network reliability', style: theme.textTheme.body2.copyWith(color: theme.primaryColor)),
               ),
               ListTile(
-                leading: const Icon(Icons.hourglass_empty),
+                leading: const Icon(Icons.network_wifi),
                 title: Text('Probability of failure: ${((1.0 - reliability) * 100).round()}%'),
               ),
               Padding(

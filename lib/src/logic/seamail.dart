@@ -1,0 +1,371 @@
+import 'dart:async';
+import 'dart:collection';
+
+import 'package:flutter/foundation.dart';
+
+import '../basic_types.dart';
+import '../models/user.dart';
+import '../network/twitarr.dart';
+import '../progress.dart';
+import 'photo_manager.dart';
+
+mixin _BusyIndicator {
+  ValueListenable<bool> get busy => _busy;
+  final ValueNotifier<bool> _busy = ValueNotifier<bool>(false);
+  int _busyCount = 0;
+  void _startBusy() {
+    if (_busyCount == 0)
+      _busy.value = true;
+    _busyCount += 1;
+  }
+  void _endBusy() {
+    _busyCount -= 1;
+    if (_busyCount == 0)
+      _busy.value = false;
+  }
+}
+
+class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyIndicator {
+  Seamail(
+    this._twitarr,
+    this._credentials,
+    this._photoManager, {
+    this.maxUpdatePeriod = const Duration(minutes: 1),
+    @required this.onError,
+  }) : assert(onError != null),
+       assert(_twitarr != null),
+       assert(_credentials != null),
+       assert(_photoManager != null);
+
+  Seamail.empty() : _twitarr = null, _credentials = null, _photoManager = null, maxUpdatePeriod = null, onError = null;
+
+  final Twitarr _twitarr;
+  final Credentials _credentials;
+  final PhotoManager _photoManager;
+
+  final Duration maxUpdatePeriod;
+  final ErrorCallback onError;
+
+  @override
+  Iterator<SeamailThread> get iterator => _threads.values.iterator;
+
+  final Map<String, SeamailThread> _threads = <String, SeamailThread>{};
+
+  int get unreadCount {
+    int result = 0;
+    for (SeamailThread thread in _threads.values)
+      result += thread.unreadCount;
+    return result;
+  }
+
+  void addThread(SeamailThread thread) {
+    assert(_credentials != null);
+    _threads[thread.id] = thread;
+  }
+
+  bool _updating = false;
+  @protected
+  void update() async {
+    if (_updating || _credentials == null)
+      return;
+    _startBusy();
+    _updating = true;
+    try {
+      final SeamailSummary summary = await _twitarr.getSeamailThreads(credentials: _credentials).asFuture();
+      // discarding summary.freshnessToken;
+      for (SeamailThreadSummary thread in summary.threads) {
+        if (_threads.containsKey(thread.id)) {
+          if (_threads[thread.id].updateFrom(thread))
+            _timer?.interested();
+        } else {
+          _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager);
+          _timer?.interested();
+        }
+      }
+    } on UserFriendlyError catch (error) {
+      _timer?.interested();
+      _reportError(error);
+    } finally {
+      _updating = false;
+      _endBusy();
+    }
+    notifyListeners();
+  }
+
+  Progress<SeamailThread> postThread({
+    @required Set<User> users,
+    @required String subject,
+    @required String text,
+  }) {
+    if (_credentials == null)
+      throw const LocalError('Cannot create a thread when not logged in.');
+    return Progress<SeamailThread>((ProgressController<SeamailThread> completer) async {
+      final SeamailThreadSummary thread = await completer.chain<SeamailThreadSummary>(
+        _twitarr.createSeamailThread(
+          credentials: _credentials,
+          users: users,
+          subject: subject,
+          text: text,
+        ),
+      );
+      _timer?.interested();
+      if (_threads.containsKey(thread.id))
+        return _threads[thread.id];
+      _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager);
+      notifyListeners();
+      return _threads[thread.id];
+    });
+  }
+
+  void _childUpdated(SeamailThread thread) {
+    notifyListeners();
+  }
+
+  void _reportError(UserFriendlyError error) {
+    onError(error.toString());
+  }
+
+  VariableTimer _timer;
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!hasListeners && maxUpdatePeriod != null)
+      _timer = VariableTimer(maxUpdatePeriod, update);
+    super.addListener(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    if (!hasListeners && maxUpdatePeriod != null) {
+      _timer.cancel();
+      _timer = null;
+    }
+  }
+}
+
+class SeamailThread extends ChangeNotifier with _BusyIndicator {
+  SeamailThread(
+    this.id,
+    this._parent,
+    this._twitarr,
+    this._credentials,
+    this._photoManager, {
+    this.maxUpdatePeriod = const Duration(minutes: 1),
+  });
+
+  SeamailThread.from(
+    SeamailThreadSummary thread,
+    this._parent,
+    this._twitarr,
+    this._credentials,
+    this._photoManager, {
+    this.maxUpdatePeriod = const Duration(minutes: 1),
+  }) : id = thread.id {
+    updateFrom(thread);
+  }
+
+  final Seamail _parent;
+  final Twitarr _twitarr;
+  final Credentials _credentials;
+  final PhotoManager _photoManager;
+
+  final Duration maxUpdatePeriod;
+
+  final String id;
+
+  String get subject => _subject;
+  String _subject;
+
+  Iterable<User> get users => _users;
+  List<User> _users;
+
+  DateTime get lastMessageTimestamp => _lastMessageTimestamp;
+  DateTime _lastMessageTimestamp;
+
+  bool get hasUnread => _hasUnread;
+  bool _hasUnread;
+
+  int get unreadCount => _unreadCount ?? 0;
+  int _unreadCount;
+
+  int get totalCount => _totalCount ?? 0;
+  int _totalCount;
+
+  Iterable<SeamailMessage> get messages => _messages.values;
+  final Map<String, SeamailMessage> _messages = <String, SeamailMessage>{};
+
+  bool _updating = false;
+  @protected
+  void update() async {
+    if (_updating)
+      return;
+    _startBusy();
+    _updating = true;
+    try {
+      final SeamailThreadSummary thread = await _twitarr.getSeamailMessages(
+        credentials: _credentials,
+        threadId: id,
+        markRead: false,
+      ).asFuture();
+      if (thread.id != id)
+        throw LocalError('Unexpected data from server: asked for update to thread "$id", got data for thread "${thread.id}".');
+      updateFrom(thread);
+    } on UserFriendlyError catch (error) {
+      _timer?.interested();
+      _parent._reportError(error);
+    } finally {
+      _updating = false;
+      _endBusy();
+    }
+    notifyListeners();
+  }
+
+  // Returns if something interesting was in the update.
+  // implying we should check again soon
+  @protected
+  bool updateFrom(SeamailThreadSummary thread) {
+    bool interesting = false;
+    if (thread.subject != null)
+      _subject = thread.subject;
+    if (thread.users != null)
+      _users = thread.users.map<User>((SeamailUserSummary user) => user.toUser(_photoManager)).toList();
+    if (thread.lastMessageTimestamp != null)
+      _lastMessageTimestamp = thread.lastMessageTimestamp;
+    if (thread.unread != null) {
+      _unreadCount = null;
+      if (_hasUnread != null && !_hasUnread && thread.unread)
+        interesting = true;
+      _hasUnread = thread.unread;
+    }
+    if (thread.messages != null) {
+      for (SeamailMessageSummary message in thread.messages) {
+        if (!_messages.containsKey(message.id))
+          interesting = true;
+        _messages[message.id] = SeamailMessage.from(message, _photoManager);
+      }
+    }
+    if (thread.totalMessages != null) {
+      _totalCount = thread.totalMessages;
+      if (_totalCount < _messages.length)
+        _totalCount = _messages.length;
+      if (thread.messages != null) {
+        _unreadCount = 0;
+        for (SeamailMessage message in messages) {
+          if (!message.readReceipts.containsKey(_credentials.username))
+            _unreadCount += 1;
+        }
+        _hasUnread = _unreadCount > 0;
+      }
+    }
+    if (thread.unreadMessages != null) {
+      if (_unreadCount != thread.unreadMessages)
+        interesting = true;
+      _unreadCount = thread.unreadMessages;
+      _hasUnread = _unreadCount > 0;
+    }
+    _parent._childUpdated(this);
+    if (interesting)
+      _timer?.interested();
+    return interesting;
+  }
+
+  Progress<void> send(String text) {
+    return Progress<void>((ProgressController<void> completer) async {
+      final SeamailMessageSummary message = await completer.chain<SeamailMessageSummary>(
+        _twitarr.postSeamailMessage(
+          credentials: _credentials,
+          threadId: id,
+          text: text,
+        ),
+      );
+      _timer?.interested();
+      if (_messages != null && _messages.containsKey(message.id))
+        return;
+      _messages[message.id] = SeamailMessage.from(message, _photoManager);
+      notifyListeners();
+      _parent._childUpdated(this);
+    });
+  }
+
+  VariableTimer _timer;
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!hasListeners && maxUpdatePeriod != null)
+      _timer = VariableTimer(maxUpdatePeriod, update);
+    super.addListener(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    if (!hasListeners && maxUpdatePeriod != null) {
+      _timer.cancel();
+      _timer = null;
+    }
+  }
+}
+
+class SeamailMessage {
+  const SeamailMessage({
+    this.id,
+    this.user,
+    this.text,
+    this.timestamp,
+    this.readReceipts,
+  });
+
+  SeamailMessage.from(
+    SeamailMessageSummary message,
+    PhotoManager photoManager,
+  ) : id = message.id,
+      user = message.user.toUser(photoManager),
+      text = message.text,
+      timestamp = message.timestamp,
+      readReceipts = Map<String, User>.fromIterable(
+        message.readReceipts.map<User>((SeamailUserSummary user) => user.toUser(photoManager)),
+        key: (dynamic user) => (user as User).username,
+      );
+
+  final String id;
+
+  final User user;
+
+  final String text;
+
+  final DateTime timestamp;
+
+  final Map<String, User> readReceipts;
+}
+
+class VariableTimer {
+  VariableTimer(this.maxDuration, this.callback) {
+    interested();
+    Timer.run(tick);
+  }
+
+  final Duration maxDuration;
+
+  final VoidCallback callback;
+
+  Timer _timer;
+  Duration _currentPeriod;
+
+  void tick() {
+    _currentPeriod *= 1.5;
+    callback();
+    if (_currentPeriod > maxDuration)
+      _currentPeriod = maxDuration;
+    _timer = Timer(_currentPeriod, tick);
+  }
+
+  void interested() {
+    _currentPeriod = const Duration(seconds: 5);
+  }
+
+  void cancel() {
+    _timer.cancel();
+    _timer = null;
+  }
+}

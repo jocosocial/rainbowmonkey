@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 
 import '../logic/photo_manager.dart';
 import '../models/calendar.dart';
-import '../models/seamail.dart';
 import '../models/user.dart';
 import '../progress.dart';
 
@@ -74,14 +73,6 @@ abstract class TwitarrConfiguration {
   Twitarr createTwitarr();
 }
 
-class CancelationSignal {
-  bool get canceled => _canceled;
-  bool _canceled = false;
-  void cancel() {
-    _canceled = true;
-  }
-}
-
 /// An interface for communicating with the server.
 abstract class Twitarr {
   const Twitarr();
@@ -112,22 +103,6 @@ abstract class Twitarr {
 
   Progress<AuthenticatedUser> getAuthenticatedUser(Credentials credentials, PhotoManager photoManager);
   Progress<Calendar> getCalendar();
-
-  Future<void> updateSeamailThreads(
-    Credentials credentials,
-    Seamail seamail,
-    PhotoManager photoManager,
-    CancelationSignal cancelationSignal,
-  );
-
-  Progress<SeamailThread> newSeamail(
-    Credentials credentials,
-    Seamail seamail,
-    PhotoManager photoManager,
-    Set<User> users,
-    String subject,
-    String message,
-  );
 
   Progress<Uint8List> fetchProfilePicture(String username);
 
@@ -160,5 +135,118 @@ abstract class Twitarr {
 
   Progress<List<User>> getUserList(String searchTerm);
 
+  Progress<SeamailSummary> getSeamailThreads({
+    @required Credentials credentials,
+  });
+
+  Progress<SeamailSummary> getUnreadSeamailMessages({
+    @required Credentials credentials,
+    int freshnessToken,
+  });
+
+  Progress<SeamailThreadSummary> getSeamailMessages({
+    @required Credentials credentials,
+    @required String threadId,
+    bool markRead = true,
+  });
+
+  Progress<SeamailMessageSummary> postSeamailMessage({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String text,
+  });
+
+  Progress<SeamailThreadSummary> createSeamailThread({
+    @required Credentials credentials,
+    @required Set<User> users,
+    @required String subject,
+    @required String text,
+  });
+
   void dispose();
+}
+
+class SeamailSummary {
+  const SeamailSummary({
+    this.threads,
+    this.freshnessToken,
+  });
+
+  final Set<SeamailThreadSummary> threads;
+
+  final int freshnessToken;
+}
+
+class SeamailThreadSummary {
+  const SeamailThreadSummary({
+    this.id,
+    this.subject,
+    this.users,
+    this.messages,
+    this.lastMessageTimestamp,
+    this.unreadMessages,
+    this.totalMessages,
+    this.unread,
+  });
+
+  final String id;
+
+  final String subject;
+
+  final Set<SeamailUserSummary> users;
+
+  final List<SeamailMessageSummary> messages;
+
+  final DateTime lastMessageTimestamp;
+
+  final int unreadMessages;
+
+  final int totalMessages;
+
+  final bool unread;
+}
+
+class SeamailMessageSummary {
+  const SeamailMessageSummary({
+    this.id,
+    this.user,
+    this.text,
+    this.timestamp,
+    this.readReceipts,
+  });
+
+  final String id;
+
+  final SeamailUserSummary user;
+
+  final String text;
+
+  final DateTime timestamp;
+
+  final Set<SeamailUserSummary> readReceipts;
+}
+
+class SeamailUserSummary {
+  const SeamailUserSummary({
+    this.username,
+    this.displayName,
+    this.photoTimestamp,
+  });
+
+  final String username;
+
+  final String displayName;
+
+  final DateTime photoTimestamp;
+
+  User toUser(PhotoManager photoManager) {
+    photoManager.heardAboutUserPhoto(
+      username,
+      photoTimestamp,
+    );
+    return User(
+      username: username,
+      displayName: displayName,
+    );
+  }
 }

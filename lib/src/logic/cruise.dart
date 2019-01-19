@@ -7,55 +7,45 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 
+import '../basic_types.dart';
 import '../models/calendar.dart';
-import '../models/seamail.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
+import 'notifications.dart';
 import 'photo_manager.dart';
+import 'seamail.dart';
 import 'store.dart';
-
-typedef AsyncCallback<T> = Future<T> Function();
 
 // TODO(ianh): Move polling logic into RestTwitarr class
 
 class CruiseModel extends ChangeNotifier implements PhotoManager {
   CruiseModel({
-    @required TwitarrConfiguration twitarrConfiguration,
+    @required TwitarrConfiguration initialTwitarrConfiguration,
     @required this.store,
     this.frequentPollInterval = const Duration(seconds: 30), // e.g. twitarr
     this.rarePollInterval = const Duration(seconds: 600), // e.g. calendar
-    this.maxSeamailUpdateDelay = const Duration(minutes: 5),
-  }) : assert(twitarrConfiguration != null),
+    @required this.onError,
+  }) : assert(initialTwitarrConfiguration != null),
        assert(store != null),
        assert(frequentPollInterval != null),
-       assert(rarePollInterval != null) {
+       assert(rarePollInterval != null),
+       assert(onError != null) {
     _restorePhotos(); // async
-    _setupTwitarr(twitarrConfiguration);
+    _setupTwitarr(initialTwitarrConfiguration);
     _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
     _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
-    _seamail = Seamail();
     _restoreCredentials();
   }
 
   final Duration rarePollInterval;
   final Duration frequentPollInterval;
-  final Duration maxSeamailUpdateDelay;
   final DataStore store;
+  final ErrorCallback onError;
 
   bool _alive = true;
   Progress<Credentials> _pendingCredentials;
   Credentials _currentCredentials;
-
-  Twitarr _twitarr;
-  TwitarrConfiguration get twitarrConfiguration => _twitarr.configuration;
-  void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
-    final Twitarr oldTwitarr = _twitarr;
-    final Progress<AuthenticatedUser> logoutProgress = oldTwitarr.logout();
-    logoutProgress.asFuture().whenComplete(oldTwitarr.dispose);
-    _setupTwitarr(newConfiguration);
-    _reset();
-  }
 
   void _setupTwitarr(TwitarrConfiguration configuration) {
     _twitarr = configuration.createTwitarr();
@@ -63,6 +53,41 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _twitarr.debugReliability = _debugReliability;
   }
 
+  void _reset() {
+    Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
+    _currentCredentials = null;
+    _pendingCredentials?.removeListener(_handleCredentialsChange);
+    _pendingCredentials = null;
+    _seamail = Seamail.empty();
+    _user.reset();
+  }
+
+  Twitarr _twitarr;
+  TwitarrConfiguration get twitarrConfiguration => _twitarr.configuration;
+  void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
+    assert(_twitarr != null);
+    final Twitarr oldTwitarr = _twitarr;
+    final Progress<AuthenticatedUser> logoutProgress = oldTwitarr.logout();
+    logoutProgress
+      .asFuture()
+      .catchError(
+        (Object error, StackTrace stack) {
+          if (onError != null && error is UserFriendlyError) {
+            onError('$error');
+            return null;
+          }
+          return Future<AuthenticatedUser>.error(error, stack);
+        },
+        test: (Object error) => error is UserFriendlyError,
+      )
+      .whenComplete(oldTwitarr.dispose);
+    _reset();
+    _setupTwitarr(newConfiguration);
+    _calendar.triggerUnscheduledUpdate();
+    notifyListeners();
+  }
+
+  // TODO(ianh): save this in the store
   double get debugLatency => _debugLatency;
   double _debugLatency = 0.0;
   set debugLatency(double value) {
@@ -71,6 +96,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     notifyListeners();
   }
 
+  // TODO(ianh): save this in the store
   double get debugReliability => _debugReliability;
   double _debugReliability = 1.0;
   set debugReliability(double value) {
@@ -79,15 +105,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     notifyListeners();
   }
 
-  void _reset() {
-    _cancelUpdateSeamail();
-    _currentCredentials = null;
-    _pendingCredentials?.removeListener(_saveCredentials);
-    _pendingCredentials = null;
-    _seamail = Seamail();
-    _user.reset();
-    notifyListeners();
-  }
+  Seamail get seamail => _seamail;
+  Seamail _seamail;
 
   Progress<Credentials> createAccount({
     @required String username,
@@ -147,20 +166,23 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       (AuthenticatedUser user) => user?.credentials,
     );
     _pendingCredentials = result;
-    _pendingCredentials?.addListener(_saveCredentials);
+    _pendingCredentials?.addListener(_handleCredentialsChange);
+    notifyListeners();
     return result;
   }
 
-  void _saveCredentials() {
+  void _handleCredentialsChange() {
     final ProgressValue<Credentials> progress = _pendingCredentials?.value;
     if (progress is SuccessfulProgress<Credentials>) {
-      _pendingCredentials.removeListener(_saveCredentials);
+      _pendingCredentials.removeListener(_handleCredentialsChange);
       _pendingCredentials = null;
       _currentCredentials = progress.value;
       assert(_currentCredentials == null || _currentCredentials.key != null);
       store.saveCredentials(_currentCredentials);
-      if (_currentCredentials != null)
-        updateSeamail();
+      if (_currentCredentials != null) {
+        _seamail = Seamail(_twitarr, _currentCredentials, this, onError: onError);
+        notifyListeners();
+      }
     }
   }
 
@@ -180,65 +202,11 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return completer.chain<Calendar>(_twitarr.getCalendar());
   }
 
-  Seamail get seamail => _seamail;
-  Seamail _seamail;
-  CancelationSignal _ongoingSeamailUpdate;
-  Duration _seamailUpdateDelay = Duration.zero;
-  bool _seamailUpdateScheduled = false;
-
-  void updateSeamail() async {
-    if (_seamailUpdateScheduled) {
-      assert(_ongoingSeamailUpdate != null);
-      _cancelUpdateSeamail();
-    } else if (_ongoingSeamailUpdate != null) {
-      _seamailUpdateDelay = Duration.zero;
-      return;
-    }
-    assert(_currentCredentials != null && _currentCredentials.key != null);
-    assert(_ongoingSeamailUpdate == null);
-    final CancelationSignal signal = CancelationSignal();
-    _ongoingSeamailUpdate = signal;
-    if (_seamail.active) {
-      await _twitarr.updateSeamailThreads(_currentCredentials, _seamail, this, signal); // I/O
-      // ASYNCHRONOUS CONTINUATION
-      if (signal.canceled)
-        return;
-      assert(_ongoingSeamailUpdate == signal);
-      if (_seamailUpdateDelay < maxSeamailUpdateDelay)
-        _seamailUpdateDelay = _seamailUpdateDelay + const Duration(seconds: 1);
-      assert(!_seamailUpdateScheduled);
-      _seamailUpdateScheduled = true;
-      await Future<void>.delayed(_seamailUpdateDelay); // Timed-based delay
-      // ASYNCHRONOUS CONTINUATION
-      if (signal.canceled)
-        return;
-    }
-    await _seamail.untilActive; // Demand-based delay
-    // ASYNCHRONOUS CONTINUATION
-    if (signal.canceled)
-      return;
-    assert(_ongoingSeamailUpdate == signal);
-    _ongoingSeamailUpdate = null;
-    _seamailUpdateScheduled = false;
-    updateSeamail(); // TAIL RECURSION
-  }
-
-  void _cancelUpdateSeamail() {
-    _ongoingSeamailUpdate?.cancel();
-    _ongoingSeamailUpdate = null;
-    _seamailUpdateScheduled = false;
-  }
-
-  Progress<SeamailThread> newSeamail(Set<User> users, String subject, String message) {
-    assert(_currentCredentials != null && _currentCredentials.key != null);
-    return _twitarr.newSeamail(_currentCredentials, seamail, this, users, subject, message);
-  }
-
   final Map<String, DateTime> _photoUpdates = <String, DateTime>{};
   final Map<String, Set<VoidCallback>> _photoListeners = <String, Set<VoidCallback>>{};
 
   Future<void> _photosBusy = Future<void>.value();
-  Future<T> _queuePhotosWork<T>(AsyncCallback<T> callback) async {
+  Future<T> _queuePhotosWork<T>(AsyncValueGetter<T> callback) async {
     final Future<void> lastLock = _photosBusy;
     final Completer<void> currentLock = Completer<void>();
     _photosBusy = currentLock.future;
@@ -426,10 +394,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   @override
   void dispose() {
     _alive = false;
-    _ongoingSeamailUpdate?.cancel();
-    _seamail.dispose();
-    _seamail = null;
-    _pendingCredentials?.removeListener(_saveCredentials);
+    _pendingCredentials?.removeListener(_handleCredentialsChange);
     _user.dispose();
     _calendar.dispose();
     _twitarr.dispose();

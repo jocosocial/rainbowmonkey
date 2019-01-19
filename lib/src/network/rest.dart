@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import '../json.dart';
 import '../logic/photo_manager.dart';
 import '../models/calendar.dart';
-import '../models/seamail.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import 'form_data.dart';
@@ -240,152 +239,6 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
-  Future<void> updateSeamailThreads(
-    Credentials credentials,
-    Seamail seamail,
-    PhotoManager photoManager,
-    CancelationSignal cancelationSignal,
-  ) async {
-    assert(credentials.key != null);
-    final FormData body = FormData()
-      ..add('key', credentials.key);
-    final String encodedBody = body.toUrlEncoded();
-    final String rawResult = await _requestUtf8('GET', 'api/v2/seamail?$encodedBody').asFuture();
-    if (cancelationSignal.canceled)
-      return;
-    final dynamic data = Json.parse(rawResult);
-    seamail.update(DateTime.fromMicrosecondsSinceEpoch((data.last_checked as Json).toInt()), (SeamailUpdater updater) {
-      for (dynamic thread in data.seamail_meta.asIterable() as Iterable<dynamic>) {
-        final List<User> users = _parseUsersFromSeamailMeta(thread.users as Json, photoManager);
-        final String id = thread.id.toString();
-        updater.updateThread(id,
-          messageCount: _parseMessageCount(thread.messages.toString()),
-          subject: thread.subject.toString(),
-          timestamp: DateTime.parse(thread.timestamp.toString()),
-          unread: (thread.is_unread as Json).toBoolean(),
-          users: users,
-          messagesCallback: _getMessagesCallback(id, credentials),
-          sendCallback: _getSendCallback(id, credentials),
-        );
-      }
-    });
-  }
-
-  @override
-  Progress<SeamailThread> newSeamail(
-    Credentials credentials,
-    Seamail seamail,
-    PhotoManager photoManager,
-    Set<User> users,
-    String subject,
-    String message,
-  ) {
-    assert(credentials.key != null);
-    return Progress<SeamailThread>((ProgressController<SeamailThread> completer) async {
-      final FormData body = FormData()
-        ..add('key', credentials.key);
-      final String jsonBody = json.encode(<String, dynamic>{
-        'users': users
-          .where((User user) => user.username != credentials.username)
-          .map<String>((User user) => user.username)
-          .toList(),
-        'subject': subject,
-        'text': message,
-      });
-      final String result = await completer.chain<String>(
-        _requestUtf8(
-          'POST',
-          'api/v2/seamail?${body.toUrlEncoded()}',
-          body: utf8.encode(jsonBody),
-          contentType: ContentType('application', 'json', charset: 'utf-8'),
-        ),
-      );
-      final dynamic data = Json.parse(result);
-      if (data['errors'] != null)
-        throw ServerError((data.errors as Json).toList().cast<String>());
-      final dynamic thread = data.seamail_meta;
-      final String id = thread.id.toString();
-      return SeamailThread(
-        seamail: seamail,
-        id: id,
-        users: _parseUsersFromSeamailMeta(thread.users as Json, photoManager),
-        messageCount: _parseMessageCount(thread.messages.toString()),
-        subject: thread.subject.toString(),
-        timestamp: DateTime.parse(thread.timestamp.toString()),
-        unread: (thread.is_unread as Json).toBoolean(),
-        messagesCallback: _getMessagesCallback(id, credentials),
-        sendCallback: _getSendCallback(id, credentials),
-      );
-    });
-  }
-
-  List<User> _parseUsersFromSeamailMeta(Json users, PhotoManager photoManager) {
-    return (users.asIterable()).map<User>((dynamic user) {
-      photoManager.heardAboutUserPhoto(
-        user.username.toString(),
-        DateTime.fromMicrosecondsSinceEpoch((user.last_photo_updated as Json).toInt()),
-      );
-      return User(
-        username: user.username.toString(),
-        displayName: user.display_name.toString(),
-      );
-    }).toList();
-  }
-
-  int _parseMessageCount(String input) {
-    if (input == '1 message')
-      return 1;
-    if (input.endsWith(' messages'))
-      return int.parse(input.substring(0, input.length - 9));
-    return null;
-  }
-
-  SeamailMessagesCallback _getMessagesCallback(String id, Credentials credentials) {
-    return () { // TODO(ianh): pull this up to Twitarr-level rather than being a closure
-      assert(credentials.key != null);
-      final FormData body = FormData()
-        ..add('key', credentials.key);
-      return Progress<List<SeamailMessage>>((ProgressController<List<SeamailMessage>> completer) async {
-        return await compute<String, List<SeamailMessage>>(
-          _parseSeamailMessages,
-          await completer.chain<String>(
-            _requestUtf8('GET', 'api/v2/seamail/${Uri.encodeComponent(id)}?${body.toUrlEncoded()}'),
-          ),
-        );
-      });
-    };
-  }
-
-  static List<SeamailMessage> _parseSeamailMessages(String rawData) {
-    final dynamic data = Json.parse(rawData);
-    return (data.seamail.messages as Json).asIterable().map<SeamailMessage>((dynamic value) {
-      return SeamailMessage(
-        user: User(
-          username: value.author.username.toString(),
-          displayName: value.author.display_name.toString(),
-        ),
-        text: value.text.toString(),
-        timestamp: DateTime.parse(value.timestamp.toString()),
-      );
-    }).toList().reversed.toList();
-  }
-
-  SeamailSendCallback _getSendCallback(String id, Credentials credentials) {
-    return (String value) { // TODO(ianh): pull this up to Twitarr-level rather than being a closure
-      return Progress<void>((ProgressController<void> completer) async {
-        final FormData body = FormData()
-          ..add('key', credentials.key)
-          ..add('text', value);
-        final String encodedBody = body.toUrlEncoded();
-        final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/seamail/${Uri.encodeComponent(id)}?$encodedBody'));
-        final dynamic data = Json.parse(result);
-        if (data['errors'] != null)
-          throw ServerError((data.errors as Json).toList().cast<String>());
-      });
-    };
-  }
-
-  @override
   Progress<Uint8List> fetchProfilePicture(String username) {
     return _requestBytes('GET', 'api/v2/user/photo/${Uri.encodeComponent(username)}');
   }
@@ -510,6 +363,223 @@ class RestTwitarr implements Twitarr {
     }).toList();
   }
 
+  @override
+  Progress<SeamailSummary> getSeamailThreads({
+    @required Credentials credentials,
+  }) {
+    assert(credentials.key != null);
+    final FormData body = FormData()
+      ..add('key', credentials.key)
+      ..add('exclude_read_messages', 'true');
+    final String encodedBody = body.toUrlEncoded();
+    return Progress<SeamailSummary>((ProgressController<SeamailSummary> completer) async {
+      return await compute<String, SeamailSummary>(
+        _parseSeamailSummary,
+        await completer.chain<String>(
+          _requestUtf8('GET', 'api/v2/seamail_threads?$encodedBody'),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<SeamailSummary> getUnreadSeamailMessages({
+    @required Credentials credentials,
+    int freshnessToken,
+  }) {
+    assert(credentials.key != null);
+    final FormData body = FormData()
+      ..add('key', credentials.key)
+      ..add('unread', 'true');
+    if (freshnessToken != null)
+      body.add('after', '$freshnessToken');
+    final String encodedBody = body.toUrlEncoded();
+    return Progress<SeamailSummary>((ProgressController<SeamailSummary> completer) async {
+      return await compute<String, SeamailSummary>(
+        _parseSeamailSummary,
+        await completer.chain<String>(
+          _requestUtf8('GET', 'api/v2/seamail_threads?$encodedBody'),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<SeamailThreadSummary> getSeamailMessages({
+    @required Credentials credentials,
+    @required String threadId,
+    bool markRead = true,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(markRead != null);
+    final FormData body = FormData()
+      ..add('key', credentials.key);
+    if (!markRead)
+      body.add('skip_mark_read', 'true');
+    final String encodedBody = body.toUrlEncoded();
+    return Progress<SeamailThreadSummary>((ProgressController<SeamailThreadSummary> completer) async {
+      return await compute<String, SeamailThreadSummary>(
+        _parseSeamailThreadWrapper,
+        await completer.chain<String>(
+          _requestUtf8('GET', 'api/v2/seamail/${Uri.encodeComponent(threadId)}?$encodedBody'),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<SeamailThreadSummary> createSeamailThread({
+    @required Credentials credentials,
+    @required Set<User> users,
+    @required String subject,
+    @required String text,
+  }) {
+    assert(credentials.key != null);
+    assert(users != null);
+    assert(users.isNotEmpty);
+    assert(subject != null);
+    assert(subject.isNotEmpty);
+    assert(text != null);
+    assert(text.isNotEmpty);
+    return Progress<SeamailThreadSummary>((ProgressController<SeamailThreadSummary> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String jsonBody = json.encode(<String, dynamic>{
+        'users': users
+          .where((User user) => user.username != credentials.username)
+          .map<String>((User user) => user.username)
+          .toList(),
+        'subject': subject,
+        'text': text,
+      });
+      return await compute<String, SeamailThreadSummary>(
+        _parseSeamailThreadCreationResult,
+        await completer.chain<String>(
+          _requestUtf8(
+            'POST',
+            'api/v2/seamail?${body.toUrlEncoded()}',
+            body: utf8.encode(jsonBody),
+            contentType: ContentType('application', 'json', charset: 'utf-8'),
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<SeamailMessageSummary> postSeamailMessage({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String text,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(threadId.isNotEmpty);
+    assert(text != null);
+    assert(text.isNotEmpty);
+    return Progress<SeamailMessageSummary>((ProgressController<SeamailMessageSummary> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String jsonBody = json.encode(<String, dynamic>{
+        'text': text,
+      });
+      return await compute<String, SeamailMessageSummary>(
+        _parseSeamailMessageCreationResult,
+        await completer.chain<String>(
+          _requestUtf8(
+            'POST',
+            'api/v2/seamail/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+            body: utf8.encode(jsonBody),
+            contentType: ContentType('application', 'json', charset: 'utf-8'),
+          ),
+        ),
+      );
+    });
+  }
+
+  static SeamailSummary _parseSeamailSummary(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    final Set<SeamailThreadSummary> threads = Set<SeamailThreadSummary>();
+    for (Json thread in (data.seamail_threads as Json).asIterable()) {
+      threads.add(_parseSeamailThread(thread));
+    }
+    return SeamailSummary(
+      threads: threads,
+      freshnessToken: (data.last_checked as Json).toInt(),
+    );
+  }
+
+  static SeamailThreadSummary _parseSeamailThreadWrapper(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    if (data.status.toString() == 'error')
+      throw ServerError(<String>[data.error.toString()]);
+    return _parseSeamailThread(data.seamail);
+  }
+
+  static SeamailThreadSummary _parseSeamailThreadCreationResult(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    if (data.status.toString() == 'error')
+      throw ServerError((data.errors as Json).toList().cast<String>());
+    return _parseSeamailThread(data.seamail);
+  }
+
+  static SeamailMessageSummary _parseSeamailMessageCreationResult(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    if (data.status.toString() == 'error') {
+      if ((data as Json).hasKey('errors'))
+        throw ServerError((data.errors as Json).toList().cast<String>());
+      throw ServerError(<String>[data.error.toString()]);
+    }
+    return _parseSeamailMessage(data.seamail_message);
+  }
+
+  static SeamailThreadSummary _parseSeamailThread(dynamic thread) {
+    final bool countIsUnread = (thread.count_is_unread as Json).toBoolean() == true;
+    return SeamailThreadSummary(
+      id: thread.id.toString(),
+      subject: thread.subject.toString(),
+      users: Set<SeamailUserSummary>.from(
+        (thread.users as Json)
+          .asIterable()
+          .map<SeamailUserSummary>(_parseSeamailUser)
+      ),
+      messages: _asListIfPresent<SeamailMessageSummary>(thread.messages as Json, _parseSeamailMessage),
+      lastMessageTimestamp: DateTime.parse(thread.timestamp.toString()),
+      unreadMessages: countIsUnread ? (thread.message_count as Json).toInt() : null,
+      totalMessages: countIsUnread ? null : (thread.message_count as Json).toInt(),
+      unread: (thread.is_unread as Json).toBoolean(),
+    );
+  }
+
+  static List<T> _asListIfPresent<T>(Json data, T Function(dynamic data) parser) {
+    if (!data.isList)
+      return null;
+    return data.asIterable().map<T>((Json data) => parser(data)).toList();
+  }
+
+  static SeamailMessageSummary _parseSeamailMessage(dynamic message) {
+    return SeamailMessageSummary(
+      id: message.id.toString(),
+      user: _parseSeamailUser(message.author as Json),
+      text: message.text.toString(),
+      timestamp: DateTime.parse(message.timestamp.toString()),
+      readReceipts: Set<SeamailUserSummary>.from(
+        (message.read_users as Json)
+          .asIterable()
+          .map<SeamailUserSummary>(_parseSeamailUser)
+      ),
+    );
+  }
+
+  static SeamailUserSummary _parseSeamailUser(dynamic user) {
+    return SeamailUserSummary(
+      username: user.username.toString(),
+      displayName: user.display_name.toString(),
+      photoTimestamp: DateTime.fromMicrosecondsSinceEpoch((user.last_photo_updated as Json).toInt()),
+    );
+  }
+
   Progress<String> _requestUtf8(String method, String path, {
     List<int> body,
     List<Uint8List> bodyParts,
@@ -527,7 +597,7 @@ class RestTwitarr implements Twitarr {
         expectedStatusCodes,
       );
       int count = 0;
-      return await response
+      final String result = await response
         .map((List<int> bytes) {
           if (response.contentLength > 0) {
             count += bytes.length;
@@ -537,6 +607,8 @@ class RestTwitarr implements Twitarr {
         })
         .transform(utf8.decoder)
         .join();
+      debugPrint('<<< $result');
+      return result;
     });
   }
 
@@ -620,6 +692,8 @@ class RestTwitarr implements Twitarr {
     } on SocketException catch (error) {
       if (error.osError.errorCode == 111)
         throw const ServerError(<String>['The server is down.']);
+      if (error.osError.errorCode == 113)
+        throw const ServerError(<String>['The server cannot be reached.']);
       rethrow;
     }
   }

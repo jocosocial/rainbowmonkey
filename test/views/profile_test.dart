@@ -16,13 +16,14 @@ Future<void> main() async {
     final List<String> log = <String>[];
     ProfileTestTwitarr twitarr;
     final CruiseModel model = CruiseModel(
-      twitarrConfiguration: ProfileTestTwitarrConfiguration(
+      initialTwitarrConfiguration: ProfileTestTwitarrConfiguration(
         log,
         onTwitarr: (ProfileTestTwitarr value) {
           twitarr = value;
         },
       ),
       store: const TestDataStore(),
+      onError: (String error) { log.add('error: $error'); },
     );
     await model.login(username: 'username', password: 'password').asFuture();
     await tester.pumpWidget(

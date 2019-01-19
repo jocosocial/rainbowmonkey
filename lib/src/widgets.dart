@@ -39,6 +39,20 @@ String wrapError(Exception error) {
   return error.toString();
 }
 
+Widget iconAndLabel({ Key key, @required IconData icon, @required String message }) {
+  return Center(
+    key: key,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Icon(icon, size: 72.0),
+        Text(message, textAlign: TextAlign.center),
+      ],
+    ),
+  );
+}
+
 Widget _defaultSecondaryActiveBuilder(BuildContext context, double progress, double target) {
   assert(target != 0.0);
   return CircularProgressIndicator(key: ProgressBuilder.activeKey, value: progress / target);
@@ -121,17 +135,7 @@ class ProgressBuilder<T> extends StatelessWidget {
 
   static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
     assert(error != null);
-    return Center(
-      key: ProgressBuilder.failedKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          const Icon(Icons.warning, size: 72.0),
-          Text(wrapError(error), textAlign: TextAlign.center),
-        ],
-      ),
-    );
+    return iconAndLabel(key: ProgressBuilder.failedKey, icon: Icons.warning, message: wrapError(error));
   }
 
   @override

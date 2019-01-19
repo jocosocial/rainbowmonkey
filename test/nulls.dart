@@ -1,10 +1,11 @@
 import 'dart:typed_data';
 
+import 'package:cruisemonkey/src/basic_types.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
+import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
-import 'package:cruisemonkey/src/models/seamail.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -49,13 +50,13 @@ class NullCruiseModel implements CruiseModel {
   // CRUISE MODEL
 
   @override
+  final ErrorCallback onError = null;
+
+  @override
   final Duration rarePollInterval = null;
 
   @override
   final Duration frequentPollInterval = null;
-
-  @override
-  final Duration maxSeamailUpdateDelay = null;
 
   @override
   final DataStore store = null;
@@ -99,12 +100,6 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   Seamail get seamail => null;
-
-  @override
-  void updateSeamail() { }
-
-  @override
-  Progress<SeamailThread> newSeamail(Set<User> users, String subject, String message) => null;
 
   @override
   Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) => null;

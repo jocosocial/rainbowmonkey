@@ -6,6 +6,10 @@ dependencies:
     sdk: flutter
   path_provider: any
   image_picker: any
+    # path: ../plugins/packages/image_picker/
+  android_alarm_manager: any
+  flutter_local_notifications: any
+  sqflite: any
 
 dev_dependencies:
   flutter_test:
