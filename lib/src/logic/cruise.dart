@@ -191,6 +191,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   ContinuousProgress<AuthenticatedUser> get user => _user;
   PeriodicProgress<AuthenticatedUser> _user;
 
+  bool get loggedIn => _currentCredentials != null;
+  
   Future<AuthenticatedUser> _updateUser(ProgressController<AuthenticatedUser> completer) async {
     if (_currentCredentials?.key != null)
       return await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
