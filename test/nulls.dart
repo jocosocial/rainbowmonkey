@@ -20,6 +20,12 @@ class NullDataStore implements DataStore {
 
   @override
   Progress<Credentials> restoreCredentials() => null;
+
+  @override
+  Progress<void> saveSetting(Setting id, dynamic value) => null;
+
+  @override
+  Progress<Map<Setting, dynamic>> restoreSettings() => null;
 }
 
 class NullTwitarrConfiguration extends TwitarrConfiguration {
@@ -72,6 +78,9 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   double debugReliability = 1.0;
+
+  @override
+  bool get restoringSettings => false;
 
   @override
   Progress<Credentials> createAccount({

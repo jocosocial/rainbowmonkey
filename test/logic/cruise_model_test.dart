@@ -20,7 +20,7 @@ void main() {
     expect(model.twitarrConfiguration, config1);
     log.add('--- select new configuration');
     model.selectTwitarrConfiguration(config2);
-    log.add('--- idling');
+    log.add('--- idling, expect settings restore to change the model');
     await tester.idle();
     log.add('--- waiting one hour');
     await tester.pump(const Duration(hours: 1));
@@ -41,12 +41,14 @@ void main() {
     expect(
       log,
       <String>[
+        'LoggingDataStore.restoreSettings',
         'LoggingDataStore.restoreCredentials',
         '--- select new configuration',
         'LoggingTwitarr(1).logout',
         'LoggingTwitarr(2).getCalendar',
         'model changed',
-        '--- idling',
+        '--- idling, expect settings restore to change the model',
+        'model changed',
         'LoggingTwitarr(1).dispose',
         '--- waiting one hour',
         '--- login',

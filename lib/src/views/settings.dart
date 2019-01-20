@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../logic/store.dart';
 import '../network/rest.dart';
 import '../network/twitarr.dart';
 import '../widgets.dart';
@@ -24,6 +25,7 @@ class Settings extends StatelessWidget {
       ),
       body: StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
+          final bool busy = Cruise.of(context).restoringSettings;
           return ListView(
             children: <Widget>[
               ListTile(
@@ -33,19 +35,19 @@ class Settings extends StatelessWidget {
                 title: const Text('hendusoone\'s server'),
                 groupValue: Cruise.of(context).twitarrConfiguration,
                 value: const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'),
-                onChanged: (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
+                onChanged: busy ? null : (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
               ),
               RadioListTile<TwitarrConfiguration>(
                 title: const Text('hendusoone\'s development machine'),
                 groupValue: Cruise.of(context).twitarrConfiguration,
                 value: const RestTwitarrConfiguration(baseUrl: 'http://108.49.102.77:3000/'),
-                onChanged: (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
+                onChanged: busy ? null : (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
               ),
               RadioListTile<TwitarrConfiguration>(
                 title: const Text('gbasden\'s server'),
                 groupValue: Cruise.of(context).twitarrConfiguration,
                 value: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
-                onChanged: (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
+                onChanged: busy ? null : (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
               ),
               const Divider(),
               ListTile(
@@ -61,7 +63,7 @@ class Settings extends StatelessWidget {
                   value: latency == 0 ? 0 : math.log(latency).clamp(0.0, 10.0).toDouble(),
                   min: 0.0,
                   max: 10.0,
-                  onChanged: (double value) { Cruise.of(context).debugLatency = value == 0 ? 0 : math.exp(value); },
+                  onChanged: busy ? null : (double value) { Cruise.of(context).debugLatency = value == 0 ? 0 : math.exp(value); },
                 ),
               ),
               const Divider(),
@@ -78,7 +80,7 @@ class Settings extends StatelessWidget {
                   value: 1.0 - reliability.clamp(0.0, 1.0).toDouble(),
                   min: 0.0,
                   max: 1.0,
-                  onChanged: (double value) { Cruise.of(context).debugReliability = 1.0 - value; },
+                  onChanged: busy ? null : (double value) { Cruise.of(context).debugReliability = 1.0 - value; },
                 ),
               ),
               const Divider(),
@@ -95,7 +97,12 @@ class Settings extends StatelessWidget {
                   value: timeDilation.clamp(1.0, 100.0).toDouble(),
                   min: 1.0,
                   max: 100.0,
-                  onChanged: (double value) { setState(() { timeDilation = value; }); },
+                  onChanged: busy ? null : (double value) {
+                    setState(() {
+                      timeDilation = value;
+                    });
+                    Cruise.of(context).store.saveSetting(Setting.debugTimeDilation, timeDilation);
+                  },
                 ),
               ),
             ],
