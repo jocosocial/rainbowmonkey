@@ -34,7 +34,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _restorePhotos(); // async
     _setupTwitarr(initialTwitarrConfiguration);
     _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
-    _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
+    _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar); // TODO(ianh): autoretry faster on network failure
     _restoreCredentials();
   }
 
@@ -130,6 +130,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     @required String username,
     @required String password,
   }) {
+    // TODO(ianh): autoretry on network failure
     return _updateCredentials(_twitarr.login(
       username: username,
       password: password,
@@ -145,6 +146,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _updateCredentials(Progress<AuthenticatedUser>.deferred((ProgressController<AuthenticatedUser> completer) async {
       final Credentials credentials = await completer.chain<Credentials>(store.restoreCredentials());
       if (credentials != null && _alive) {
+        // TODO(ianh): autoretry on network failure
         return await completer.chain<AuthenticatedUser>(
           _twitarr.login(
             username: credentials.username,
