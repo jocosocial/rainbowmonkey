@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -91,7 +92,20 @@ class SeamailView extends StatelessWidget implements View {
             );
           return ListView.builder(
             itemBuilder: (BuildContext context, int index) {
-              if (index < threads.length) {
+              if (threads.isEmpty && index == 0) {
+                if (Cruise.of(context).loggedIn) {
+                  return const ListTile(
+                    leading: Icon(Icons.phonelink_erase, size: 40.0),
+                    title: Text('I check my messages'),
+                    subtitle: Text('but I don\'t have any messages.'),
+                  );
+                } else {
+                  return const ListTile(
+                    leading: Icon(Icons.account_circle, size: 40.0),
+                    title: Text('Seamail is only available when logged in'),
+                  );
+                }
+              } else if (index < threads.length) {
                 final SeamailThread thread = threads[index];
                 return ListTile(
                   leading: CircleAvatar(child: Text('${thread.users.length}')), // TODO(ianh): faces
@@ -109,7 +123,7 @@ class SeamailView extends StatelessWidget implements View {
                 // TODO(ianh): Twitarr
               );
             },
-            itemCount: threads.length + 1,
+            itemCount: math.max(threads.length, 1) + 1,
           );
         },
       ),

@@ -96,6 +96,9 @@ class NullCruiseModel implements CruiseModel {
   final MutableContinuousProgress<AuthenticatedUser> user = null;
 
   @override
+  bool get loggedIn => null;
+
+  @override
   final MutableContinuousProgress<Calendar> calendar = null;
 
   @override
