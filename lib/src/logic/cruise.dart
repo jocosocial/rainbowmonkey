@@ -2,14 +2,16 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui show Codec, FrameInfo;
 
-import 'package:meta/meta.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:meta/meta.dart';
 
 import '../basic_types.dart';
 import '../models/calendar.dart';
 import '../models/user.dart';
+import '../network/rest.dart' show RestTwitarrConfiguration;
 import '../network/twitarr.dart';
 import '../progress.dart';
 import 'notifications.dart';
@@ -33,6 +35,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
        assert(onError != null) {
     _restorePhotos(); // async
     _setupTwitarr(initialTwitarrConfiguration);
+    _restoreSettings();
     _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
     _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar); // TODO(ianh): autoretry faster on network failure
     _restoreCredentials();
@@ -84,6 +87,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _reset();
     _setupTwitarr(newConfiguration);
     _calendar.triggerUnscheduledUpdate();
+    if (newConfiguration is RestTwitarrConfiguration) // TODO(ianh): use a configuration class registry
+      store.saveSetting(Setting.server, newConfiguration.baseUrl);
     notifyListeners();
   }
 
@@ -93,6 +98,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   set debugLatency(double value) {
     _debugLatency = value;
     _twitarr.debugLatency = value;
+    store.saveSetting(Setting.debugNetworkLatency, value);
     notifyListeners();
   }
 
@@ -102,7 +108,32 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   set debugReliability(double value) {
     _debugReliability = value;
     _twitarr.debugReliability = value;
+    store.saveSetting(Setting.debugNetworkReliability, value);
     notifyListeners();
+  }
+
+  bool get restoringSettings => _restoringSettings;
+  bool _restoringSettings = false;
+  void _restoreSettings() async {
+    _restoringSettings = true;
+    try {
+      final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
+      if (settings == null)
+        return;
+      if (settings.containsKey(Setting.debugNetworkLatency))
+        debugLatency = settings[Setting.debugNetworkLatency] as double;
+      if (settings.containsKey(Setting.debugNetworkReliability))
+        debugReliability = settings[Setting.debugNetworkReliability] as double;
+      if (settings.containsKey(Setting.server))
+        selectTwitarrConfiguration(RestTwitarrConfiguration(baseUrl: settings[Setting.server] as String));
+      if (settings.containsKey(Setting.debugTimeDilation)) {
+        timeDilation = settings[Setting.debugTimeDilation] as double;
+        await SchedulerBinding.instance.reassembleApplication();
+      }
+    } finally {
+      _restoringSettings = false;
+      notifyListeners();
+    }
   }
 
   Seamail get seamail => _seamail;

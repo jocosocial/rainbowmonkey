@@ -195,7 +195,7 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
       tiles.add(ListTile(
         leading: const Icon(Icons.settings),
         title: const Text('Settings'),
-        onTap: () {
+        onTap: Cruise.of(context).restoringSettings ? null : () {
           Navigator.pop(context); // drawer
           Navigator.pushNamed(context, '/settings');
         },

@@ -24,6 +24,18 @@ class LoggingDataStore implements DataStore {
     log.add('LoggingDataStore.restoreCredentials');
     return Progress<Credentials>.completed(null);
   }
+
+  @override
+  Progress<void> saveSetting(Setting id, dynamic value) {
+    log.add('LoggingDataStore.saveSetting $id $value');
+    return Progress<void>.completed(null);
+  }
+
+  @override
+  Progress<Map<Setting, dynamic>> restoreSettings() {
+    log.add('LoggingDataStore.restoreSettings');
+    return Progress<Map<Setting, dynamic>>.completed(null);
+  }
 }
 
 @immutable

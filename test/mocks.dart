@@ -25,6 +25,16 @@ class TestDataStore implements DataStore {
   Progress<Credentials> restoreCredentials() {
     return const Progress<Credentials>.idle();
   }
+
+  @override
+  Progress<void> saveSetting(Setting id, dynamic value) {
+    return const Progress<void>.idle();
+  }
+
+  @override
+  Progress<Map<Setting, dynamic>> restoreSettings() {
+    return const Progress<Map<Setting, dynamic>>.idle();
+  }
 }
 
 class TestTwitarrConfiguration extends TwitarrConfiguration {
@@ -68,6 +78,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
     assert(newConfiguration is TestTwitarrConfiguration);
   }
+
+  @override
+  bool get restoringSettings => false;
 
   @override
   Seamail get seamail => _seamail;
