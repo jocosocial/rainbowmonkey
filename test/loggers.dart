@@ -36,6 +36,34 @@ class LoggingDataStore implements DataStore {
     log.add('LoggingDataStore.restoreSettings');
     return Progress<Map<Setting, dynamic>>.completed(null);
   }
+
+  @override
+  Progress<dynamic> restoreSetting(Setting id) {
+    log.add('LoggingDataStore.restoreSetting $id');
+    return Progress<dynamic>.completed(null);
+  }
+
+  @override
+  Future<void> addNotification(String threadId, String messageId) async {
+    log.add('LoggingDataStore.addNotification($threadId, $messageId)');
+  }
+
+  @override
+  Future<void> removeNotification(String threadId, String messageId) async {
+    log.add('LoggingDataStore.removeNotification($threadId, $messageId)');
+  }
+
+  @override
+  Future<List<String>> getNotifications(String threadId) async {
+    log.add('LoggingDataStore.getNotifications($threadId)');
+    return <String>[];
+  }
+
+  @override
+  Future<void> updateFreshnessToken(FreshnessCallback callback) async {
+    log.add('LoggingDataStore.updateFreshnessToken');
+    await callback(null);
+  }
 }
 
 @immutable
@@ -197,6 +225,7 @@ class LoggingTwitarr extends Twitarr {
   @override
   Progress<SeamailSummary> getSeamailThreads({
     @required Credentials credentials,
+    int freshnessToken,
   }) {
     log.add('getSeamailThreads');
     return null;

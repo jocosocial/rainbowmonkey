@@ -22,7 +22,7 @@ Future<void> main() async {
           twitarr = value;
         },
       ),
-      store: const TestDataStore(),
+      store: const HangingDataStore(),
       onError: (String error) { log.add('error: $error'); },
     );
     await model.login(username: 'username', password: 'password').asFuture();

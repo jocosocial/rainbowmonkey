@@ -137,6 +137,7 @@ abstract class Twitarr {
 
   Progress<SeamailSummary> getSeamailThreads({
     @required Credentials credentials,
+    int freshnessToken,
   });
 
   Progress<SeamailSummary> getUnreadSeamailMessages({
@@ -240,10 +241,12 @@ class SeamailUserSummary {
   final DateTime photoTimestamp;
 
   User toUser(PhotoManager photoManager) {
-    photoManager.heardAboutUserPhoto(
-      username,
-      photoTimestamp,
-    );
+    if (photoManager != null) {
+      photoManager.heardAboutUserPhoto(
+        username,
+        photoTimestamp,
+      );
+    }
     return User(
       username: username,
       displayName: displayName,

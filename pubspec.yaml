@@ -8,6 +8,7 @@ dependencies:
   image_picker: any
     # path: ../plugins/packages/image_picker/
   android_alarm_manager: any
+    # path: ../plugins/packages/android_alarm_manager/
   flutter_local_notifications: any
   sqflite: any
 
