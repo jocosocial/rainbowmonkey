@@ -26,6 +26,21 @@ class NullDataStore implements DataStore {
 
   @override
   Progress<Map<Setting, dynamic>> restoreSettings() => null;
+
+  @override
+  Progress<dynamic> restoreSetting(Setting id) => null;
+
+  @override
+  Future<void> addNotification(String threadId, String messageId) => null;
+
+  @override
+  Future<void> removeNotification(String threadId, String messageId) => null;
+
+  @override
+  Future<List<String>> getNotifications(String threadId) => null;
+
+  @override
+  Future<void> updateFreshnessToken(FreshnessCallback callback) => null;
 }
 
 class NullTwitarrConfiguration extends TwitarrConfiguration {
@@ -57,6 +72,9 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   final ErrorCallback onError = null;
+
+  @override
+  final CheckForMessagesCallback onCheckForMessages = null;
 
   @override
   final Duration rarePollInterval = null;

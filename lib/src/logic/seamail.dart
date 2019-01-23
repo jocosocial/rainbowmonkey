@@ -25,6 +25,8 @@ mixin _BusyIndicator {
   }
 }
 
+typedef ThreadReadCallback = void Function(String threadId);
+
 class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyIndicator {
   Seamail(
     this._twitarr,
@@ -32,12 +34,21 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
     this._photoManager, {
     this.maxUpdatePeriod = const Duration(minutes: 1),
     @required this.onError,
+    this.onCheckForMessages,
+    @required this.onThreadRead,
   }) : assert(onError != null),
        assert(_twitarr != null),
        assert(_credentials != null),
        assert(_photoManager != null);
 
-  Seamail.empty() : _twitarr = null, _credentials = null, _photoManager = null, maxUpdatePeriod = null, onError = null;
+  Seamail.empty(
+  ) : _twitarr = null,
+      _credentials = null,
+      _photoManager = null,
+      maxUpdatePeriod = null,
+      onError = null,
+      onCheckForMessages = null,
+      onThreadRead = null;
 
   final Twitarr _twitarr;
   final Credentials _credentials;
@@ -45,6 +56,15 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
 
   final Duration maxUpdatePeriod;
   final ErrorCallback onError;
+
+  /// Called when there might be new messages to report as notifications.
+  final VoidCallback onCheckForMessages;
+
+  /// Called when a SeamailThread is subscribed to and tells the server to
+  /// mark everything as read.
+  final ThreadReadCallback onThreadRead;
+
+  static String kSeamailLoop = 'seamail-loop';
 
   @override
   Iterator<SeamailThread> get iterator => _threads.values.iterator;
@@ -63,6 +83,8 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
     _threads[thread.id] = thread;
   }
 
+  int _freshnessToken;
+
   bool _updating = false;
   @protected
   void update() async {
@@ -71,17 +93,25 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
     _startBusy();
     _updating = true;
     try {
-      final SeamailSummary summary = await _twitarr.getSeamailThreads(credentials: _credentials).asFuture();
-      // discarding summary.freshnessToken;
+      final SeamailSummary summary = await _twitarr.getSeamailThreads(
+        credentials: _credentials,
+        freshnessToken: _freshnessToken,
+      ).asFuture();
+      bool hasNewUnread = false;
       for (SeamailThreadSummary thread in summary.threads) {
+        if (thread.messages.isNotEmpty)
+          hasNewUnread = true;
         if (_threads.containsKey(thread.id)) {
           if (_threads[thread.id].updateFrom(thread))
             _timer?.interested();
         } else {
-          _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager);
+          _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
           _timer?.interested();
         }
       }
+      if (onCheckForMessages != null && hasNewUnread)
+        onCheckForMessages();
+      _freshnessToken = summary.freshnessToken;
     } on UserFriendlyError catch (error) {
       _timer?.interested();
       _reportError(error);
@@ -111,7 +141,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
       _timer?.interested();
       if (_threads.containsKey(thread.id))
         return _threads[thread.id];
-      _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager);
+      _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
       notifyListeners();
       return _threads[thread.id];
     });
@@ -152,6 +182,7 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
     this._credentials,
     this._photoManager, {
     this.maxUpdatePeriod = const Duration(minutes: 1),
+    @required this.onThreadRead,
   });
 
   SeamailThread.from(
@@ -161,6 +192,7 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
     this._credentials,
     this._photoManager, {
     this.maxUpdatePeriod = const Duration(minutes: 1),
+    @required this.onThreadRead,
   }) : id = thread.id {
     updateFrom(thread);
   }
@@ -171,6 +203,7 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
   final PhotoManager _photoManager;
 
   final Duration maxUpdatePeriod;
+  final ThreadReadCallback onThreadRead;
 
   final String id;
 
@@ -206,11 +239,12 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
       final SeamailThreadSummary thread = await _twitarr.getSeamailMessages(
         credentials: _credentials,
         threadId: id,
-        markRead: false,
       ).asFuture();
       if (thread.id != id)
         throw LocalError('Unexpected data from server: asked for update to thread "$id", got data for thread "${thread.id}".');
       updateFrom(thread);
+      if (onThreadRead != null)
+        onThreadRead(id);
     } on UserFriendlyError catch (error) {
       _timer?.interested();
       _parent._reportError(error);

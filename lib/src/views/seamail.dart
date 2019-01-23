@@ -167,7 +167,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
     super.initState();
     // our build is dependent on the clock, so we have to rebuild occasionally:
     _clock = Timer.periodic(const Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
-    widget.thread.addListener(_update);
+    widget.thread.addListener(_update); // this marks the thread as read
   }
 
   @override
@@ -386,16 +386,6 @@ class ChatLine extends StatelessWidget {
   final List<String> messages;
   final Widget metadata;
 
-  String _demangleText(String text) {
-    return text
-      .replaceAll('<br />', '\n')
-      .replaceAll('&#39;', '\'')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&lt;', '<') // must be after "<br />"
-      .replaceAll('&gt;', '>')
-      .replaceAll('&amp;', '&'); // must be last
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> lines = <Widget>[];
@@ -403,7 +393,7 @@ class ChatLine extends StatelessWidget {
       lines.add(DefaultTextStyle(
         style: Theme.of(context).textTheme.subhead,
         textAlign: TextAlign.start,
-        child: Text(_demangleText(message)),
+        child: Text(message),
       ));
     }
     lines.add(const SizedBox(height: 4.0));

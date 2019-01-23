@@ -13,6 +13,8 @@ import '../progress.dart';
 import 'form_data.dart';
 import 'twitarr.dart';
 
+const String kDefaultTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
+
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
 
@@ -137,7 +139,6 @@ class RestTwitarr implements Twitarr {
         _requestUtf8(
           'GET',
           'api/v2/user/auth?${body.toUrlEncoded()}',
-          expectedStatusCodes: const <int>[200, 401],
         ),
         steps: 2,
       );
@@ -366,17 +367,24 @@ class RestTwitarr implements Twitarr {
   @override
   Progress<SeamailSummary> getSeamailThreads({
     @required Credentials credentials,
+    int freshnessToken,
   }) {
     assert(credentials.key != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
       ..add('exclude_read_messages', 'true');
+    if (freshnessToken != null)
+      body.add('after', '$freshnessToken');
     final String encodedBody = body.toUrlEncoded();
     return Progress<SeamailSummary>((ProgressController<SeamailSummary> completer) async {
       return await compute<String, SeamailSummary>(
         _parseSeamailSummary,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/seamail_threads?$encodedBody'),
+          _requestUtf8(
+            'GET',
+            'api/v2/seamail_threads?$encodedBody',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
     });
@@ -398,7 +406,11 @@ class RestTwitarr implements Twitarr {
       return await compute<String, SeamailSummary>(
         _parseSeamailSummary,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/seamail_threads?$encodedBody'),
+          _requestUtf8(
+            'GET',
+            'api/v2/seamail_threads?$encodedBody',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
     });
@@ -422,7 +434,11 @@ class RestTwitarr implements Twitarr {
       return await compute<String, SeamailThreadSummary>(
         _parseSeamailThreadWrapper,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/seamail/${Uri.encodeComponent(threadId)}?$encodedBody'),
+          _requestUtf8(
+            'GET',
+            'api/v2/seamail/${Uri.encodeComponent(threadId)}?$encodedBody',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
     });
@@ -461,6 +477,7 @@ class RestTwitarr implements Twitarr {
             'api/v2/seamail?${body.toUrlEncoded()}',
             body: utf8.encode(jsonBody),
             contentType: ContentType('application', 'json', charset: 'utf-8'),
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -492,6 +509,7 @@ class RestTwitarr implements Twitarr {
             'api/v2/seamail/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
             body: utf8.encode(jsonBody),
             contentType: ContentType('application', 'json', charset: 'utf-8'),
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -562,7 +580,7 @@ class RestTwitarr implements Twitarr {
     return SeamailMessageSummary(
       id: message.id.toString(),
       user: _parseSeamailUser(message.author as Json),
-      text: message.text.toString(),
+      text: _demangleText(message.text.toString()),
       timestamp: DateTime.parse(message.timestamp.toString()),
       readReceipts: Set<SeamailUserSummary>.from(
         (message.read_users as Json)
@@ -570,6 +588,16 @@ class RestTwitarr implements Twitarr {
           .map<SeamailUserSummary>(_parseSeamailUser)
       ),
     );
+  }
+
+  static String _demangleText(String text) {
+    return text
+      .replaceAll('<br />', '\n')
+      .replaceAll('&#39;', '\'')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&lt;', '<') // must be after "<br />"
+      .replaceAll('&gt;', '>')
+      .replaceAll('&amp;', '&'); // must be last
   }
 
   static SeamailUserSummary _parseSeamailUser(dynamic user) {
@@ -580,11 +608,13 @@ class RestTwitarr implements Twitarr {
     );
   }
 
+  static const List<int> _kTwitarrExpectedStatusCodes = <int>[200, 400, 401, 403, 404, 422];
+
   Progress<String> _requestUtf8(String method, String path, {
     List<int> body,
     List<Uint8List> bodyParts,
     ContentType contentType,
-    List<int> expectedStatusCodes = const <int>[200],
+    List<int> expectedStatusCodes = _kTwitarrExpectedStatusCodes,
   }) {
     return Progress<String>((ProgressController<String> completer) async {
       final HttpClientResponse response = await _requestInternal<String>(
@@ -607,7 +637,7 @@ class RestTwitarr implements Twitarr {
         })
         .transform(utf8.decoder)
         .join();
-      debugPrint('<<< $result');
+      debugPrint('<<< ${response.statusCode} $result');
       return result;
     });
   }
@@ -616,7 +646,7 @@ class RestTwitarr implements Twitarr {
     List<int> body,
     List<Uint8List> bodyParts,
     ContentType contentType,
-    List<int> expectedStatusCodes = const <int>[200],
+    List<int> expectedStatusCodes = _kTwitarrExpectedStatusCodes,
   }) {
     return Progress<Uint8List>((ProgressController<Uint8List> completer) async {
       final HttpClientResponse response = await _requestInternal<Uint8List>(

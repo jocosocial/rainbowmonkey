@@ -21,6 +21,8 @@ import 'store.dart';
 
 // TODO(ianh): Move polling logic into RestTwitarr class
 
+typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store);
+
 class CruiseModel extends ChangeNotifier implements PhotoManager {
   CruiseModel({
     @required TwitarrConfiguration initialTwitarrConfiguration,
@@ -28,6 +30,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     this.frequentPollInterval = const Duration(seconds: 30), // e.g. twitarr
     this.rarePollInterval = const Duration(seconds: 600), // e.g. calendar
     @required this.onError,
+    this.onCheckForMessages,
   }) : assert(initialTwitarrConfiguration != null),
        assert(store != null),
        assert(frequentPollInterval != null),
@@ -45,6 +48,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   final Duration frequentPollInterval;
   final DataStore store;
   final ErrorCallback onError;
+
+  final CheckForMessagesCallback onCheckForMessages;
 
   bool _alive = true;
   Progress<Credentials> _pendingCredentials;
@@ -213,9 +218,27 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       assert(_currentCredentials == null || _currentCredentials.key != null);
       store.saveCredentials(_currentCredentials);
       if (_currentCredentials != null) {
-        _seamail = Seamail(_twitarr, _currentCredentials, this, onError: onError);
+        _seamail = Seamail(
+          _twitarr,
+          _currentCredentials,
+          this,
+          onError: onError,
+          onCheckForMessages: () {
+            if (onCheckForMessages != null)
+              onCheckForMessages(_currentCredentials, _twitarr, store);
+          },
+          onThreadRead: _handleThreadRead,
+        );
         notifyListeners();
       }
+    }
+  }
+
+  void _handleThreadRead(String threadId) async {
+    final Notifications notifications = await Notifications.instance;
+    for (String messageId in await store.getNotifications(threadId)) {
+      await notifications.messageRead(threadId, messageId);
+      await store.removeNotification(threadId, messageId);
     }
   }
 
@@ -223,7 +246,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   PeriodicProgress<AuthenticatedUser> _user;
 
   bool get loggedIn => _currentCredentials != null;
-  
+
   Future<AuthenticatedUser> _updateUser(ProgressController<AuthenticatedUser> completer) async {
     if (_currentCredentials?.key != null)
       return await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));

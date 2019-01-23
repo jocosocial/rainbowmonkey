@@ -13,8 +13,8 @@ import 'package:cruisemonkey/src/progress.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-class TestDataStore implements DataStore {
-  const TestDataStore();
+class HangingDataStore implements DataStore {
+  const HangingDataStore();
 
   @override
   Progress<void> saveCredentials(Credentials value) {
@@ -34,6 +34,31 @@ class TestDataStore implements DataStore {
   @override
   Progress<Map<Setting, dynamic>> restoreSettings() {
     return const Progress<Map<Setting, dynamic>>.idle();
+  }
+
+  @override
+  Progress<dynamic> restoreSetting(Setting id) {
+    return const Progress<dynamic>.idle();
+  }
+
+  @override
+  Future<void> addNotification(String threadId, String messageId) {
+    return Completer<void>().future;
+  }
+
+  @override
+  Future<void> removeNotification(String threadId, String messageId) {
+    return Completer<void>().future;
+  }
+
+  @override
+  Future<List<String>> getNotifications(String threadId) {
+    return Completer<List<String>>().future;
+  }
+
+  @override
+  Future<void> updateFreshnessToken(FreshnessCallback callback) {
+    return Completer<List<String>>().future;
   }
 }
 
@@ -57,13 +82,16 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final ErrorCallback onError = null;
 
   @override
+  final CheckForMessagesCallback onCheckForMessages = null;
+
+  @override
   final Duration rarePollInterval = const Duration(minutes: 10);
 
   @override
   final Duration frequentPollInterval = const Duration(minutes: 1);
 
   @override
-  final DataStore store = const TestDataStore();
+  final DataStore store = const HangingDataStore();
 
   @override
   TwitarrConfiguration get twitarrConfiguration => const TestTwitarrConfiguration();

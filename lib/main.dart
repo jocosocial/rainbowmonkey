@@ -22,9 +22,10 @@ final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 void main() {
   final CruiseModel model = CruiseModel(
-    initialTwitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'),
+    initialTwitarrConfiguration: const RestTwitarrConfiguration(baseUrl: kDefaultTwitarrUrl),
     store: DiskDataStore(),
     onError: _handleError,
+    onCheckForMessages: checkForMessages,
   );
   runApp(CruiseMonkeyApp(cruiseModel: model, scaffoldKey: scaffoldKey));
   runBackground();
