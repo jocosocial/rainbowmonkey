@@ -123,7 +123,10 @@ class NullCruiseModel implements CruiseModel {
   final MutableContinuousProgress<AuthenticatedUser> user = null;
 
   @override
-  bool get loggedIn => null;
+  bool get isLoggedIn => null;
+
+  @override
+  Future<void> get loggedIn => null;
 
   @override
   final MutableContinuousProgress<Calendar> calendar = null;

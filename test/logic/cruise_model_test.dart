@@ -34,8 +34,8 @@ void main() {
     model.user.best.addListener(() { log.add('user updated'); });
     log.add('--- idling');
     await tester.idle();
-    log.add('--- waiting 20 minutes');
-    await tester.pump(const Duration(minutes: 20));
+    log.add('--- waiting 2 hours');
+    await tester.pump(const Duration(hours: 2));
     log.add('--- end');
     model.dispose();
     expect(
@@ -62,7 +62,7 @@ void main() {
         '--- idling',
         'LoggingTwitarr(2).getAuthenticatedUser Credentials(aaa)',
         'user updated',
-        '--- waiting 20 minutes',
+        '--- waiting 2 hours',
         'LoggingTwitarr(2).getAuthenticatedUser Credentials(aaa)',
         'user updated',
         'LoggingTwitarr(2).getAuthenticatedUser Credentials(aaa)',

@@ -71,6 +71,17 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
 
   final Map<String, SeamailThread> _threads = <String, SeamailThread>{};
 
+  SeamailThread threadById(String threadId) {
+    return _threads.putIfAbsent(threadId, () => SeamailThread(
+      threadId,
+      this,
+      _twitarr,
+      _credentials,
+      _photoManager,
+      onThreadRead: onThreadRead,
+    ));
+  }
+
   int get unreadCount {
     int result = 0;
     for (SeamailThread thread in _threads.values)
@@ -207,10 +218,10 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
 
   final String id;
 
-  String get subject => _subject;
+  String get subject => _subject ?? '';
   String _subject;
 
-  Iterable<User> get users => _users;
+  Iterable<User> get users => _users ?? const <User>[];
   List<User> _users;
 
   DateTime get lastMessageTimestamp => _lastMessageTimestamp;

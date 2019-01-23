@@ -76,15 +76,20 @@ Future<void> _backgroundUpdate() async {
 Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStore store) async {
   try {
     print('I call my phone and I check my messages.');
+    if (credentials == null) {
+      print('Not logged in; skipping check for messages.');
+      return;
+    }
     SeamailSummary summary;
     await store.updateFreshnessToken((int freshnessToken) async {
       summary = await twitarr.getUnreadSeamailMessages(
         credentials: credentials,
         freshnessToken: freshnessToken,
       ).asFuture();
+      final int result = summary.freshnessToken;
       if (freshnessToken == null)
         summary = null;
-      return summary.freshnessToken;
+      return result;
     });
     if (summary != null) {
       final List<Future<void>> futures = <Future<void>>[];
@@ -99,6 +104,6 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
       await Future.wait(futures);
     }
   } on UserFriendlyError catch (error) {
-    print('Skipping notifications check: $error');
+    print('Failed to check for messages: $error');
   }
 }

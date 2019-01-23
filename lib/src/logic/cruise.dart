@@ -28,7 +28,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     @required TwitarrConfiguration initialTwitarrConfiguration,
     @required this.store,
     this.frequentPollInterval = const Duration(seconds: 30), // e.g. twitarr
-    this.rarePollInterval = const Duration(seconds: 600), // e.g. calendar
+    this.rarePollInterval = const Duration(seconds: 3600), // e.g. calendar
     @required this.onError,
     this.onCheckForMessages,
   }) : assert(initialTwitarrConfiguration != null),
@@ -68,6 +68,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _pendingCredentials = null;
     _seamail = Seamail.empty();
     _user.reset();
+    if (_loggedIn.isCompleted)
+      _loggedIn = Completer<void>();
   }
 
   Twitarr _twitarr;
@@ -229,6 +231,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           },
           onThreadRead: _handleThreadRead,
         );
+        _loggedIn.complete();
         notifyListeners();
       }
     }
@@ -245,7 +248,9 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   ContinuousProgress<AuthenticatedUser> get user => _user;
   PeriodicProgress<AuthenticatedUser> _user;
 
-  bool get loggedIn => _currentCredentials != null;
+  bool get isLoggedIn => _currentCredentials != null;
+  Future<void> get loggedIn => _loggedIn.future;
+  Completer<void> _loggedIn = Completer<void>();
 
   Future<AuthenticatedUser> _updateUser(ProgressController<AuthenticatedUser> completer) async {
     if (_currentCredentials?.key != null)

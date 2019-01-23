@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'src/logic/background_polling.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
+import 'src/logic/notifications.dart';
 import 'src/models/user.dart';
 import 'src/network/rest.dart';
 import 'src/progress.dart';
@@ -16,6 +17,7 @@ import 'src/views/karaoke.dart';
 import 'src/views/profile.dart';
 import 'src/views/seamail.dart';
 import 'src/views/settings.dart';
+import 'src/views/stream.dart';
 import 'src/widgets.dart';
 
 final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
@@ -29,6 +31,14 @@ void main() {
   );
   runApp(CruiseMonkeyApp(cruiseModel: model, scaffoldKey: scaffoldKey));
   runBackground();
+  Notifications.instance.then((Notifications notifications) {
+    notifications.onTap = (String threadId) async {
+      print('Received tap to view: $threadId');
+      await model.loggedIn;
+      Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
+      SeamailView.showThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
+    };
+  });
 }
 
 void _handleError(String message) {
@@ -194,6 +204,7 @@ class CruiseMonkeyHome extends StatelessWidget {
         '/profile': (BuildContext context) => const Profile(),
         '/create_account': (BuildContext context) => const CreateAccount(),
         '/settings': (BuildContext context) => const Settings(),
+        '/twitarr': (BuildContext context) => const TwitarrStream(),
       },
     );
   }

@@ -143,7 +143,10 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final MutableContinuousProgress<AuthenticatedUser> user;
 
   @override
-  bool get loggedIn => false;
+  bool get isLoggedIn => false;
+
+  @override
+  Future<void> get loggedIn async => null;
 
   @override
   final MutableContinuousProgress<Calendar> calendar;
