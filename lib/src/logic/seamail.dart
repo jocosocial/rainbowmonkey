@@ -225,7 +225,13 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
   int get totalCount => _totalCount ?? 0;
   int _totalCount;
 
-  Iterable<SeamailMessage> get messages => _messages.values;
+  List<SeamailMessage> getMessages() {
+    return _messages.values.toList()..sort(
+      (SeamailMessage a, SeamailMessage b) {
+        return a.timestamp.compareTo(b.timestamp);
+      },
+    );
+  }
   final Map<String, SeamailMessage> _messages = <String, SeamailMessage>{};
 
   bool _updating = false;
@@ -285,7 +291,7 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
         _totalCount = _messages.length;
       if (thread.messages != null) {
         _unreadCount = 0;
-        for (SeamailMessage message in messages) {
+        for (SeamailMessage message in _messages.values) {
           if (!message.readReceipts.containsKey(_credentials.username))
             _unreadCount += 1;
         }

@@ -152,7 +152,8 @@ class _PendingSend {
 }
 
 class MessageBubble {
-  MessageBubble();
+  MessageBubble({ this.user });
+  final User user;
   final List<SeamailMessage> messages = <SeamailMessage>[];
 }
 
@@ -222,151 +223,161 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
     final CruiseModel cruise = Cruise.of(context);
     final DateTime now = DateTime.now();
     final List<User> users = widget.thread.users.toList();
-    final List<SeamailMessage> messages = widget.thread.messages?.toList() ?? const <SeamailMessage>[];
+    final List<SeamailMessage> messages = widget.thread.getMessages() ?? const <SeamailMessage>[];
     final List<MessageBubble> bubbles = <MessageBubble>[];
     MessageBubble currentBubble = MessageBubble();
     SeamailMessage lastMessage = const SeamailMessage(user: User.none());
     for (SeamailMessage message in messages) {
       if (!message.user.sameAs(lastMessage.user) ||
           message.timestamp.difference(lastMessage.timestamp) > const Duration(minutes: 2)) {
-        currentBubble = MessageBubble();
+        currentBubble = MessageBubble(user: message.user);
         bubbles.add(currentBubble);
       }
       currentBubble.messages.add(message);
       lastMessage = message;
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.thread.subject), // TODO(ianh): faces
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: BusyIndicator(
-              busy: widget.thread.busy,
-              child: ListView.builder(
-                reverse: true,
-                itemBuilder: (BuildContext context, int index) {
-                  // the very first item is the user list
-                  if (index == bubbles.length) {
-                    return ListBody(
-                      children: <Widget>[
-                        const SizedBox(height: 20.0),
-                        Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.display2),
-                        Center(
-                          child: DefaultTextStyle(
-                            style: theme.textTheme.subhead,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: users.map<Widget>(
-                                (User user) {
-                                  return Padding(
-                                    padding: const EdgeInsetsDirectional.only(top: 10.0, end: 60.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: <Widget>[
-                                        cruise.avatarFor(user, size: 60.0),
-                                        const SizedBox(width: 20.0),
-                                        Text(user.displayName),
-                                      ],
-                                    ),
-                                  );
-                                }
-                              ).toList(),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 24.0, bottom: 48.0, left: 64.0, right: 64.0),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(width: 8.0, color: theme.dividerColor),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                  final int bubbleIndex = bubbles.length - (index + 1);
-                  final MessageBubble bubble = bubbles[bubbleIndex];
-                  return Tooltip(
-                    message: _tooltipFor(bubble.messages.first),
-                    child: ChatLine(
-                      key: ValueKey<int>(bubbleIndex),
-                      avatar: Cruise.of(context).avatarFor(bubble.messages.first.user),
-                      messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
-                      metadata: Text(prettyDuration(now.difference(bubble.messages.first.timestamp))),
-                    ),
-                  );
-                },
-                itemCount: bubbles.length + 1,
-              ),
-            ),
+    return ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
+      valueListenable: Cruise.of(context).user.best,
+      builder: (BuildContext context, ProgressValue<AuthenticatedUser> user, Widget child) {
+        User currentUser;
+        if (user is SuccessfulProgress<AuthenticatedUser>)
+          currentUser = user.value;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.thread.subject), // TODO(ianh): faces
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: _pending.map((_PendingSend entry) {
-              if (entry.error != null) {
-                return ListTile(
-                  key: ObjectKey(entry),
-                  leading: const Icon(Icons.error, size: 40.0, color: Colors.red),
-                  title: Text(entry.text),
-                  subtitle: Text('Failed: ${entry.error}. Tap to retry.'),
-                  onTap: () {
-                    _pending.remove(entry);
-                    _submitMessage(entry.text);
-                  },
-                );
-              }
-              return ListTile(
-                key: ObjectKey(entry),
-                leading: ProgressBuilder<void>(
-                  progress: entry.progress,
-                  nullChild: const Icon(Icons.error, size: 40.0, color: Colors.purple),
-                  idleChild: const Icon(Icons.error, size: 40.0, color: Colors.orange),
-                  startingChild: const CircularProgressIndicator(),
-                  failedBuilder: (BuildContext context, Exception error, StackTrace stackTrace) => const Icon(Icons.error, size: 40.0, color: Colors.pink),
-                  builder: (BuildContext context, void value) => const Icon(Icons.error, size: 40.0, color: Colors.yellow),
-                ),
-                title: Text(entry.text),
-              );
-            }).toList(),
-          ),
-          const Divider(height: 0.0),
-          Row(
+          body: Column(
             children: <Widget>[
               Expanded(
-                child: TextField(
-                  controller: _textController,
-                  onChanged: (String value) {
-                    setState(() {
-                      // changed state is in _textController
-                      assert(_textController.text == value);
-                    });
-                  },
-                  onSubmitted: (String value) {
-                    assert(_textController.text == value);
-                    if (_textController.text.isNotEmpty)
-                      _submitCurrentMessage();
-                  },
-                  textInputAction: TextInputAction.send,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                    hintText: 'Message',
+                child: BusyIndicator(
+                  busy: widget.thread.busy,
+                  child: ListView.builder(
+                    reverse: true,
+                    itemBuilder: (BuildContext context, int index) {
+                      // the very first item is the user list
+                      if (index == bubbles.length) {
+                        return ListBody(
+                          children: <Widget>[
+                            const SizedBox(height: 20.0),
+                            Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.display2),
+                            Center(
+                              child: DefaultTextStyle(
+                                style: theme.textTheme.subhead,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: users.map<Widget>(
+                                    (User user) {
+                                      return Padding(
+                                        padding: const EdgeInsetsDirectional.only(top: 10.0, end: 60.0),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            cruise.avatarFor(user, size: 60.0),
+                                            const SizedBox(width: 20.0),
+                                            Text(user.displayName),
+                                          ],
+                                        ),
+                                      );
+                                    }
+                                  ).toList(),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(top: 24.0, bottom: 48.0, left: 64.0, right: 64.0),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(width: 8.0, color: theme.dividerColor),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      final int bubbleIndex = bubbles.length - (index + 1);
+                      final MessageBubble bubble = bubbles[bubbleIndex];
+                      return Tooltip(
+                        message: _tooltipFor(bubble.messages.first),
+                        child: ChatLine(
+                          key: ValueKey<int>(bubbleIndex),
+                          avatar: Cruise.of(context).avatarFor(bubble.messages.first.user),
+                          messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
+                          metadata: Text('${bubble.user} • ${prettyDuration(now.difference(bubble.messages.first.timestamp))}'),
+                          isCurrentUser: bubble.user.sameAs(currentUser),
+                        ),
+                      );
+                    },
+                    itemCount: bubbles.length + 1,
                   ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.send),
-                tooltip: 'Send message',
-                onPressed: _textController.text.isNotEmpty ? _submitCurrentMessage : null,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: _pending.map((_PendingSend entry) {
+                  if (entry.error != null) {
+                    return ListTile(
+                      key: ObjectKey(entry),
+                      leading: const Icon(Icons.error, size: 40.0, color: Colors.red),
+                      title: Text(entry.text),
+                      subtitle: Text('Failed: ${entry.error}. Tap to retry.'),
+                      onTap: () {
+                        _pending.remove(entry);
+                        _submitMessage(entry.text);
+                      },
+                    );
+                  }
+                  // TODO(ianh): Use a ChatLine for this, somehow, so it matches the direction and style of other speech bubbles.
+                  return ListTile(
+                    key: ObjectKey(entry),
+                    leading: ProgressBuilder<void>(
+                      progress: entry.progress,
+                      nullChild: const Icon(Icons.error, size: 40.0, color: Colors.purple),
+                      idleChild: const Icon(Icons.error, size: 40.0, color: Colors.orange),
+                      startingChild: const CircularProgressIndicator(),
+                      failedBuilder: (BuildContext context, Exception error, StackTrace stackTrace) => const Icon(Icons.error, size: 40.0, color: Colors.pink),
+                      builder: (BuildContext context, void value) => const Icon(Icons.error, size: 40.0, color: Colors.yellow),
+                    ),
+                    title: Text(entry.text),
+                  );
+                }).toList(),
+              ),
+              const Divider(height: 0.0),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      onChanged: (String value) {
+                        setState(() {
+                          // changed state is in _textController
+                          assert(_textController.text == value);
+                        });
+                      },
+                      onSubmitted: (String value) {
+                        assert(_textController.text == value);
+                        if (_textController.text.isNotEmpty)
+                          _submitCurrentMessage();
+                      },
+                      textInputAction: TextInputAction.send,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                        hintText: 'Message',
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    tooltip: 'Send message',
+                    onPressed: _textController.text.isNotEmpty ? _submitCurrentMessage : null,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -377,6 +388,7 @@ class ChatLine extends StatelessWidget {
     @required this.avatar,
     @required this.messages,
     @required this.metadata,
+    @required this.isCurrentUser,
   }) : assert(avatar != null),
        assert(messages != null),
        assert(metadata != null),
@@ -385,75 +397,106 @@ class ChatLine extends StatelessWidget {
   final Widget avatar;
   final List<String> messages;
   final Widget metadata;
+  final bool isCurrentUser;
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> lines = <Widget>[];
+    final ThemeData theme = Theme.of(context);
     for (String message in messages) {
-      lines.add(DefaultTextStyle(
-        style: Theme.of(context).textTheme.subhead,
-        textAlign: TextAlign.start,
-        child: Text(message),
-      ));
+      lines.add(Text(message));
     }
-    lines.add(const SizedBox(height: 4.0));
-    lines.add(DefaultTextStyle.merge(
-      style: TextStyle(fontSize: 8.0, color: Colors.grey.shade500),
-      textAlign: TextAlign.end,
-      child: metadata,
-    ));
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-          child: Stack(
+    final TextDirection direction = isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
+    return Directionality(
+      textDirection: direction,
+      child: ListBody(
+        children: <Widget>[
+          const SizedBox(height: 20.0),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              avatar,
-              // in case the avatar doesn't have a baseline, create a fake one:
-              Positioned.fill(
-                child: Center(
-                  child: Text('', style: Theme.of(context).textTheme.subhead),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Directionality(textDirection: TextDirection.ltr, child: avatar),
+              ),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    IntrinsicWidth(
+                      child: Container(
+                        margin: const EdgeInsetsDirectional.only(end: 20.0),
+                        padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                        decoration: ShapeDecoration(
+                          // TODO(ianh): add shadow, gradient as per the mockup
+                          color: theme.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        child: DefaultTextStyle(
+                          style: theme.primaryTextTheme.body1,
+                          textAlign: isCurrentUser ? TextAlign.right : TextAlign.left,
+                          child: Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: lines,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    DefaultTextStyle(
+                      style: theme.textTheme.caption.copyWith(color: Colors.grey.shade400),
+                      textAlign: TextAlign.end,
+                      child: Directionality(textDirection: TextDirection.ltr, child: metadata),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0.0, 20.0, 16.0, 8.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: lines,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 String prettyDuration(Duration duration) {
   final int microseconds = duration.inMicroseconds;
-  final double minutes = microseconds / (1000 * 1000 * 60);
-  if (minutes < 1)
+  double minutes = microseconds / (1000 * 1000 * 60);
+  if (minutes < 0.9)
     return 'just now';
+  if (minutes < 1.5)
+    return '1 minute ago';
   if (minutes < 59.5)
-    return '${minutes.round()}m ago';
-  final double hours = microseconds / (1000 * 1000 * 60 * 60);
-  if (hours < 10)
-    return '${hours.truncate()}h ${(minutes - hours.truncate() * 60).truncate()}m ago';
-  if (hours < 23.5)
-    return '${hours.round()}h ago';
-  final double days = microseconds / (1000 * 1000 * 60 * 60 * 24);
-  if (days < 7)
-    return '${days.truncate()}d ${(hours - days.truncate() * 24).truncate()}h ago';
+    return '${minutes.round()} minutes ago';
+  double hours = microseconds / (1000 * 1000 * 60 * 60);
+  minutes -= hours.truncate() * 60;
+  if (hours < 2 && minutes < 5)
+    return '${hours.truncate()} hour ago';
+  if (hours < 2)
+    return '${hours.truncate()} hour ${minutes.truncate()} minutes ago';
+  if (hours < 5 && (minutes <= 20 || minutes >= 40))
+    return '${hours.round()} hours ago';
+  if (hours < 5)
+    return '${hours.round()}½ hours ago';
+  if (hours < 23)
+    return '${hours.round()} hours ago';
+  double days = microseconds / (1000 * 1000 * 60 * 60 * 24);
+  hours -= days.truncate() * 24;
+  if (days < 1.5)
+    return '1 day ago';
+  if (days < 10.5)
+    return '${days.round()} days ago';
   final double weeks = microseconds / (1000 * 1000 * 60 * 60 * 24 * 7);
-  if (weeks < 3)
-    return '${weeks.truncate()}w ${(days - weeks.truncate() * 7).truncate()}d ago';
-  return '${weeks.round()}w ago';
+  days -= weeks.truncate() * 7;
+  if (weeks < 1.5)
+    return '1 week ago';
+  return '${weeks.round()} weeks ago';
 }
 
 class StartConversationView extends StatefulWidget {
