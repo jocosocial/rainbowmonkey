@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/cruise.dart';
@@ -67,7 +68,7 @@ class SeamailView extends StatelessWidget implements View {
     showThread(context, thread);
   }
 
-  void showThread(BuildContext context, SeamailThread thread) {
+  static void showThread(BuildContext context, SeamailThread thread) {
     Navigator.push<void>(
       context,
       MaterialPageRoute<void>(
@@ -93,7 +94,7 @@ class SeamailView extends StatelessWidget implements View {
           return ListView.builder(
             itemBuilder: (BuildContext context, int index) {
               if (threads.isEmpty && index == 0) {
-                if (Cruise.of(context).loggedIn) {
+                if (Cruise.of(context).isLoggedIn) {
                   return const ListTile(
                     leading: Icon(Icons.phonelink_erase, size: 40.0),
                     title: Text('I check my messages'),
@@ -117,10 +118,10 @@ class SeamailView extends StatelessWidget implements View {
                   onTap: () { showThread(context, thread); },
                 );
               }
-              return const ListTile(
-                leading: CircleAvatar(child: Icon(Icons.all_inclusive)),
-                title: Text('Twitarr'),
-                // TODO(ianh): Twitarr
+              return ListTile(
+                leading: const CircleAvatar(child: Icon(Icons.question_answer)),
+                title: const Text('Twitarr'),
+                onTap: () { Navigator.pushNamed(context, '/twitarr'); },
               );
             },
             itemCount: math.max(threads.length, 1) + 1,
@@ -157,7 +158,7 @@ class MessageBubble {
   final List<SeamailMessage> messages = <SeamailMessage>[];
 }
 
-class _SeamailThreadViewState extends State<SeamailThreadView> {
+class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final Set<_PendingSend> _pending = Set<_PendingSend>();
 
@@ -168,13 +169,44 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
     super.initState();
     // our build is dependent on the clock, so we have to rebuild occasionally:
     _clock = Timer.periodic(const Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
-    widget.thread.addListener(_update); // this marks the thread as read
+    didChangeAppLifecycleState(SchedulerBinding.instance.lifecycleState);
+  }
+
+  bool _listening = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    bool _newState;
+    switch (state) {
+      case AppLifecycleState.inactive:
+        _newState = true;
+        break;
+      case AppLifecycleState.paused:
+        _newState = false;
+        break;
+      case AppLifecycleState.resumed:
+        _newState = true;
+        break;
+      case AppLifecycleState.suspending:
+        _newState = false;
+        break;
+      default:
+        _newState = true; // app probably just started
+    }
+    if (_newState != _listening) {
+      if (_newState) {
+        widget.thread.addListener(_update); // this will mark the thread as read when we update
+      } else {
+        widget.thread.removeListener(_update);
+      }
+      _listening = _newState;
+    }
   }
 
   @override
   void didUpdateWidget(SeamailThreadView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.thread != oldWidget.thread) {
+    if (widget.thread != oldWidget.thread && _listening) {
       widget.thread.removeListener(_update);
       widget.thread.addListener(_update);
     }
@@ -182,7 +214,8 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
 
   @override
   void dispose() {
-    widget.thread.removeListener(_update);
+    if (_listening)
+      widget.thread.removeListener(_update);
     _clock.cancel();
     super.dispose();
   }
