@@ -5,6 +5,7 @@ import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
+import 'package:cruisemonkey/src/logic/stream.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
@@ -135,6 +136,9 @@ class NullCruiseModel implements CruiseModel {
   Seamail get seamail => null;
 
   @override
+  TweetStream createTweetStream() => null;
+
+  @override
   Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) => null;
 
   @override
@@ -172,6 +176,14 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   Progress<List<User>> getUserList(String searchTerm) => null;
+
+  @override
+  Progress<void> postTweet({
+    @required Credentials credentials,
+    @required String text,
+    String parentId,
+    // TODO(ianh): photo
+  }) => null;
 
   @override
   void dispose() { }

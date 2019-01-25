@@ -272,6 +272,28 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<StreamSliceSummary> getStream({
+    Credentials credentials,
+    @required StreamDirection direction,
+    int boundaryToken,
+    int limit = 100,
+  }) {
+    log.add('getStream');
+    return null;
+  }
+
+  @override
+  Progress<void> postTweet({
+    @required Credentials credentials,
+    @required String text,
+    String parentId,
+    // TODO(ianh): photo
+  }) {
+    log.add('postTweet');
+    return null;
+  }
+
+  @override
   void dispose() {
     log.add('LoggingTwitarr(${_configuration.id}).dispose');
   }

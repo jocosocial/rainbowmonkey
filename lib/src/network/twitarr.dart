@@ -164,6 +164,20 @@ abstract class Twitarr {
     @required String text,
   });
 
+  Progress<StreamSliceSummary> getStream({
+    Credentials credentials,
+    @required StreamDirection direction,
+    int boundaryToken,
+    int limit = 100,
+  });
+
+  Progress<void> postTweet({
+    @required Credentials credentials,
+    @required String text,
+    String parentId,
+    // TODO(ianh): photo
+  });
+
   void dispose();
 }
 
@@ -194,7 +208,7 @@ class SeamailThreadSummary {
 
   final String subject;
 
-  final Set<SeamailUserSummary> users;
+  final Set<UserSummary> users;
 
   final List<SeamailMessageSummary> messages;
 
@@ -218,17 +232,81 @@ class SeamailMessageSummary {
 
   final String id;
 
-  final SeamailUserSummary user;
+  final UserSummary user;
 
   final String text;
 
   final DateTime timestamp;
 
-  final Set<SeamailUserSummary> readReceipts;
+  final Set<UserSummary> readReceipts;
 }
 
-class SeamailUserSummary {
-  const SeamailUserSummary({
+enum StreamDirection { backwards, forwards }
+
+class StreamSliceSummary {
+  const StreamSliceSummary({
+    this.direction,
+    this.posts,
+    this.boundaryToken,
+  });
+
+  final StreamDirection direction;
+
+  final List<StreamPostSummary> posts;
+
+  final int boundaryToken;
+}
+
+class StreamPostSummary {
+  const StreamPostSummary({
+    this.id,
+    this.user,
+    this.text,
+    this.photo,
+    @required this.timestamp,
+    this.boundaryToken,
+    this.reactions,
+    this.parents,
+  }) : assert(timestamp != null),
+       deleted = false;
+
+  const StreamPostSummary.deleted({
+    this.id,
+    @required this.timestamp,
+    this.boundaryToken,
+  }) : assert(timestamp != null),
+       user = null,
+       text = null,
+       photo = null,
+       reactions = null,
+       parents = null,
+       deleted = true;
+
+  final String id;
+
+  final UserSummary user;
+
+  final String text;
+
+  final PhotoSummary photo;
+
+  final DateTime timestamp;
+
+  final int boundaryToken;
+
+  final Map<String, Set<UserSummary>> reactions; // String=null is "likes"
+
+  final List<String> parents;
+
+  final bool deleted;
+}
+
+class PhotoSummary {
+  const PhotoSummary();
+}
+
+class UserSummary {
+  const UserSummary({
     this.username,
     this.displayName,
     this.photoTimestamp,

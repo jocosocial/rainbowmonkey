@@ -88,7 +88,9 @@ class SeamailView extends StatelessWidget implements View {
           final List<SeamailThread> threads = seamail.toList()
             ..sort(
               (SeamailThread a, SeamailThread b) {
-                return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
+                if (b.lastMessageTimestamp != a.lastMessageTimestamp)
+                  return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
+                return b.id.compareTo(a.id);
               }
             );
           return ListView.builder(
@@ -162,13 +164,9 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
   final TextEditingController _textController = TextEditingController();
   final Set<_PendingSend> _pending = Set<_PendingSend>();
 
-  Timer _clock;
-
   @override
   void initState() {
     super.initState();
-    // our build is dependent on the clock, so we have to rebuild occasionally:
-    _clock = Timer.periodic(const Duration(minutes: 1), (Timer timer) { setState(() { /* time passed */ }); });
     didChangeAppLifecycleState(SchedulerBinding.instance.lifecycleState);
   }
 
@@ -216,7 +214,6 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
   void dispose() {
     if (_listening)
       widget.thread.removeListener(_update);
-    _clock.cancel();
     super.dispose();
   }
 
@@ -246,15 +243,10 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
     setState(_textController.clear);
   }
 
-  String _tooltipFor(SeamailMessage message) {
-    return '${message.user.toString()} • ${message.timestamp}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final CruiseModel cruise = Cruise.of(context);
-    final DateTime now = DateTime.now();
     final List<User> users = widget.thread.users.toList();
     final List<SeamailMessage> messages = widget.thread.getMessages() ?? const <SeamailMessage>[];
     final List<MessageBubble> bubbles = <MessageBubble>[];
@@ -330,15 +322,12 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                       }
                       final int bubbleIndex = bubbles.length - (index + 1);
                       final MessageBubble bubble = bubbles[bubbleIndex];
-                      return Tooltip(
-                        message: _tooltipFor(bubble.messages.first),
-                        child: ChatLine(
-                          key: ValueKey<int>(bubbleIndex),
-                          avatar: Cruise.of(context).avatarFor(bubble.messages.first.user),
-                          messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
-                          metadata: Text('${bubble.user} • ${prettyDuration(now.difference(bubble.messages.first.timestamp))}'),
-                          isCurrentUser: bubble.user.sameAs(currentUser),
-                        ),
+                      return ChatLine(
+                        key: ValueKey<int>(bubbleIndex),
+                        user: bubble.user,
+                        isCurrentUser: bubble.user.sameAs(currentUser),
+                        messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
+                        timestamp: bubble.messages.first.timestamp,
                       );
                     },
                     itemCount: bubbles.length + 1,
@@ -413,123 +402,6 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
       },
     );
   }
-}
-
-class ChatLine extends StatelessWidget {
-  const ChatLine({
-    Key key,
-    @required this.avatar,
-    @required this.messages,
-    @required this.metadata,
-    @required this.isCurrentUser,
-  }) : assert(avatar != null),
-       assert(messages != null),
-       assert(metadata != null),
-       super(key: key);
-
-  final Widget avatar;
-  final List<String> messages;
-  final Widget metadata;
-  final bool isCurrentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> lines = <Widget>[];
-    final ThemeData theme = Theme.of(context);
-    for (String message in messages) {
-      lines.add(Text(message));
-    }
-    final TextDirection direction = isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
-    return Directionality(
-      textDirection: direction,
-      child: ListBody(
-        children: <Widget>[
-          const SizedBox(height: 20.0),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Directionality(textDirection: TextDirection.ltr, child: avatar),
-              ),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    IntrinsicWidth(
-                      child: Container(
-                        margin: const EdgeInsetsDirectional.only(end: 20.0),
-                        padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
-                        decoration: ShapeDecoration(
-                          // TODO(ianh): add shadow, gradient as per the mockup
-                          color: theme.primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                        ),
-                        child: DefaultTextStyle(
-                          style: theme.primaryTextTheme.body1,
-                          textAlign: isCurrentUser ? TextAlign.right : TextAlign.left,
-                          child: Directionality(
-                            textDirection: TextDirection.ltr,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: lines,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4.0),
-                    DefaultTextStyle(
-                      style: theme.textTheme.caption.copyWith(color: Colors.grey.shade400),
-                      textAlign: TextAlign.end,
-                      child: Directionality(textDirection: TextDirection.ltr, child: metadata),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-String prettyDuration(Duration duration) {
-  final int microseconds = duration.inMicroseconds;
-  double minutes = microseconds / (1000 * 1000 * 60);
-  if (minutes < 0.9)
-    return 'just now';
-  if (minutes < 1.5)
-    return '1 minute ago';
-  if (minutes < 59.5)
-    return '${minutes.round()} minutes ago';
-  double hours = microseconds / (1000 * 1000 * 60 * 60);
-  minutes -= hours.truncate() * 60;
-  if (hours < 2 && minutes < 5)
-    return '${hours.truncate()} hour ago';
-  if (hours < 2)
-    return '${hours.truncate()} hour ${minutes.truncate()} minutes ago';
-  if (hours < 5 && (minutes <= 20 || minutes >= 40))
-    return '${hours.round()} hours ago';
-  if (hours < 5)
-    return '${hours.round()}½ hours ago';
-  if (hours < 23)
-    return '${hours.round()} hours ago';
-  double days = microseconds / (1000 * 1000 * 60 * 60 * 24);
-  hours -= days.truncate() * 24;
-  if (days < 1.5)
-    return '1 day ago';
-  if (days < 10.5)
-    return '${days.round()} days ago';
-  final double weeks = microseconds / (1000 * 1000 * 60 * 60 * 24 * 7);
-  days -= weeks.truncate() * 7;
-  if (weeks < 1.5)
-    return '1 week ago';
-  return '${weeks.round()} weeks ago';
 }
 
 class StartConversationView extends StatefulWidget {

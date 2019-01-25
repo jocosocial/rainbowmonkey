@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
@@ -7,27 +6,12 @@ import '../basic_types.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
+import '../utils.dart';
 import 'photo_manager.dart';
-
-mixin _BusyIndicator {
-  ValueListenable<bool> get busy => _busy;
-  final ValueNotifier<bool> _busy = ValueNotifier<bool>(false);
-  int _busyCount = 0;
-  void _startBusy() {
-    if (_busyCount == 0)
-      _busy.value = true;
-    _busyCount += 1;
-  }
-  void _endBusy() {
-    _busyCount -= 1;
-    if (_busyCount == 0)
-      _busy.value = false;
-  }
-}
 
 typedef ThreadReadCallback = void Function(String threadId);
 
-class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyIndicator {
+class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyIndicator {
   Seamail(
     this._twitarr,
     this._credentials,
@@ -101,7 +85,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
   void update() async {
     if (_updating || _credentials == null)
       return;
-    _startBusy();
+    startBusy();
     _updating = true;
     try {
       final SeamailSummary summary = await _twitarr.getSeamailThreads(
@@ -128,7 +112,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
       _reportError(error);
     } finally {
       _updating = false;
-      _endBusy();
+      endBusy();
     }
     notifyListeners();
   }
@@ -185,7 +169,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, _BusyInd
   }
 }
 
-class SeamailThread extends ChangeNotifier with _BusyIndicator {
+class SeamailThread extends ChangeNotifier with BusyIndicator {
   SeamailThread(
     this.id,
     this._parent,
@@ -239,7 +223,9 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
   List<SeamailMessage> getMessages() {
     return _messages.values.toList()..sort(
       (SeamailMessage a, SeamailMessage b) {
-        return a.timestamp.compareTo(b.timestamp);
+        if (a.timestamp == b.timestamp)
+          return a.timestamp.compareTo(b.timestamp);
+        return a.id.compareTo(b.id);
       },
     );
   }
@@ -250,7 +236,7 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
   void update() async {
     if (_updating)
       return;
-    _startBusy();
+    startBusy();
     _updating = true;
     try {
       final SeamailThreadSummary thread = await _twitarr.getSeamailMessages(
@@ -267,7 +253,7 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
       _parent._reportError(error);
     } finally {
       _updating = false;
-      _endBusy();
+      endBusy();
     }
     notifyListeners();
   }
@@ -280,7 +266,7 @@ class SeamailThread extends ChangeNotifier with _BusyIndicator {
     if (thread.subject != null)
       _subject = thread.subject;
     if (thread.users != null)
-      _users = thread.users.map<User>((SeamailUserSummary user) => user.toUser(_photoManager)).toList();
+      _users = thread.users.map<User>((UserSummary user) => user.toUser(_photoManager)).toList();
     if (thread.lastMessageTimestamp != null)
       _lastMessageTimestamp = thread.lastMessageTimestamp;
     if (thread.unread != null) {
@@ -375,7 +361,7 @@ class SeamailMessage {
       text = message.text,
       timestamp = message.timestamp,
       readReceipts = Map<String, User>.fromIterable(
-        message.readReceipts.map<User>((SeamailUserSummary user) => user.toUser(photoManager)),
+        message.readReceipts.map<User>((UserSummary user) => user.toUser(photoManager)),
         key: (dynamic user) => (user as User).username,
       );
 
@@ -388,35 +374,4 @@ class SeamailMessage {
   final DateTime timestamp;
 
   final Map<String, User> readReceipts;
-}
-
-class VariableTimer {
-  VariableTimer(this.maxDuration, this.callback) {
-    interested();
-    Timer.run(tick);
-  }
-
-  final Duration maxDuration;
-
-  final VoidCallback callback;
-
-  Timer _timer;
-  Duration _currentPeriod;
-
-  void tick() {
-    _currentPeriod *= 1.5;
-    callback();
-    if (_currentPeriod > maxDuration)
-      _currentPeriod = maxDuration;
-    _timer = Timer(_currentPeriod, tick);
-  }
-
-  void interested() {
-    _currentPeriod = const Duration(seconds: 5);
-  }
-
-  void cancel() {
-    _timer.cancel();
-    _timer = null;
-  }
 }

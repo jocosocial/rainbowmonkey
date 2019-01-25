@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'logic/cruise.dart';
+import 'models/user.dart';
 import 'progress.dart';
 
 const Duration animationDuration = Duration(milliseconds: 100);
@@ -352,4 +354,184 @@ class Badge extends StatelessWidget {
 abstract class View implements Widget {
   Widget buildFab(BuildContext context);
   Widget buildTab(BuildContext context);
+}
+
+class Now extends InheritedNotifier<TimerNotifier> {
+  Now({
+    Key key,
+    Widget child,
+    Duration period,
+  }) : super(
+    key: key,
+    notifier: TimerNotifier(period),
+    child: child,
+  );
+
+  static DateTime of(BuildContext context) {
+    final Now now = context.inheritFromWidgetOfExactType(Now) as Now;
+    if (now == null)
+      return null;
+    return now.notifier.value;
+  }
+}
+
+class TimerNotifier extends ValueNotifier<DateTime> {
+  TimerNotifier(this.period) : super(DateTime.now());
+
+  final Duration period;
+
+  Timer _timer;
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!hasListeners) {
+      assert(_timer == null);
+      _timer = Timer.periodic(period, _tick);
+    }
+    super.addListener(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    if (!hasListeners && _timer != null) {
+      _timer.cancel();
+      _timer = null;
+    }
+  }
+
+  void _tick(Timer timer) {
+    value = DateTime.now();
+    notifyListeners();
+  }
+}
+
+class ChatLine extends StatelessWidget {
+  const ChatLine({
+    Key key,
+    @required this.user,
+    @required this.isCurrentUser,
+    @required this.messages,
+    @required this.timestamp,
+  }) : assert(user != null),
+       assert(isCurrentUser != null),
+       assert(messages != null),
+       assert(timestamp != null),
+       super(key: key);
+
+  final User user;
+  final bool isCurrentUser;
+  final List<String> messages;
+  final DateTime timestamp;
+
+  static String prettyDuration(Duration duration) {
+    final int microseconds = duration.inMicroseconds;
+    double minutes = microseconds / (1000 * 1000 * 60);
+    if (minutes < 0.9)
+      return 'just now';
+    if (minutes < 1.5)
+      return '1 minute ago';
+    if (minutes < 59.5)
+      return '${minutes.round()} minutes ago';
+    double hours = microseconds / (1000 * 1000 * 60 * 60);
+    minutes -= hours.truncate() * 60;
+    if (hours < 2 && minutes < 5)
+      return '${hours.truncate()} hour ago';
+    if (hours < 2)
+      return '${hours.truncate()} hour ${minutes.truncate()} minutes ago';
+    if (hours < 5 && (minutes <= 20 || minutes >= 40))
+      return '${hours.round()} hours ago';
+    if (hours < 5)
+      return '${hours.round()}½ hours ago';
+    if (hours < 23)
+      return '${hours.round()} hours ago';
+    double days = microseconds / (1000 * 1000 * 60 * 60 * 24);
+    hours -= days.truncate() * 24;
+    if (days < 1.5)
+      return '1 day ago';
+    if (days < 10.5)
+      return '${days.round()} days ago';
+    final double weeks = microseconds / (1000 * 1000 * 60 * 60 * 24 * 7);
+    days -= weeks.truncate() * 7;
+    if (weeks < 1.5)
+      return '1 week ago';
+    return '${weeks.round()} weeks ago';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> lines = <Widget>[];
+    final ThemeData theme = Theme.of(context);
+    for (String message in messages) {
+      lines.add(Text(message));
+    }
+    final TextDirection direction = isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
+    final DateTime now = Now.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
+      child: Directionality(
+        textDirection: direction,
+        child: Tooltip(
+          message: '$user • $timestamp',
+          child: ListBody(
+            children: <Widget>[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Cruise.of(context).avatarFor(user),
+                    ),
+                  ),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        IntrinsicWidth(
+                          child: Container(
+                            margin: const EdgeInsetsDirectional.only(end: 20.0),
+                            padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                            decoration: ShapeDecoration(
+                              // TODO(ianh): add shadow, gradient as per the mockup
+                              color: theme.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                            child: DefaultTextStyle(
+                              style: theme.primaryTextTheme.body1,
+                              textAlign: isCurrentUser ? TextAlign.right : TextAlign.left,
+                              child: Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: lines,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4.0),
+                        DefaultTextStyle(
+                          style: theme.textTheme.caption.copyWith(color: Colors.grey.shade400),
+                          textAlign: TextAlign.end,
+                          child: Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Text('$user • ${prettyDuration(now.difference(timestamp))}'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
