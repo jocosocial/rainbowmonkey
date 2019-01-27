@@ -55,3 +55,54 @@ Future<T> valueListenableToFutureAdapter<T>(ValueListenable<T> listenable, Value
   listenable.addListener(listener);
   return completer.future;
 }
+
+mixin BusyIndicator {
+  ValueListenable<bool> get busy => _busy;
+  final ValueNotifier<bool> _busy = ValueNotifier<bool>(false);
+  int _busyCount = 0;
+
+  @protected
+  void startBusy() {
+    if (_busyCount == 0)
+      _busy.value = true;
+    _busyCount += 1;
+  }
+
+  @protected
+  void endBusy() {
+    _busyCount -= 1;
+    if (_busyCount == 0)
+      _busy.value = false;
+  }
+}
+
+class VariableTimer {
+  VariableTimer(this.maxDuration, this.callback) {
+    interested();
+    Timer.run(tick);
+  }
+
+  final Duration maxDuration;
+
+  final VoidCallback callback;
+
+  Timer _timer;
+  Duration _currentPeriod;
+
+  void tick() {
+    _currentPeriod *= 1.5;
+    callback();
+    if (_currentPeriod > maxDuration)
+      _currentPeriod = maxDuration;
+    _timer = Timer(_currentPeriod, tick);
+  }
+
+  void interested() {
+    _currentPeriod = const Duration(seconds: 3);
+  }
+
+  void cancel() {
+    _timer.cancel();
+    _timer = null;
+  }
+}

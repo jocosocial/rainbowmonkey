@@ -6,6 +6,7 @@ import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
+import 'package:cruisemonkey/src/logic/stream.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
@@ -115,6 +116,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   Seamail _seamail;
 
   @override
+  TweetStream createTweetStream() => TweetStream(null, photoManager: this);
+
+  @override
   Progress<Credentials> createAccount({
     @required String username,
     @required String password,
@@ -194,6 +198,14 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
 
   @override
   Progress<List<User>> getUserList(String searchTerm) => null;
+
+  @override
+  Progress<void> postTweet({
+    @required Credentials credentials,
+    @required String text,
+    String parentId,
+    // TODO(ianh): photo
+  }) => null;
 
   @override
   void dispose() {

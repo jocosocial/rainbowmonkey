@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -23,6 +25,7 @@ import 'src/widgets.dart';
 final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 void main() {
+  print('CruiseMonkey has started');
   final CruiseModel model = CruiseModel(
     initialTwitarrConfiguration: const RestTwitarrConfiguration(baseUrl: kDefaultTwitarrUrl),
     store: DiskDataStore(),
@@ -30,7 +33,8 @@ void main() {
     onCheckForMessages: checkForMessages,
   );
   runApp(CruiseMonkeyApp(cruiseModel: model, scaffoldKey: scaffoldKey));
-  runBackground();
+  if (Platform.isAndroid)
+    runBackground();
   Notifications.instance.then((Notifications notifications) {
     notifications.onTap = (String threadId) async {
       print('Received tap to view: $threadId');
@@ -124,7 +128,10 @@ class CruiseMonkeyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Cruise(
       cruiseModel: cruiseModel,
-      child: CruiseMonkeyHome(scaffoldKey: scaffoldKey),
+      child: Now(
+        period: const Duration(seconds: 15),
+        child: CruiseMonkeyHome(scaffoldKey: scaffoldKey),
+      ),
     );
   }
 }
@@ -204,7 +211,7 @@ class CruiseMonkeyHome extends StatelessWidget {
         '/profile': (BuildContext context) => const Profile(),
         '/create_account': (BuildContext context) => const CreateAccount(),
         '/settings': (BuildContext context) => const Settings(),
-        '/twitarr': (BuildContext context) => const TwitarrStream(),
+        '/twitarr': (BuildContext context) => const TweetStreamView(),
       },
     );
   }

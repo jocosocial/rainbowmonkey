@@ -18,6 +18,7 @@ import 'notifications.dart';
 import 'photo_manager.dart';
 import 'seamail.dart';
 import 'store.dart';
+import 'stream.dart';
 
 // TODO(ianh): Move polling logic into RestTwitarr class
 
@@ -145,6 +146,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 
   Seamail get seamail => _seamail;
   Seamail _seamail;
+
+  TweetStream createTweetStream() {
+    return TweetStream(_twitarr, photoManager: this, onError: (dynamic error, StackTrace stack) => onError('$error'));
+  }
 
   Progress<Credentials> createAccount({
     @required String username,
@@ -452,6 +457,18 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     // for "b" we could figure out the results for "be", if the server sent us
     // all the data it used to find the results, such as the user text data)
     return _twitarr.getUserList(searchTerm);
+  }
+
+  Progress<void> postTweet({
+    String text,
+    String parentId,
+    // TODO(ianh): photo
+  }) {
+    return _twitarr.postTweet(
+      credentials: _currentCredentials,
+      text: text,
+      parentId: parentId,
+    );
   }
 
   @override

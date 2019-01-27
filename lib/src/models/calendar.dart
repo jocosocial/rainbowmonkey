@@ -53,7 +53,9 @@ class Calendar {
           return 1;
         if (a.location != b.location)
           return a.location.compareTo(b.location);
-        return a.title.compareTo(b.title);
+        if (a.title != b.title)
+          return a.title.compareTo(b.title);
+        return a.id.compareTo(b.id);
       })
     );
   }

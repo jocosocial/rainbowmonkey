@@ -181,7 +181,7 @@ class RestTwitarr implements Twitarr {
       _checkStatusIsOk(data);
       photoManager.heardAboutUserPhoto(
         data.user.username.toString(),
-        DateTime.fromMicrosecondsSinceEpoch((data.user.last_photo_updated as Json).toInt()),
+        _parseDateTime(data.user.last_photo_updated as Json),
       );
       return _createAuthenticatedUser(data.user, credentials);
     });
@@ -233,8 +233,8 @@ class RestTwitarr implements Twitarr {
         official: (value.official as Json).toBoolean(),
         description: value['description']?.toString(),
         location: value.location.toString(),
-        startTime: DateTime.parse(value.start_time.toString()),
-        endTime: DateTime.parse(value.end_time.toString()),
+        startTime: _parseDateTime(value.start_time as Json),
+        endTime: _parseDateTime(value.end_time as Json),
       );
     }).toList());
   }
@@ -372,7 +372,8 @@ class RestTwitarr implements Twitarr {
     assert(credentials.key != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
-      ..add('exclude_read_messages', 'true');
+      ..add('exclude_read_messages', 'true')
+      ..add('app', 'plain');
     if (freshnessToken != null)
       body.add('after', '$freshnessToken');
     final String encodedBody = body.toUrlEncoded();
@@ -426,7 +427,8 @@ class RestTwitarr implements Twitarr {
     assert(threadId != null);
     assert(markRead != null);
     final FormData body = FormData()
-      ..add('key', credentials.key);
+      ..add('key', credentials.key)
+      ..add('app', 'plain');
     if (!markRead)
       body.add('skip_mark_read', 'true');
     final String encodedBody = body.toUrlEncoded();
@@ -460,7 +462,8 @@ class RestTwitarr implements Twitarr {
     assert(text.isNotEmpty);
     return Progress<SeamailThreadSummary>((ProgressController<SeamailThreadSummary> completer) async {
       final FormData body = FormData()
-        ..add('key', credentials.key);
+        ..add('key', credentials.key)
+        ..add('app', 'plain');
       final String jsonBody = json.encode(<String, dynamic>{
         'users': users
           .where((User user) => user.username != credentials.username)
@@ -497,7 +500,8 @@ class RestTwitarr implements Twitarr {
     assert(text.isNotEmpty);
     return Progress<SeamailMessageSummary>((ProgressController<SeamailMessageSummary> completer) async {
       final FormData body = FormData()
-        ..add('key', credentials.key);
+        ..add('key', credentials.key)
+        ..add('app', 'plain');
       final String jsonBody = json.encode(<String, dynamic>{
         'text': text,
       });
@@ -557,13 +561,13 @@ class RestTwitarr implements Twitarr {
     return SeamailThreadSummary(
       id: thread.id.toString(),
       subject: thread.subject.toString(),
-      users: Set<SeamailUserSummary>.from(
+      users: Set<UserSummary>.from(
         (thread.users as Json)
           .asIterable()
-          .map<SeamailUserSummary>(_parseSeamailUser)
+          .map<UserSummary>(_parseUser)
       ),
       messages: _asListIfPresent<SeamailMessageSummary>(thread.messages as Json, _parseSeamailMessage),
-      lastMessageTimestamp: DateTime.parse(thread.timestamp.toString()),
+      lastMessageTimestamp: _parseDateTime(thread.timestamp as Json),
       unreadMessages: countIsUnread ? (thread.message_count as Json).toInt() : null,
       totalMessages: countIsUnread ? null : (thread.message_count as Json).toInt(),
       unread: (thread.is_unread as Json).toBoolean(),
@@ -579,33 +583,168 @@ class RestTwitarr implements Twitarr {
   static SeamailMessageSummary _parseSeamailMessage(dynamic message) {
     return SeamailMessageSummary(
       id: message.id.toString(),
-      user: _parseSeamailUser(message.author as Json),
-      text: _demangleText(message.text.toString()),
-      timestamp: DateTime.parse(message.timestamp.toString()),
-      readReceipts: Set<SeamailUserSummary>.from(
+      user: _parseUser(message.author as Json),
+      text: message.text.toString(),
+      timestamp: _parseDateTime(message.timestamp as Json),
+      readReceipts: Set<UserSummary>.from(
         (message.read_users as Json)
           .asIterable()
-          .map<SeamailUserSummary>(_parseSeamailUser)
+          .map<UserSummary>(_parseUser)
       ),
     );
   }
 
-  static String _demangleText(String text) {
-    return text
-      .replaceAll('<br />', '\n')
-      .replaceAll('&#39;', '\'')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&lt;', '<') // must be after "<br />"
-      .replaceAll('&gt;', '>')
-      .replaceAll('&amp;', '&'); // must be last
+  @override
+  Progress<StreamSliceSummary> getStream({
+    Credentials credentials,
+    @required StreamDirection direction,
+    int boundaryToken,
+    int limit = 100,
+  }) {
+    assert(credentials == null || credentials.key != null);
+    assert(direction != null);
+    assert(limit != null);
+    assert(limit > 0);
+    return Progress<StreamSliceSummary>((ProgressController<StreamSliceSummary> completer) async {
+      final FormData body = FormData()
+        ..add('include_deleted', 'true')
+        ..add('limit', '$limit')
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      if (boundaryToken != null)
+        body.add('start', '$boundaryToken');
+      ComputeCallback<String, StreamSliceSummary> parser;
+      switch (direction) {
+        case StreamDirection.forwards:
+          body.add('newer_posts', 'true');
+          parser = _parseStreamForwards;
+          break;
+        case StreamDirection.backwards:
+          parser = _parseStreamBackwards;
+          break;
+      }
+      return await compute<String, StreamSliceSummary>(
+        parser,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/stream?${body.toUrlEncoded()}',
+          ),
+        ),
+      );
+    });
   }
 
-  static SeamailUserSummary _parseSeamailUser(dynamic user) {
-    return SeamailUserSummary(
+  @override
+  Progress<void> postTweet({
+    @required Credentials credentials,
+    @required String text,
+    String parentId,
+    // TODO(ianh): photo
+  }) {
+    // TODO(ianh): send
+    return null;
+  }
+
+  static StreamSliceSummary _parseStreamBackwards(String rawData) {
+    return _parseStream(rawData, StreamDirection.backwards);
+  }
+
+  static StreamSliceSummary _parseStreamForwards(String rawData) {
+    return _parseStream(rawData, StreamDirection.forwards);
+  }
+
+  static StreamSliceSummary _parseStream(String rawData, StreamDirection direction) {
+    final dynamic data = Json.parse(rawData);
+    final Set<StreamPostSummary> posts = Set<StreamPostSummary>();
+    for (dynamic post in (data.stream_posts as Json).asIterable()) {
+      posts.add(_parseStreamPost(post as Json));
+      if ((post as Json).hasKey('children')) {
+        final List<String> parents = <String>[post.id.toString()];
+        for (dynamic subpost in (post.children as Json).asIterable()) {
+          posts.add(_parseStreamPost(subpost as Json, parents));
+          parents.add(subpost.id.toString());
+        }
+      }
+    }
+    int adjustment;
+    switch (direction) {
+      case StreamDirection.forwards:
+        // with newer_posts=true, server returns posts >= than the given value,
+        // but we need to make sure we include the last post from the previous
+        // time just to make sure we include any with duplicate timestamps.
+        adjustment = -1;
+        break;
+      case StreamDirection.backwards:
+        // with newer_posts=false, server returns posts <= the given value,
+        // but we still need to ask for it to include the last tweet from last
+        // time just in case there was a duplicate timestamp.
+        adjustment = 1;
+        break;
+    }
+    return StreamSliceSummary(
+      direction: direction,
+      boundaryToken: (data.next_page as Json).toInt() + adjustment,
+      posts: posts.toList(), // we assume server's sort order is good
+    );
+  }
+
+  static StreamPostSummary _parseStreamPost(dynamic post, [ List<String> parents ]) {
+    if ((post as Json).hasKey('deleted') && (post.deleted as bool)) {
+      return StreamPostSummary.deleted(
+        id: post.id.toString(),
+        timestamp: _parseDateTime(post.timestamp as Json),
+        boundaryToken: (post.timestamp as Json).toInt(),
+      );
+    }
+    return StreamPostSummary(
+      id: post.id.toString(),
+      user: _parseUser(post.author as Json),
+      text: post.text.toString(),
+      timestamp: _parseDateTime(post.timestamp as Json),
+      boundaryToken: (post.timestamp as Json).toInt(),
+      photo: (post as Json).hasKey('photo') ? _parsePhoto(post.photo as Json) : null,
+      reactions: _parseReactions(post.reactions as Json),
+      parents: (post as Json).hasKey('parent_chain') ? _parseParents(post.parent_chain as Json) : parents,
+    );
+  }
+
+  static PhotoSummary _parsePhoto(dynamic photo) {
+    // TODO(ianh): parse this
+    return const PhotoSummary();
+  }
+
+  static Map<String, Set<UserSummary>> _parseReactions(dynamic reactions) {
+    // TODO(ianh): parse this
+    return <String, Set<UserSummary>>{}; // DO NOT MAKE THIS CONST -- SEE https://github.com/dart-lang/sdk/issues/35778
+  }
+
+  static List<String> _parseParents(dynamic parentChain) {
+    // TODO(ianh): parse this
+    return const <String>[];
+  }
+
+  static UserSummary _parseUser(dynamic user) {
+    return UserSummary(
       username: user.username.toString(),
       displayName: user.display_name.toString(),
-      photoTimestamp: DateTime.fromMicrosecondsSinceEpoch((user.last_photo_updated as Json).toInt()),
+      photoTimestamp: _parseDateTime(user.last_photo_updated as Json),
     );
+  }
+
+  static DateTime _parseDateTime(Json value) {
+    if (value.valueType == double) {
+      final int epoch = value.toInt();
+      if (epoch >= 10000000000000)
+        return DateTime.fromMicrosecondsSinceEpoch(epoch);
+      if (epoch >= 10000000000)
+        return DateTime.fromMillisecondsSinceEpoch(epoch);
+     return DateTime.fromMillisecondsSinceEpoch(epoch * 1000);
+    }
+    if (value.valueType == String)
+      return DateTime.parse(value.toString());
+    throw FormatException('Could not interpret DateTime from server', '$value');
   }
 
   static const List<int> _kTwitarrExpectedStatusCodes = <int>[200, 400, 401, 403, 404, 422];
