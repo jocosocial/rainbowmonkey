@@ -467,6 +467,7 @@ class ChatLine extends StatelessWidget {
     }
     final TextDirection direction = isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
     final DateTime now = Now.of(context);
+    final String duration = '${prettyDuration(now.difference(timestamp))}';
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
       child: Directionality(
@@ -494,8 +495,15 @@ class ChatLine extends StatelessWidget {
                             margin: const EdgeInsetsDirectional.only(end: 20.0),
                             padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
                             decoration: ShapeDecoration(
-                              // TODO(ianh): add shadow, gradient as per the mockup
-                              color: theme.primaryColor,
+                              gradient: LinearGradient(
+                                begin: const Alignment(0.0, -1.0),
+                                end: const Alignment(0.0, 0.6),
+                                colors: <Color>[
+                                  Color.lerp(theme.primaryColor, Colors.white, 0.15),
+                                  theme.primaryColor,
+                                ],
+                              ),
+                              shadows: kElevationToShadow[1],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
@@ -520,12 +528,13 @@ class ChatLine extends StatelessWidget {
                           textAlign: TextAlign.end,
                           child: Directionality(
                             textDirection: TextDirection.ltr,
-                            child: Text('$user • ${prettyDuration(now.difference(timestamp))}'),
+                            child: isCurrentUser ? Text(duration) : Text('$user • $duration'),
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 40.0),
                 ],
               ),
             ],

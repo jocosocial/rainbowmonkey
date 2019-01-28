@@ -49,6 +49,7 @@ Future<void> main() async {
     await tester.pump();
     expect(log, <String>[
       'LoggingTwitarr(0).login username / password',
+      'LoggingTwitarr(0).getCalendar',
       'fetchProfilePicture',
       'updateProfile Hello/null/null/null/null/null/null/null',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)'

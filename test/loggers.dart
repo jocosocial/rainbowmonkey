@@ -106,14 +106,12 @@ class LoggingTwitarr extends Twitarr {
     @required String username,
     @required String password,
     @required String registrationCode,
-    @required String email,
-    @required String securityQuestion,
-    @required String securityAnswer,
+    String displayName,
   }) {
-    log.add('LoggingTwitarr(${_configuration.id}).createAccount $username / $password / $registrationCode / $email / $securityQuestion / $securityAnswer');
+    log.add('LoggingTwitarr(${_configuration.id}).createAccount $username / $password / $registrationCode / $displayName');
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
-      email: email,
+      displayName: displayName,
       currentLocation: overrideCurrentLocation,
       credentials: Credentials(
         username: username,
@@ -142,12 +140,6 @@ class LoggingTwitarr extends Twitarr {
         loginTimestamp: DateTime.fromMillisecondsSinceEpoch(_stamp += 1),
       ),
     ));
-  }
-
-  @override
-  Progress<AuthenticatedUser> logout() {
-    log.add('LoggingTwitarr(${_configuration.id}).logout');
-    return Progress<AuthenticatedUser>.completed(null);
   }
 
   @override
