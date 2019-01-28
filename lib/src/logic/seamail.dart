@@ -82,7 +82,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyIndi
 
   bool _updating = false;
   @protected
-  void update() async {
+  Future<void> update() async {
     if (_updating || _credentials == null)
       return;
     startBusy();
@@ -233,7 +233,7 @@ class SeamailThread extends ChangeNotifier with BusyIndicator {
 
   bool _updating = false;
   @protected
-  void update() async {
+  Future<void> update() async {
     if (_updating)
       return;
     startBusy();

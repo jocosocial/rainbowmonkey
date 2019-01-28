@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../logic/stream.dart';
+import '../progress.dart';
 import '../widgets.dart';
 
 class TweetStreamView extends StatefulWidget {
@@ -12,8 +13,15 @@ class TweetStreamView extends StatefulWidget {
   State<TweetStreamView> createState() => _TweetStreamViewState();
 }
 
-class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderStateMixin<TweetStreamView> {
+class _PendingSend {
+  _PendingSend(this.progress, this.text);
+  final Progress<void> progress;
+  final String text;
+  // TODO(ianh): image
+  String error;
+}
 
+class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderStateMixin<TweetStreamView> {
   final Map<String, Animation<double>> _animations = <String, Animation<double>>{};
   final List<AnimationController> _controllers = <AnimationController>[];
 
@@ -21,6 +29,31 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   AnimationController _currentController;
   Animation<double> _currentAnimation;
   TweetStream _stream;
+
+  final TextEditingController _textController = TextEditingController();
+  final List<_PendingSend> _pending = <_PendingSend>[];
+
+  void _submitMessage(String value) { // TODO(ianh): image
+    final Progress<void> progress = _stream.send(text: value); // TODO(ianh): image
+    final _PendingSend entry = _PendingSend(progress, value);
+    setState(() {
+      _pending.add(entry);
+      progress.asFuture().then(
+        (void value) {
+          setState(() {
+            _pending.remove(entry);
+          });
+        },
+        onError: (dynamic error, StackTrace stack) { },
+      );
+    });
+  }
+
+  void _submitCurrentMessage() {
+    // TODO(ianh): handle images
+    _submitMessage(_textController.text);
+    setState(_textController.clear);
+  }
 
   bool get _atZero => _scrollController.position.pixels <= 0.0;
 
@@ -86,36 +119,96 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final bool loggedIn = Cruise.of(context).isLoggedIn;
+    final bool canPost = loggedIn && _textController.text.isNotEmpty; // TODO(ianh): or image selected
     return Scaffold(
       appBar: AppBar(
         title: const Text('Twitarr'),
-        // TODO(ianh): add a manual refresh button that shows when we're busy
-        // TODO(ianh): (or find another way to use _stream.busy)
       ),
-      body: AnimatedBuilder(
-        animation: _stream,
-        builder: (BuildContext context, Widget child) {
-          return ListView.custom(
-            controller: _scrollController,
-            reverse: true,
-            cacheExtent: 1000.0,
-            childrenDelegate: _SliverChildBuilderDelegate(
-              builder: (BuildContext context, int index) {
-                final StreamPost post = _stream[index];
-                if (post == const StreamPost.sentinel())
-                  return null;
-                return Entry(post: post, animation: _animationFor(post));
-                // TODO(ianh): add a text field at the bottom, for sending posts
-              },
-              onDidFinishLayout: () {
-                if (_atZero) {
-                  _currentController = null;
-                  _currentAnimation = null;
-                }
-              },
-            ),
-          );
-        },
+      body: BusyIndicator(
+        busy: _stream.busy,
+        child: AnimatedBuilder(
+          animation: _stream,
+          builder: (BuildContext context, Widget child) {
+            return ListView.custom(
+              controller: _scrollController,
+              reverse: true,
+              cacheExtent: 1000.0,
+              childrenDelegate: _SliverChildBuilderDelegate(
+                builder: (BuildContext context, int index) {
+                  if (index == 0) {
+                    return Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: TextField(
+                            controller: _textController,
+                            onChanged: (String value) {
+                              setState(() {
+                                // changed state is in _textController
+                                assert(_textController.text == value);
+                              });
+                            },
+                            onSubmitted: canPost ? (String value) {
+                              assert(_textController.text == value);
+                              if (_textController.text.isNotEmpty)
+                                _submitCurrentMessage();
+                            } : null,
+                            textInputAction: TextInputAction.send,
+                            enabled: loggedIn,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                              hintText: loggedIn ? 'Message' : 'Log in to send messages',
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.send),
+                          tooltip: 'Send message',
+                          onPressed: canPost ? _submitCurrentMessage : null,
+                        ),
+                      ],
+                    );
+                  }
+                  if (index == 1)
+                    return const Divider(height: 0.0);
+                  index -= 2;
+                  if (index < _pending.length) {
+                    final _PendingSend entry = _pending[index];
+                    return ProgressChatLine(
+                      key: ObjectKey(entry),
+                      progress: entry.progress,
+                      text: entry.text,
+                      onRetry: () {
+                        setState(() {
+                          _pending.remove(entry);
+                          _submitMessage(entry.text);
+                        });
+                      },
+                      onRemove: () {
+                        setState(() {
+                          _pending.remove(entry);
+                        });
+                      },
+                    );
+                  }
+                  index -= _pending.length;
+                  final StreamPost post = _stream[index];
+                  if (post == const StreamPost.sentinel())
+                    return null;
+                  return Entry(post: post, animation: _animationFor(post));
+                  // TODO(ianh): add a text field at the bottom, for sending posts
+                },
+                onDidFinishLayout: () {
+                  if (_atZero) {
+                    _currentController = null;
+                    _currentAnimation = null;
+                  }
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -152,9 +245,9 @@ class Entry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (post == null) {
-      return ListTile(
-        leading: const Icon(Icons.more_vert),
-        title: const Text('...'),
+      return const ListTile(
+        leading: Icon(Icons.more_vert),
+        title: Text('...'),
       );
     }
     return SizeTransition(

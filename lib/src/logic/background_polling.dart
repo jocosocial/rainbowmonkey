@@ -75,11 +75,11 @@ Future<void> _backgroundUpdate() async {
 
 Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStore store) async {
   try {
-    print('I call my phone and I check my messages.');
     if (credentials == null) {
       print('Not logged in; skipping check for messages.');
       return;
     }
+    print('I call my phone and I check my messages.');
     SeamailSummary summary;
     await store.updateFreshnessToken((int freshnessToken) async {
       summary = await twitarr.getUnreadSeamailMessages(

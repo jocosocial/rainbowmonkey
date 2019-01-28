@@ -535,3 +535,106 @@ class ChatLine extends StatelessWidget {
     );
   }
 }
+
+// TODO(ianh): Make this look more like ChatLine
+class ProgressChatLine extends StatelessWidget {
+  const ProgressChatLine({
+    Key key,
+    @required this.progress,
+    @required this.text,
+    @required this.onRetry,
+    @required this.onRemove,
+  }) : assert(progress != null),
+       assert(text != null),
+       super(key: key);
+
+  final Progress<void> progress;
+  final String text;
+  final VoidCallback onRetry;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ProgressValue<void>>(
+      valueListenable: progress,
+      builder: (BuildContext context, ProgressValue<void> value, Widget child) {
+        assert(child == null);
+        Widget leading, trailing, subtitle;
+        VoidCallback onTap;
+        if (value is IdleProgress) {
+          leading = const Icon(Icons.error, size: 40.0, color: Colors.orange);
+        } else if (value is StartingProgress) {
+          leading = const CircularProgressIndicator();
+        } else if (value is ActiveProgress) {
+          leading = CircularProgressIndicator(value: value.progress / value.target);
+        } else if (value is FailedProgress) {
+          leading = const Icon(Icons.error, size: 40.0, color: Colors.red);
+          trailing = onRemove != null ? IconButton(icon: const Icon(Icons.clear), tooltip: 'Abandon message', onPressed: onRemove) : null;
+          subtitle = onRetry != null ? Text('Failed: ${value.error}. Tap to retry.') : Text('Failed: ${value.error}');
+          onTap = onRetry;
+        } else if (value is SuccessfulProgress<void>) {
+          leading = const Icon(Icons.error, size: 40.0, color: Colors.yellow);
+        } else {
+          leading = const Icon(Icons.error, size: 40.0, color: Colors.purple);
+        }
+        return ListTile(
+          leading: leading,
+          title: Text(text),
+          trailing: trailing,
+          subtitle: subtitle,
+          onTap: onTap,
+        );
+      },
+    );
+  }
+}
+
+class BusyIndicator extends StatelessWidget {
+  const BusyIndicator({
+    Key key,
+    this.busy,
+    this.child,
+    this.busyIndicator: _defaultIndicator,
+    this.alignment: AlignmentDirectional.bottomEnd,
+  }) : super(key: key);
+
+  final ValueListenable<bool> busy;
+
+  final Widget child;
+
+  final Widget busyIndicator;
+
+  final AlignmentGeometry alignment;
+
+  static const Widget _defaultIndicator = Padding(
+    padding: EdgeInsets.all(4.0),
+    child: CircularProgressIndicator(),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        child,
+        Positioned.fill(
+          child: Align(
+            alignment: alignment,
+            child: IgnorePointer(
+              child: ValueListenableBuilder<bool>(
+                valueListenable: busy,
+                builder: (BuildContext context, bool busy, Widget child) {
+                  return AnimatedOpacity(
+                    opacity: busy ? 1.0 : 0.0,
+                    duration: kThemeChangeDuration,
+                    curve: Curves.easeInOut,
+                    child: busyIndicator,
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

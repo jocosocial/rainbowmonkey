@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/user.dart';
 import '../network/twitarr.dart';
+import '../progress.dart';
 import '../utils.dart';
 import 'photo_manager.dart';
 
@@ -11,7 +12,8 @@ typedef StreamErrorCallback = void Function(dynamic error, StackTrace stack);
 
 class TweetStream extends ChangeNotifier with BusyIndicator {
   TweetStream(
-    this._twitarr, {
+    this._twitarr,
+    this._credentials, {
     @required this.photoManager,
     this.onError,
     this.maxUpdatePeriod = const Duration(minutes: 5),
@@ -23,6 +25,7 @@ class TweetStream extends ChangeNotifier with BusyIndicator {
   }
 
   final Twitarr _twitarr;
+  final Credentials _credentials;
   final PhotoManager photoManager;
   final StreamErrorCallback onError;
   final Duration maxUpdatePeriod;
@@ -68,6 +71,7 @@ class TweetStream extends ChangeNotifier with BusyIndicator {
         trying = false;
         final int localPageSize = pageSize;
         final StreamSliceSummary result = await _twitarr.getStream(
+          credentials: _credentials,
           direction: StreamDirection.backwards,
           boundaryToken: isInitialFetch ? null : _posts.last.boundaryToken,
           limit: localPageSize,
@@ -113,7 +117,7 @@ class TweetStream extends ChangeNotifier with BusyIndicator {
     }
   }
 
-  void _fetchForwards() async {
+  Future<void> _fetchForwards() async {
     if (_seekingForwards || _posts.isEmpty)
       return;
     assert(_posts.isNotEmpty);
@@ -126,6 +130,7 @@ class TweetStream extends ChangeNotifier with BusyIndicator {
         trying = false;
         final int localPageSize = pageSize;
         final StreamSliceSummary result = await _twitarr.getStream(
+          credentials: _credentials,
           direction: StreamDirection.forwards,
           boundaryToken: _posts.first.boundaryToken,
           limit: localPageSize,
@@ -198,6 +203,23 @@ class TweetStream extends ChangeNotifier with BusyIndicator {
       _timer.cancel();
       _timer = null;
     }
+  }
+
+  Progress<void> send({
+    @required String text,
+    String parentId,
+    // TODO(ianh): photo
+  }) {
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.postTweet(
+          credentials: _credentials,
+          text: text,
+          parentId: parentId,
+        ),
+      );
+      await _fetchForwards();
+    });
   }
 }
 
