@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/models/user.dart';
 
 import '../loggers.dart';
-
-
+import '../mocks.dart';
 
 void main() {
   testWidgets('CruiseModel', (WidgetTester tester) async {
@@ -43,12 +43,10 @@ void main() {
       <String>[
         'LoggingDataStore.restoreSettings',
         '--- select new configuration',
-        'LoggingTwitarr(1).logout',
+        'LoggingTwitarr(1).dispose',
         'model changed',
         '--- idling, expect settings restore to change the model',
         'LoggingDataStore.restoreCredentials',
-        'LoggingTwitarr(1).dispose',
-        'model changed',
         'LoggingTwitarr(2).getCalendar',
         '--- waiting one hour',
         '--- login',
@@ -69,6 +67,37 @@ void main() {
         'user updated',
         '--- end',
         'LoggingTwitarr(2).dispose',
+      ],
+    );
+  });
+
+  testWidgets('CruiseModel autologin', (WidgetTester tester) async {
+    final List<String> log = <String>[];
+    final TrivialDataStore store = TrivialDataStore();
+    store.storedCredentials = const Credentials(username: 'aaa', password: 'aaaaaa', key: 'blabla');
+    final CruiseModel model = CruiseModel(
+      initialTwitarrConfiguration: LoggingTwitarrConfiguration(1, log),
+      store: store,
+      onError: (String error) { log.add('error: $error'); },
+    );
+    model.addListener(() { log.add('model changed (isLoggedIn = ${model.isLoggedIn})'); });
+    log.add('--- idling');
+    await tester.idle();
+    log.add('--- waiting one hour');
+    await tester.pump(const Duration(hours: 1));
+    log.add('--- end');
+    model.dispose();
+    expect(
+      log,
+      <String>[
+        '--- idling',
+        'LoggingTwitarr(1).login aaa / aaaaaa',
+        'model changed (isLoggedIn = false)',
+        'model changed (isLoggedIn = true)',
+        'LoggingTwitarr(1).getCalendar',
+        '--- waiting one hour',
+        '--- end',
+        'LoggingTwitarr(1).dispose'
       ],
     );
   });

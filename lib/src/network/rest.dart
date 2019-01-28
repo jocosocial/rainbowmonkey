@@ -65,31 +65,24 @@ class RestTwitarr implements Twitarr {
     @required String username,
     @required String password,
     @required String registrationCode,
-    @required String email,
-    @required String securityQuestion,
-    @required String securityAnswer,
+    String displayName,
   }) {
     assert(username != null);
     assert(password != null);
-    assert(email != null);
     assert(registrationCode != null);
-    assert(securityAnswer != null);
-    assert(securityQuestion != null);
     assert(AuthenticatedUser.isValidUsername(username));
     assert(AuthenticatedUser.isValidDisplayName(username));
+    assert(displayName == null || AuthenticatedUser.isValidDisplayName(displayName));
     assert(AuthenticatedUser.isValidPassword(password));
     assert(AuthenticatedUser.isValidRegistrationCode(registrationCode));
-    assert(AuthenticatedUser.isValidEmail(email));
-    assert(AuthenticatedUser.isValidSecurityQuestion(securityQuestion));
-    assert(AuthenticatedUser.isValidSecurityAnswer(securityAnswer));
-    final String body = json.encode(<String, dynamic>{
+    final Map<String, dynamic> fields = <String, dynamic>{
       'new_username': username,
       'new_password': password,
       'registration_code': registrationCode,
-      'email': email,
-      'security_question': securityQuestion,
-      'security_answer': securityAnswer
-    });
+    };
+    if (displayName != null)
+      fields['display_name'] = displayName;
+    final String body = json.encode(fields);
     return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
       final String result = await completer.chain<String>(
         _requestUtf8(
@@ -157,14 +150,6 @@ class RestTwitarr implements Twitarr {
         ),
         photoManager,
       ));
-    });
-  }
-
-  @override
-  Progress<AuthenticatedUser> logout() {
-    return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
-      await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/logout'), steps: 2);
-      return null;
     });
   }
 
@@ -858,7 +843,6 @@ class RestTwitarr implements Twitarr {
       debugPrint('>>> $method $url (body length: $length)');
       return true;
     }());
-    await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
     try {
       if (_random.nextDouble() > debugReliability)
         throw const LocalError('Fake network failure');
@@ -875,6 +859,7 @@ class RestTwitarr implements Twitarr {
           bodyParts.forEach(request.add);
       }
       final HttpClientResponse response = await request.close();
+      await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
       if (!expectedStatusCodes.contains(response.statusCode))
         throw HttpServerError(response.statusCode, response.reasonPhrase, url);
       if (response.contentLength > 0)

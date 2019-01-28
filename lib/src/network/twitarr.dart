@@ -89,9 +89,7 @@ abstract class Twitarr {
     @required String username,
     @required String password,
     @required String registrationCode,
-    @required String email,
-    @required String securityQuestion,
-    @required String securityAnswer,
+    String displayName,
   });
 
   Progress<AuthenticatedUser> login({
@@ -99,7 +97,6 @@ abstract class Twitarr {
     @required String password,
     @required PhotoManager photoManager,
   });
-  Progress<AuthenticatedUser> logout();
 
   Progress<AuthenticatedUser> getAuthenticatedUser(Credentials credentials, PhotoManager photoManager);
   Progress<Calendar> getCalendar();

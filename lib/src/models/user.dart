@@ -153,25 +153,10 @@ class AuthenticatedUser extends User {
     return registrationCode.isNotEmpty;
   }
 
-  static bool isValidEmail(String email, { bool skipServerCheck: false }) {
+  static bool isValidEmail(String email) {
     assert(email != null);
     // https://html.spec.whatwg.org/#valid-e-mail-address
-    if (!email.contains(RegExp(r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")))
-      return false;
-    // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L10
-    return skipServerCheck || email.contains(RegExp(r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b', caseSensitive: false));
-  }
-
-  static bool isValidSecurityQuestion(String question) {
-    assert(question != null);
-    // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L51
-    return question.isNotEmpty;
-  }
-
-  static bool isValidSecurityAnswer(String answer) {
-    assert(answer != null);
-    // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L51
-    return answer.isNotEmpty;
+    return email.contains(RegExp(r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"));
   }
 
   static bool isValidRoomNumber(String roomNumber) {

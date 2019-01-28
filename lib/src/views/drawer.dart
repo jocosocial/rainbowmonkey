@@ -192,12 +192,18 @@ class _CruiseMonkeyDrawerState extends State<CruiseMonkeyDrawer> {
     assert(() {
       // Settings screen only shows up in debug builds,
       // because it's really just debug settings.
-      tiles.add(ListTile(
-        leading: const Icon(Icons.settings),
-        title: const Text('Settings'),
-        onTap: Cruise.of(context).restoringSettings ? null : () {
-          Navigator.pop(context); // drawer
-          Navigator.pushNamed(context, '/settings');
+      tiles.add(ValueListenableBuilder<bool>(
+        valueListenable: Cruise.of(context).restoringSettings,
+        builder: (BuildContext context, bool busy, Widget child) {
+          return ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Settings'),
+            enabled: !busy,
+            onTap: busy ? null : () {
+              Navigator.pop(context); // drawer
+              Navigator.pushNamed(context, '/settings');
+            },
+          );
         },
       ));
       return true;

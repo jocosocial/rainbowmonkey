@@ -99,16 +99,14 @@ class NullCruiseModel implements CruiseModel {
   double debugReliability = 1.0;
 
   @override
-  bool get restoringSettings => false;
+  ValueListenable<bool> get restoringSettings => null;
 
   @override
   Progress<Credentials> createAccount({
     @required String username,
     @required String password,
     @required String registrationCode,
-    @required String email,
-    @required String securityQuestion,
-    @required String securityAnswer,
+    String displayName,
   }) => null;
 
   @override

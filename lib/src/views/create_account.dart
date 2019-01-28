@@ -15,7 +15,7 @@ class CreateAccount extends StatefulWidget {
   _CreateAccountState createState() => _CreateAccountState();
 }
 
-enum _AccountCreationField { username, password, registrationCode, email, securityQuestion, securityAnswer }
+enum _AccountCreationField { username, password, registrationCode, displayName }
 
 class _AccountCreationServerResponse {
   _AccountCreationServerResponse(this.fields, { @required this.close });
@@ -28,18 +28,14 @@ class _CreateAccountState extends State<CreateAccount> {
   final TextEditingController _password1 = TextEditingController();
   final TextEditingController _password2 = TextEditingController();
   final TextEditingController _registrationCode = TextEditingController();
-  final TextEditingController _email = TextEditingController();
-  final TextEditingController _securityQuestion = TextEditingController();
-  final TextEditingController _securityAnswer = TextEditingController();
+  final TextEditingController _displayName = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final FocusNode _usernameFocus = FocusNode();
   final FocusNode _password1Focus = FocusNode();
   final FocusNode _password2Focus = FocusNode();
   final FocusNode _registrationCodeFocus = FocusNode();
-  final FocusNode _emailFocus = FocusNode();
-  final FocusNode _securityQuestionFocus = FocusNode();
-  final FocusNode _securityAnswerFocus = FocusNode();
+  final FocusNode _displayNameFocus = FocusNode();
 
   _AccountCreationServerResponse _latestServerResponse = _AccountCreationServerResponse(const <_AccountCreationField, String>{}, close: false);
 
@@ -49,9 +45,7 @@ class _CreateAccountState extends State<CreateAccount> {
            AuthenticatedUser.isValidPassword(_password1.text) &&
            (_password1.text == _password2.text) &&
            AuthenticatedUser.isValidRegistrationCode(_registrationCode.text) &&
-           AuthenticatedUser.isValidEmail(_email.text) &&
-           AuthenticatedUser.isValidSecurityQuestion(_securityQuestion.text) &&
-           AuthenticatedUser.isValidSecurityAnswer(_securityAnswer.text);
+           _displayName.text == '' || AuthenticatedUser.isValidDisplayName(_displayName.text);
   }
 
   void _createAccount() async {
@@ -60,9 +54,7 @@ class _CreateAccountState extends State<CreateAccount> {
       username: _username.text,
       password: _password1.text,
       registrationCode: _registrationCode.text,
-      email: _email.text,
-      securityQuestion: _securityQuestion.text,
-      securityAnswer: _securityAnswer.text,
+      displayName: _displayName.text == '' ? null : _displayName.text,
     );
     final _AccountCreationServerResponse serverResponse = await showDialog<_AccountCreationServerResponse>(
       context: context,
@@ -81,9 +73,7 @@ class _CreateAccountState extends State<CreateAccount> {
           case _AccountCreationField.username: FocusScope.of(context).requestFocus(_usernameFocus); break;
           case _AccountCreationField.password: FocusScope.of(context).requestFocus(_password1Focus); break;
           case _AccountCreationField.registrationCode: FocusScope.of(context).requestFocus(_registrationCodeFocus); break;
-          case _AccountCreationField.email: FocusScope.of(context).requestFocus(_emailFocus); break;
-          case _AccountCreationField.securityQuestion: FocusScope.of(context).requestFocus(_securityQuestionFocus); break;
-          case _AccountCreationField.securityAnswer: FocusScope.of(context).requestFocus(_securityAnswerFocus); break;
+          case _AccountCreationField.displayName: FocusScope.of(context).requestFocus(_displayNameFocus); break;
         }
       }
     }
@@ -213,7 +203,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           controller: _registrationCode,
                           focusNode: _registrationCodeFocus,
                           onFieldSubmitted: (String value) {
-                            FocusScope.of(context).requestFocus(_emailFocus);
+                            FocusScope.of(context).requestFocus(_displayNameFocus);
                           },
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
@@ -233,67 +223,22 @@ class _CreateAccountState extends State<CreateAccount> {
                       child: Align(
                         alignment: AlignmentDirectional.topStart,
                         child: TextFormField(
-                          controller: _email,
-                          focusNode: _emailFocus,
-                          onFieldSubmitted: (String value) {
-                            FocusScope.of(context).requestFocus(_securityQuestionFocus);
-                          },
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'E-mail',
-                            helperText: 'Only visible to administrators.',
-                          ),
-                          validator: (String email) {
-                            if (!AuthenticatedUser.isValidEmail(email))
-                              return 'E-mail is not valid.';
-                            return _latestServerResponse.fields[_AccountCreationField.email];
-                          },
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 96.0,
-                      child: Align(
-                        alignment: AlignmentDirectional.topStart,
-                        child: TextFormField(
-                          controller: _securityQuestion,
-                          focusNode: _securityQuestionFocus,
-                          onFieldSubmitted: (String value) {
-                            FocusScope.of(context).requestFocus(_securityAnswerFocus);
-                          },
-                          textCapitalization: TextCapitalization.sentences,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Security question',
-                          ),
-                          validator: (String securityQuestion) {
-                            if (!AuthenticatedUser.isValidSecurityQuestion(securityQuestion))
-                              return 'You need a security question.';
-                            return _latestServerResponse.fields[_AccountCreationField.securityQuestion];
-                          },
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 96.0,
-                      child: Align(
-                        alignment: AlignmentDirectional.topStart,
-                        child: TextFormField(
-                          controller: _securityAnswer,
-                          focusNode: _securityAnswerFocus,
+                          controller: _displayName,
+                          focusNode: _displayNameFocus,
                           onFieldSubmitted: (String value) {
                             if (_valid)
                               _createAccount();
                           },
-                          textInputAction: TextInputAction.done,
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
-                            labelText: 'Security answer',
+                            labelText: 'Display name (optional)',
+                            helperText: 'Defaults to the username if not specified.',
                           ),
-                          validator: (String securityAnswer) {
-                            if (!AuthenticatedUser.isValidSecurityAnswer(securityAnswer))
-                              return 'You need a security answer.';
-                            return _latestServerResponse.fields[_AccountCreationField.securityAnswer];
+                          validator: (String displayName) {
+                            if (_displayName.text != '' && !AuthenticatedUser.isValidDisplayName(displayName))
+                              return 'Display name is not valid.';
+                            return _latestServerResponse.fields[_AccountCreationField.displayName];
                           },
                         ),
                       ),
@@ -385,9 +330,7 @@ class _AccountCreationStatus extends StatelessWidget {
               case 'username': fieldIdentifier = _AccountCreationField.username; break;
               case 'password': fieldIdentifier = _AccountCreationField.password; break;
               case 'registration_code': fieldIdentifier = _AccountCreationField.registrationCode; break;
-              case 'email': fieldIdentifier = _AccountCreationField.email; break;
-              case 'security_question': fieldIdentifier = _AccountCreationField.securityQuestion; break;
-              case 'security_answer': fieldIdentifier = _AccountCreationField.securityAnswer; break;
+              case 'display_name': fieldIdentifier = _AccountCreationField.displayName; break;
             }
             if (fieldIdentifier != null)
               fields[fieldIdentifier] = error.fields[field].join(' ');

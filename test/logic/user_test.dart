@@ -76,16 +76,8 @@ void main() {
     expect(AuthenticatedUser.isValidEmail(' test@example.com'), isFalse);
     expect(AuthenticatedUser.isValidEmail('test@example.com '), isFalse);
     expect(AuthenticatedUser.isValidEmail('test%example.com'), isFalse);
-    expect(AuthenticatedUser.isValidEmail('test@invalid'), isFalse);
+    expect(AuthenticatedUser.isValidEmail('test@invalid'), isTrue);
     expect(AuthenticatedUser.isValidEmail('test @example.com'), isFalse);
     expect(AuthenticatedUser.isValidEmail('test@ example.com'), isFalse);
-  });
-  testWidgets('AuthenticatedUser.isValidSecurityQuestion', (WidgetTester tester) async {
-    expect(AuthenticatedUser.isValidSecurityQuestion(''), isFalse);
-    expect(AuthenticatedUser.isValidSecurityQuestion('a'), isTrue);
-  });
-  testWidgets('AuthenticatedUser.isValidSecurityAnswer', (WidgetTester tester) async {
-    expect(AuthenticatedUser.isValidSecurityAnswer(''), isFalse);
-    expect(AuthenticatedUser.isValidSecurityAnswer('a'), isTrue);
   });
 }

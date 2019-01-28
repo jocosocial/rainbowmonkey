@@ -170,7 +170,8 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
-  bool get restoringSettings => false;
+  ValueListenable<bool> get restoringSettings => _restoringSettings;
+  final ValueNotifier<bool> _restoringSettings = ValueNotifier<bool>(false);
 
   @override
   Seamail get seamail => _seamail;
@@ -184,9 +185,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     @required String username,
     @required String password,
     @required String registrationCode,
-    @required String email,
-    @required String securityQuestion,
-    @required String securityAnswer,
+    String displayName,
   }) {
     return const Progress<Credentials>.idle();
   }
