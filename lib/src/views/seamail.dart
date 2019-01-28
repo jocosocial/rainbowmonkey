@@ -337,6 +337,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: _pending.map((_PendingSend entry) {
+                  // TODO(ianh): Use a ChatLine for this, somehow, so it matches the direction and style of other speech bubbles.
                   if (entry.error != null) {
                     return ListTile(
                       key: ObjectKey(entry),
@@ -349,7 +350,6 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                       },
                     );
                   }
-                  // TODO(ianh): Use a ChatLine for this, somehow, so it matches the direction and style of other speech bubbles.
                   return ListTile(
                     key: ObjectKey(entry),
                     leading: ProgressBuilder<void>(
@@ -704,56 +704,6 @@ class _StartConversationViewState extends State<StartConversationView> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class BusyIndicator extends StatelessWidget {
-  const BusyIndicator({
-    Key key,
-    this.busy,
-    this.child,
-    this.busyIndicator: _defaultIndicator,
-    this.alignment: AlignmentDirectional.bottomEnd,
-  }) : super(key: key);
-
-  final ValueListenable<bool> busy;
-
-  final Widget child;
-
-  final Widget busyIndicator;
-
-  final AlignmentGeometry alignment;
-
-  static const Widget _defaultIndicator = Padding(
-    padding: EdgeInsets.all(4.0),
-    child: CircularProgressIndicator(),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        child,
-        Positioned.fill(
-          child: Align(
-            alignment: alignment,
-            child: IgnorePointer(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: busy,
-                builder: (BuildContext context, bool busy, Widget child) {
-                  return AnimatedOpacity(
-                    opacity: busy ? 1.0 : 0.0,
-                    duration: kThemeChangeDuration,
-                    curve: Curves.easeInOut,
-                    child: busyIndicator,
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

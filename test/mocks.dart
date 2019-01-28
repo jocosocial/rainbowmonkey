@@ -63,6 +63,67 @@ class HangingDataStore implements DataStore {
   }
 }
 
+class TrivialDataStore implements DataStore {
+  TrivialDataStore();
+
+  Credentials storedCredentials;
+
+  @override
+  Progress<void> saveCredentials(Credentials value) {
+    return Progress<void>.completed(null);
+  }
+
+  @override
+  Progress<Credentials> restoreCredentials() {
+    return Progress<Credentials>.completed(storedCredentials);
+  }
+
+  Map<Setting, dynamic> storedSettings = <Setting, dynamic>{};
+
+  @override
+  Progress<void> saveSetting(Setting id, dynamic value) {
+    storedSettings[id] = value;
+    return Progress<void>.completed(null);
+  }
+
+  @override
+  Progress<Map<Setting, dynamic>> restoreSettings() {
+    return Progress<Map<Setting, dynamic>>.completed(storedSettings);
+  }
+
+  @override
+  Progress<dynamic> restoreSetting(Setting id) {
+    return Progress<dynamic>.completed(storedSettings[id]);
+  }
+
+  Map<String, Set<String>> storedNotifications = <String, Set<String>>{};
+
+  @override
+  Future<void> addNotification(String threadId, String messageId) async {
+    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
+    thread.add(messageId);
+  }
+
+  @override
+  Future<void> removeNotification(String threadId, String messageId) async {
+    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
+    thread.remove(messageId);
+  }
+
+  @override
+  Future<List<String>> getNotifications(String threadId) async {
+    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
+    return thread.toList();
+  }
+
+  int storedFreshnessToken;
+
+  @override
+  Future<void> updateFreshnessToken(FreshnessCallback callback) async {
+    storedFreshnessToken = await callback(storedFreshnessToken);
+  }
+}
+
 class TestTwitarrConfiguration extends TwitarrConfiguration {
   const TestTwitarrConfiguration();
 
@@ -116,7 +177,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   Seamail _seamail;
 
   @override
-  TweetStream createTweetStream() => TweetStream(null, photoManager: this);
+  TweetStream createTweetStream() => TweetStream(null, null, photoManager: this);
 
   @override
   Progress<Credentials> createAccount({

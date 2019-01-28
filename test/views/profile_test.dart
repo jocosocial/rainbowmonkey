@@ -1,11 +1,13 @@
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
+import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/views/profile.dart';
+import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
 import '../loggers.dart';
@@ -22,7 +24,7 @@ Future<void> main() async {
           twitarr = value;
         },
       ),
-      store: const HangingDataStore(),
+      store: TrivialDataStore(),
       onError: (String error) { log.add('error: $error'); },
     );
     await model.login(username: 'username', password: 'password').asFuture();
@@ -73,4 +75,21 @@ class ProfileTestTwitarrConfiguration extends LoggingTwitarrConfiguration {
 
 class ProfileTestTwitarr extends LoggingTwitarr {
   ProfileTestTwitarr(ProfileTestTwitarrConfiguration configuration, List<String> log) : super(configuration, log);
+
+  @override
+  Progress<AuthenticatedUser> login({
+    @required String username,
+    @required String password,
+    @required PhotoManager photoManager,
+  }) {
+    super.login(username: username, password: password, photoManager: photoManager);
+    return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
+      username: username,
+      credentials: Credentials(
+        username: username,
+        password: password,
+        key: 'blablabla',
+      ),
+    ));
+  }
 }

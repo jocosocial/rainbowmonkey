@@ -143,9 +143,7 @@ class RestTwitarr implements Twitarr {
         steps: 2,
       );
       final dynamic data = Json.parse(result);
-      if (data['status'] != null &&
-          (data.status == 'incorrect username or password' ||
-           data.status == 'incorrect password or username')) {
+      if (data.status == 'error' && data.error == 'Invalid username or password.') {
         throw const InvalidUsernameOrPasswordError();
       }
       _checkStatusIsOk(data);
@@ -288,7 +286,7 @@ class RestTwitarr implements Twitarr {
     return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
       final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/profile?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(result);
-      _checkStatusIsOk(data, desiredStatus: 'Profile Updated.');
+      _checkStatusIsOk(data, desiredStatus: 'Profile Updated.'); // TODO(ianh): check that this is still correct
     });
   }
 
@@ -310,7 +308,7 @@ class RestTwitarr implements Twitarr {
         contentType: encoded.contentType,
       ));
       final dynamic data = Json.parse(result);
-      _checkStatusIsOk(data, statusIsHumanReadable: true);
+      _checkStatusIsOk(data, statusIsHumanReadable: true); // TODO(ianh): check that this is still correct
     });
   }
 
@@ -346,7 +344,7 @@ class RestTwitarr implements Twitarr {
       final List<User> result = await compute<String, List<User>>(
         _parseUserList,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/user/autocomplete/${Uri.encodeComponent(searchTerm)}'),
+          _requestUtf8('GET', 'api/v2/user/ac/${Uri.encodeComponent(searchTerm)}'),
         ),
       );
       return result;
@@ -355,7 +353,7 @@ class RestTwitarr implements Twitarr {
 
   static List<User> _parseUserList(String rawData) {
     final dynamic data = Json.parse(rawData);
-    final Iterable<dynamic> values = (data.names as Json).asIterable();
+    final Iterable<dynamic> values = (data.users as Json).asIterable();
     return values.map<User>((dynamic value) {
       return User(
         username: value.username.toString(),
@@ -643,8 +641,32 @@ class RestTwitarr implements Twitarr {
     String parentId,
     // TODO(ianh): photo
   }) {
-    // TODO(ianh): send
-    return null;
+    assert(credentials.key != null);
+    assert(text != null);
+    assert(text.isNotEmpty);
+    // TODO(ianh): image
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key)
+        ..add('app', 'plain');
+      final Map<String, dynamic> details = <String, dynamic>{
+        'text': text,
+      };
+      if (parentId != null)
+        details['parent'] = parentId;
+      // TODO(ianh): image
+      final String jsonBody = json.encode(details);
+      final String result = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/stream?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        )
+      );
+      final dynamic data = Json.parse(result);
+      _checkStatusIsOk(data);
+    });
   }
 
   static StreamSliceSummary _parseStreamBackwards(String rawData) {
@@ -838,6 +860,8 @@ class RestTwitarr implements Twitarr {
     }());
     await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
     try {
+      if (_random.nextDouble() > debugReliability)
+        throw const LocalError('Fake network failure');
       final HttpClientRequest request = await _client.openUrl(method, url);
       if (contentType != null)
         request.headers.contentType = contentType;
@@ -853,8 +877,6 @@ class RestTwitarr implements Twitarr {
       final HttpClientResponse response = await request.close();
       if (!expectedStatusCodes.contains(response.statusCode))
         throw HttpServerError(response.statusCode, response.reasonPhrase, url);
-      if (_random.nextDouble() > debugReliability)
-        throw const LocalError('Fake network failure');
       if (response.contentLength > 0)
         completer.advance(0.0, response.contentLength.toDouble());
       return response;
@@ -871,6 +893,11 @@ class RestTwitarr implements Twitarr {
     if (data.status == 'key not valid')
       throw const ServerError(<String>['An authentication error occurred: the key the server provided is being refused for some reason. Try logging out and logging back in.']);
     if (data.status != desiredStatus) {
+      if (data.status.toString() == 'error') {
+        if ((data as Json).hasKey('errors'))
+          throw ServerError((data.errors as Json).toList().cast<String>());
+        throw ServerError(<String>[data.error.toString()]);
+      }
       if (statusIsHumanReadable)
         throw ServerError(<String>[data.status.toString()]);
       throw FormatException('status "${data.status}" is not "$desiredStatus"');

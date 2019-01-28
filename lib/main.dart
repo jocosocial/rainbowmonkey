@@ -76,15 +76,18 @@ void _handleError(String message) {
         left: 24.0,
         right: 24.0,
         bottom: position.value,
-        child: FadeTransition(
-          opacity: opacity,
-          child: Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: ShapeDecoration(
-              color: Colors.grey[800],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+        child: IgnorePointer(
+          child: FadeTransition(
+            opacity: opacity,
+            child: Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: ShapeDecoration(
+                color: Colors.grey[800],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                shadows: kElevationToShadow[4],
+              ),
+              child: Text(message, style: theme.textTheme.caption.copyWith(color: Colors.white)),
             ),
-            child: Text(message, style: theme.textTheme.caption.copyWith(color: Colors.white)),
           ),
         ),
       );

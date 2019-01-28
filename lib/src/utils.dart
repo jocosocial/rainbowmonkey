@@ -64,7 +64,7 @@ mixin BusyIndicator {
   @protected
   void startBusy() {
     if (_busyCount == 0)
-      _busy.value = true;
+      scheduleMicrotask(_updateBusy);
     _busyCount += 1;
   }
 
@@ -72,7 +72,11 @@ mixin BusyIndicator {
   void endBusy() {
     _busyCount -= 1;
     if (_busyCount == 0)
-      _busy.value = false;
+      scheduleMicrotask(_updateBusy);
+  }
+
+  void _updateBusy() {
+    _busy.value = _busyCount > 0;
   }
 }
 
@@ -84,14 +88,14 @@ class VariableTimer {
 
   final Duration maxDuration;
 
-  final VoidCallback callback;
+  final AsyncCallback callback;
 
   Timer _timer;
   Duration _currentPeriod;
 
-  void tick() {
+  void tick() async {
     _currentPeriod *= 1.5;
-    callback();
+    await callback();
     if (_currentPeriod > maxDuration)
       _currentPeriod = maxDuration;
     _timer = Timer(_currentPeriod, tick);
