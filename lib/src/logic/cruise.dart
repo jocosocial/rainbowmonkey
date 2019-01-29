@@ -396,7 +396,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           ),
           foregroundDecoration: ShapeDecoration(
             shape: const CircleBorder(),
-            image: DecorationImage(image: AvatarImage(user.username, this, _twitarr)),
+            image: DecorationImage(image: AvatarImage(user.username, this, _twitarr, onError: onError)),
           ),
           duration: const Duration(milliseconds: 250),
           height: size,
@@ -486,13 +486,15 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 }
 
 class AvatarImage extends ImageProvider<AvatarImage> {
-  const AvatarImage(this.username, this.photoManager, this.twitarr);
+  const AvatarImage(this.username, this.photoManager, this.twitarr, { this.onError });
 
   final String username;
 
   final PhotoManager photoManager;
 
   final Twitarr twitarr;
+
+  final ErrorCallback onError;
 
   @override
   Future<AvatarImage> obtainKey(ImageConfiguration configuration) {
@@ -502,7 +504,7 @@ class AvatarImage extends ImageProvider<AvatarImage> {
   @override
   ImageStreamCompleter load(AvatarImage key) {
     assert(key == this);
-    return AvatarImageStreamCompleter(username, photoManager, twitarr);
+    return AvatarImageStreamCompleter(username, photoManager, twitarr, onError: onError);
   }
 
   @override
@@ -528,7 +530,7 @@ class AvatarImage extends ImageProvider<AvatarImage> {
 }
 
 class AvatarImageStreamCompleter extends ImageStreamCompleter {
-  AvatarImageStreamCompleter(this.username, this.photoManager, this.twitarr) {
+  AvatarImageStreamCompleter(this.username, this.photoManager, this.twitarr, { this.onError }) {
     _update();
   }
 
@@ -538,6 +540,8 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
 
   final Twitarr twitarr;
 
+  final ErrorCallback onError;
+  
   bool _busy = false;
   bool _dirty = true;
 
@@ -558,7 +562,11 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
         setImage(ImageInfo(image: frameInfo.image));
       } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
         // it's ok to catch all errors here, as we're just rerouting them, not swallowing them
-        reportError(exception: error, stack: stack);
+        if (error is UserFriendlyError && onError != null) {
+          onError('$error');
+        } else {
+          reportError(exception: error, stack: stack);
+        }
       }
     }
     _busy = false;
