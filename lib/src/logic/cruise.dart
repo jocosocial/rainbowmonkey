@@ -14,6 +14,7 @@ import '../models/user.dart';
 import '../network/rest.dart' show RestTwitarrConfiguration;
 import '../network/twitarr.dart';
 import '../progress.dart';
+import 'forums.dart';
 import 'notifications.dart';
 import 'photo_manager.dart';
 import 'seamail.dart';
@@ -40,6 +41,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
     _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar); // TODO(ianh): autoretry faster on network failure
     _seamail = Seamail.empty();
+    _forums = Forums.empty();
     selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
     _restoreSettings(); // async
     _restorePhotos(); // async
@@ -66,7 +68,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _busy -= 1;
       if (_busy == 0) {
         _calendar.triggerUnscheduledUpdate();
-        // TODO(ianh): notify other things, like seamail, tweet stream
+        // TODO(ianh): notify other things, like seamail, tweet stream, forums
       }
     }
   }
@@ -152,6 +154,9 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   Seamail get seamail => _seamail;
   Seamail _seamail;
 
+  Forums get forums => _forums;
+  Forums _forums;
+
   TweetStream createTweetStream() {
     return TweetStream(
       _twitarr,
@@ -198,6 +203,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _pendingCredentials?.removeListener(_handleCredentialsChange);
     _pendingCredentials = null;
     _seamail = Seamail.empty();
+    _forums = Forums.empty();
     _user.reset();
     if (_loggedIn.isCompleted)
       _loggedIn = Completer<void>();
@@ -234,6 +240,12 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
               onCheckForMessages(_currentCredentials, _twitarr, store);
           },
           onThreadRead: _handleThreadRead,
+        );
+        _forums = Forums(
+          _twitarr,
+          _currentCredentials,
+          this,
+          onError: onError,
         );
         _loggedIn.complete();
       }

@@ -11,7 +11,7 @@ import 'photo_manager.dart';
 
 typedef ThreadReadCallback = void Function(String threadId);
 
-class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyIndicator {
+class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixin {
   Seamail(
     this._twitarr,
     this._credentials,
@@ -134,10 +134,10 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyIndi
         ),
       );
       _timer?.interested();
-      if (_threads.containsKey(thread.id))
-        return _threads[thread.id];
-      _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
-      notifyListeners();
+      if (_threads.containsKey(thread.id)) {
+        _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
+        notifyListeners();
+      }
       return _threads[thread.id];
     });
   }
@@ -169,7 +169,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyIndi
   }
 }
 
-class SeamailThread extends ChangeNotifier with BusyIndicator {
+class SeamailThread extends ChangeNotifier with BusyMixin {
   SeamailThread(
     this.id,
     this._parent,
@@ -256,6 +256,7 @@ class SeamailThread extends ChangeNotifier with BusyIndicator {
       endBusy();
     }
     notifyListeners();
+    _parent._childUpdated(this);
   }
 
   // Returns if something interesting was in the update.
@@ -301,6 +302,7 @@ class SeamailThread extends ChangeNotifier with BusyIndicator {
       _unreadCount = thread.unreadMessages;
       _hasUnread = _unreadCount > 0;
     }
+    notifyListeners();
     _parent._childUpdated(this);
     if (interesting)
       _timer?.interested();

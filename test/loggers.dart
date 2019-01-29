@@ -286,6 +286,45 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<Set<ForumSummary>> getForumThreads({
+    Credentials credentials,
+  }) {
+    log.add('getForumThreads');
+    return null;
+  }
+
+  @override
+  Progress<List<ForumMessageSummary>> getForumMessages({
+    Credentials credentials,
+    @required String threadId,
+  }) {
+    log.add('getForumMessages $threadId');
+    return null;
+  }
+
+  @override
+  Progress<ForumSummary> createForumThread({
+    Credentials credentials,
+    @required String subject,
+    @required String text,
+    // TODO(ianh): images
+  }) {
+    log.add('createForumThread "$subject" "$text"');
+    return null;
+  }
+
+  @override
+  Progress<void> postForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String text,
+    // TODO(ianh): images
+  }) {
+    log.add('postForumMessage $threadId "$text"');
+    return null;
+  }
+
+  @override
   void dispose() {
     log.add('LoggingTwitarr(${_configuration.id}).dispose');
   }

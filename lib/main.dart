@@ -12,12 +12,12 @@ import 'src/models/user.dart';
 import 'src/network/rest.dart';
 import 'src/progress.dart';
 import 'src/views/calendar.dart';
+import 'src/views/comms.dart';
 import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/drawer.dart';
 import 'src/views/karaoke.dart';
 import 'src/views/profile.dart';
-import 'src/views/seamail.dart';
 import 'src/views/settings.dart';
 import 'src/views/stream.dart';
 import 'src/widgets.dart';
@@ -40,7 +40,7 @@ void main() {
       print('Received tap to view: $threadId');
       await model.loggedIn;
       Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
-      SeamailView.showThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
+      CommsView.showThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
     };
   });
 }
@@ -151,7 +151,7 @@ class CruiseMonkeyHome extends StatelessWidget {
     CalendarView(),
     DeckPlanView(),
     KaraokeView(),
-    SeamailView(),
+    CommsView(),
   ];
 
   @override

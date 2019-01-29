@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cruisemonkey/src/basic_types.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/logic/forums.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
@@ -138,6 +139,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }) : user = user ?? MutableContinuousProgress<AuthenticatedUser>(),
        calendar = calendar ?? MutableContinuousProgress<Calendar>() {
     _seamail = Seamail.empty();
+    _forums = Forums.empty();
   }
 
   @override
@@ -176,6 +178,10 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   @override
   Seamail get seamail => _seamail;
   Seamail _seamail;
+
+  @override
+  Forums get forums => _forums;
+  Forums _forums;
 
   @override
   TweetStream createTweetStream() => TweetStream(null, null, photoManager: this);

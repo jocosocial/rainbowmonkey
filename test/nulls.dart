@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:cruisemonkey/src/basic_types.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/logic/forums.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
@@ -132,6 +133,9 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   Seamail get seamail => null;
+
+  @override
+  Forums get forums => null;
 
   @override
   TweetStream createTweetStream() => null;

@@ -10,7 +10,7 @@ import 'photo_manager.dart';
 
 typedef StreamErrorCallback = void Function(dynamic error, StackTrace stack);
 
-class TweetStream extends ChangeNotifier with BusyIndicator {
+class TweetStream extends ChangeNotifier with BusyMixin {
   TweetStream(
     this._twitarr,
     this._credentials, {
@@ -83,7 +83,7 @@ class TweetStream extends ChangeNotifier with BusyIndicator {
         final bool theEnd = result.posts.length < localPageSize;
         if (overlap < result.posts.length) {
           final List<StreamPost> newPosts = result.posts.skip(overlap).map<StreamPost>(
-            (StreamPostSummary summary) => StreamPost.from(summary, photoManager),
+            (StreamMessageSummary summary) => StreamPost.from(summary, photoManager),
           ).toList();
           int index = 0;
           for (StreamPost post in newPosts) {
@@ -142,7 +142,7 @@ class TweetStream extends ChangeNotifier with BusyIndicator {
         }
         if (overlap < count) {
           final List<StreamPost> newPosts = result.posts.take(count - overlap).map<StreamPost>(
-            (StreamPostSummary summary) => StreamPost.from(summary, photoManager),
+            (StreamMessageSummary summary) => StreamPost.from(summary, photoManager),
           ).toList();
           _posts.insertAll(0, newPosts);
           int index = 0;
@@ -232,7 +232,7 @@ class StreamPost {
     this.boundaryToken,
   });
 
-  StreamPost.from(StreamPostSummary summary, PhotoManager photoManager)
+  StreamPost.from(StreamMessageSummary summary, PhotoManager photoManager)
      : id = summary.id,
        user = summary.user.toUser(photoManager),
        text = summary.text,
