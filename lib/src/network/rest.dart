@@ -664,7 +664,7 @@ class RestTwitarr implements Twitarr {
 
   static StreamSliceSummary _parseStream(String rawData, StreamDirection direction) {
     final dynamic data = Json.parse(rawData);
-    final Set<StreamPostSummary> posts = Set<StreamPostSummary>();
+    final Set<StreamMessageSummary> posts = Set<StreamMessageSummary>();
     for (dynamic post in (data.stream_posts as Json).asIterable()) {
       posts.add(_parseStreamPost(post as Json));
       if ((post as Json).hasKey('children')) {
@@ -697,15 +697,15 @@ class RestTwitarr implements Twitarr {
     );
   }
 
-  static StreamPostSummary _parseStreamPost(dynamic post, [ List<String> parents ]) {
+  static StreamMessageSummary _parseStreamPost(dynamic post, [ List<String> parents ]) {
     if ((post as Json).hasKey('deleted') && (post.deleted as bool)) {
-      return StreamPostSummary.deleted(
+      return StreamMessageSummary.deleted(
         id: post.id.toString(),
         timestamp: _parseDateTime(post.timestamp as Json),
         boundaryToken: (post.timestamp as Json).toInt(),
       );
     }
-    return StreamPostSummary(
+    return StreamMessageSummary(
       id: post.id.toString(),
       user: _parseUser(post.author as Json),
       text: post.text.toString(),
@@ -730,6 +730,153 @@ class RestTwitarr implements Twitarr {
   static List<String> _parseParents(dynamic parentChain) {
     // TODO(ianh): parse this
     return const <String>[];
+  }
+
+  @override
+  Progress<Set<ForumSummary>> getForumThreads({
+    Credentials credentials,
+  }) {
+    assert(credentials == null || credentials.key != null);
+    return Progress<Set<ForumSummary>>((ProgressController<Set<ForumSummary>> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      return await compute<String, Set<ForumSummary>>(
+        _parseForumList,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/forums?${body.toUrlEncoded()}',
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<List<ForumMessageSummary>> getForumMessages({
+    Credentials credentials,
+    @required String threadId,
+  }) {
+    assert(credentials == null || credentials.key != null);
+    assert(threadId != null);
+    return Progress<List<ForumMessageSummary>>((ProgressController<List<ForumMessageSummary>> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      return await compute<String, List<ForumMessageSummary>>(
+        _parseForumThread,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/forums/thread/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<ForumSummary> createForumThread({
+    Credentials credentials,
+    @required String subject,
+    @required String text,
+    // TODO(ianh): images
+  }) {
+    assert(credentials.key != null);
+    assert(subject != null);
+    assert(text != null);
+    return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      final Map<String, dynamic> details = <String, dynamic>{
+        'subject': subject,
+        'text': text,
+        // TODO(ianh): images
+      };
+      final String jsonBody = json.encode(details);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/forums?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      return _parseForumMeta(data);
+    });
+  }
+
+  @override
+  Progress<void> postForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String text,
+    // TODO(ianh): images
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(text != null);
+    return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      final Map<String, dynamic> details = <String, dynamic>{
+        'text': text,
+        // TODO(ianh): images
+      };
+      final String jsonBody = json.encode(details);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  static Set<ForumSummary> _parseForumList(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    final Set<ForumSummary> result = Set<ForumSummary>();
+    for (dynamic forum in (data.forum_meta as Json).asIterable())
+      result.add(_parseForumMeta(forum as Json));
+    return result;
+  }
+
+  static ForumSummary _parseForumMeta(dynamic data) {
+    return ForumSummary(
+      id: data.id.toString(),
+      subject: data.subject.toString(),
+      totalCount: (data.posts as Json).toInt(),
+      unreadCount: (data as Json).hasKey('new_posts') ? (data.new_posts as Json).toInt() : null,
+      lastMessageUser: _parseUser(data.last_post_author as Json),
+      lastMessageTimestamp: _parseDateTime(data.timestamp as Json),
+    );
+  }
+
+  static List<ForumMessageSummary> _parseForumThread(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    final List<ForumMessageSummary> result = <ForumMessageSummary>[];
+    for (dynamic forum in (data.forums_meta as Json).asIterable()) {
+      result.add(ForumMessageSummary(
+        id: forum.id.toString(),
+        user: _parseUser(forum.author as Json),
+        text: forum.text.toString(),
+        timestamp: _parseDateTime(forum.epoch as Json),
+        read: (forum['new'] as Json).toBoolean(),
+      ));
+    }
+    return result;
   }
 
   static UserSummary _parseUser(dynamic user) {

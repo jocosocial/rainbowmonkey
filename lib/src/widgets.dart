@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'logic/cruise.dart';
 import 'models/user.dart';
 import 'progress.dart';
+import 'utils.dart';
 
 const Duration animationDuration = Duration(milliseconds: 100);
 const Curve animationCurve = Curves.fastOutSlowIn;
@@ -423,40 +424,6 @@ class ChatLine extends StatelessWidget {
   final bool isCurrentUser;
   final List<String> messages;
   final DateTime timestamp;
-
-  static String prettyDuration(Duration duration) {
-    final int microseconds = duration.inMicroseconds;
-    double minutes = microseconds / (1000 * 1000 * 60);
-    if (minutes < 0.9)
-      return 'just now';
-    if (minutes < 1.5)
-      return '1 minute ago';
-    if (minutes < 59.5)
-      return '${minutes.round()} minutes ago';
-    double hours = microseconds / (1000 * 1000 * 60 * 60);
-    minutes -= hours.truncate() * 60;
-    if (hours < 2 && minutes < 5)
-      return '${hours.truncate()} hour ago';
-    if (hours < 2)
-      return '${hours.truncate()} hour ${minutes.truncate()} minutes ago';
-    if (hours < 5 && (minutes <= 20 || minutes >= 40))
-      return '${hours.round()} hours ago';
-    if (hours < 5)
-      return '${hours.round()}½ hours ago';
-    if (hours < 23)
-      return '${hours.round()} hours ago';
-    double days = microseconds / (1000 * 1000 * 60 * 60 * 24);
-    hours -= days.truncate() * 24;
-    if (days < 1.5)
-      return '1 day ago';
-    if (days < 10.5)
-      return '${days.round()} days ago';
-    final double weeks = microseconds / (1000 * 1000 * 60 * 60 * 24 * 7);
-    days -= weeks.truncate() * 7;
-    if (weeks < 1.5)
-      return '1 week ago';
-    return '${weeks.round()} weeks ago';
-  }
 
   @override
   Widget build(BuildContext context) {

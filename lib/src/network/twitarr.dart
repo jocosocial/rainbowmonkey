@@ -175,6 +175,29 @@ abstract class Twitarr {
     // TODO(ianh): photo
   });
 
+  Progress<Set<ForumSummary>> getForumThreads({
+    Credentials credentials,
+  });
+
+  Progress<List<ForumMessageSummary>> getForumMessages({
+    Credentials credentials,
+    @required String threadId,
+  });
+
+  Progress<ForumSummary> createForumThread({
+    Credentials credentials,
+    @required String subject,
+    @required String text,
+    // TODO(ianh): images
+  });
+
+  Progress<void> postForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String text,
+    // TODO(ianh): images
+  });
+
   void dispose();
 }
 
@@ -249,13 +272,13 @@ class StreamSliceSummary {
 
   final StreamDirection direction;
 
-  final List<StreamPostSummary> posts;
+  final List<StreamMessageSummary> posts;
 
   final int boundaryToken;
 }
 
-class StreamPostSummary {
-  const StreamPostSummary({
+class StreamMessageSummary {
+  const StreamMessageSummary({
     this.id,
     this.user,
     this.text,
@@ -267,7 +290,7 @@ class StreamPostSummary {
   }) : assert(timestamp != null),
        deleted = false;
 
-  const StreamPostSummary.deleted({
+  const StreamMessageSummary.deleted({
     this.id,
     @required this.timestamp,
     this.boundaryToken,
@@ -296,6 +319,50 @@ class StreamPostSummary {
   final List<String> parents;
 
   final bool deleted;
+}
+
+class ForumSummary {
+  const ForumSummary({
+    this.id,
+    this.subject,
+    this.totalCount,
+    this.unreadCount,
+    this.lastMessageUser,
+    this.lastMessageTimestamp,
+  });
+
+  final String id;
+
+  final String subject;
+
+  final int totalCount;
+
+  final int unreadCount;
+
+  final UserSummary lastMessageUser;
+
+  final DateTime lastMessageTimestamp;
+}
+
+class ForumMessageSummary {
+  const ForumMessageSummary({
+    this.id,
+    this.user,
+    this.text,
+    // TODO(ianh): images
+    this.timestamp,
+    this.read,
+  });
+
+  final String id;
+
+  final UserSummary user;
+
+  final String text;
+
+  final DateTime timestamp;
+
+  final bool read;
 }
 
 class PhotoSummary {
