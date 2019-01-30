@@ -553,7 +553,7 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
   final Twitarr twitarr;
 
   final ErrorCallback onError;
-  
+
   bool _busy = false;
   bool _dirty = true;
 

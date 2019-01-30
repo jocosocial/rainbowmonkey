@@ -40,7 +40,7 @@ void main() {
       print('Received tap to view: $threadId');
       await model.loggedIn;
       Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
-      CommsView.showThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
+      CommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
     };
   });
 }

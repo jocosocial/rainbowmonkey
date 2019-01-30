@@ -10,7 +10,7 @@ import '../models/user.dart';
 import '../progress.dart';
 import '../utils.dart';
 import '../widgets.dart';
-//import 'forums.dart';
+import 'forums.dart';
 import 'seamail.dart';
 
 class CommsView extends StatelessWidget implements View {
@@ -65,19 +65,40 @@ class CommsView extends StatelessWidget implements View {
     final SeamailThread thread = await Navigator.push(
       context,
       MaterialPageRoute<SeamailThread>(
-        builder: (BuildContext context) => StartConversationView(currentUser: currentUser),
+        builder: (BuildContext context) => StartSeamailView(currentUser: currentUser),
       ),
     );
     if (thread == null)
       return;
-    showThread(context, thread);
+    showSeamailThread(context, thread);
   }
 
-  static void showThread(BuildContext context, SeamailThread thread) {
+  static void showSeamailThread(BuildContext context, SeamailThread thread) {
     Navigator.push<void>(
       context,
       MaterialPageRoute<void>(
         builder: (BuildContext context) => SeamailThreadView(thread: thread),
+      ),
+    );
+  }
+
+  Future<void> _createNewForum(BuildContext context, User currentUser) async {
+    final ForumThread thread = await Navigator.push(
+      context,
+      MaterialPageRoute<ForumThread>(
+        builder: (BuildContext context) => StartForumView(currentUser: currentUser),
+      ),
+    );
+    if (thread == null)
+      return;
+    showForumThread(context, thread);
+  }
+
+  static void showForumThread(BuildContext context, ForumThread thread) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => ForumThreadView(thread: thread),
       ),
     );
   }
@@ -142,7 +163,7 @@ class CommsView extends StatelessWidget implements View {
                       '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}',
                       style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
                     ),
-                    onTap: () { showThread(context, thread); },
+                    onTap: () { showSeamailThread(context, thread); },
                   );
                 }
                 index -= seamailThreads.length;
@@ -172,9 +193,7 @@ class CommsView extends StatelessWidget implements View {
                 title: Text(forum.subject),
                 subtitle: Text('${forum.totalCount} message${forum.totalCount == 1 ? '' : "s"}$unread\n$lastMessage'),
                 isThreeLine: true,
-                onTap: () {
-                  // TODO(ianh): Show the forum!
-                },
+                onTap: () { showForumThread(context, forum); },
               );
             },
           );
@@ -217,6 +236,6 @@ class OrListenable extends ValueNotifier<bool> {
 
   @override
   String toString() {
-    return 'OrListenable([${_children.join(", ")}])';
+    return '$runtimeType([${_children.join(", ")}])';
   }
 }

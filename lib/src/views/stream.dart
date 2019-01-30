@@ -120,7 +120,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final bool loggedIn = Cruise.of(context).isLoggedIn;
-    final bool canPost = loggedIn && _textController.text.isNotEmpty; // TODO(ianh): or image selected
+    final bool canPost = loggedIn && _textController.text.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Twitarr'),
