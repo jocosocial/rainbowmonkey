@@ -77,9 +77,9 @@ Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
       main,
       PositionedDirectional(
         end: 0.0,
-        bottom: 0.0,
+        top: 0.0,
         child: Padding(
-          padding: const EdgeInsets.all(4.0),
+          padding: const EdgeInsets.all(8.0),
           child: secondary,
         ),
       ),
@@ -571,7 +571,7 @@ class BusyIndicator extends StatelessWidget {
     this.busy,
     this.child,
     this.busyIndicator: _defaultIndicator,
-    this.alignment: AlignmentDirectional.bottomEnd,
+    this.alignment: AlignmentDirectional.topEnd,
   }) : super(key: key);
 
   final ValueListenable<bool> busy;
@@ -583,7 +583,7 @@ class BusyIndicator extends StatelessWidget {
   final AlignmentGeometry alignment;
 
   static const Widget _defaultIndicator = Padding(
-    padding: EdgeInsets.all(4.0),
+    padding: EdgeInsets.all(8.0),
     child: CircularProgressIndicator(),
   );
 
@@ -601,7 +601,7 @@ class BusyIndicator extends StatelessWidget {
                 builder: (BuildContext context, bool busy, Widget child) {
                   return AnimatedOpacity(
                     opacity: busy ? 1.0 : 0.0,
-                    duration: kThemeChangeDuration,
+                    duration: const Duration(milliseconds: 500),
                     curve: Curves.easeInOut,
                     child: busyIndicator,
                   );

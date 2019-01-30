@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../logic/stream.dart';
+import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
 
@@ -120,95 +121,103 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final bool loggedIn = Cruise.of(context).isLoggedIn;
-    final bool canPost = loggedIn && _textController.text.isNotEmpty; // TODO(ianh): or image selected
+    final bool canPost = loggedIn && _textController.text.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Twitarr'),
       ),
-      body: BusyIndicator(
-        busy: _stream.busy,
-        child: AnimatedBuilder(
-          animation: _stream,
-          builder: (BuildContext context, Widget child) {
-            return ListView.custom(
-              controller: _scrollController,
-              reverse: true,
-              cacheExtent: 1000.0,
-              childrenDelegate: _SliverChildBuilderDelegate(
-                builder: (BuildContext context, int index) {
-                  if (index == 0) {
-                    return Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: TextField(
-                            controller: _textController,
-                            onChanged: (String value) {
-                              setState(() {
-                                // changed state is in _textController
-                                assert(_textController.text == value);
-                              });
-                            },
-                            onSubmitted: canPost ? (String value) {
-                              assert(_textController.text == value);
-                              if (_textController.text.isNotEmpty)
-                                _submitCurrentMessage();
-                            } : null,
-                            textInputAction: TextInputAction.send,
-                            enabled: loggedIn,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                              hintText: loggedIn ? 'Message' : 'Log in to send messages',
+      body: ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
+        valueListenable: Cruise.of(context).user.best,
+        builder: (BuildContext context, ProgressValue<AuthenticatedUser> user, Widget child) {
+          User currentUser;
+          if (user is SuccessfulProgress<AuthenticatedUser>)
+            currentUser = user.value;
+          return BusyIndicator(
+            busy: _stream.busy,
+            child: AnimatedBuilder(
+              animation: _stream,
+              builder: (BuildContext context, Widget child) {
+                return ListView.custom(
+                  controller: _scrollController,
+                  reverse: true,
+                  cacheExtent: 1000.0,
+                  childrenDelegate: _SliverChildBuilderDelegate(
+                    builder: (BuildContext context, int index) {
+                      if (index == 0) {
+                        return Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: TextField(
+                                controller: _textController,
+                                onChanged: (String value) {
+                                  setState(() {
+                                    // changed state is in _textController
+                                    assert(_textController.text == value);
+                                  });
+                                },
+                                onSubmitted: canPost ? (String value) {
+                                  assert(_textController.text == value);
+                                  if (_textController.text.isNotEmpty)
+                                    _submitCurrentMessage();
+                                } : null,
+                                textInputAction: TextInputAction.send,
+                                enabled: loggedIn,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                                  hintText: loggedIn ? 'Message' : 'Log in to send messages',
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.send),
-                          tooltip: 'Send message',
-                          onPressed: canPost ? _submitCurrentMessage : null,
-                        ),
-                      ],
-                    );
-                  }
-                  if (index == 1)
-                    return const Divider(height: 0.0);
-                  index -= 2;
-                  if (index < _pending.length) {
-                    final _PendingSend entry = _pending[index];
-                    return ProgressChatLine(
-                      key: ObjectKey(entry),
-                      progress: entry.progress,
-                      text: entry.text,
-                      onRetry: () {
-                        setState(() {
-                          _pending.remove(entry);
-                          _submitMessage(entry.text);
-                        });
-                      },
-                      onRemove: () {
-                        setState(() {
-                          _pending.remove(entry);
-                        });
-                      },
-                    );
-                  }
-                  index -= _pending.length;
-                  final StreamPost post = _stream[index];
-                  if (post == const StreamPost.sentinel())
-                    return null;
-                  return Entry(post: post, animation: _animationFor(post));
-                  // TODO(ianh): add a text field at the bottom, for sending posts
-                },
-                onDidFinishLayout: () {
-                  if (_atZero) {
-                    _currentController = null;
-                    _currentAnimation = null;
-                  }
-                },
-              ),
-            );
-          },
-        ),
+                            IconButton(
+                              icon: const Icon(Icons.send),
+                              tooltip: 'Send message',
+                              onPressed: canPost ? _submitCurrentMessage : null,
+                            ),
+                          ],
+                        );
+                      }
+                      if (index == 1)
+                        return const Divider(height: 0.0);
+                      index -= 2;
+                      if (index < _pending.length) {
+                        final _PendingSend entry = _pending[index];
+                        return ProgressChatLine(
+                          key: ObjectKey(entry),
+                          progress: entry.progress,
+                          text: entry.text,
+                          onRetry: () {
+                            setState(() {
+                              _pending.remove(entry);
+                              _submitMessage(entry.text);
+                            });
+                          },
+                          onRemove: () {
+                            setState(() {
+                              _pending.remove(entry);
+                            });
+                          },
+                        );
+                      }
+                      index -= _pending.length;
+                      final StreamPost post = _stream[index];
+                      if (post == const StreamPost.sentinel())
+                        return null;
+                      return Entry(post: post, animation: _animationFor(post), currentUser: currentUser);
+                      // TODO(ianh): add a text field at the bottom, for sending posts
+                    },
+                    onDidFinishLayout: () {
+                      if (_atZero) {
+                        _currentController = null;
+                        _currentAnimation = null;
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }
@@ -235,12 +244,15 @@ class Entry extends StatelessWidget {
     Key key,
     @required this.post,
     @required this.animation,
+    @required this.currentUser,
   }) : assert(post == null || animation != null),
        super(key: key);
 
   final StreamPost post;
 
   final Animation<double> animation;
+
+  final User currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +267,7 @@ class Entry extends StatelessWidget {
       axisAlignment: -1.0,
       child: ChatLine(
         user: post.user,
-        isCurrentUser: false, // TODO(ianh): determine if it's the current user
+        isCurrentUser: post.user.sameAs(currentUser),
         messages: <String>[ post.text ],
         timestamp: post.timestamp,
       ),

@@ -808,7 +808,7 @@ class RestTwitarr implements Twitarr {
         ),
       );
       final dynamic data = Json.parse(rawData);
-      return _parseForumMeta(data);
+      return _parseForumMeta(data.forum_meta as Json);
     });
   }
 
@@ -832,16 +832,17 @@ class RestTwitarr implements Twitarr {
         // TODO(ianh): images
       };
       final String jsonBody = json.encode(details);
-      final String rawData = await completer.chain<String>(
+      await completer.chain<String>(
         _requestUtf8(
           'POST',
-          'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+          'api/v2/forums/thread/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
+          expectedStatusCodes: <int>[200],
         ),
       );
-      final dynamic data = Json.parse(rawData);
-      _checkStatusIsOk(data);
+      // We ignore the return value. It's the forum post, but what are you going to do with it?
+      // You don't know where it belongs in the forum...
     });
   }
 
@@ -867,13 +868,13 @@ class RestTwitarr implements Twitarr {
   static List<ForumMessageSummary> _parseForumThread(String rawData) {
     final dynamic data = Json.parse(rawData);
     final List<ForumMessageSummary> result = <ForumMessageSummary>[];
-    for (dynamic forum in (data.forums_meta as Json).asIterable()) {
+    for (dynamic post in (data.forum.posts as Json).asIterable()) {
       result.add(ForumMessageSummary(
-        id: forum.id.toString(),
-        user: _parseUser(forum.author as Json),
-        text: forum.text.toString(),
-        timestamp: _parseDateTime(forum.epoch as Json),
-        read: (forum['new'] as Json).toBoolean(),
+        id: post.id.toString(),
+        user: _parseUser(post.author as Json),
+        text: post.text.toString(),
+        timestamp: _parseDateTime(post.timestamp as Json),
+        read: (post['new'] as Json).toBoolean(),
       ));
     }
     return result;

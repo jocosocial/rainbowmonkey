@@ -278,8 +278,8 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
   }
 }
 
-class StartConversationView extends StatefulWidget {
-  const StartConversationView({
+class StartSeamailView extends StatefulWidget {
+  const StartSeamailView({
     Key key,
     this.currentUser,
   }) : super(key: key);
@@ -287,10 +287,10 @@ class StartConversationView extends StatefulWidget {
   final User currentUser;
 
   @override
-  _StartConversationViewState createState() => _StartConversationViewState();
+  _StartSeamailViewState createState() => _StartSeamailViewState();
 }
 
-class _StartConversationViewState extends State<StartConversationView> {
+class _StartSeamailViewState extends State<StartSeamailView> {
   final TextEditingController _nextUser = TextEditingController();
   final Set<User> _users = Set<User>();
   final TextEditingController _subject = TextEditingController();
@@ -306,7 +306,7 @@ class _StartConversationViewState extends State<StartConversationView> {
   }
 
   @override
-  void didUpdateWidget(StartConversationView oldWidget) {
+  void didUpdateWidget(StartSeamailView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentUser != widget.currentUser) {
       _users.remove(oldWidget.currentUser);
