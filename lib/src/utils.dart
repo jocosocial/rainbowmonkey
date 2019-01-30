@@ -106,7 +106,7 @@ class VariableTimer {
   }
 
   void cancel() {
-    _timer.cancel();
+    _timer?.cancel();
     _timer = null;
   }
 }

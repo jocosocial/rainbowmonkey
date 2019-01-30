@@ -177,10 +177,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
 class StartForumView extends StatefulWidget {
   const StartForumView({
     Key key,
-    this.currentUser,
   }) : super(key: key);
-
-  final User currentUser;
 
   @override
   _StartForumViewState createState() => _StartForumViewState();
@@ -288,4 +285,3 @@ class _StartForumViewState extends State<StartForumView> {
     );
   }
 }
-

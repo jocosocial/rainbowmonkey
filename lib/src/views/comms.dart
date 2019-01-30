@@ -13,6 +13,8 @@ import '../widgets.dart';
 import 'forums.dart';
 import 'seamail.dart';
 
+enum _CreateWhat { seamail, forum }
+
 class CommsView extends StatelessWidget implements View {
   const CommsView({
     Key key,
@@ -45,10 +47,31 @@ class CommsView extends StatelessWidget implements View {
         if (user is SuccessfulProgress<AuthenticatedUser> && user.value != null) {
           return FloatingActionButton(
             child: icon,
-            onPressed: () {
-              // TODO(ianh): add an interstitial to pick private vs public
-              _createNewSeamail(context, user.value);
-            },
+            onPressed: () async {
+              switch (await showDialog<_CreateWhat>(
+                context: context,
+                builder: (BuildContext context) => SimpleDialog(
+                  title: const Text('What would you like to create?'),
+                  children: <Widget>[
+                    FlatButton(
+                      onPressed: () { Navigator.of(context).pop(_CreateWhat.seamail); },
+                      child: const Text('PRIVATE SEAMAIL'),
+                    ),
+                    FlatButton(
+                      onPressed: () { Navigator.of(context).pop(_CreateWhat.forum); },
+                      child: const Text('PUBLIC FORUM'),
+                    ),
+                  ],
+                ),
+              )) {
+                case _CreateWhat.seamail:
+                  await _createNewSeamail(context, user.value);
+                  break;
+                case _CreateWhat.forum:
+                  await _createNewForum(context);
+                  break;
+              }
+            }
           );
         }
         return FloatingActionButton(
@@ -82,11 +105,11 @@ class CommsView extends StatelessWidget implements View {
     );
   }
 
-  Future<void> _createNewForum(BuildContext context, User currentUser) async {
+  Future<void> _createNewForum(BuildContext context) async {
     final ForumThread thread = await Navigator.push(
       context,
       MaterialPageRoute<ForumThread>(
-        builder: (BuildContext context) => StartForumView(currentUser: currentUser),
+        builder: (BuildContext context) => const StartForumView(),
       ),
     );
     if (thread == null)

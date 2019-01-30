@@ -808,7 +808,7 @@ class RestTwitarr implements Twitarr {
         ),
       );
       final dynamic data = Json.parse(rawData);
-      return _parseForumMeta(data);
+      return _parseForumMeta(data.forum_meta as Json);
     });
   }
 
