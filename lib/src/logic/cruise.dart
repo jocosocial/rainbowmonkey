@@ -321,7 +321,17 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   @override
-  Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) {
+  Future<Uint8List> putImageIfAbsent(String photoId, ImageFetcher callback) {
+    return _queuePhotosWork<Uint8List>(() {
+      // TODO(ianh): cache the image obtained by callback to disk
+      // TODO(ianh): return the cached version if we have one
+      _storePhotos();
+      return callback();
+    });
+  }
+
+  @override
+  Future<Uint8List> putUserPhotoIfAbsent(String username, ImageFetcher callback) {
     return _queuePhotosWork<Uint8List>(() {
       // TODO(ianh): cache the image obtained by callback to disk
       // TODO(ianh): return the cached version if we have one
@@ -351,13 +361,13 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   @override
-  void addListenerForPhoto(String username, VoidCallback listener) {
+  void addListenerForUserPhoto(String username, VoidCallback listener) {
     final Set<VoidCallback> callbacks = _photoListeners.putIfAbsent(username, () => Set<VoidCallback>());
     callbacks.add(listener);
   }
 
   @override
-  void removeListenerForPhoto(String username, VoidCallback listener) {
+  void removeListenerForUserPhoto(String username, VoidCallback listener) {
     if (_photoListeners.containsKey(username)) {
       final Set<VoidCallback> callbacks = _photoListeners[username];
       callbacks.remove(listener);
@@ -418,6 +428,11 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     );
   }
 
+  Widget imageFor(String photoId) {
+    // TODO(ianh): long-press to download image
+    return Image(image: TwitarrImage(photoId, this, _twitarr, onError: onError));
+  }
+
   Progress<void> updateProfile({
     String currentLocation,
     String displayName,
@@ -475,13 +490,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   Progress<void> postTweet({
-    String text,
+    @required String text,
     String parentId,
-    // TODO(ianh): photo
+    @required Uint8List photo,
   }) {
     return _twitarr.postTweet(
       credentials: _currentCredentials,
       text: text,
+      photo: photo,
       parentId: parentId,
     );
   }
@@ -538,7 +554,6 @@ class AvatarImage extends ImageProvider<AvatarImage> {
     photoManager,
     twitarr,
   );
-
 }
 
 class AvatarImageStreamCompleter extends ImageStreamCompleter {
@@ -565,7 +580,7 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
     while (_dirty) {
       _dirty = false;
       try {
-        final Uint8List bytes = await photoManager.putIfAbsent(
+        final Uint8List bytes = await photoManager.putUserPhotoIfAbsent(
           username,
           () => twitarr.fetchProfilePicture(username).asFuture(),
         );
@@ -592,7 +607,7 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
   @override
   void addListener(ImageListener listener, { ImageErrorListener onError }) {
     if (!hasListeners)
-      photoManager.addListenerForPhoto(username, _update);
+      photoManager.addListenerForUserPhoto(username, _update);
     _listenerCount += 1; // TODO(ianh): remove once https://github.com/flutter/flutter/pull/25865 lands
     super.addListener(listener, onError: onError);
   }
@@ -602,6 +617,82 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
     super.removeListener(listener);
     _listenerCount -= 1; // TODO(ianh): remove as this is bogus, removeListener can remove multiple listeners; see https://github.com/flutter/flutter/pull/25865
     if (!hasListeners)
-      photoManager.removeListenerForPhoto(username, _update);
+      photoManager.removeListenerForUserPhoto(username, _update);
+  }
+}
+
+class TwitarrImage extends ImageProvider<TwitarrImage> {
+  const TwitarrImage(this.photoId, this.photoManager, this.twitarr, { this.onError });
+
+  final String photoId;
+
+  final PhotoManager photoManager;
+
+  final Twitarr twitarr;
+
+  final ErrorCallback onError;
+
+  @override
+  Future<TwitarrImage> obtainKey(ImageConfiguration configuration) {
+    return SynchronousFuture<TwitarrImage>(this);
+  }
+
+  @override
+  ImageStreamCompleter load(TwitarrImage key) {
+    assert(key == this);
+    return TwitarrImageStreamCompleter(photoId, photoManager, twitarr, onError: onError);
+  }
+
+  @override
+  String toString() => '$runtimeType($photoId)';
+
+  @override
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType)
+      return false;
+    final TwitarrImage typedOther = other as TwitarrImage;
+    return photoId == typedOther.photoId
+        && photoManager == typedOther.photoManager
+        && twitarr == typedOther.twitarr;
+  }
+
+  @override
+  int get hashCode => hashValues(
+    photoId,
+    photoManager,
+    twitarr,
+  );
+}
+
+class TwitarrImageStreamCompleter extends ImageStreamCompleter {
+  TwitarrImageStreamCompleter(this.photoId, this.photoManager, this.twitarr, { this.onError }) {
+    _update();
+  }
+
+  final String photoId;
+
+  final PhotoManager photoManager;
+
+  final Twitarr twitarr;
+
+  final ErrorCallback onError;
+
+  Future<void> _update() async {
+    try {
+      final Uint8List bytes = await photoManager.putImageIfAbsent(
+        photoId,
+        () => twitarr.fetchImage(photoId).asFuture(),
+      );
+      final ui.Codec codec = await PaintingBinding.instance.instantiateImageCodec(bytes);
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
+      setImage(ImageInfo(image: frameInfo.image));
+    } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
+      // it's ok to catch all errors here, as we're just rerouting them, not swallowing them
+      if (error is UserFriendlyError && onError != null) {
+        onError('$error');
+      } else {
+        reportError(exception: error, stack: stack);
+      }
+    }
   }
 }

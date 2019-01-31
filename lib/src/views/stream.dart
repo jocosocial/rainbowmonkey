@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../logic/stream.dart';
@@ -26,6 +28,8 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   final Map<String, Animation<double>> _animations = <String, Animation<double>>{};
   final List<AnimationController> _controllers = <AnimationController>[];
 
+  Uint8List _photo; // TODO(ianh): image
+
   ScrollController _scrollController;
   AnimationController _currentController;
   Animation<double> _currentAnimation;
@@ -34,8 +38,8 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   final TextEditingController _textController = TextEditingController();
   final List<_PendingSend> _pending = <_PendingSend>[];
 
-  void _submitMessage(String value) { // TODO(ianh): image
-    final Progress<void> progress = _stream.send(text: value); // TODO(ianh): image
+  void _submitMessage(String value) {
+    final Progress<void> progress = _stream.send(text: value, photo: _photo);
     final _PendingSend entry = _PendingSend(progress, value);
     setState(() {
       _pending.add(entry);
@@ -269,6 +273,7 @@ class Entry extends StatelessWidget {
         user: post.user,
         isCurrentUser: post.user.sameAs(currentUser),
         messages: <String>[ post.text ],
+        photoIds: post.photoId != null ? <String>[ post.photoId, ] : null,
         timestamp: post.timestamp,
       ),
     );

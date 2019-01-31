@@ -124,6 +124,13 @@ abstract class Twitarr {
     @required Credentials credentials,
   });
 
+  Progress<Uint8List> fetchImage(String photoId);
+
+  Progress<String> uploadImage({
+    @required Credentials credentials,
+    @required Uint8List bytes,
+  });
+
   Progress<void> updatePassword({
     @required Credentials credentials,
     @required String oldPassword,
@@ -172,7 +179,7 @@ abstract class Twitarr {
     @required Credentials credentials,
     @required String text,
     String parentId,
-    // TODO(ianh): photo
+    @required Uint8List photo,
   });
 
   Progress<Set<ForumSummary>> getForumThreads({
@@ -188,14 +195,14 @@ abstract class Twitarr {
     Credentials credentials,
     @required String subject,
     @required String text,
-    // TODO(ianh): images
+    @required List<Uint8List> photos,
   });
 
   Progress<void> postForumMessage({
     Credentials credentials,
     @required String threadId,
     @required String text,
-    // TODO(ianh): images
+    @required List<Uint8List> photos,
   });
 
   void dispose();
@@ -282,7 +289,7 @@ class StreamMessageSummary {
     this.id,
     this.user,
     this.text,
-    this.photo,
+    this.photoId,
     @required this.timestamp,
     this.boundaryToken,
     this.reactions,
@@ -297,7 +304,7 @@ class StreamMessageSummary {
   }) : assert(timestamp != null),
        user = null,
        text = null,
-       photo = null,
+       photoId = null,
        reactions = null,
        parents = null,
        deleted = true;
@@ -308,7 +315,7 @@ class StreamMessageSummary {
 
   final String text;
 
-  final PhotoSummary photo;
+  final String photoId;
 
   final DateTime timestamp;
 
@@ -349,7 +356,7 @@ class ForumMessageSummary {
     this.id,
     this.user,
     this.text,
-    // TODO(ianh): images
+    this.photoIds,
     this.timestamp,
     this.read,
   });
@@ -360,13 +367,11 @@ class ForumMessageSummary {
 
   final String text;
 
+  final List<String> photoIds;
+
   final DateTime timestamp;
 
   final bool read;
-}
-
-class PhotoSummary {
-  const PhotoSummary();
 }
 
 class UserSummary {

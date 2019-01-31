@@ -141,19 +141,25 @@ class NullCruiseModel implements CruiseModel {
   TweetStream createTweetStream() => null;
 
   @override
-  Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) => null;
+  Future<Uint8List> putImageIfAbsent(String username, ImageFetcher callback) => null;
+
+  @override
+  Future<Uint8List> putUserPhotoIfAbsent(String username, ImageFetcher callback) => null;
 
   @override
   void heardAboutUserPhoto(String username, DateTime lastUpdate) { }
 
   @override
-  void addListenerForPhoto(String username, VoidCallback listener) { }
+  void addListenerForUserPhoto(String username, VoidCallback listener) { }
 
   @override
-  void removeListenerForPhoto(String username, VoidCallback listener) { }
+  void removeListenerForUserPhoto(String username, VoidCallback listener) { }
 
   @override
   Widget avatarFor(User user, { double size: 40.0 }) => null;
+
+  @override
+  Widget imageFor(String photoId) => null;
 
   @override
   Progress<void> updateProfile({
@@ -184,7 +190,7 @@ class NullCruiseModel implements CruiseModel {
     @required Credentials credentials,
     @required String text,
     String parentId,
-    // TODO(ianh): photo
+    @required Uint8List photo,
   }) => null;
 
   @override

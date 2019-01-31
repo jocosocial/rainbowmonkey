@@ -24,6 +24,4 @@ abstract class DataStore {
   Future<List<String>> getNotifications(String threadId);
 
   Future<void> updateFreshnessToken(FreshnessCallback callback);
-
-  // TODO(ianh): image cache for avatars
 }
