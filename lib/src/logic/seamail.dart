@@ -134,7 +134,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
         ),
       );
       _timer?.interested();
-      if (_threads.containsKey(thread.id)) {
+      if (!_threads.containsKey(thread.id)) {
         _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
         notifyListeners();
       }
