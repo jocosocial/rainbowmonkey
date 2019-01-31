@@ -199,6 +199,21 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<Uint8List> fetchImage(String photoId) {
+    log.add('fetchImage $photoId');
+    return null;
+  }
+
+  @override
+  Progress<String> uploadImage({
+    @required Credentials credentials,
+    @required Uint8List bytes,
+  }) {
+    log.add('uploadImage');
+    return null;
+  }
+
+  @override
   Progress<void> updatePassword({
     @required Credentials credentials,
     @required String oldPassword,
@@ -279,7 +294,7 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     @required String text,
     String parentId,
-    // TODO(ianh): photo
+    @required Uint8List photo,
   }) {
     log.add('postTweet');
     return null;
@@ -307,7 +322,7 @@ class LoggingTwitarr extends Twitarr {
     Credentials credentials,
     @required String subject,
     @required String text,
-    // TODO(ianh): images
+    @required List<Uint8List> photos,
   }) {
     log.add('createForumThread "$subject" "$text"');
     return null;
@@ -318,7 +333,7 @@ class LoggingTwitarr extends Twitarr {
     Credentials credentials,
     @required String threadId,
     @required String text,
-    // TODO(ianh): images
+    @required List<Uint8List> photos,
   }) {
     log.add('postForumMessage $threadId "$text"');
     return null;

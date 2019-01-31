@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -20,15 +22,18 @@ class ForumThreadView extends StatefulWidget {
 }
 
 class _PendingSend {
-  _PendingSend(this.progress, this.text);
+  _PendingSend(this.progress, this.text, this.photos);
   final Progress<void> progress;
   final String text;
+  final List<Uint8List> photos;
   String error;
 }
 
 class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final Set<_PendingSend> _pending = Set<_PendingSend>();
+
+  final List<Uint8List> _photos = <Uint8List>[];
 
   @override
   void initState() {
@@ -55,9 +60,9 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
     setState(() { /* thread updated */ });
   }
 
-  void _submitMessage(String value) {
-    final Progress<void> progress = widget.thread.send(value);
-    final _PendingSend entry = _PendingSend(progress, value);
+  void _submitMessage(String value, { @required List<Uint8List> photos }) {
+    final Progress<void> progress = widget.thread.send(value, photos: photos.isEmpty ? null : photos);
+    final _PendingSend entry = _PendingSend(progress, value, photos);
     setState(() {
       _pending.add(entry);
       progress.asFuture().then((void value) {
@@ -73,7 +78,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
   }
 
   void _submitCurrentMessage() {
-    _submitMessage(_textController.text);
+    _submitMessage(_textController.text, photos: _photos);
     setState(_textController.clear);
   }
 
@@ -105,6 +110,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         user: message.user,
                         isCurrentUser: message.user.sameAs(currentUser),
                         messages: <String>[ message.text ],
+                        photoIds: message.photoIds,
                         timestamp: message.timestamp,
                       );
                     },
@@ -122,7 +128,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                     onRetry: () {
                       setState(() {
                         _pending.remove(entry);
-                        _submitMessage(entry.text);
+                        _submitMessage(entry.text, photos: entry.photos);
                       });
                     },
                     onRemove: () {
@@ -188,6 +194,8 @@ class _StartForumViewState extends State<StartForumView> {
   final TextEditingController _text = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  final List<Uint8List> _photos = <Uint8List>[]; // TODO(ianh): images
+
   bool get _valid {
     return _subject.text.isNotEmpty
         && _text.text.isNotEmpty;
@@ -206,6 +214,7 @@ class _StartForumViewState extends State<StartForumView> {
               final Progress<ForumThread> progress = Cruise.of(context).forums.postThread(
                 subject: _subject.text,
                 text: _text.text,
+                photos: _photos.isEmpty ? null : _photos,
               );
               final ForumThread thread = await showDialog<ForumThread>(
                 context: context,

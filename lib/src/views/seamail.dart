@@ -201,6 +201,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                         user: bubble.user,
                         isCurrentUser: bubble.user.sameAs(currentUser),
                         messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
+                        photoIds: null,
                         timestamp: bubble.messages.first.timestamp,
                       );
                     },

@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
+import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/views/profile.dart';
-import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
 import '../loggers.dart';

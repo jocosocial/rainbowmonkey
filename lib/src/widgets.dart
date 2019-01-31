@@ -313,7 +313,10 @@ class Badge extends StatelessWidget {
     Key key,
     @required this.child,
     this.enabled = true,
+    this.alignment = const AlignmentDirectional(0.9, -0.9),
   }) : assert(child != null),
+       assert(enabled != null),
+       assert(alignment != null),
        super(key: key);
 
   /// The widget below this widget in the tree.
@@ -322,6 +325,8 @@ class Badge extends StatelessWidget {
   final Widget child;
 
   final bool enabled;
+
+  final AlignmentGeometry alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -332,12 +337,12 @@ class Badge extends StatelessWidget {
         Positioned.fill(
           child: Visibility(
             visible: enabled,
-            child: const IgnorePointer(
+            child: IgnorePointer(
               child: FractionallySizedBox(
-                alignment: AlignmentDirectional(0.9, -0.9),
+                alignment: alignment,
                 widthFactor: 0.25,
                 heightFactor: 0.25,
-                child: DecoratedBox(
+                child: const DecoratedBox(
                   decoration: ShapeDecoration(
                     color: Colors.red,
                     shape: CircleBorder(),
@@ -413,6 +418,7 @@ class ChatLine extends StatelessWidget {
     @required this.user,
     @required this.isCurrentUser,
     @required this.messages,
+    @required this.photoIds,
     @required this.timestamp,
   }) : assert(user != null),
        assert(isCurrentUser != null),
@@ -423,14 +429,19 @@ class ChatLine extends StatelessWidget {
   final User user;
   final bool isCurrentUser;
   final List<String> messages;
+  final List<String> photoIds;
   final DateTime timestamp;
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> lines = <Widget>[];
     final ThemeData theme = Theme.of(context);
-    for (String message in messages) {
+    for (String message in messages)
       lines.add(Text(message));
+    if (photoIds != null) {
+      final CruiseModel cruise = Cruise.of(context);
+      for (String photoId in photoIds)
+        lines.add(cruise.imageFor(photoId));
     }
     final TextDirection direction = isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
     final DateTime now = Now.of(context);

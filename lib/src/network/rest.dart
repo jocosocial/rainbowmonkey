@@ -271,7 +271,7 @@ class RestTwitarr implements Twitarr {
     return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
       final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/profile?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(result);
-      _checkStatusIsOk(data, desiredStatus: 'Profile Updated.'); // TODO(ianh): check that this is still correct
+      _checkStatusIsOk(data);
     });
   }
 
@@ -279,12 +279,11 @@ class RestTwitarr implements Twitarr {
   Progress<void> uploadAvatar({
     @required Credentials credentials,
     @required Uint8List bytes,
-    @required PhotoManager photoManager,
   }) {
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
-      ..addFile('file', 'avatar.jpeg', bytes, ContentType('image', 'jpeg'));
+      ..addFile('file', 'avatar.png', bytes, ContentType('image', 'jpeg'));
     final MultipartFormData encoded = body.toMultipartEncoded();
     return Progress<void>((ProgressController<void> completer) async {
       final String result = await completer.chain<String>(_requestUtf8(
@@ -293,14 +292,13 @@ class RestTwitarr implements Twitarr {
         contentType: encoded.contentType,
       ));
       final dynamic data = Json.parse(result);
-      _checkStatusIsOk(data, statusIsHumanReadable: true); // TODO(ianh): check that this is still correct
+      _checkStatusIsOk(data);
     });
   }
 
   @override
   Progress<void> resetAvatar({
     @required Credentials credentials,
-    @required PhotoManager photoManager
   }) {
     assert(credentials != null);
     final FormData body = FormData()
@@ -309,6 +307,33 @@ class RestTwitarr implements Twitarr {
       final String result = await completer.chain<String>(_requestUtf8('DELETE', 'api/v2/user/photo?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(result);
       _checkStatusIsOk(data);
+    });
+  }
+
+  @override
+  Progress<Uint8List> fetchImage(String photoId) {
+    return _requestBytes('GET', 'api/v2/photo/full/${Uri.encodeComponent(photoId)}');
+  }
+
+  @override
+  Progress<String> uploadImage({
+    @required Credentials credentials,
+    @required Uint8List bytes,
+  }) {
+    assert(credentials != null);
+    final FormData body = FormData()
+      ..add('key', credentials.key)
+      ..addFile('file', 'image.png', bytes, ContentType('image', 'jpeg'));
+    final MultipartFormData encoded = body.toMultipartEncoded();
+    return Progress<String>((ProgressController<String> completer) async {
+      final String result = await completer.chain<String>(_requestUtf8(
+        'POST', 'api/v2/photo',
+        bodyParts: encoded.body,
+        contentType: encoded.contentType,
+      ));
+      final dynamic data = Json.parse(result);
+      _checkStatusIsOk(data);
+      return data.photo.id.toString();
     });
   }
 
@@ -624,12 +649,11 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     @required String text,
     String parentId,
-    // TODO(ianh): photo
+    Uint8List photo,
   }) {
     assert(credentials.key != null);
     assert(text != null);
     assert(text.isNotEmpty);
-    // TODO(ianh): image
     return Progress<void>((ProgressController<void> completer) async {
       final FormData body = FormData()
         ..add('key', credentials.key)
@@ -637,9 +661,10 @@ class RestTwitarr implements Twitarr {
       final Map<String, dynamic> details = <String, dynamic>{
         'text': text,
       };
+      if (photo != null)
+        details['photo'] = await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: 2);
       if (parentId != null)
         details['parent'] = parentId;
-      // TODO(ianh): image
       final String jsonBody = json.encode(details);
       final String result = await completer.chain<String>(
         _requestUtf8(
@@ -647,7 +672,8 @@ class RestTwitarr implements Twitarr {
           'api/v2/stream?${body.toUrlEncoded()}',
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
-        )
+        ),
+        steps: 2
       );
       final dynamic data = Json.parse(result);
       _checkStatusIsOk(data);
@@ -711,15 +737,10 @@ class RestTwitarr implements Twitarr {
       text: post.text.toString(),
       timestamp: _parseDateTime(post.timestamp as Json),
       boundaryToken: (post.timestamp as Json).toInt(),
-      photo: (post as Json).hasKey('photo') ? _parsePhoto(post.photo as Json) : null,
+      photoId: (post as Json).hasKey('photo') ? post.photo.id.toString() : null,
       reactions: _parseReactions(post.reactions as Json),
       parents: (post as Json).hasKey('parent_chain') ? _parseParents(post.parent_chain as Json) : parents,
     );
-  }
-
-  static PhotoSummary _parsePhoto(dynamic photo) {
-    // TODO(ianh): parse this
-    return const PhotoSummary();
   }
 
   static Map<String, Set<UserSummary>> _parseReactions(dynamic reactions) {
@@ -771,7 +792,7 @@ class RestTwitarr implements Twitarr {
         await completer.chain<String>(
           _requestUtf8(
             'GET',
-            'api/v2/forums/thread/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+            'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
           ),
         ),
       );
@@ -783,11 +804,12 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     @required String subject,
     @required String text,
-    // TODO(ianh): images
+    @required List<Uint8List> photos,
   }) {
     assert(credentials.key != null);
     assert(subject != null);
     assert(text != null);
+    assert(photos == null || photos.isNotEmpty);
     return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
       final FormData body = FormData()
         ..add('app', 'plain');
@@ -796,8 +818,13 @@ class RestTwitarr implements Twitarr {
       final Map<String, dynamic> details = <String, dynamic>{
         'subject': subject,
         'text': text,
-        // TODO(ianh): images
       };
+      if (photos != null) {
+        final List<String> photoIds = <String>[];
+        for (Uint8List photo in photos)
+          photoIds.add(await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: photos.length + 1));
+        details['photos'] = photoIds;
+      }
       final String jsonBody = json.encode(details);
       final String rawData = await completer.chain<String>(
         _requestUtf8(
@@ -806,9 +833,10 @@ class RestTwitarr implements Twitarr {
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
         ),
+        steps: (photos != null ? photos.length : 0) + 1,
       );
       final dynamic data = Json.parse(rawData);
-      return _parseForumMeta(data.forum_meta as Json);
+      return _parseForumBody(data.forum_thread as Json);
     });
   }
 
@@ -817,11 +845,12 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     @required String threadId,
     @required String text,
-    // TODO(ianh): images
+    @required List<Uint8List> photos,
   }) {
     assert(credentials.key != null);
     assert(threadId != null);
     assert(text != null);
+    assert(photos == null || photos.isNotEmpty);
     return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
       final FormData body = FormData()
         ..add('app', 'plain');
@@ -829,17 +858,23 @@ class RestTwitarr implements Twitarr {
         body.add('key', credentials.key);
       final Map<String, dynamic> details = <String, dynamic>{
         'text': text,
-        // TODO(ianh): images
       };
+      if (photos != null) {
+        final List<String> photoIds = <String>[];
+        for (Uint8List photo in photos)
+          photoIds.add(await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: photos.length + 1));
+        details['photos'] = photoIds;
+      }
       final String jsonBody = json.encode(details);
       await completer.chain<String>(
         _requestUtf8(
           'POST',
-          'api/v2/forums/thread/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
           expectedStatusCodes: <int>[200],
         ),
+        steps: (photos != null ? photos.length : 0) + 1,
       );
       // We ignore the return value. It's the forum post, but what are you going to do with it?
       // You don't know where it belongs in the forum...
@@ -849,12 +884,12 @@ class RestTwitarr implements Twitarr {
   static Set<ForumSummary> _parseForumList(String rawData) {
     final dynamic data = Json.parse(rawData);
     final Set<ForumSummary> result = Set<ForumSummary>();
-    for (dynamic forum in (data.forum_meta as Json).asIterable())
-      result.add(_parseForumMeta(forum as Json));
+    for (dynamic forum in (data.forum_threads as Json).asIterable())
+      result.add(_parseForumBody(forum as Json));
     return result;
   }
 
-  static ForumSummary _parseForumMeta(dynamic data) {
+  static ForumSummary _parseForumBody(dynamic data) {
     return ForumSummary(
       id: data.id.toString(),
       subject: data.subject.toString(),
@@ -868,11 +903,14 @@ class RestTwitarr implements Twitarr {
   static List<ForumMessageSummary> _parseForumThread(String rawData) {
     final dynamic data = Json.parse(rawData);
     final List<ForumMessageSummary> result = <ForumMessageSummary>[];
-    for (dynamic post in (data.forum.posts as Json).asIterable()) {
+    for (dynamic post in (data.forum_thread.posts as Json).asIterable()) {
       result.add(ForumMessageSummary(
         id: post.id.toString(),
         user: _parseUser(post.author as Json),
         text: post.text.toString(),
+        photoIds: (post as Json).hasKey('photos')
+          ? (post.photos as Json).asIterable().map<String>((dynamic photo) => photo.id.toString()).toList()
+          : null,
         timestamp: _parseDateTime(post.timestamp as Json),
         read: (post['new'] as Json).toBoolean(),
       ));
@@ -1022,19 +1060,14 @@ class RestTwitarr implements Twitarr {
     }
   }
 
-  void _checkStatusIsOk(dynamic data, { String desiredStatus = 'ok', bool statusIsHumanReadable = false }) {
-    if (data.status == 'key not valid')
-      throw const ServerError(<String>['An authentication error occurred: the key the server provided is being refused for some reason. Try logging out and logging back in.']);
-    if (data.status != desiredStatus) {
-      if (data.status.toString() == 'error') {
-        if ((data as Json).hasKey('errors'))
-          throw ServerError((data.errors as Json).toList().cast<String>());
-        throw ServerError(<String>[data.error.toString()]);
-      }
-      if (statusIsHumanReadable)
-        throw ServerError(<String>[data.status.toString()]);
-      throw FormatException('status "${data.status}" is not "$desiredStatus"');
+  void _checkStatusIsOk(dynamic data) {
+    if (data.status.toString() == 'error') {
+      if ((data as Json).hasKey('errors'))
+        throw ServerError((data.errors as Json).toList().cast<String>());
+      throw ServerError(<String>[data.error.toString()]);
     }
+    if (data.status != 'ok')
+      throw ServerError(<String>['Server said the status was "${data.status}".']);
   }
 
   @override

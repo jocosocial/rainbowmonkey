@@ -222,7 +222,12 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final MutableContinuousProgress<Calendar> calendar;
 
   @override
-  Future<Uint8List> putIfAbsent(String username, PhotoFetcher callback) {
+  Future<Uint8List> putImageIfAbsent(String username, ImageFetcher callback) {
+    return callback();
+  }
+
+  @override
+  Future<Uint8List> putUserPhotoIfAbsent(String username, ImageFetcher callback) {
     return callback();
   }
 
@@ -231,15 +236,18 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
-  void addListenerForPhoto(String username, VoidCallback listener) {
+  void addListenerForUserPhoto(String username, VoidCallback listener) {
   }
 
   @override
-  void removeListenerForPhoto(String username, VoidCallback listener) {
+  void removeListenerForUserPhoto(String username, VoidCallback listener) {
   }
 
   @override
   Widget avatarFor(User user, { double size: 40.0 }) => null;
+
+  @override
+  Widget imageFor(String photoId) => null;
 
   @override
   Progress<void> updateProfile({
@@ -270,7 +278,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     @required Credentials credentials,
     @required String text,
     String parentId,
-    // TODO(ianh): photo
+    @required Uint8List photo,
   }) => null;
 
   @override

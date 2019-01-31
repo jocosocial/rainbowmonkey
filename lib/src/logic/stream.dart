@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
@@ -208,13 +209,14 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   Progress<void> send({
     @required String text,
     String parentId,
-    // TODO(ianh): photo
+    @required Uint8List photo,
   }) {
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain<void>(
         _twitarr.postTweet(
           credentials: _credentials,
           text: text,
+          photo: photo,
           parentId: parentId,
         ),
       );
@@ -228,6 +230,7 @@ class StreamPost {
     this.id,
     this.user,
     this.text,
+    this.photoId,
     this.timestamp,
     this.boundaryToken,
   });
@@ -236,10 +239,11 @@ class StreamPost {
      : id = summary.id,
        user = summary.user.toUser(photoManager),
        text = summary.text,
+       photoId = summary.photoId,
        timestamp = summary.timestamp,
        boundaryToken = summary.boundaryToken;
 
-  const StreamPost.sentinel() : id = null, user = null, text = null, timestamp = null, boundaryToken = null;
+  const StreamPost.sentinel() : id = null, user = null, text = null, photoId = null, timestamp = null, boundaryToken = null;
 
   final String id;
 
@@ -247,11 +251,12 @@ class StreamPost {
 
   final String text;
 
+  final String photoId;
+
   final DateTime timestamp;
 
   final int boundaryToken;
 
-  // TODO(ianh): photo
   // TODO(ianh): reactions
   // TODO(ianh): parents
 

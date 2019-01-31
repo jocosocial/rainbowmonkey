@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
@@ -79,7 +80,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   Progress<ForumThread> postThread({
     @required String subject,
     @required String text,
-    // TODO(ianh): images
+    @required List<Uint8List> photos,
   }) {
     if (_credentials == null)
       throw const LocalError('Cannot create a thread when not logged in.');
@@ -89,6 +90,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
           credentials: _credentials,
           subject: subject,
           text: text,
+          photos: photos,
         ),
       );
       _timer?.interested();
@@ -218,13 +220,14 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     return interesting;
   }
 
-  Progress<void> send(String text) {
+  Progress<void> send(String text, { @required List<Uint8List> photos }) {
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain<void>(
         _twitarr.postForumMessage(
           credentials: _credentials,
           threadId: id,
           text: text,
+          photos: photos,
         ),
       );
       await update();
@@ -257,6 +260,7 @@ class ForumMessage {
     this.id,
     this.user,
     this.text,
+    this.photoIds,
     this.timestamp,
     this.read,
   });
@@ -267,6 +271,7 @@ class ForumMessage {
   ) : id = message.id,
       user = message.user.toUser(photoManager),
       text = message.text,
+      photoIds = message.photoIds,
       timestamp = message.timestamp,
       read = message.read;
 
@@ -275,6 +280,8 @@ class ForumMessage {
   final User user;
 
   final String text;
+
+  final List<String> photoIds;
 
   final DateTime timestamp;
 
