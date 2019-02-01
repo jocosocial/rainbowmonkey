@@ -38,7 +38,7 @@ Future<void> main() async {
     );
     expect(find.text('Display name'), findsOneWidget);
     expect(find.text('Current location'), findsNothing);
-    await tester.drag(find.byType(CustomScrollView), const Offset(0.0, -200.0));
+    await tester.drag(find.byType(CustomScrollView), const Offset(0.0, -400.0));
     await tester.pump();
     expect(find.text('Current location'), findsOneWidget);
     expect(find.text('Hello'), findsNothing);
@@ -51,7 +51,7 @@ Future<void> main() async {
       'LoggingTwitarr(0).login username / password',
       'LoggingTwitarr(0).getCalendar',
       'fetchProfilePicture',
-      'updateProfile Hello/null/null/null/null/null/null/null',
+      'updateProfile Hello/null/null/null/null/null/null/null/null',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)'
     ]);
     expect(find.text('Current location'), findsOneWidget);

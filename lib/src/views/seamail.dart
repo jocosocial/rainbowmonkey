@@ -298,6 +298,10 @@ class _StartSeamailViewState extends State<StartSeamailView> {
   final TextEditingController _text = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  final FocusNode _subjectFocus = FocusNode();
+  final FocusNode _firstMessageFocus = FocusNode();
+  final FocusNode _usernameFocus = FocusNode();
+
   Progress<List<User>> _autocompleteProgress;
 
   @override
@@ -412,6 +416,12 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                   alignment: AlignmentDirectional.topStart,
                   child: TextFormField(
                     controller: _subject,
+                    focusNode: _subjectFocus,
+                    autofocus: true,
+                    onFieldSubmitted: (String value) {
+                      FocusScope.of(context).requestFocus(_firstMessageFocus);
+                    },
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Subject',
                     ),
@@ -426,6 +436,11 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                   alignment: AlignmentDirectional.topStart,
                   child: TextFormField(
                     controller: _text,
+                    focusNode: _firstMessageFocus,
+                    onFieldSubmitted: (String value) {
+                      FocusScope.of(context).requestFocus(_usernameFocus);
+                    },
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'First message',
                     ),
@@ -449,6 +464,8 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                   alignment: AlignmentDirectional.topStart,
                   child: TextField(
                     controller: _nextUser,
+                    focusNode: _usernameFocus,
+                    textInputAction: TextInputAction.search,
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.search),
                       labelText: 'User name',

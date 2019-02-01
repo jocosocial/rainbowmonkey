@@ -6,6 +6,7 @@ import '../logic/stream.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
+import 'attach_image.dart';
 
 class TweetStreamView extends StatefulWidget {
   const TweetStreamView({
@@ -17,10 +18,10 @@ class TweetStreamView extends StatefulWidget {
 }
 
 class _PendingSend {
-  _PendingSend(this.progress, this.text);
+  _PendingSend(this.progress, this.text, this.photo);
   final Progress<void> progress;
   final String text;
-  // TODO(ianh): image
+  final Uint8List photo;
   String error;
 }
 
@@ -28,7 +29,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   final Map<String, Animation<double>> _animations = <String, Animation<double>>{};
   final List<AnimationController> _controllers = <AnimationController>[];
 
-  Uint8List _photo; // TODO(ianh): image
+  Uint8List _photo;
 
   ScrollController _scrollController;
   AnimationController _currentController;
@@ -38,9 +39,9 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   final TextEditingController _textController = TextEditingController();
   final List<_PendingSend> _pending = <_PendingSend>[];
 
-  void _submitMessage(String value) {
-    final Progress<void> progress = _stream.send(text: value, photo: _photo);
-    final _PendingSend entry = _PendingSend(progress, value);
+  void _submitMessage(String value, Uint8List photo) {
+    final Progress<void> progress = _stream.send(text: value, photo: photo);
+    final _PendingSend entry = _PendingSend(progress, value, photo);
     setState(() {
       _pending.add(entry);
       progress.asFuture().then(
@@ -55,9 +56,11 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   }
 
   void _submitCurrentMessage() {
-    // TODO(ianh): handle images
-    _submitMessage(_textController.text);
-    setState(_textController.clear);
+    _submitMessage(_textController.text, _photo);
+    setState(() {
+      _textController.clear();
+      _photo = null;
+    });
   }
 
   bool get _atZero => _scrollController.position.pixels <= 0.0;
@@ -169,9 +172,20 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                                  hintText: loggedIn ? 'Message' : 'Log in to send messages',
+                                  hintText: !loggedIn ? 'Log in to send messages'
+                                          : _photo != null ? 'Enter a message to submit with the image'
+                                          : 'Message',
                                 ),
                               ),
+                            ),
+                            AttachImageButton(
+                              images: _photo == null ? null : <Uint8List>[ _photo ],
+                              onUpdate: (List<Uint8List> newPhotos) {
+                                setState(() {
+                                  _photo = newPhotos.isEmpty ? null : newPhotos.single;
+                                });
+                              },
+                              allowMultiple: false,
                             ),
                             IconButton(
                               icon: const Icon(Icons.send),
@@ -190,10 +204,11 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                           key: ObjectKey(entry),
                           progress: entry.progress,
                           text: entry.text,
+                          photos: entry.photo != null ? <Uint8List>[ entry.photo ] : null,
                           onRetry: () {
                             setState(() {
                               _pending.remove(entry);
-                              _submitMessage(entry.text);
+                              _submitMessage(entry.text, entry.photo);
                             });
                           },
                           onRemove: () {

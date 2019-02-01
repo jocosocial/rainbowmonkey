@@ -170,14 +170,15 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     String currentLocation,
     String displayName,
+    String realName,
+    String pronouns,
     String email,
     bool emailPublic,
     String homeLocation,
-    String realName,
     String roomNumber,
     bool vcardPublic,
   }) {
-    log.add('updateProfile $currentLocation/$displayName/$email/$emailPublic/$homeLocation/$realName/$roomNumber/$vcardPublic');
+    log.add('updateProfile $currentLocation/$displayName/$realName/$pronouns/$email/$emailPublic/$homeLocation/$roomNumber/$vcardPublic');
     return Progress<void>.completed(null);
   }
 

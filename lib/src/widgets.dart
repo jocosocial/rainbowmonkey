@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -529,6 +530,7 @@ class ProgressChatLine extends StatelessWidget {
     Key key,
     @required this.progress,
     @required this.text,
+    @required this.photos,
     @required this.onRetry,
     @required this.onRemove,
   }) : assert(progress != null),
@@ -537,6 +539,7 @@ class ProgressChatLine extends StatelessWidget {
 
   final Progress<void> progress;
   final String text;
+  final List<Uint8List> photos;
   final VoidCallback onRetry;
   final VoidCallback onRemove;
 
@@ -564,9 +567,12 @@ class ProgressChatLine extends StatelessWidget {
         } else {
           leading = const Icon(Icons.error, size: 40.0, color: Colors.purple);
         }
+        String title = text;
+        if (photos != null && photos.isNotEmpty)
+          title += ' (+${photos.length} image${ photos.length == 1 ? "" : "s"})';
         return ListTile(
           leading: leading,
-          title: Text(text),
+          title: Text(title),
           trailing: trailing,
           subtitle: subtitle,
           onTap: onTap,
@@ -623,5 +629,27 @@ class BusyIndicator extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+typedef VSyncBuilderCallback = Widget Function(BuildContext context, TickerProvider vsync);
+
+class VSyncBuilder extends StatefulWidget {
+  const VSyncBuilder({
+    Key key,
+    @required this.builder,
+  }) : assert(builder != null),
+       super(key: key);
+
+  final VSyncBuilderCallback builder;
+
+  @override
+  _VSyncBuilderState createState() => _VSyncBuilderState();
+}
+
+class _VSyncBuilderState extends State<VSyncBuilder> with TickerProviderStateMixin {
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context, this);
   }
 }

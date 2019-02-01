@@ -70,7 +70,8 @@ void main() {
     expect(AuthenticatedUser.isValidDisplayName('x' * 41), isFalse);
   });
   testWidgets('AuthenticatedUser.isValidEmail', (WidgetTester tester) async {
-    expect(AuthenticatedUser.isValidEmail(''), isFalse);
+    expect(AuthenticatedUser.isValidEmail(''), isTrue);
+    expect(AuthenticatedUser.isValidEmail(' '), isFalse);
     expect(AuthenticatedUser.isValidEmail('test@example.com'), isTrue);
     expect(AuthenticatedUser.isValidEmail('test+foo@bar.example.test'), isTrue);
     expect(AuthenticatedUser.isValidEmail(' test@example.com'), isFalse);

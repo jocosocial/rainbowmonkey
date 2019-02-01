@@ -39,9 +39,10 @@ class User {
   const User({
     @required this.username,
     this.displayName,
+    this.realName,
+    this.pronouns,
     this.currentLocation,
     this.roomNumber,
-    this.realName,
     this.homeLocation,
   }) : assert(username != null),
        assert(username != '');
@@ -49,32 +50,30 @@ class User {
   const User.none(
   ) : username = null,
       displayName = null,
+      realName = null,
+      pronouns = null,
       currentLocation = null,
       roomNumber = null,
-      realName = null,
       homeLocation = null;
 
   final String username;
   final String displayName;
-
+  final String realName;
+  final String pronouns;
   final String currentLocation;
   final String roomNumber;
-  final String realName;
   final String homeLocation;
-
-  // final bool isvCardPublic;
 
   // final int numberOfTweets;
   // final int numberOfMentions;
 
-  // final bool isEmailPublic;
   // final bool isAdmin;
   // final String status;
   // final String lastLogin;
   // final bool emptyPassword;
   // final bool unnoticedAlerts;
 
-  bool sameAs(User other) => username == other.username;
+  bool sameAs(User other) => other != null && username == other.username;
 
   @override
   String toString() {
@@ -90,9 +89,10 @@ class User {
     final User typedOther = other as User;
     return username == typedOther.username
         && displayName == typedOther.displayName
+        && realName == typedOther.realName
+        && pronouns == typedOther.pronouns
         && currentLocation == typedOther.currentLocation
         && roomNumber == typedOther.roomNumber
-        && realName == typedOther.realName
         && homeLocation == typedOther.homeLocation;
   }
 
@@ -100,9 +100,10 @@ class User {
   int get hashCode => hashValues(
     username,
     displayName,
+    realName,
+    pronouns,
     currentLocation,
     roomNumber,
-    realName,
     homeLocation,
   );
 }
@@ -111,18 +112,20 @@ class AuthenticatedUser extends User {
   const AuthenticatedUser({
     String username,
     String displayName,
+    String realName,
+    String pronouns,
     String currentLocation,
     String roomNumber,
-    String realName,
     String homeLocation,
     this.email,
     this.credentials,
   }) : super(
     username: username,
     displayName: displayName,
+    realName: realName,
+    pronouns: pronouns,
     currentLocation: currentLocation,
     roomNumber: roomNumber,
-    realName: realName,
     homeLocation: homeLocation,
   );
 
@@ -156,7 +159,7 @@ class AuthenticatedUser extends User {
   static bool isValidEmail(String email) {
     assert(email != null);
     // https://html.spec.whatwg.org/#valid-e-mail-address
-    return email.contains(RegExp(r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"));
+    return email.isEmpty || email.contains(RegExp(r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"));
   }
 
   static bool isValidRoomNumber(String roomNumber) {

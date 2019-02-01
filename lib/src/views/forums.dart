@@ -7,6 +7,7 @@ import '../logic/forums.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
+import 'attach_image.dart';
 
 class ForumThreadView extends StatefulWidget {
   const ForumThreadView({
@@ -33,7 +34,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
   final TextEditingController _textController = TextEditingController();
   final Set<_PendingSend> _pending = Set<_PendingSend>();
 
-  final List<Uint8List> _photos = <Uint8List>[];
+  List<Uint8List> _photos = <Uint8List>[];
 
   @override
   void initState() {
@@ -79,14 +80,17 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
 
   void _submitCurrentMessage() {
     _submitMessage(_textController.text, photos: _photos);
-    setState(_textController.clear);
+    setState(() {
+      _textController.clear();
+      _photos.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final List<ForumMessage> messages = widget.thread.toList().reversed.toList() ?? const <ForumMessage>[];
     final bool loggedIn = Cruise.of(context).isLoggedIn;
-    final bool canPost = loggedIn && _textController.text.isNotEmpty; // TODO(ianh): or image selected
+    final bool canPost = loggedIn && _textController.text.isNotEmpty;
     return ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
       valueListenable: Cruise.of(context).user.best,
       builder: (BuildContext context, ProgressValue<AuthenticatedUser> user, Widget child) {
@@ -125,6 +129,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                     key: ObjectKey(entry),
                     progress: entry.progress,
                     text: entry.text,
+                    photos: entry.photos,
                     onRetry: () {
                       setState(() {
                         _pending.remove(entry);
@@ -161,9 +166,21 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                        hintText: loggedIn ? 'Message' : 'Log in to send messages',
+                        hintText: !loggedIn ? 'Log in to send messages'
+                                : _photos.isEmpty ? 'Message'
+                                : _photos.length == 1 ? 'Enter a message to submit with the image'
+                                : 'Enter a message to submit with the images',
                       ),
                     ),
+                  ),
+                  AttachImageButton(
+                    images: _photos,
+                    onUpdate: (List<Uint8List> newPhotos) {
+                      setState(() {
+                        _photos = newPhotos;
+                      });
+                    },
+                    allowMultiple: true,
                   ),
                   IconButton(
                     icon: const Icon(Icons.send),
@@ -194,11 +211,30 @@ class _StartForumViewState extends State<StartForumView> {
   final TextEditingController _text = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final List<Uint8List> _photos = <Uint8List>[]; // TODO(ianh): images
+  final FocusNode _subjectFocus = FocusNode();
+  final FocusNode _firstMessageFocus = FocusNode();
+
+  List<Uint8List> _photos = <Uint8List>[];
 
   bool get _valid {
     return _subject.text.isNotEmpty
         && _text.text.isNotEmpty;
+  }
+
+  void _send() async {
+    final Progress<ForumThread> progress = Cruise.of(context).forums.postThread(
+      subject: _subject.text,
+      text: _text.text,
+      photos: _photos.isEmpty ? null : _photos,
+    );
+    final ForumThread thread = await showDialog<ForumThread>(
+      context: context,
+      builder: (BuildContext context) => ProgressDialog<ForumThread>(
+        progress: progress,
+      ),
+    );
+    if (mounted && thread != null)
+      Navigator.pop(context, thread);
   }
 
   @override
@@ -210,21 +246,7 @@ class _StartForumViewState extends State<StartForumView> {
       floatingActionButton: _valid
         ? FloatingActionButton(
             child: const Icon(Icons.send),
-            onPressed: () async {
-              final Progress<ForumThread> progress = Cruise.of(context).forums.postThread(
-                subject: _subject.text,
-                text: _text.text,
-                photos: _photos.isEmpty ? null : _photos,
-              );
-              final ForumThread thread = await showDialog<ForumThread>(
-                context: context,
-                builder: (BuildContext context) => ProgressDialog<ForumThread>(
-                  progress: progress,
-                ),
-              );
-              if (mounted && thread != null)
-                Navigator.pop(context, thread);
-            },
+            onPressed: _send,
           )
         : FloatingActionButton(
             child: const Icon(Icons.send),
@@ -258,33 +280,57 @@ class _StartForumViewState extends State<StartForumView> {
             ),
           ) == true;
         },
-        child: CustomScrollView(
-          slivers: <Widget>[
-            SliverPadding(
+        child: Column(
+          children: <Widget>[
+            Padding(
               padding: const EdgeInsets.fromLTRB(12.0, 20.0, 12.0, 0.0),
-              sliver: SliverToBoxAdapter(
-                child: Align(
-                  alignment: AlignmentDirectional.topStart,
-                  child: TextFormField(
-                    controller: _subject,
-                    decoration: const InputDecoration(
-                      labelText: 'Subject',
-                    ),
+              child: Align(
+                alignment: AlignmentDirectional.topStart,
+                child: TextFormField(
+                  controller: _subject,
+                  focusNode: _subjectFocus,
+                  autofocus: true,
+                  onFieldSubmitted: (String value) {
+                    FocusScope.of(context).requestFocus(_firstMessageFocus);
+                  },
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Subject',
                   ),
                 ),
               ),
             ),
-            SliverPadding(
+            Padding(
               padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
-              sliver: SliverToBoxAdapter(
-                child: Align(
-                  alignment: AlignmentDirectional.topStart,
-                  child: TextFormField(
-                    controller: _text,
-                    decoration: const InputDecoration(
-                      labelText: 'First message',
-                    ),
+              child: Align(
+                alignment: AlignmentDirectional.topStart,
+                child: TextFormField(
+                  controller: _text,
+                  focusNode: _firstMessageFocus,
+                  onFieldSubmitted: (String value) {
+                    if (_valid)
+                      _send();
+                  },
+                  textInputAction: TextInputAction.send,
+                  textCapitalization: TextCapitalization.sentences,
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    labelText: 'First message',
                   ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                child: AttachImageDialog(
+                  images: _photos,
+                  onUpdate: (List<Uint8List> newImages) {
+                    setState(() {
+                      _photos = newImages;
+                    });
+                  },
+                  allowMultiple: true,
                 ),
               ),
             ),

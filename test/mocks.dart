@@ -253,10 +253,11 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   Progress<void> updateProfile({
     String currentLocation,
     String displayName,
+    String realName,
+    String pronouns,
     String email,
     bool emailPublic,
     String homeLocation,
-    String realName,
     String roomNumber,
     bool vcardPublic,
   }) => null;
