@@ -11,10 +11,23 @@ import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
 
-class Profile extends StatelessWidget {
+class Profile extends StatefulWidget {
   const Profile({
     Key key,
   }) : super(key: key);
+
+  @override
+  State<Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<Profile> {
+  final FocusNode _displayNameFocus = FocusNode();
+  final FocusNode _realNameFocus = FocusNode();
+  final FocusNode _pronounsFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _currentLocationFocus = FocusNode();
+  final FocusNode _roomNumberFocus = FocusNode();
+  final FocusNode _homeLocationFocus = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +48,9 @@ class Profile extends StatelessWidget {
                     AvatarEditor(user: user),
                     ProfileField(
                       title: 'Display name',
+                      autofocus: true,
+                      focusNode: _displayNameFocus,
+                      nextNode: _realNameFocus,
                       textCapitalization: TextCapitalization.words,
                       value: user.displayName,
                       onUpdate: (String value) {
@@ -47,6 +63,8 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Real name',
+                      focusNode: _realNameFocus,
+                      nextNode: _pronounsFocus,
                       textCapitalization: TextCapitalization.words,
                       value: user.realName,
                       onUpdate: (String value) {
@@ -56,7 +74,21 @@ class Profile extends StatelessWidget {
                       },
                     ),
                     ProfileField(
+                      title: 'Pronouns',
+                      focusNode: _pronounsFocus,
+                      nextNode: _emailFocus,
+                      textCapitalization: TextCapitalization.sentences,
+                      value: user.pronouns,
+                      onUpdate: (String value) {
+                        return Cruise.of(context).updateProfile(
+                          pronouns: value,
+                        );
+                      },
+                    ),
+                    ProfileField(
                       title: 'E-mail address',
+                      focusNode: _emailFocus,
+                      nextNode: _currentLocationFocus,
                       keyboardType: TextInputType.emailAddress,
                       value: user.email,
                       onUpdate: (String value) {
@@ -69,6 +101,8 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Current location',
+                      focusNode: _currentLocationFocus,
+                      nextNode: _roomNumberFocus,
                       textCapitalization: TextCapitalization.sentences,
                       value: user.currentLocation,
                       onUpdate: (String value) {
@@ -79,6 +113,8 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Room number',
+                      focusNode: _roomNumberFocus,
+                      nextNode: _homeLocationFocus,
                       keyboardType: TextInputType.number,
                       value: user.roomNumber,
                       onUpdate: (String value) {
@@ -91,6 +127,8 @@ class Profile extends StatelessWidget {
                     ),
                     ProfileField(
                       title: 'Home location',
+                      focusNode: _homeLocationFocus,
+                      nextNode: _displayNameFocus,
                       textCapitalization: TextCapitalization.words,
                       value: user.homeLocation,
                       onUpdate: (String value) {
@@ -229,14 +267,24 @@ class ProfileField extends StatefulWidget {
   const ProfileField({
     Key key,
     this.title,
+    this.autofocus = false,
+    this.focusNode,
+    this.nextNode,
     this.value,
     this.textCapitalization = TextCapitalization.none,
     this.keyboardType,
     @required this.onUpdate,
   }) : assert(onUpdate != null),
+       assert(autofocus != null),
        super(key: key);
 
   final String title;
+
+  final bool autofocus;
+
+  final FocusNode focusNode;
+
+  final FocusNode nextNode;
 
   final String value;
 
@@ -252,7 +300,6 @@ class ProfileField extends StatefulWidget {
 
 class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClientMixin<ProfileField> {
   final TextEditingController _field = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
 
   String _error;
 
@@ -280,24 +327,26 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
   void initState() {
     super.initState();
     _field.text = widget.value;
-    _focusNode.addListener(_focusChange);
+    widget.focusNode.addListener(_focusChange);
   }
 
   @override
   void didUpdateWidget(ProfileField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value && !_focusNode.hasFocus && !_updating)
+    oldWidget.focusNode.removeListener(_focusChange);
+    widget.focusNode.addListener(_focusChange);
+    if (oldWidget.value != widget.value && !widget.focusNode.hasFocus && !_updating)
       _field.text = widget.value;
   }
 
   @override
   void dispose() {
-    _focusNode.removeListener(_focusChange);
+    widget.focusNode.removeListener(_focusChange);
     super.dispose();
   }
 
   void _focusChange() {
-    if (!_focusNode.hasFocus)
+    if (!widget.focusNode.hasFocus)
       _update();
   }
 
@@ -310,7 +359,12 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
         children: <Widget>[
           TextField(
             controller: _field,
-            focusNode: _focusNode,
+            focusNode: widget.focusNode,
+            onSubmitted: (String value) {
+              if (widget.nextNode != null)
+                FocusScope.of(context).requestFocus(widget.nextNode);
+            },
+            textInputAction: widget.nextNode != null ? TextInputAction.next : TextInputAction.done,
             keyboardType: widget.keyboardType,
             textCapitalization: widget.textCapitalization,
             enabled: !_updating,

@@ -247,10 +247,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     ButtonBar(
                       children: <Widget>[
                         FlatButton(
-                          onPressed: () async {
-                            if (await Navigator.maybePop(context) && mounted)
-                              Navigator.pop(context);
-                          },
+                          onPressed: () { Navigator.maybePop(context); },
                           child: const Text('CANCEL'),
                         ),
                         FlatButton(

@@ -14,6 +14,7 @@ import '../models/user.dart';
 import '../network/rest.dart' show RestTwitarrConfiguration;
 import '../network/twitarr.dart';
 import '../progress.dart';
+import '../widgets.dart';
 import 'forums.dart';
 import 'notifications.dart';
 import 'photo_manager.dart';
@@ -430,30 +431,71 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 
   Widget imageFor(String photoId) {
     // TODO(ianh): long-press to download image
-    return Image(image: TwitarrImage(photoId, this, _twitarr, onError: onError));
+    final Widget image = Hero(
+      tag: photoId,
+      child: Image(
+        image: TwitarrImage(photoId, this, _twitarr, onError: onError),
+      ),
+    );
+    return VSyncBuilder(
+      builder: (BuildContext context, TickerProvider vsync) {
+        final MediaQueryData metrics = MediaQuery.of(context);
+        return Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.fastOutSlowIn,
+            vsync: vsync,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: metrics.size.height - metrics.padding.vertical - (56.0 * 3.0),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push<void>(context, MaterialPageRoute<void>(
+                      builder: (BuildContext context) {
+                        return Container(
+                          color: Colors.black,
+                          child: SafeArea(
+                            child: Center(
+                              child: image,
+                            ),
+                          ),
+                        );
+                      },
+                    ));
+                  },
+                  child: image,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Progress<void> updateProfile({
     String currentLocation,
     String displayName,
-    String email,
-    bool emailPublic,
-    String homeLocation,
     String realName,
+    String pronouns,
+    String email,
+    String homeLocation,
     String roomNumber,
-    bool vcardPublic,
   }) {
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain(_twitarr.updateProfile(
         credentials: _currentCredentials,
         currentLocation: currentLocation,
         displayName: displayName,
-        email: email,
-        emailPublic: emailPublic,
-        homeLocation: homeLocation,
         realName: realName,
+        pronouns: pronouns,
+        email: email,
+        homeLocation: homeLocation,
         roomNumber: roomNumber,
-        vcardPublic: vcardPublic,
       ));
       _user.triggerUnscheduledUpdate(); // this is non-blocking for the caller
     });
@@ -599,23 +641,16 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
     _busy = false;
   }
 
-  // TODO(ianh): remove once https://github.com/flutter/flutter/pull/25865 lands
-  @protected
-  bool get hasListeners => _listenerCount > 0;
-  int _listenerCount = 0;
-
   @override
   void addListener(ImageListener listener, { ImageErrorListener onError }) {
     if (!hasListeners)
       photoManager.addListenerForUserPhoto(username, _update);
-    _listenerCount += 1; // TODO(ianh): remove once https://github.com/flutter/flutter/pull/25865 lands
     super.addListener(listener, onError: onError);
   }
 
   @override
   void removeListener(ImageListener listener) {
     super.removeListener(listener);
-    _listenerCount -= 1; // TODO(ianh): remove as this is bogus, removeListener can remove multiple listeners; see https://github.com/flutter/flutter/pull/25865
     if (!hasListeners)
       photoManager.removeListenerForUserPhoto(username, _update);
   }

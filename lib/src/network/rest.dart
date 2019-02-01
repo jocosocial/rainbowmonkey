@@ -173,14 +173,13 @@ class RestTwitarr implements Twitarr {
   AuthenticatedUser _createAuthenticatedUser(dynamic user, Credentials credentials) {
     return AuthenticatedUser(
       username: (user.username as Json).toScalar() as String,
-      email: (user.email as Json).toScalar() as String,
       displayName: (user.display_name as Json).toScalar() as String,
+      realName: (user.real_name as Json).toScalar() as String,
+      pronouns: (user.pronouns as Json).toScalar() as String,
+      email: (user.email as Json).toScalar() as String,
       currentLocation: (user.current_location as Json).toScalar() as String,
       roomNumber: (user.room_number as Json).toScalar() as String,
-      realName: (user.real_name as Json).toScalar() as String,
       homeLocation: (user.home_location as Json).toScalar() as String,
-      // isvCardPublic: (user['vcard_public?'] as Json).toBoolean(),
-      // isEmailPublic: (user['email_public?'] as Json).toBoolean(),
       // isAdmin: (user.isAdminas Json).toBoolean(),
       // status: (user.status as Json).toScalar() as String,
       // lastLogin: (user.last_login as Json).toScalar() as String, // TODO(ianh): parse to DateTime
@@ -232,12 +231,11 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     String currentLocation,
     String displayName,
-    String email,
-    bool emailPublic,
-    String homeLocation,
     String realName,
+    String pronouns,
+    String email,
+    String homeLocation,
     String roomNumber,
-    bool vcardPublic,
   }) {
     assert(credentials != null);
     final FormData body = FormData()
@@ -249,24 +247,21 @@ class RestTwitarr implements Twitarr {
       assert(AuthenticatedUser.isValidDisplayName(displayName));
       body.add('display_name', displayName);
     }
+    if (realName != null) {
+      body.add('real_name', realName);
+    }
+    if (pronouns != null) {
+      body.add('pronouns', pronouns);
+    }
     if (email != null) {
       assert(AuthenticatedUser.isValidEmail(email));
       body.add('email', email);
     }
-    if (emailPublic != null) {
-      body.add('email_public?', emailPublic ? 'true' : 'false');
-    }
     if (homeLocation != null) {
       body.add('home_location', homeLocation);
     }
-    if (realName != null) {
-      body.add('real_name', realName);
-    }
     if (roomNumber != null) {
       body.add('room_number', roomNumber);
-    }
-    if (vcardPublic != null) {
-      body.add('vcard_public?', vcardPublic ? 'true' : 'false');
     }
     return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
       final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/profile?${body.toUrlEncoded()}'));
@@ -835,8 +830,7 @@ class RestTwitarr implements Twitarr {
         ),
         steps: (photos != null ? photos.length : 0) + 1,
       );
-      final dynamic data = Json.parse(rawData);
-      return _parseForumBody(data.forum_thread as Json);
+      return _parseForumCreationResult(rawData);
     });
   }
 
@@ -900,10 +894,28 @@ class RestTwitarr implements Twitarr {
     );
   }
 
+  static ForumSummary _parseForumCreationResult(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    final dynamic forum = data.forum_thread as Json;
+    final List<ForumMessageSummary> posts = _parseForumMessageList(forum.posts as Json);
+    return ForumSummary(
+      id: forum.id.toString(),
+      subject: forum.subject.toString(),
+      totalCount: (forum.post_count as Json).toInt(),
+      unreadCount: (forum as Json).hasKey('new_posts') ? (forum.new_posts as Json).toInt() : null,
+      lastMessageUser: posts.single.user,
+      lastMessageTimestamp: posts.single.timestamp,
+    );
+  }
+
   static List<ForumMessageSummary> _parseForumThread(String rawData) {
     final dynamic data = Json.parse(rawData);
+    return _parseForumMessageList(data.forum_thread.posts as Json);
+  }
+
+  static List<ForumMessageSummary> _parseForumMessageList(dynamic posts) {
     final List<ForumMessageSummary> result = <ForumMessageSummary>[];
-    for (dynamic post in (data.forum_thread.posts as Json).asIterable()) {
+    for (dynamic post in (posts as Json).asIterable()) {
       result.add(ForumMessageSummary(
         id: post.id.toString(),
         user: _parseUser(post.author as Json),

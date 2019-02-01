@@ -105,14 +105,13 @@ abstract class Twitarr {
 
   Progress<void> updateProfile({
     @required Credentials credentials,
-    String currentLocation,
     String displayName,
-    String email,
-    bool emailPublic,
-    String homeLocation,
     String realName,
+    String pronouns,
+    String email,
+    String currentLocation,
+    String homeLocation,
     String roomNumber,
-    bool vcardPublic,
   });
 
   Progress<void> uploadAvatar({
