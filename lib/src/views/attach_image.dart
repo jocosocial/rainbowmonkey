@@ -29,7 +29,7 @@ class AttachImageButton extends StatelessWidget {
     return IconButton(
       icon: Stack(
         children: <Widget>[
-          const Icon(Icons.attach_file),
+          const Icon(Icons.add_photo_alternate),
           PositionedDirectional(
             bottom: 0.0,
             end: 0.0,
