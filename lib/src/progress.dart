@@ -198,14 +198,19 @@ class ProgressController<T> {
     _update(ActiveProgress(progress, target));
   }
 
+  /// Make this progress follow a subprogress.
+  ///
+  /// If steps is null, then subprogress values are ignored.
+  /// Otherwise, subprogress values add to the current progress, and a
+  /// complete cycle (0.0-1.0) of the subprogress corresponds to 1/steps
+  /// in the main progress.
   Future<R> chain<R>(Progress<R> subprogress, { int steps = 1 }) async {
     assert(subprogress != null);
-    assert(steps != null);
     double startingStep = 0.0;
     final ProgressValue<T> currentProgress = _progress.value;
     if (currentProgress is ActiveProgress)
       startingStep = currentProgress.progress;
-    assert(steps >= startingStep + 1.0);
+    assert(steps == null || (1.0 / steps) <= 1.0 - startingStep);
     final Completer<R> completer = Completer<R>();
     void _listener() {
       switch (subprogress.value._index) {
@@ -217,8 +222,13 @@ class ProgressController<T> {
             _update(newValue);
           break;
         case _ProgressIndex.active:
-          final ActiveProgress newValue = subprogress.value as ActiveProgress;
-          advance(startingStep + newValue.progress / newValue.target, steps.toDouble());
+          if (steps == null) {
+            if (_progress.value._index.index < _ProgressIndex.starting.index)
+              start();
+          } else {
+            final ActiveProgress newValue = subprogress.value as ActiveProgress;
+            advance(startingStep + newValue.progress / newValue.target, steps.toDouble());
+          }
           break;
         case _ProgressIndex.failed:
           final FailedProgress newValue = subprogress.value as FailedProgress;

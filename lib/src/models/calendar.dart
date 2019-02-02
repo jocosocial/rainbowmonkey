@@ -6,6 +6,7 @@ class Event {
     @required this.id,
     @required this.title,
     @required this.official,
+    this.following = false,
     this.description,
     @required this.location,
     @required this.startTime,
@@ -13,14 +14,16 @@ class Event {
   }) : assert(id != null),
        assert(title != null),
        assert(official != null),
+       assert(following != null),
        assert(location != null),
        assert(startTime != null),
        assert(endTime != null),
-       assert(startTime.isBefore(endTime));
+       assert(startTime.isBefore(endTime), '"$title" ($id) has invalid times');
 
   final String id; // 16 bytes in hex
   final String title;
   final bool official;
+  final bool following;
   final String description;
   final String location;
   final DateTime startTime;
