@@ -51,7 +51,6 @@ void main() {
         '--- waiting one hour',
         '--- login',
         'LoggingTwitarr(2).login aaa / bbb',
-        'model changed',
         '--- idling',
         'LoggingDataStore.saveCredentials Credentials(aaa)',
         'model changed',
@@ -81,7 +80,7 @@ void main() {
       onError: (String error) { log.add('error: $error'); },
     );
     model.addListener(() { log.add('model changed (isLoggedIn = ${model.isLoggedIn})'); });
-    log.add('--- idling');
+    log.add('--- idling (isLoggedIn = ${model.isLoggedIn})');
     await tester.idle();
     log.add('--- waiting one hour');
     await tester.pump(const Duration(hours: 1));
@@ -90,9 +89,8 @@ void main() {
     expect(
       log,
       <String>[
-        '--- idling',
+        '--- idling (isLoggedIn = false)',
         'LoggingTwitarr(1).login aaa / aaaaaa',
-        'model changed (isLoggedIn = false)',
         'model changed (isLoggedIn = true)',
         'LoggingTwitarr(1).getCalendar',
         '--- waiting one hour',

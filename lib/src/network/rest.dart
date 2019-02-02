@@ -201,18 +201,15 @@ class RestTwitarr implements Twitarr {
     });
   }
 
-  static Calendar _parseCalendar(String rawEventData) {
-    final dynamic data = Json.parse(rawEventData);
-    final dynamic values = (data.event.asIterable() as Iterable<dynamic>).single;
-    if (values.status != 'ok')
-      throw FormatException('status "${values.status}" is not ok');
-    if (values.total_count != (values.events.asIterable() as Iterable<dynamic>).length)
-      throw const FormatException('total_count invalid');
-    return Calendar(events: (values.events.asIterable() as Iterable<dynamic>).map<Event>((dynamic value) {
+  static Calendar _parseCalendar(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    _checkStatusIsOk(data);
+    return Calendar(events: (data.events.asIterable() as Iterable<dynamic>).map<Event>((dynamic value) {
       return Event(
         id: value.id.toString(),
         title: value.title.toString(),
         official: (value.official as Json).toBoolean(),
+        following: (value.following as Json).toBoolean(),
         description: value['description']?.toString(),
         location: value.location.toString(),
         startTime: _parseDateTime(value.start_time as Json),
@@ -1072,7 +1069,7 @@ class RestTwitarr implements Twitarr {
     }
   }
 
-  void _checkStatusIsOk(dynamic data) {
+  static void _checkStatusIsOk(dynamic data) {
     if (data.status.toString() == 'error') {
       if ((data as Json).hasKey('errors'))
         throw ServerError((data.errors as Json).toList().cast<String>());

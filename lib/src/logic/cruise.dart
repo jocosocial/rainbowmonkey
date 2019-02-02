@@ -57,7 +57,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   final CheckForMessagesCallback onCheckForMessages;
 
   bool _alive = true;
-  Progress<Credentials> _pendingCredentials;
   Credentials _currentCredentials;
 
   int _busy = 0;
@@ -81,7 +80,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       if (newConfiguration == _twitarr.configuration)
         return;
       _twitarr.dispose();
-      _resetCredentials();
+      logout();
     }
     _twitarr = newConfiguration.createTwitarr();
     _twitarr.debugLatency = _debugLatency;
@@ -138,12 +137,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         }
         final Credentials credentials = await store.restoreCredentials().asFuture();
         if (credentials != null && _alive) {
-          // TODO(ianh): autoretry on network failure
-          _updateCredentials(_twitarr.login(
+          login(
             username: credentials.username,
             password: credentials.password,
-            photoManager: this,
-          ));
+          );
         }
       } finally {
         _restoringSettings.value = false;
@@ -167,91 +164,98 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     );
   }
 
-  Progress<Credentials> createAccount({
+  Progress<String> createAccount({
     @required String username,
     @required String password,
     @required String registrationCode,
     String displayName,
   }) {
-    return _updateCredentials(_twitarr.createAccount(
-      username: username,
-      password: password,
-      registrationCode: registrationCode,
-      displayName: displayName,
-    ));
+    return Progress<String>((ProgressController<String> controller) async {
+      logout();
+      final Progress<AuthenticatedUser> userProgress = _twitarr.createAccount(
+        username: username,
+        password: password,
+        registrationCode: registrationCode,
+        displayName: displayName,
+      );
+      _user.addProgress(userProgress);
+      final AuthenticatedUser user = await controller.chain<AuthenticatedUser>(userProgress);
+      _updateCredentials(user);
+      return _currentCredentials.username;
+    });
   }
 
-  Progress<Credentials> login({
+  Progress<void> login({
     @required String username,
     @required String password,
   }) {
-    // TODO(ianh): autoretry on network failure
-    return _updateCredentials(_twitarr.login(
-      username: username,
-      password: password,
-      photoManager: this,
-    ));
+    return Progress<void>((ProgressController<void> controller) async {
+      logout();
+      AuthenticatedUser user;
+      do {
+        try {
+          final Progress<AuthenticatedUser> userProgress = _twitarr.login(
+            username: username,
+            password: password,
+            photoManager: this,
+          );
+          _user.addProgress(userProgress);
+          user = await controller.chain<AuthenticatedUser>(
+            userProgress,
+            steps: null,
+          );
+        } on InvalidUsernameOrPasswordError {
+          rethrow;
+        } on UserFriendlyError catch (error) {
+          onError('$error');
+          await Future<void>.delayed(const Duration(seconds: 3));
+        }
+      } while (user == null);
+      _updateCredentials(user);
+    });
   }
 
-  Progress<Credentials> logout() {
-    return _updateCredentials(Progress<AuthenticatedUser>.completed(null));
-  }
-
-  // Caller must call notifyListeners
-  void _resetCredentials() {
-    Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
-    _currentCredentials = null;
-    _pendingCredentials?.removeListener(_handleCredentialsChange);
-    _pendingCredentials = null;
-    _seamail = Seamail.empty();
-    _forums = Forums.empty();
+  void logout() {
     _user.reset();
-    if (_loggedIn.isCompleted)
-      _loggedIn = Completer<void>();
+    _updateCredentials(null);
   }
 
-  Progress<Credentials> _updateCredentials(Progress<AuthenticatedUser> userProgress) {
-    _resetCredentials();
-    _user.addProgress(userProgress);
-    _pendingCredentials = Progress.convert<AuthenticatedUser, Credentials>(
-      userProgress,
-      (AuthenticatedUser user) => user?.credentials,
-    );
-    _pendingCredentials?.addListener(_handleCredentialsChange);
-    notifyListeners();
-    return _pendingCredentials;
-  }
-
-  void _handleCredentialsChange() {
-    final ProgressValue<Credentials> progress = _pendingCredentials?.value;
-    if (progress is SuccessfulProgress<Credentials>) {
-      _pendingCredentials.removeListener(_handleCredentialsChange);
-      _pendingCredentials = null;
-      _currentCredentials = progress.value;
-      assert(_currentCredentials == null || _currentCredentials.key != null);
-      store.saveCredentials(_currentCredentials);
-      if (_currentCredentials != null) {
-        _seamail = Seamail(
-          _twitarr,
-          _currentCredentials,
-          this,
-          onError: onError,
-          onCheckForMessages: () {
-            if (onCheckForMessages != null)
-              onCheckForMessages(_currentCredentials, _twitarr, store);
-          },
-          onThreadRead: _handleThreadRead,
-        );
-        _forums = Forums(
-          _twitarr,
-          _currentCredentials,
-          this,
-          onError: onError,
-        );
-        _loggedIn.complete();
-      }
-      notifyListeners();
+  void _updateCredentials(AuthenticatedUser user) {
+    Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
+    if (user == null) {
+      if (_currentCredentials == null)
+        return;
+      _currentCredentials = null;
+      _seamail = Seamail.empty();
+      _forums = Forums.empty();
+      if (_loggedIn.isCompleted)
+        _loggedIn = Completer<void>();
+    } else {
+      assert(user.credentials.key != null);
+      if (_currentCredentials == user.credentials)
+        return;
+      _currentCredentials = user.credentials;
+      _seamail = Seamail(
+        _twitarr,
+        _currentCredentials,
+        this,
+        onError: onError,
+        onCheckForMessages: () {
+          if (onCheckForMessages != null)
+            onCheckForMessages(_currentCredentials, _twitarr, store);
+        },
+        onThreadRead: _handleThreadRead,
+      );
+      _forums = Forums(
+        _twitarr,
+        _currentCredentials,
+        this,
+        onError: onError,
+      );
+      _loggedIn.complete();
     }
+    store.saveCredentials(_currentCredentials);
+    notifyListeners();
   }
 
   void _handleThreadRead(String threadId) async {
@@ -547,7 +551,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   @override
   void dispose() {
     _alive = false;
-    _pendingCredentials?.removeListener(_handleCredentialsChange);
     _user.dispose();
     _calendar.dispose();
     _twitarr.dispose();

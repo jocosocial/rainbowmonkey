@@ -103,7 +103,7 @@ class NullCruiseModel implements CruiseModel {
   ValueListenable<bool> get restoringSettings => null;
 
   @override
-  Progress<Credentials> createAccount({
+  Progress<String> createAccount({
     @required String username,
     @required String password,
     @required String registrationCode,

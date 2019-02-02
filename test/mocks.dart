@@ -187,13 +187,13 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   TweetStream createTweetStream() => TweetStream(null, null, photoManager: this);
 
   @override
-  Progress<Credentials> createAccount({
+  Progress<String> createAccount({
     @required String username,
     @required String password,
     @required String registrationCode,
     String displayName,
   }) {
-    return const Progress<Credentials>.idle();
+    return const Progress<String>.idle();
   }
 
   @override

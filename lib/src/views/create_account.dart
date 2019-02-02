@@ -50,7 +50,7 @@ class _CreateAccountState extends State<CreateAccount> {
 
   void _createAccount() async {
     assert(_valid);
-    final Progress<Credentials> progress = Cruise.of(context).createAccount(
+    final Progress<String> progress = Cruise.of(context).createAccount(
       username: _username.text,
       password: _password1.text,
       registrationCode: _registrationCode.text,
@@ -278,7 +278,7 @@ class _AccountCreationStatus extends StatelessWidget {
 
   static final _AccountCreationServerResponse close = _AccountCreationServerResponse(null, close: true);
 
-  final Progress<Credentials> progress;
+  final Progress<String> progress;
   final String username;
 
   @override
@@ -296,7 +296,7 @@ class _AccountCreationStatus extends StatelessWidget {
         ),
       ],
     );
-    return ProgressBuilder<Credentials>(
+    return ProgressBuilder<String>(
       progress: progress,
       idleChild: idleStatus,
       startingChild: idleStatus,
@@ -367,10 +367,10 @@ class _AccountCreationStatus extends StatelessWidget {
           ],
         );
       },
-      builder: (BuildContext context, Credentials value) {
+      builder: (BuildContext context, String value) {
         return AlertDialog(
           title: const Text('Account created!'),
-          content: Text('Your account username is "${value.username}".'),
+          content: Text('Your account username is "$value".'),
           actions: <Widget>[
             FlatButton(
               onPressed: () { Navigator.of(context).pop(close); },
