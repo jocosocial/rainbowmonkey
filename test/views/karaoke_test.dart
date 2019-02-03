@@ -49,23 +49,23 @@ Future<void> main() async {
 
   testWidgets('Song', (WidgetTester tester) async {
     final List<Song> songs = <Song>[
-      const Song('bb', 'aa'),
-      const Song('aa', 'bb'),
-      const Song('aa', 'aa'),
-      const Song('bb', 'bb'),
+      const Song('bb', 'aa', ''),
+      const Song('aa', 'bb', ''),
+      const Song('aa', 'aa', ''),
+      const Song('bb', 'bb', ''),
     ];
     expect(songs, const <Song>[
-      Song('bb', 'aa'),
-      Song('aa', 'bb'),
-      Song('aa', 'aa'),
-      Song('bb', 'bb'),
+      Song('bb', 'aa', ''),
+      Song('aa', 'bb', ''),
+      Song('aa', 'aa', ''),
+      Song('bb', 'bb', ''),
     ]);
     songs.sort();
     expect(songs, const <Song>[
-      Song('aa', 'aa'),
-      Song('aa', 'bb'),
-      Song('bb', 'aa'),
-      Song('bb', 'bb'),
+      Song('aa', 'aa', ''),
+      Song('aa', 'bb', ''),
+      Song('bb', 'aa', ''),
+      Song('bb', 'bb', ''),
     ]);
   });
 }
