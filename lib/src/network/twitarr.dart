@@ -99,7 +99,10 @@ abstract class Twitarr {
   });
 
   Progress<AuthenticatedUser> getAuthenticatedUser(Credentials credentials, PhotoManager photoManager);
-  Progress<Calendar> getCalendar();
+
+  Progress<Calendar> getCalendar({
+    Credentials credentials,
+  });
 
   Progress<Uint8List> fetchProfilePicture(String username);
 

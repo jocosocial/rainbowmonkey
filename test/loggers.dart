@@ -154,8 +154,10 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
-  Progress<Calendar> getCalendar() {
-    log.add('LoggingTwitarr(${_configuration.id}).getCalendar');
+  Progress<Calendar> getCalendar({
+    Credentials credentials,
+  }) {
+    log.add('LoggingTwitarr(${_configuration.id}).getCalendar($credentials)');
     return const Progress<Calendar>.idle();
   }
 
