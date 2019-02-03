@@ -222,6 +222,12 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final MutableContinuousProgress<Calendar> calendar;
 
   @override
+  Progress<void> setEventFavorite({
+    @required String eventId,
+    @required bool favorite,
+  }) => null;
+
+  @override
   Future<Uint8List> putImageIfAbsent(String username, ImageFetcher callback) {
     return callback();
   }

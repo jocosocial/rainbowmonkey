@@ -209,6 +209,25 @@ class RestTwitarr implements Twitarr {
     });
   }
 
+  @override
+  Progress<void> setEventFavorite({
+    @required Credentials credentials,
+    @required String eventId,
+    @required bool favorite,
+  }) {
+    final FormData body = FormData()
+      ..add('key', credentials.key)
+      ..add('app', 'plain');
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<String>(
+        _requestUtf8(
+          favorite ? 'POST' : 'DELETE',
+          'api/v2/event/${Uri.encodeComponent(eventId)}/favorite?${body.toUrlEncoded()}',
+        ),
+      );
+    });
+  }
+
   static Calendar _parseCalendar(String rawData) {
     final dynamic data = Json.parse(rawData);
     _checkStatusIsOk(data);

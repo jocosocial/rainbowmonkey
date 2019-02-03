@@ -104,6 +104,12 @@ abstract class Twitarr {
     Credentials credentials,
   });
 
+  Progress<void> setEventFavorite({
+    @required Credentials credentials,
+    @required String eventId,
+    @required bool favorite,
+  });
+
   Progress<Uint8List> fetchProfilePicture(String username);
 
   Progress<void> updateProfile({

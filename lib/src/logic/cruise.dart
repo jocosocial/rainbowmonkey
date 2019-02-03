@@ -276,6 +276,20 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return await completer.chain<Calendar>(_twitarr.getCalendar(credentials: _currentCredentials));
   }
 
+  Progress<void> setEventFavorite({
+    @required String eventId,
+    @required bool favorite,
+  }) {
+    return Progress<void>((ProgressController<void> completer) async {
+      try {
+        await completer.chain(_twitarr.setEventFavorite(credentials: _currentCredentials, eventId: eventId, favorite: favorite), steps: 2);
+        await completer.chain(_calendar.triggerUnscheduledUpdate(), steps: 2);
+      } on UserFriendlyError catch (error) {
+        onError('$error');
+      }
+    });
+  }
+
   final Map<String, DateTime> _photoUpdates = <String, DateTime>{};
   final Map<String, Set<VoidCallback>> _photoListeners = <String, Set<VoidCallback>>{};
 

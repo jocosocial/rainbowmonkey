@@ -132,6 +132,12 @@ class NullCruiseModel implements CruiseModel {
   final MutableContinuousProgress<Calendar> calendar = null;
 
   @override
+  Progress<void> setEventFavorite({
+    @required String eventId,
+    @required bool favorite,
+  }) => null;
+
+  @override
   Seamail get seamail => null;
 
   @override
