@@ -68,17 +68,34 @@ class LoggingDataStore implements DataStore {
 
 @immutable
 class LoggingTwitarrConfiguration extends TwitarrConfiguration {
-  const LoggingTwitarrConfiguration(this.id, this.log);
+  const LoggingTwitarrConfiguration(this.id);
 
   final int id;
 
-  final List<String> log;
+  static List<String> get log => _log;
+  static List<String> _log;
 
   @override
-  Twitarr createTwitarr() => LoggingTwitarr(this, log);
+  Twitarr createTwitarr() => LoggingTwitarr(this, _log);
+
+  static void register(List<String> log) {
+    assert(_log == null);
+    assert(log != null);
+    _log = log;
+    TwitarrConfiguration.register(_prefix, _factory);
+  }
+
+  static const String _prefix = 'logger';
+
+  static LoggingTwitarrConfiguration _factory(String settings) {
+    return LoggingTwitarrConfiguration(int.parse(settings));
+  }
 
   @override
-  String toString() => 'LoggingTwitarrConfiguration($id)';
+  String get prefix => _prefix;
+
+  @override
+  String get settings => '$id';
 }
 
 class LoggingTwitarr extends Twitarr {
@@ -247,8 +264,8 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     int freshnessToken,
   }) {
-    log.add('getSeamailThreads');
-    return null;
+    log.add('getSeamailThreads for $credentials from $freshnessToken');
+    return const Progress<SeamailSummary>.idle();
   }
 
   @override

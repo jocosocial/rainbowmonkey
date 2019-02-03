@@ -26,6 +26,7 @@ final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 void main() {
   print('CruiseMonkey has started');
+  RestTwitarrConfiguration.register();
   final CruiseModel model = CruiseModel(
     initialTwitarrConfiguration: const RestTwitarrConfiguration(baseUrl: kDefaultTwitarrUrl),
     store: DiskDataStore(),

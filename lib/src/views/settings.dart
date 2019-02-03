@@ -9,10 +9,20 @@ import '../network/rest.dart';
 import '../network/twitarr.dart';
 import '../widgets.dart';
 
-class Settings extends StatelessWidget {
+class Settings extends StatefulWidget {
   const Settings({
     Key key,
   }) : super(key: key);
+
+  @override
+  State<Settings> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<Settings> {
+  void _apply(TwitarrConfiguration configuration) async {
+    Cruise.of(context).selectTwitarrConfiguration(configuration);
+    await Cruise.of(context).saveTwitarrConfiguration().asFuture();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,19 +47,19 @@ class Settings extends StatelessWidget {
                     title: const Text('hendusoone\'s server'),
                     groupValue: Cruise.of(context).twitarrConfiguration,
                     value: const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'),
-                    onChanged: busy ? null : (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
+                    onChanged: busy ? null : _apply,
                   ),
                   RadioListTile<TwitarrConfiguration>(
                     title: const Text('hendusoone\'s development machine'),
                     groupValue: Cruise.of(context).twitarrConfiguration,
                     value: const RestTwitarrConfiguration(baseUrl: 'http://108.49.102.77:3000/'),
-                    onChanged: busy ? null : (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
+                    onChanged: busy ? null : _apply,
                   ),
                   RadioListTile<TwitarrConfiguration>(
                     title: const Text('gbasden\'s server'),
                     groupValue: Cruise.of(context).twitarrConfiguration,
                     value: const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'),
-                    onChanged: busy ? null : (TwitarrConfiguration configuration) => Cruise.of(context).selectTwitarrConfiguration(configuration),
+                    onChanged: busy ? null : _apply,
                   ),
                   const Divider(),
                   ListTile(

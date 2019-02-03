@@ -50,6 +50,22 @@ class NullTwitarrConfiguration extends TwitarrConfiguration {
 
   @override
   Twitarr createTwitarr() => null;
+
+  static void register() {
+    TwitarrConfiguration.register(_prefix, _factory);
+  }
+
+  static const String _prefix = 'null';
+
+  static NullTwitarrConfiguration _factory(String settings) {
+    return const NullTwitarrConfiguration();
+  }
+
+  @override
+  String get prefix => _prefix;
+
+  @override
+  String get settings => '';
 }
 
 class NullCruiseModel implements CruiseModel {
@@ -92,6 +108,9 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) { }
+
+  @override
+  Progress<void> saveTwitarrConfiguration() => null;
 
   @override
   double debugLatency = 0.0;

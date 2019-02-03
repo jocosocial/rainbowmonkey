@@ -11,7 +11,6 @@ import 'package:meta/meta.dart';
 import '../basic_types.dart';
 import '../models/calendar.dart';
 import '../models/user.dart';
-import '../network/rest.dart' show RestTwitarrConfiguration;
 import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -43,9 +42,11 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar); // TODO(ianh): autoretry faster on network failure
     _seamail = Seamail.empty();
     _forums = Forums.empty();
-    selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
-    _restoreSettings(); // async
-    _restorePhotos(); // async
+    _busy(() {
+      selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
+      _restoreSettings(); // async
+      _restorePhotos(); // async
+    });
   }
 
   final Duration rarePollInterval;
@@ -58,21 +59,44 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   bool _alive = true;
   Credentials _currentCredentials;
 
+  int _busyCounter = 0;
+  void _busy(AsyncCallback callback) async {
+    if (_busyCounter == 0) {
+      _user.pause();
+      _calendar.pause();
+    }
+    _busyCounter += 1;
+    try {
+      await callback();
+    } finally {
+      _busyCounter -= 1;
+      if (_busyCounter == 0) {
+        _user.resume();
+        _calendar.resume();
+      }
+    }
+  }
+
   Twitarr _twitarr;
   TwitarrConfiguration get twitarrConfiguration => _twitarr.configuration;
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
-    if (_twitarr != null) {
-      if (newConfiguration == _twitarr.configuration)
-        return;
-      _twitarr.dispose();
-      logout(serverChanging: true);
-    }
-    _twitarr = newConfiguration.createTwitarr();
-    _twitarr.debugLatency = _debugLatency;
-    _twitarr.debugReliability = _debugReliability;
-    if (newConfiguration is RestTwitarrConfiguration) // TODO(ianh): use a configuration class registry
-      store.saveSetting(Setting.server, newConfiguration.baseUrl);
-    notifyListeners();
+    _busy(() {
+      if (_twitarr != null) {
+        if (newConfiguration == _twitarr.configuration)
+          return;
+        _twitarr.dispose();
+        logout();
+      }
+      _twitarr = newConfiguration.createTwitarr();
+      _twitarr.debugLatency = _debugLatency;
+      _twitarr.debugReliability = _debugReliability;
+      _calendar.triggerUnscheduledUpdate();
+      notifyListeners();
+    });
+  }
+
+  Progress<void> saveTwitarrConfiguration() {
+    return store.saveSetting(Setting.server, '$twitarrConfiguration');
   }
 
   // TODO(ianh): save this in the store
@@ -98,37 +122,42 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   Future<void> _restoredSettings;
   ValueListenable<bool> get restoringSettings => _restoringSettings;
   final ValueNotifier<bool> _restoringSettings = ValueNotifier<bool>(false);
-  void _restoreSettings() async {
-    assert(!_restoringSettings.value);
-    assert(_restoredSettings == null);
-    _restoringSettings.value = true;
-    final Completer<void> done = Completer<void>();
-    _restoredSettings = done.future;
-    try {
-      final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
-      if (settings != null) {
-        if (settings.containsKey(Setting.debugNetworkLatency))
-          debugLatency = settings[Setting.debugNetworkLatency] as double;
-        if (settings.containsKey(Setting.debugNetworkReliability))
-          debugReliability = settings[Setting.debugNetworkReliability] as double;
-        if (settings.containsKey(Setting.server))
-          selectTwitarrConfiguration(RestTwitarrConfiguration(baseUrl: settings[Setting.server] as String)); // TODO(ianh): don't hard-code RestTwitarrConfiguration
-        if (settings.containsKey(Setting.debugTimeDilation)) {
-          timeDilation = settings[Setting.debugTimeDilation] as double;
-          await SchedulerBinding.instance.reassembleApplication();
+  void _restoreSettings() {
+    _busy(() async {
+      assert(!_restoringSettings.value);
+      assert(_restoredSettings == null);
+      _restoringSettings.value = true;
+      final Completer<void> done = Completer<void>();
+      _restoredSettings = done.future;
+      try {
+        final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
+        if (settings != null) {
+          if (settings.containsKey(Setting.debugNetworkLatency))
+            debugLatency = settings[Setting.debugNetworkLatency] as double;
+          if (settings.containsKey(Setting.debugNetworkReliability))
+            debugReliability = settings[Setting.debugNetworkReliability] as double;
+          if (settings.containsKey(Setting.server)) {
+            final String serialization = settings[Setting.server] as String;
+            final int colon = serialization.indexOf(':');
+            selectTwitarrConfiguration(TwitarrConfiguration.from(serialization.substring(0, colon), serialization.substring(colon + 1)));
+          }
+          if (settings.containsKey(Setting.debugTimeDilation)) {
+            timeDilation = settings[Setting.debugTimeDilation] as double;
+            await SchedulerBinding.instance.reassembleApplication();
+          }
         }
+        final Credentials credentials = await store.restoreCredentials().asFuture();
+        if (credentials != null && _alive) {
+          login(
+            username: credentials.username,
+            password: credentials.password,
+          );
+        }
+      } finally {
+        _restoringSettings.value = false;
+        done.complete();
       }
-      final Credentials credentials = await store.restoreCredentials().asFuture();
-      if (credentials != null && _alive) {
-        login(
-          username: credentials.username,
-          password: credentials.password,
-        );
-      }
-    } finally {
-      _restoringSettings.value = false;
-      done.complete();
-    }
+    });
   }
 
   Seamail get seamail => _seamail;
@@ -197,24 +226,22 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     });
   }
 
-  void logout({ bool serverChanging = false }) {
-    _user.reset();
-    _updateCredentials(null, serverChanging: serverChanging);
+  void logout() {
+    _updateCredentials(null);
   }
 
-  void _updateCredentials(AuthenticatedUser user, { bool serverChanging = false }) {
+  void _updateCredentials(AuthenticatedUser user) {
     Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
     final Credentials oldCredentials = _currentCredentials;
     if (user == null) {
       _currentCredentials = null;
-      if (_currentCredentials != oldCredentials) {
-        _seamail = Seamail.empty();
-        _forums = Forums.empty();
-        if (_loggedIn.isCompleted)
-          _loggedIn = Completer<void>();
-      }
+      _user.reset();
+      _calendar.reset();
+      _seamail = Seamail.empty();
+      _forums = Forums.empty();
+      if (_loggedIn.isCompleted)
+        _loggedIn = Completer<void>();
     } else {
-      assert(!serverChanging); // when changing the server, start logged off
       assert(user.credentials.key != null);
       _currentCredentials = user.credentials;
       if (_currentCredentials != oldCredentials) {
@@ -238,9 +265,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         _loggedIn.complete();
       }
     }
-    if (_currentCredentials != oldCredentials || serverChanging)
-      _calendar.triggerUnscheduledUpdate();
     if (_currentCredentials != oldCredentials) {
+      _calendar.triggerUnscheduledUpdate();
       store.saveCredentials(_currentCredentials);
       notifyListeners();
     }
@@ -272,7 +298,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   PeriodicProgress<Calendar> _calendar;
 
   Future<Calendar> _updateCalendar(ProgressController<Calendar> completer) async {
-    await _restoredSettings;
     return await completer.chain<Calendar>(_twitarr.getCalendar(credentials: _currentCredentials));
   }
 
