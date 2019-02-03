@@ -18,9 +18,13 @@ dev_dependencies:
   flutter_launcher_icons: any
 
 flutter_icons:
+  # update with: flutter packages pub run flutter_launcher_icons:main
+  # create notification icon with: convert icons/foreground.png -trim +repage android/app/src/main/res/drawable/notifications.png
   android: true
   ios: true
-  image_path: app_icon.png
+  image_path: icons/cruise_monkey.png
+  adaptive_icon_background: icons/background.png
+  adaptive_icon_foreground: icons/foreground.png
 
 flutter:
   uses-material-design: true
