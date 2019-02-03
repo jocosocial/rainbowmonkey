@@ -16,8 +16,12 @@ import '../loggers.dart';
 import '../mocks.dart';
 
 Future<void> main() async {
+  final List<String> log = <String>[];
+  RestTwitarrConfiguration.register();
+  LoggingTwitarrConfiguration.register(log);
+
   testWidgets('Settings', (WidgetTester tester) async {
-    final List<String> log = <String>[];
+    log.clear();
     final TrivialDataStore store = TrivialDataStore();
     store.storedCredentials = const Credentials(username: 'aaa', password: 'aaaaaa', key: 'blabla');
     final CruiseModel model = _TestCruiseModel(
@@ -42,6 +46,8 @@ Future<void> main() async {
     log.add('--');
     await tester.tap(find.text('hendusoone\'s server'));
     await tester.pump();
+    log.add('--');
+    await tester.idle();
     expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'));
     expect(log, <String>[
       'LoggingTwitarr(497174609).login aaa / aaaaaa',
@@ -52,6 +58,7 @@ Future<void> main() async {
       '--',
       'LoggingTwitarr(387053049).dispose',
       'LoggingTwitarr(207387977).getCalendar(null)',
+      '--',
     ]);
   });
 }
@@ -77,6 +84,6 @@ class _TestCruiseModel extends CruiseModel {
   @override
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
     _twitarrConfiguration = newConfiguration;
-    super.selectTwitarrConfiguration(LoggingTwitarrConfiguration(newConfiguration.hashCode, log));
+    super.selectTwitarrConfiguration(LoggingTwitarrConfiguration(newConfiguration.hashCode));
   }
 }

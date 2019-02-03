@@ -1,16 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/logic/store.dart';
+import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 
 import '../loggers.dart';
 import '../mocks.dart';
 
 void main() {
+  final List<String> log = <String>[];
+  LoggingTwitarrConfiguration.register(log);
+
   testWidgets('CruiseModel', (WidgetTester tester) async {
-    final List<String> log = <String>[];
-    final LoggingTwitarrConfiguration config1 = LoggingTwitarrConfiguration(1, log);
-    final LoggingTwitarrConfiguration config2 = LoggingTwitarrConfiguration(2, log);
+    log.clear();
+    const LoggingTwitarrConfiguration config1 = LoggingTwitarrConfiguration(1);
+    const LoggingTwitarrConfiguration config2 = LoggingTwitarrConfiguration(2);
     final CruiseModel model = CruiseModel(
       initialTwitarrConfiguration: config1,
       store: LoggingDataStore(log),
@@ -72,11 +77,11 @@ void main() {
   });
 
   testWidgets('CruiseModel autologin', (WidgetTester tester) async {
-    final List<String> log = <String>[];
+    log.clear();
     final TrivialDataStore store = TrivialDataStore();
     store.storedCredentials = const Credentials(username: 'aaa', password: 'aaaaaa', key: 'blabla');
     final CruiseModel model = CruiseModel(
-      initialTwitarrConfiguration: LoggingTwitarrConfiguration(1, log),
+      initialTwitarrConfiguration: const LoggingTwitarrConfiguration(1),
       store: store,
       onError: (String error) { log.add('error: $error'); },
     );
@@ -91,6 +96,102 @@ void main() {
       log,
       <String>[
         '--- idling (isLoggedIn = false)',
+        'LoggingTwitarr(1).login aaa / aaaaaa',
+        'model changed (isLoggedIn = true)',
+        'LoggingTwitarr(1).getCalendar(Credentials(aaa))',
+        '--- waiting one hour',
+        '--- end',
+        'LoggingTwitarr(1).dispose'
+      ],
+    );
+  });
+
+  testWidgets('CruiseModel login again', (WidgetTester tester) async {
+    log.clear();
+    final TrivialDataStore store = TrivialDataStore();
+    final CruiseModel model = CruiseModel(
+      initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
+      store: store,
+      onError: (String error) { log.add('error: $error'); },
+    );
+    model.addListener(() { log.add('model changed (isLoggedIn = ${model.isLoggedIn})'); });
+    log.add('--- idling');
+    await tester.idle();
+    final Seamail seamail0 = model.seamail;
+    seamail0.addListener(() { log.add('seamail0 changed'); });
+    log.add('--- waiting 1 minute');
+    await tester.pump(const Duration(seconds: 60));
+    log.add('--- logging in 1');
+    model.login(username: 'user1', password: 'password1');
+    log.add('--- idling');
+    await tester.idle();
+    final Seamail seamail1 = model.seamail;
+    seamail1.addListener(() { log.add('seamail1 changed'); });
+    log.add('--- waiting 1 minute');
+    await tester.pump(const Duration(seconds: 60));
+    log.add('--- logging in 2');
+    model.login(username: 'user2', password: 'password2');
+    log.add('--- idling');
+    await tester.idle();
+    final Seamail seamail2 = model.seamail;
+    seamail2.addListener(() { log.add('seamail2 changed'); });
+    log.add('--- waiting 1 minute');
+    await tester.pump(const Duration(seconds: 60));
+    log.add('--- ending');
+    model.dispose();
+    expect(
+      log,
+      <String>[
+        '--- idling',
+        'LoggingTwitarr(0).getCalendar(null)',
+        '--- waiting 1 minute',
+        '--- logging in 1',
+        'LoggingTwitarr(0).login user1 / password1',
+        '--- idling',
+        'model changed (isLoggedIn = true)',
+        'LoggingTwitarr(0).getCalendar(Credentials(user1))',
+        '--- waiting 1 minute',
+        'getSeamailThreads for Credentials(user1) from null',
+        '--- logging in 2',
+        'model changed (isLoggedIn = false)',
+        'LoggingTwitarr(0).login user2 / password2',
+        '--- idling',
+        'LoggingTwitarr(0).getCalendar(null)',
+        'model changed (isLoggedIn = true)',
+        'LoggingTwitarr(0).getCalendar(Credentials(user2))',
+        '--- waiting 1 minute',
+        'getSeamailThreads for Credentials(user2) from null',
+        '--- ending',
+        'LoggingTwitarr(0).dispose'
+      ],
+    );
+    expect(identical(seamail0, seamail1), isFalse);
+    expect(identical(seamail1, seamail2), isFalse);
+  });
+
+  testWidgets('CruiseModel restore server', (WidgetTester tester) async {
+    log.clear();
+    final TrivialDataStore store = TrivialDataStore();
+    store.storedSettings[Setting.server] = 'logger:1';
+    store.storedCredentials = const Credentials(username: 'aaa', password: 'aaaaaa', key: 'blabla');
+    final CruiseModel model = CruiseModel(
+      initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
+      store: store,
+      onError: (String error) { log.add('error: $error'); },
+    );
+    model.addListener(() { log.add('model changed (isLoggedIn = ${model.isLoggedIn})'); });
+    log.add('--- idling (isLoggedIn = ${model.isLoggedIn})');
+    await tester.idle();
+    log.add('--- waiting one hour');
+    await tester.pump(const Duration(hours: 1));
+    log.add('--- end');
+    model.dispose();
+    expect(
+      log,
+      <String>[
+        '--- idling (isLoggedIn = false)',
+        'LoggingTwitarr(0).dispose',
+        'model changed (isLoggedIn = false)',
         'LoggingTwitarr(1).login aaa / aaaaaa',
         'model changed (isLoggedIn = true)',
         'LoggingTwitarr(1).getCalendar(Credentials(aaa))',

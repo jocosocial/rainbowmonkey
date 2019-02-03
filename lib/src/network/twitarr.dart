@@ -67,10 +67,32 @@ class HttpServerError implements Exception, UserFriendlyError {
   }
 }
 
+typedef TwitarrConfigurationFactory = TwitarrConfiguration Function(String settings);
+
 @immutable
 abstract class TwitarrConfiguration {
   const TwitarrConfiguration();
   Twitarr createTwitarr();
+
+  @override
+  String toString() => '$prefix:$settings';
+
+  @protected
+  String get prefix;
+
+  @protected
+  String get settings;
+
+  static final Map<String, TwitarrConfigurationFactory> _configurationClasses = <String, TwitarrConfigurationFactory>{};
+  static void register(String prefix, TwitarrConfigurationFactory factory) {
+    assert(!_configurationClasses.containsKey(prefix));
+    _configurationClasses[prefix] = factory;
+  }
+  static TwitarrConfiguration from(String prefix, String settings) {
+    if (!_configurationClasses.containsKey(prefix))
+      throw Exception('unknown Twitarr configuration class "$prefix"');
+    return _configurationClasses[prefix](settings);
+  }
 }
 
 /// An interface for communicating with the server.

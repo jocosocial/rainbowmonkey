@@ -85,6 +85,15 @@ abstract class Progress<T> implements ValueListenable<ProgressValue<T>> {
     return controller.progress;
   }
 
+  factory Progress.paused(ProgressCallback<T> completer, Future<void> starter) {
+    final ProgressController<T> controller = ProgressController<T>();
+    controller.start();
+    starter.then((void value) {
+      completer(controller).then<void>(controller.complete, onError: controller.completeError);
+    });
+    return controller.progress;
+  }
+
   factory Progress.fromFuture(Future<T> future) {
     final ProgressController<T> controller = ProgressController<T>();
     controller.start();
@@ -357,6 +366,21 @@ class PeriodicProgress<T> extends MutableContinuousProgress<T> {
 
   Progress<T> triggerUnscheduledUpdate() => _start();
 
+  int _pauseCounter = 0;
+  Completer<void> _resumed = Completer<void>()..complete();
+
+  void pause() {
+    if (_pauseCounter == 0)
+      _resumed = Completer<void>();
+    _pauseCounter += 1;
+  }
+
+  void resume() {
+    _pauseCounter -= 1;
+    if (_pauseCounter == 0)
+      _resumed.complete();
+  }
+
   void triggerUnscheduledUpdateIfListened() {
     if (_listenerCount > 0)
       triggerUnscheduledUpdate();
@@ -403,11 +427,16 @@ class PeriodicProgress<T> extends MutableContinuousProgress<T> {
       _start();
   }
 
+  Progress<T> _tryingToStart;
+
   Progress<T> _start() {
-    final Progress<T> newProgress = Progress<T>(onTick);
-    addProgress(newProgress); // sets _active to true
+    if (_tryingToStart == null) {
+      _tryingToStart = Progress<T>.paused(onTick, _resumed.future);
+      addProgress(_tryingToStart); // sets _active to true
+      _resumed.future.whenComplete(() { _tryingToStart = null; });
+    }
     assert(_active);
-    return newProgress;
+    return _tryingToStart;
   }
 
   @override

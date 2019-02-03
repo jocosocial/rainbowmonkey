@@ -34,8 +34,21 @@ class RestTwitarrConfiguration extends TwitarrConfiguration {
   @override
   int get hashCode => baseUrl.hashCode;
 
+  static void register() {
+    TwitarrConfiguration.register(_prefix, _factory);
+  }
+
+  static const String _prefix = 'rest';
+
+  static RestTwitarrConfiguration _factory(String settings) {
+    return RestTwitarrConfiguration(baseUrl: settings);
+  }
+
   @override
-  String toString() => 'Twitarr(REST $baseUrl)';
+  String get prefix => _prefix;
+
+  @override
+  String get settings => baseUrl;
 }
 
 /// An implementation of [Twitarr] that uses the HTTP protocol

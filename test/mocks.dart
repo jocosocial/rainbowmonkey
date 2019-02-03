@@ -15,6 +15,8 @@ import 'package:cruisemonkey/src/progress.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'nulls.dart' show NullTwitarrConfiguration;
+
 class HangingDataStore implements DataStore {
   const HangingDataStore();
 
@@ -125,13 +127,6 @@ class TrivialDataStore implements DataStore {
   }
 }
 
-class TestTwitarrConfiguration extends TwitarrConfiguration {
-  const TestTwitarrConfiguration();
-
-  @override
-  Twitarr createTwitarr() => null;
-}
-
 class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   TestCruiseModel({
     MutableContinuousProgress<AuthenticatedUser> user,
@@ -158,7 +153,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final DataStore store = const HangingDataStore();
 
   @override
-  TwitarrConfiguration get twitarrConfiguration => const TestTwitarrConfiguration();
+  TwitarrConfiguration get twitarrConfiguration => const NullTwitarrConfiguration();
 
   @override
   double debugLatency = 0.0;
@@ -168,7 +163,12 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
 
   @override
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
-    assert(newConfiguration is TestTwitarrConfiguration);
+    assert(newConfiguration is NullTwitarrConfiguration);
+  }
+
+  @override
+  Progress<void> saveTwitarrConfiguration() {
+    return const Progress<void>.idle();
   }
 
   @override
