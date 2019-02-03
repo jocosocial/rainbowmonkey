@@ -162,6 +162,16 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<void> setEventFavorite({
+    @required Credentials credentials,
+    @required String eventId,
+    @required bool favorite,
+  }) {
+    log.add('LoggingTwitarr(${_configuration.id}).setEventFavorite($credentials, $eventId, $favorite)');
+    return const Progress<void>.idle();
+  }
+
+  @override
   Progress<Uint8List> fetchProfilePicture(String username) {
     log.add('fetchProfilePicture');
     return Progress<Uint8List>.completed(Uint8List.fromList(<int>[0]));

@@ -4,13 +4,10 @@ import 'package:flutter/material.dart';
 import '../models/calendar.dart';
 import '../widgets.dart';
 
-class CalendarView extends StatelessWidget implements View {
+class CalendarView extends StatefulWidget implements View {
   const CalendarView({
     Key key,
   }) : super(key: key);
-
-  static final Key _beforeKey = UniqueKey();
-  static final Key _afterKey = UniqueKey();
 
   @override
   Widget buildTab(BuildContext context) {
@@ -25,8 +22,38 @@ class CalendarView extends StatelessWidget implements View {
     return null;
   }
 
-  void _handleFavorite(Event event, bool favorite) {
-    // TODO(ianh): ...
+  @override
+  State<CalendarView> createState() => _CalendarViewState();
+}
+
+typedef FavoriteCallback = void Function(Event event, bool favorite);
+
+class _PendingFavoriteUpdate {
+  _PendingFavoriteUpdate();
+  bool state;
+}
+
+class _CalendarViewState extends State<CalendarView> {
+  static final Key _beforeKey = UniqueKey();
+  static final Key _afterKey = UniqueKey();
+
+  final Map<String, _PendingFavoriteUpdate> _pendingUpdates = <String, _PendingFavoriteUpdate>{};
+  int _activePendingUpdates = 0;
+
+  void _handleFavorite(Event event, bool favorite) async {
+    _activePendingUpdates += 1;
+    final _PendingFavoriteUpdate update = _pendingUpdates.putIfAbsent(event.id, () => _PendingFavoriteUpdate());
+    setState(() {
+      update.state = favorite;
+    });
+    try {
+      await Cruise.of(context).setEventFavorite(eventId: event.id, favorite: favorite).asFuture();
+    } finally {
+      _activePendingUpdates -= 1;
+      if (_activePendingUpdates == 0) {
+        setState(_pendingUpdates.clear);
+      }
+    }
   }
 
   @override
@@ -54,6 +81,7 @@ class CalendarView extends StatelessWidget implements View {
               isLoggedIn: isLoggedIn,
               onSetFavorite: _handleFavorite,
               direction: GrowthDirection.reverse,
+              pendingUpdates: _pendingUpdates,
             ),
             EventList(
               key: _afterKey,
@@ -62,6 +90,7 @@ class CalendarView extends StatelessWidget implements View {
               isLoggedIn: isLoggedIn,
               onSetFavorite: _handleFavorite,
               direction: GrowthDirection.forward,
+              pendingUpdates: _pendingUpdates,
             ),
           ],
         );
@@ -69,8 +98,6 @@ class CalendarView extends StatelessWidget implements View {
     );
   }
 }
-
-typedef FavoriteCallback = void Function(Event event, bool favorite);
 
 class EventList extends StatelessWidget {
   const EventList({
@@ -80,11 +107,13 @@ class EventList extends StatelessWidget {
     @required this.isLoggedIn,
     @required this.onSetFavorite,
     @required this.direction,
+    @required this.pendingUpdates,
   }) : assert(events != null),
        assert(now != null),
        assert(isLoggedIn != null),
        assert(onSetFavorite != null),
        assert(direction != null),
+       assert(pendingUpdates != null),
        super(key: key);
 
   final List<Event> events;
@@ -92,6 +121,7 @@ class EventList extends StatelessWidget {
   final bool isLoggedIn;
   final FavoriteCallback onSetFavorite;
   final GrowthDirection direction;
+  final Map<String, _PendingFavoriteUpdate> pendingUpdates;
 
   @override
   Widget build(BuildContext context) {
@@ -101,14 +131,16 @@ class EventList extends StatelessWidget {
           DateTime lastTime;
           if (index > 0)
             lastTime = events[index - 1].startTime;
+          final Event event = events[index];
           return TimeSlice(
-            event: events[index],
+            event: event,
             now: now,
             isLoggedIn: isLoggedIn,
             direction: direction,
             isLast: index == events.length - 1,
             lastStartTime: lastTime,
-            onFavorite: (bool value) { onSetFavorite(events[index], value); },
+            onFavorite: (bool value) { onSetFavorite(event, value); },
+            favoriteOverride: pendingUpdates[event.id]?.state,
           );
         },
         childCount: events.length,
@@ -127,6 +159,7 @@ class TimeSlice extends StatelessWidget {
     @required this.isLast,
     this.lastStartTime,
     @required this.onFavorite,
+    @required this.favoriteOverride,
   }) : assert(event != null),
        assert(now != null),
        assert(isLoggedIn != null),
@@ -142,6 +175,7 @@ class TimeSlice extends StatelessWidget {
   final bool isLast;
   final DateTime lastStartTime;
   final ValueSetter<bool> onFavorite;
+  final bool favoriteOverride;
 
   String _getHours(DateTime time) {
     if (time.hour == 12 && time.minute == 00)
@@ -176,6 +210,7 @@ class TimeSlice extends StatelessWidget {
         ..add(Text('-${_getHours(endTime)}'));
     }
     times.add(const Opacity(opacity: 0.0, child: Text('-88:88pm'))); // forces the column to the right width
+    final bool isFavorite = favoriteOverride ?? event.following;
     Widget row = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -196,12 +231,13 @@ class TimeSlice extends StatelessWidget {
           ),
         ),
         Semantics(
-          checked: event.following,
+          checked: isFavorite,
           child: IconButton(
-            icon: Icon(event.following ? Icons.favorite : Icons.favorite_border),
-            tooltip: 'Mark this event as interesting.',
+            icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+            color: favoriteOverride == null ? null : Theme.of(context).accentColor,
+            tooltip: isFavorite ? 'Unmark this event.' : 'Mark this event as interesting.',
             onPressed: isLoggedIn ? () {
-              onFavorite(!event.following);
+              onFavorite(!isFavorite);
             } : null,
           ),
         ),
