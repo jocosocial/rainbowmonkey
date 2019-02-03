@@ -19,7 +19,7 @@ class Notifications {
     final Notifications result = Notifications._(FlutterLocalNotificationsPlugin());
     result._plugin.initialize(
       const InitializationSettings(
-        AndroidInitializationSettings('@mipmap/ic_launcher'),
+        AndroidInitializationSettings('@drawable/notifications'),
         IOSInitializationSettings(),
       ),
       onSelectNotification: result._handleSelection,

@@ -217,7 +217,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       assert(!serverChanging); // when changing the server, start logged off
       assert(user.credentials.key != null);
       _currentCredentials = user.credentials;
-      if (_currentCredentials == oldCredentials) {
+      if (_currentCredentials != oldCredentials) {
         _seamail = Seamail(
           _twitarr,
           _currentCredentials,
