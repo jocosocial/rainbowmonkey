@@ -12,3 +12,5 @@ UTF-8, you can use this command:
 ```bash
 uconv --from-code mac --to-code utf8 --output converted.txt JoCoKaraokeSongCatalog.txt
 ```
+
+You may also need to replace U+000D characters with U+000A characters.
