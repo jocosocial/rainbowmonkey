@@ -46,7 +46,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
     _restoreSettings(); // async
     _restorePhotos(); // async
-    assert(_busy == 3);
   }
 
   final Duration rarePollInterval;
@@ -59,20 +58,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   bool _alive = true;
   Credentials _currentCredentials;
 
-  int _busy = 0;
-  Future<void> _markBusy(AsyncCallback callback) async {
-    _busy += 1;
-    try {
-      await callback();
-    } finally {
-      _busy -= 1;
-      if (_busy == 0) {
-        _calendar.triggerUnscheduledUpdate();
-        // TODO(ianh): notify other things, like seamail, tweet stream, forums
-      }
-    }
-  }
-
   Twitarr _twitarr;
   TwitarrConfiguration get twitarrConfiguration => _twitarr.configuration;
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
@@ -80,7 +65,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       if (newConfiguration == _twitarr.configuration)
         return;
       _twitarr.dispose();
-      logout();
+      logout(serverChanging: true);
     }
     _twitarr = newConfiguration.createTwitarr();
     _twitarr.debugLatency = _debugLatency;
@@ -88,7 +73,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     if (newConfiguration is RestTwitarrConfiguration) // TODO(ianh): use a configuration class registry
       store.saveSetting(Setting.server, newConfiguration.baseUrl);
     notifyListeners();
-    _markBusy(() { });
   }
 
   // TODO(ianh): save this in the store
@@ -115,38 +99,36 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   ValueListenable<bool> get restoringSettings => _restoringSettings;
   final ValueNotifier<bool> _restoringSettings = ValueNotifier<bool>(false);
   void _restoreSettings() async {
-    await _markBusy(() async {
-      assert(!_restoringSettings.value);
-      assert(_restoredSettings == null);
-      _restoringSettings.value = true;
-      final Completer<void> done = Completer<void>();
-      _restoredSettings = done.future;
-      try {
-        final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
-        if (settings != null) {
-          if (settings.containsKey(Setting.debugNetworkLatency))
-            debugLatency = settings[Setting.debugNetworkLatency] as double;
-          if (settings.containsKey(Setting.debugNetworkReliability))
-            debugReliability = settings[Setting.debugNetworkReliability] as double;
-          if (settings.containsKey(Setting.server))
-            selectTwitarrConfiguration(RestTwitarrConfiguration(baseUrl: settings[Setting.server] as String)); // TODO(ianh): don't hard-code RestTwitarrConfiguration
-          if (settings.containsKey(Setting.debugTimeDilation)) {
-            timeDilation = settings[Setting.debugTimeDilation] as double;
-            await SchedulerBinding.instance.reassembleApplication();
-          }
+    assert(!_restoringSettings.value);
+    assert(_restoredSettings == null);
+    _restoringSettings.value = true;
+    final Completer<void> done = Completer<void>();
+    _restoredSettings = done.future;
+    try {
+      final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
+      if (settings != null) {
+        if (settings.containsKey(Setting.debugNetworkLatency))
+          debugLatency = settings[Setting.debugNetworkLatency] as double;
+        if (settings.containsKey(Setting.debugNetworkReliability))
+          debugReliability = settings[Setting.debugNetworkReliability] as double;
+        if (settings.containsKey(Setting.server))
+          selectTwitarrConfiguration(RestTwitarrConfiguration(baseUrl: settings[Setting.server] as String)); // TODO(ianh): don't hard-code RestTwitarrConfiguration
+        if (settings.containsKey(Setting.debugTimeDilation)) {
+          timeDilation = settings[Setting.debugTimeDilation] as double;
+          await SchedulerBinding.instance.reassembleApplication();
         }
-        final Credentials credentials = await store.restoreCredentials().asFuture();
-        if (credentials != null && _alive) {
-          login(
-            username: credentials.username,
-            password: credentials.password,
-          );
-        }
-      } finally {
-        _restoringSettings.value = false;
-        done.complete();
       }
-    });
+      final Credentials credentials = await store.restoreCredentials().asFuture();
+      if (credentials != null && _alive) {
+        login(
+          username: credentials.username,
+          password: credentials.password,
+        );
+      }
+    } finally {
+      _restoringSettings.value = false;
+      done.complete();
+    }
   }
 
   Seamail get seamail => _seamail;
@@ -215,47 +197,53 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     });
   }
 
-  void logout() {
+  void logout({ bool serverChanging = false }) {
     _user.reset();
-    _updateCredentials(null);
+    _updateCredentials(null, serverChanging: serverChanging);
   }
 
-  void _updateCredentials(AuthenticatedUser user) {
+  void _updateCredentials(AuthenticatedUser user, { bool serverChanging = false }) {
     Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
+    final Credentials oldCredentials = _currentCredentials;
     if (user == null) {
-      if (_currentCredentials == null)
-        return;
       _currentCredentials = null;
-      _seamail = Seamail.empty();
-      _forums = Forums.empty();
-      if (_loggedIn.isCompleted)
-        _loggedIn = Completer<void>();
+      if (_currentCredentials != oldCredentials) {
+        _seamail = Seamail.empty();
+        _forums = Forums.empty();
+        if (_loggedIn.isCompleted)
+          _loggedIn = Completer<void>();
+      }
     } else {
+      assert(!serverChanging); // when changing the server, start logged off
       assert(user.credentials.key != null);
-      if (_currentCredentials == user.credentials)
-        return;
       _currentCredentials = user.credentials;
-      _seamail = Seamail(
-        _twitarr,
-        _currentCredentials,
-        this,
-        onError: onError,
-        onCheckForMessages: () {
-          if (onCheckForMessages != null)
-            onCheckForMessages(_currentCredentials, _twitarr, store);
-        },
-        onThreadRead: _handleThreadRead,
-      );
-      _forums = Forums(
-        _twitarr,
-        _currentCredentials,
-        this,
-        onError: onError,
-      );
-      _loggedIn.complete();
+      if (_currentCredentials == oldCredentials) {
+        _seamail = Seamail(
+          _twitarr,
+          _currentCredentials,
+          this,
+          onError: onError,
+          onCheckForMessages: () {
+            if (onCheckForMessages != null)
+              onCheckForMessages(_currentCredentials, _twitarr, store);
+          },
+          onThreadRead: _handleThreadRead,
+        );
+        _forums = Forums(
+          _twitarr,
+          _currentCredentials,
+          this,
+          onError: onError,
+        );
+        _loggedIn.complete();
+      }
     }
-    store.saveCredentials(_currentCredentials);
-    notifyListeners();
+    if (_currentCredentials != oldCredentials || serverChanging)
+      _calendar.triggerUnscheduledUpdate();
+    if (_currentCredentials != oldCredentials) {
+      store.saveCredentials(_currentCredentials);
+      notifyListeners();
+    }
   }
 
   void _handleThreadRead(String threadId) async {
@@ -285,7 +273,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 
   Future<Calendar> _updateCalendar(ProgressController<Calendar> completer) async {
     await _restoredSettings;
-    return await completer.chain<Calendar>(_twitarr.getCalendar());
+    return await completer.chain<Calendar>(_twitarr.getCalendar(credentials: _currentCredentials));
   }
 
   final Map<String, DateTime> _photoUpdates = <String, DateTime>{};
@@ -318,10 +306,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   Future<void> _restorePhotos() async {
-    await _markBusy(() async {
-      await _queuePhotosWork<void>(() {
-        // TODO(ianh): restore the _photoUpdates map from disk
-      });
+    await _queuePhotosWork<void>(() {
+      // TODO(ianh): restore the _photoUpdates map from disk
     });
   }
 

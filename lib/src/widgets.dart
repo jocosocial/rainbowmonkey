@@ -363,7 +363,7 @@ abstract class View implements Widget {
   Widget buildTab(BuildContext context);
 }
 
-class Now extends InheritedNotifier<TimerNotifier> {
+class Now extends InheritedNotifier<ValueNotifier<DateTime>> {
   Now({
     Key key,
     Widget child,
@@ -374,10 +374,19 @@ class Now extends InheritedNotifier<TimerNotifier> {
     child: child,
   );
 
+  Now.fixed({
+    Key key,
+    DateTime dateTime,
+    Widget child,
+  }) : super(
+    key: key,
+    notifier: ValueNotifier<DateTime>(dateTime),
+    child: child,
+  );
+
   static DateTime of(BuildContext context) {
     final Now now = context.inheritFromWidgetOfExactType(Now) as Now;
-    if (now == null)
-      return null;
+    assert(now != null);
     return now.notifier.value;
   }
 }
