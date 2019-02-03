@@ -205,7 +205,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
-  Progress<Credentials> logout() {
+  Progress<Credentials> logout({ bool serverChanging = false }) {
     return const Progress<Credentials>.idle();
   }
 

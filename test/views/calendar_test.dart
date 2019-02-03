@@ -4,20 +4,29 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
 import '../mocks.dart';
 
+Future<void> useModel(WidgetTester tester, CruiseModel model) {
+  return tester.pumpWidget(
+    Now.fixed(
+      dateTime: DateTime(2019),
+      child: Cruise(
+        cruiseModel: model,
+        child: const CruiseMonkeyHome(),
+      ),
+    ),
+  );
+}
+
 void main() {
   testWidgets('Calendar', (WidgetTester tester) async {
     final TestCruiseModel model1 = TestCruiseModel();
-    await tester.pumpWidget(
-      Cruise(
-        cruiseModel: model1,
-        child: const CruiseMonkeyHome(),
-      ),
-    );
+
+    await useModel(tester, model1);
 
     expect(find.byIcon(Icons.event), findsOneWidget);
     await tester.tap(find.byIcon(Icons.event));
@@ -152,12 +161,7 @@ void main() {
     expect(find.text('Elderberry'), findsNothing);
 
     final TestCruiseModel model2 = TestCruiseModel();
-    await tester.pumpWidget(
-      Cruise(
-        cruiseModel: model2,
-        child: const CruiseMonkeyHome(),
-      ),
-    );
+    await useModel(tester, model2);
 
     expect(find.text('Coconuts'), findsOneWidget);
     expect(find.text('Dragonfruit'), findsNothing);
@@ -218,12 +222,7 @@ void main() {
       ),
     ])));
 
-    await tester.pumpWidget(
-      Cruise(
-        cruiseModel: model,
-        child: const CruiseMonkeyHome(),
-      ),
-    );
+    await useModel(tester, model);
 
     expect(find.text('Tuesday March 12'), findsOneWidget);
     expect(find.text('Fruit'), findsOneWidget);
@@ -271,12 +270,7 @@ void main() {
       }),
     );
 
-    await tester.pumpWidget(
-      Cruise(
-        cruiseModel: model,
-        child: const CruiseMonkeyHome(),
-      ),
-    );
+    await useModel(tester, model);
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
     await tester.pump(const Duration(seconds: 2)); // 1 second into first load

@@ -35,19 +35,23 @@ Future<void> main() async {
       ),
     );
     expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'https://example.com/'));
+    log.add('--');
     await tester.tap(find.text('gbasden\'s server'));
     await tester.pump();
     expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'));
+    log.add('--');
     await tester.tap(find.text('hendusoone\'s server'));
     await tester.pump();
     expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'));
     expect(log, <String>[
       'LoggingTwitarr(497174609).login aaa / aaaaaa',
-      'LoggingTwitarr(497174609).getCalendar',
+      'LoggingTwitarr(497174609).getCalendar(Credentials(aaa))',
+      '--',
       'LoggingTwitarr(497174609).dispose',
-      'LoggingTwitarr(387053049).getCalendar',
+      'LoggingTwitarr(387053049).getCalendar(null)',
+      '--',
       'LoggingTwitarr(387053049).dispose',
-      'LoggingTwitarr(207387977).getCalendar'
+      'LoggingTwitarr(207387977).getCalendar(null)',
     ]);
   });
 }

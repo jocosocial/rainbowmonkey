@@ -190,12 +190,20 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
-  Progress<Calendar> getCalendar() {
+  Progress<Calendar> getCalendar({
+    Credentials credentials,
+  }) {
+    final FormData body = FormData()
+      ..add('app', 'plain');
+    if (credentials != null) {
+      assert(credentials.key != null);
+      body.add('key', credentials.key);
+    }
     return Progress<Calendar>((ProgressController<Calendar> completer) async {
       return await compute<String, Calendar>(
         _parseCalendar,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/event.json'),
+          _requestUtf8('GET', 'api/v2/event?${body.toUrlEncoded()}'),
         ),
       );
     });
@@ -210,7 +218,7 @@ class RestTwitarr implements Twitarr {
         title: value.title.toString(),
         official: (value.official as Json).toBoolean(),
         following: (value.following as Json).toBoolean(),
-        description: value['description']?.toString(),
+        description: (value.description as Json).valueType == String ? value.description.toString() : null,
         location: value.location.toString(),
         startTime: _parseDateTime(value.start_time as Json),
         endTime: _parseDateTime(value.end_time as Json),

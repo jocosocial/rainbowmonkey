@@ -117,7 +117,7 @@ class NullCruiseModel implements CruiseModel {
   }) => null;
 
   @override
-  Progress<Credentials> logout() => null;
+  Progress<Credentials> logout({ bool serverChanging = false }) => null;
 
   @override
   final MutableContinuousProgress<AuthenticatedUser> user = null;
