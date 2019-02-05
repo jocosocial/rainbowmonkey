@@ -359,8 +359,9 @@ class Badge extends StatelessWidget {
 }
 
 abstract class View implements Widget {
+  Widget buildTabIcon(BuildContext context);
+  Widget buildTabLabel(BuildContext context);
   Widget buildFab(BuildContext context);
-  Widget buildTab(BuildContext context);
 }
 
 class Now extends InheritedNotifier<ValueNotifier<DateTime>> {

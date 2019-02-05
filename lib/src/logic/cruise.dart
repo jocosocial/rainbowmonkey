@@ -11,6 +11,7 @@ import 'package:meta/meta.dart';
 import '../basic_types.dart';
 import '../models/calendar.dart';
 import '../models/user.dart';
+import '../network/rest.dart' show kDefaultTwitarr;
 import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -40,10 +41,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
        assert(onError != null) {
     _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
     _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar); // TODO(ianh): autoretry faster on network failure
-    _seamail = Seamail.empty();
-    _forums = Forums.empty();
     _busy(() {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
+      _seamail = Seamail.empty();
+      _forums = _createForums();
       _restoreSettings(); // async
       _restorePhotos(); // async
     });
@@ -136,11 +137,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
             debugLatency = settings[Setting.debugNetworkLatency] as double;
           if (settings.containsKey(Setting.debugNetworkReliability))
             debugReliability = settings[Setting.debugNetworkReliability] as double;
-          if (settings.containsKey(Setting.server)) {
-            final String serialization = settings[Setting.server] as String;
-            final int colon = serialization.indexOf(':');
-            selectTwitarrConfiguration(TwitarrConfiguration.from(serialization.substring(0, colon), serialization.substring(colon + 1)));
-          }
+          if (settings.containsKey(Setting.server))
+            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, kDefaultTwitarr));
           if (settings.containsKey(Setting.debugTimeDilation)) {
             timeDilation = settings[Setting.debugTimeDilation] as double;
             await SchedulerBinding.instance.reassembleApplication();
@@ -238,7 +236,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _user.reset();
       _calendar.reset();
       _seamail = Seamail.empty();
-      _forums = Forums.empty();
+      _forums = _createForums();
       if (_loggedIn.isCompleted)
         _loggedIn = Completer<void>();
     } else {
@@ -256,12 +254,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           },
           onThreadRead: _handleThreadRead,
         );
-        _forums = Forums(
-          _twitarr,
-          _currentCredentials,
-          this,
-          onError: onError,
-        );
+        _forums = _createForums();
         _loggedIn.complete();
       }
     }
@@ -270,6 +263,15 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       store.saveCredentials(_currentCredentials);
       notifyListeners();
     }
+  }
+
+  Forums _createForums() {
+    return Forums(
+      _twitarr,
+      _currentCredentials,
+      this,
+      onError: onError,
+    );
   }
 
   void _handleThreadRead(String threadId) async {

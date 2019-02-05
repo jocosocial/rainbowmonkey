@@ -10,12 +10,10 @@ class CalendarView extends StatefulWidget implements View {
   }) : super(key: key);
 
   @override
-  Widget buildTab(BuildContext context) {
-    return const Tab(
-      text: 'Calendar',
-      icon: Icon(Icons.event),
-    );
-  }
+  Widget buildTabIcon(BuildContext context) => const Icon(Icons.event);
+
+  @override
+  Widget buildTabLabel(BuildContext context) => const Text('Calendar');
 
   @override
   Widget buildFab(BuildContext context) {
@@ -67,32 +65,44 @@ class _CalendarViewState extends State<CalendarView> {
       builder: (BuildContext context, Calendar calendar) {
         if (calendar.events.isEmpty)
           return iconAndLabel(icon: Icons.sentiment_neutral, message: 'Calendar is empty');
-        final DateTime now = Now.of(context);
-        final bool isLoggedIn = Cruise.of(context).isLoggedIn;
-        final List<Event> beforeEvents = calendar.events.where((Event event) => !event.endTime.isAfter(now)).toList().reversed.toList();
-        final List<Event> afterEvents = calendar.events.where((Event event) => event.endTime.isAfter(now)).toList();
-        return CustomScrollView(
-          center: _afterKey,
-          slivers: <Widget>[
-            EventList(
-              key: _beforeKey,
-              events: beforeEvents,
-              now: now,
-              isLoggedIn: isLoggedIn,
-              onSetFavorite: _handleFavorite,
-              direction: GrowthDirection.reverse,
-              pendingUpdates: _pendingUpdates,
-            ),
-            EventList(
-              key: _afterKey,
-              events: afterEvents,
-              now: now,
-              isLoggedIn: isLoggedIn,
-              onSetFavorite: _handleFavorite,
-              direction: GrowthDirection.forward,
-              pendingUpdates: _pendingUpdates,
-            ),
-          ],
+        return LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final DateTime now = Now.of(context);
+            final bool isLoggedIn = Cruise.of(context).isLoggedIn;
+            final List<Event> beforeEvents = calendar.events.where((Event event) => !event.endTime.isAfter(now)).toList().reversed.toList();
+            final List<Event> afterEvents = calendar.events.where((Event event) => event.endTime.isAfter(now)).toList();
+            return CustomScrollView(
+              center: _afterKey,
+              anchor: MediaQuery.of(context).padding.top / constraints.maxHeight,
+              slivers: <Widget>[
+                SliverSafeArea(
+                  key: _beforeKey,
+                  top: false,
+                  bottom: false,
+                  sliver: EventList(
+                    events: beforeEvents,
+                    now: now,
+                    isLoggedIn: isLoggedIn,
+                    onSetFavorite: _handleFavorite,
+                    direction: GrowthDirection.reverse,
+                    pendingUpdates: _pendingUpdates,
+                  ),
+                ),
+                SliverSafeArea(
+                  key: _afterKey,
+                  top: false,
+                  sliver: EventList(
+                    events: afterEvents,
+                    now: now,
+                    isLoggedIn: isLoggedIn,
+                    onSetFavorite: _handleFavorite,
+                    direction: GrowthDirection.forward,
+                    pendingUpdates: _pendingUpdates,
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

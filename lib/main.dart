@@ -8,18 +8,16 @@ import 'src/logic/background_polling.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
-import 'src/models/user.dart';
 import 'src/network/rest.dart';
-import 'src/progress.dart';
 import 'src/views/calendar.dart';
 import 'src/views/comms.dart';
 import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
-import 'src/views/drawer.dart';
 import 'src/views/karaoke.dart';
 import 'src/views/profile.dart';
 import 'src/views/settings.dart';
 import 'src/views/stream.dart';
+import 'src/views/user.dart';
 import 'src/widgets.dart';
 
 final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
@@ -28,7 +26,7 @@ void main() {
   print('CruiseMonkey has started');
   RestTwitarrConfiguration.register();
   final CruiseModel model = CruiseModel(
-    initialTwitarrConfiguration: const RestTwitarrConfiguration(baseUrl: kDefaultTwitarrUrl),
+    initialTwitarrConfiguration: kDefaultTwitarr,
     store: DiskDataStore(),
     onError: _handleError,
     onCheckForMessages: checkForMessages,
@@ -68,7 +66,7 @@ void _handleError(String message) {
     ],
   ));
   final Animation<double> position = controller.drive(
-    Tween<double>(begin: 128.0, end: 36.0).chain(CurveTween(curve: Curves.easeOutBack)),
+    Tween<double>(begin: 228.0, end: 136.0).chain(CurveTween(curve: Curves.easeOutBack)),
   );
   final OverlayEntry entry = OverlayEntry(
     builder: (BuildContext context) {
@@ -149,61 +147,89 @@ class CruiseMonkeyHome extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
 
   static const List<View> pages = <View>[
+    UserView(),
     CalendarView(),
+    CommsView(),
     DeckPlanView(),
     KaraokeView(),
-    CommsView(),
   ];
+
+  Widget buildTab(BuildContext context, View page, { EdgeInsets iconPadding = EdgeInsets.zero }) {
+    return Tab(
+      icon: Padding(padding: iconPadding, child: page.buildTabIcon(context)),
+      text: (page.buildTabLabel(context) as Text).data,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CruiseMonkey',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        primarySwatch: Colors.blue,
+        primaryColor: Colors.blue[900],
         accentColor: Colors.greenAccent,
         inputDecorationTheme: const InputDecorationTheme(
           border: OutlineInputBorder(),
         ),
       ),
       home: DefaultTabController(
-        length: 4,
+        length: pages.length,
         child: Builder(
           builder: (BuildContext context) {
             final TabController tabController = DefaultTabController.of(context);
+            final ThemeData theme = Theme.of(context);
             return AnimatedBuilder(
               animation: tabController,
               builder: (BuildContext context, Widget child) {
                 return Scaffold(
                   key: scaffoldKey,
-                  appBar: AppBar(
-                    leading: ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
-                      valueListenable: Cruise.of(context).user.best,
-                      builder: (BuildContext context, ProgressValue<AuthenticatedUser> value, Widget child) {
-                        return Badge(
-                          enabled: value is FailedProgress,
-                          child: Builder(
-                            builder: (BuildContext context) {
-                              return IconButton(
-                                icon: const Icon(Icons.menu),
-                                onPressed: () { Scaffold.of(context).openDrawer(); },
-                                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                    title: const Text('CruiseMonkey'),
-                    bottom: TabBar(
-                      isScrollable: true,
-                      tabs: pages.map((View page) => page.buildTab(context)).toList(),
-                    ),
-                  ),
-                  drawer: const CruiseMonkeyDrawer(),
                   floatingActionButton: pages[tabController.index].buildFab(context),
-                  body: const TabBarView(
-                    children: pages,
+                  floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+                  resizeToAvoidBottomInset: false,
+                  body: LayoutBuilder(
+                    builder: (BuildContext context, BoxConstraints constraints) {
+                      const double bottomPadding = 50.0;
+                      final double height = constraints.maxHeight + bottomPadding;
+                      final MediaQueryData metrics = MediaQuery.of(context);
+                      return OverflowBox(
+                        minWidth: constraints.maxWidth,
+                        maxWidth: constraints.maxWidth,
+                        minHeight: height,
+                        maxHeight: height,
+                        alignment: Alignment.topCenter,
+                        child: MediaQuery(
+                          data: metrics.copyWith(padding: metrics.padding.copyWith(bottom: bottomPadding)),
+                          child: TabBarView(
+                            children: pages,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  bottomNavigationBar: BottomAppBar(
+                    color: theme.primaryColor,
+                    shape: const WaveShape(),
+                    elevation: 4.0, // TODO(ianh): figure out why this has no effect
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20.0),
+                      child: Center(
+                        heightFactor: 1.0,
+                        child: TabBar(
+                          isScrollable: true,
+                          indicator: BoxDecoration(
+                            color: const Color(0x10FFFFFF),
+                            border: Border(
+                              top: BorderSide(
+                                color: theme.accentColor,
+                                width: 10.0,
+                              ),
+                            ),
+                          ),
+                          tabs: pages.map<Widget>((View page) => buildTab(context, page, iconPadding: const EdgeInsets.only(top: 8.0))).toList(),
+                        ),
+                      ),
+                    ),
                   ),
                 );
               },
@@ -218,5 +244,35 @@ class CruiseMonkeyHome extends StatelessWidget {
         '/twitarr': (BuildContext context) => const TweetStreamView(),
       },
     );
+  }
+}
+
+class WaveShape extends NotchedShape {
+  const WaveShape();
+
+  @override
+  Path getOuterPath(Rect host, Rect guest) {
+    const double waveDiameter = 50.0;
+    const double waveHeight = 13.0;
+    const double waveWidth = 43.0;
+    
+    final double phaseOffset = ((host.width - waveWidth) / 2.0) % waveWidth;
+
+    final Path circles = Path();
+    double left = host.left - phaseOffset;
+    while (left < host.right) {
+      circles.addOval(
+        Rect.fromCircle(
+          center: Offset(left + waveWidth / 2.0, host.top + waveHeight - waveDiameter / 2.0),
+          radius: waveDiameter / 2.0,
+        ),
+      );
+      left += waveWidth;
+    }
+    final Path waves = Path.combine(PathOperation.difference, Path()..addRect(host), circles);
+
+    if (guest != null)
+      return Path.combine(PathOperation.difference, waves, Path()..addOval(guest.inflate(guest.width * 0.05)));
+    return waves;
   }
 }

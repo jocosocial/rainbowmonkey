@@ -13,12 +13,10 @@ class KaraokeView extends StatefulWidget implements View {
   }) : super(key: key);
 
   @override
-  Widget buildTab(BuildContext context) {
-    return const Tab(
-      text: 'Karaoke',
-      icon: Icon(Icons.library_music),
-    );
-  }
+  Widget buildTabIcon(BuildContext context) => const Icon(Icons.library_music);
+
+  @override
+  Widget buildTabLabel(BuildContext context) => const Text('Karaoke');
 
   @override
   Widget buildFab(BuildContext context) {
@@ -103,47 +101,51 @@ class _KaraokeViewState extends State<KaraokeView> {
       builder: (BuildContext context, List<Song> songList) {
         if (_filter != null)
           songList = songList.where(_filter).toList();
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: <Widget>[
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Search',
-                  suffixIcon: Icon(Icons.search),
-                ),
-                onChanged: _applyFilter,
-              ),
-              Expanded(
-                child: Scrollbar(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: songList.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final Song song = songList[index];
-                      Widget trailing;
-                      switch (song.metadata) {
-                        case 'M':
-                          trailing = Text('M', style: textStyle.caption);
-                          break;
-                        case 'VR':
-                          trailing = Text('VR', style: textStyle.caption);
-                          break;
-                        // 'Bowieoke' seems to mean "David Bowie sang this",
-                        // which is already reflected in the artist, so...
-                      }
-                      return ListTile(
-                        title: Text(song.title),
-                        subtitle: Text(song.artist),
-                        trailing: trailing,
-                      );
-                    },
+        final EdgeInsets outerPadding = MediaQuery.of(context).padding;
+        return Column(
+          children: <Widget>[
+            Material(
+              elevation: 4.0,
+              child: Padding(
+                padding: outerPadding.copyWith(bottom: 0.0) + const EdgeInsets.all(8.0),
+                child: TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Search',
+                    suffixIcon: Icon(Icons.search),
                   ),
+                  onChanged: _applyFilter,
                 ),
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: Scrollbar(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: outerPadding.copyWith(top: 0.0) + const EdgeInsets.all(8.0),
+                  itemCount: songList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final Song song = songList[index];
+                    Widget trailing;
+                    switch (song.metadata) {
+                      case 'M':
+                        trailing = Text('M', style: textStyle.caption);
+                        break;
+                      case 'VR':
+                        trailing = Text('VR', style: textStyle.caption);
+                        break;
+                      // 'Bowieoke' seems to mean "David Bowie sang this",
+                      // which is already reflected in the artist, so...
+                    }
+                    return ListTile(
+                      title: Text(song.title),
+                      subtitle: Text(song.artist),
+                      trailing: trailing,
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

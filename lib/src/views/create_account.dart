@@ -82,6 +82,9 @@ class _CreateAccountState extends State<CreateAccount> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Twitarr account'),
+      ),
       body: Form(
         key: _formKey,
         autovalidate: true,
@@ -110,9 +113,6 @@ class _CreateAccountState extends State<CreateAccount> {
         },
         child: CustomScrollView(
           slivers: <Widget>[
-            SliverAppBar(
-              title: const Text('Create Twitarr account'),
-            ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 8.0),
               sliver: SliverList(
@@ -243,19 +243,6 @@ class _CreateAccountState extends State<CreateAccount> {
                         ),
                       ),
                     ),
-                    const Divider(),
-                    ButtonBar(
-                      children: <Widget>[
-                        FlatButton(
-                          onPressed: () { Navigator.maybePop(context); },
-                          child: const Text('CANCEL'),
-                        ),
-                        FlatButton(
-                          onPressed: _valid ? _createAccount : null,
-                          child: const Text('CREATE ACCOUNT'),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -263,6 +250,16 @@ class _CreateAccountState extends State<CreateAccount> {
           ],
         ),
       ),
+      persistentFooterButtons: <Widget>[
+        FlatButton(
+          onPressed: () { Navigator.maybePop(context); },
+          child: const Text('CANCEL'),
+        ),
+        FlatButton(
+          onPressed: _valid ? _createAccount : null,
+          child: const Text('CREATE ACCOUNT'),
+        ),
+      ],
     );
   }
 }

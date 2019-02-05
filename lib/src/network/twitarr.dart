@@ -85,10 +85,14 @@ abstract class TwitarrConfiguration {
 
   static final Map<String, TwitarrConfigurationFactory> _configurationClasses = <String, TwitarrConfigurationFactory>{};
   static void register(String prefix, TwitarrConfigurationFactory factory) {
-    assert(!_configurationClasses.containsKey(prefix));
     _configurationClasses[prefix] = factory;
   }
-  static TwitarrConfiguration from(String prefix, String settings) {
+  static TwitarrConfiguration from(String serialization, TwitarrConfiguration defaultConfig) {
+    if (serialization == null)
+      return defaultConfig;
+    final int colon = serialization.indexOf(':');
+    final String prefix = serialization.substring(0, colon);
+    final String settings = serialization.substring(colon + 1);
     if (!_configurationClasses.containsKey(prefix))
       throw Exception('unknown Twitarr configuration class "$prefix"');
     return _configurationClasses[prefix](settings);

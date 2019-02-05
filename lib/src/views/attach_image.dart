@@ -48,7 +48,7 @@ class AttachImageButton extends StatelessWidget {
              : !allowMultiple ? 'Remove or replace the currently attached image'
              : images.length > 2 ? 'Attach another image or remove one of the attached images'
              : 'Attach another image or remove the attached image',
-      onPressed: () {
+      onPressed: Cruise.of(context).isLoggedIn ? () {
         List<Uint8List> currentImages = images;
         showDialog<void>(
           context: context,
@@ -77,9 +77,9 @@ class AttachImageButton extends StatelessWidget {
                 ),
               ],
             );
-          },
+          }
         );
-      },
+      } : null,
     );
   }
 }

@@ -13,7 +13,8 @@ import '../progress.dart';
 import 'form_data.dart';
 import 'twitarr.dart';
 
-const String kDefaultTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
+const String _kDefaultTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
+const TwitarrConfiguration kDefaultTwitarr = RestTwitarrConfiguration(baseUrl: _kDefaultTwitarrUrl);
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
@@ -961,7 +962,7 @@ class RestTwitarr implements Twitarr {
           ? (post.photos as Json).asIterable().map<String>((dynamic photo) => photo.id.toString()).toList()
           : null,
         timestamp: _parseDateTime(post.timestamp as Json),
-        read: (post['new'] as Json).toBoolean(),
+        read: (post as Json).hasKey('new') ? (post['new'] as Json).toBoolean() : null,
       ));
     }
     return result;

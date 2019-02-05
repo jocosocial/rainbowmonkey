@@ -30,6 +30,7 @@ Future<void> runBackground() async {
 }
 
 Future<void> _periodicCallback() async {
+  RestTwitarrConfiguration.register();
   await _backgroundUpdate();
   /// If this isn't reliable enough, we could try this:
   // if (!await AndroidAlarmManager.oneShot(
@@ -60,8 +61,8 @@ Future<void> _backgroundUpdate() async {
       rethrow;
     }
     final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
-    final String baseUrl = settings.containsKey(Setting.server) ? settings[Setting.server] as String : kDefaultTwitarrUrl;
-    final Twitarr twitarr = RestTwitarrConfiguration(baseUrl: baseUrl).createTwitarr();
+    final String server = settings[Setting.server] as String;
+    final Twitarr twitarr = TwitarrConfiguration.from(server, kDefaultTwitarr).createTwitarr();
     if (settings.containsKey(Setting.debugNetworkLatency))
       twitarr.debugLatency = settings[Setting.debugNetworkLatency] as double;
     if (settings.containsKey(Setting.debugNetworkReliability))
