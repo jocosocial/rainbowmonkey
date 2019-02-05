@@ -9,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:meta/meta.dart';
 
 import '../basic_types.dart';
+import '../models/announcements.dart';
 import '../models/calendar.dart';
 import '../models/user.dart';
 import '../network/rest.dart' show kDefaultTwitarr;
@@ -40,7 +41,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
        assert(rarePollInterval != null),
        assert(onError != null) {
     _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
-    _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar); // TODO(ianh): autoretry faster on network failure
+    _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
+    _announcements = PeriodicProgress<List<Announcement>>(rarePollInterval, _updateAnnouncements);
     _busy(() {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
       _seamail = Seamail.empty();
@@ -65,6 +67,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     if (_busyCounter == 0) {
       _user.pause();
       _calendar.pause();
+      _announcements.pause();
     }
     _busyCounter += 1;
     try {
@@ -74,6 +77,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       if (_busyCounter == 0) {
         _user.resume();
         _calendar.resume();
+        _announcements.resume();
       }
     }
   }
@@ -92,6 +96,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _twitarr.debugLatency = _debugLatency;
       _twitarr.debugReliability = _debugReliability;
       _calendar.triggerUnscheduledUpdate();
+      _announcements.triggerUnscheduledUpdate();
       notifyListeners();
     });
   }
@@ -315,6 +320,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         onError('$error');
       }
     });
+  }
+
+  ContinuousProgress<List<Announcement>> get announcements => _announcements;
+  PeriodicProgress<List<Announcement>> _announcements;
+
+  Future<List<Announcement>> _updateAnnouncements(ProgressController<List<Announcement>> completer) async {
+    final List<AnnouncementSummary> summary = await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements());
+    return summary.map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this)).toList();
   }
 
   final Map<String, DateTime> _photoUpdates = <String, DateTime>{};
@@ -580,6 +593,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _alive = false;
     _user.dispose();
     _calendar.dispose();
+    _announcements.dispose();
     _twitarr.dispose();
     super.dispose();
   }

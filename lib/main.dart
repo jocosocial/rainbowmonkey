@@ -23,6 +23,7 @@ import 'src/widgets.dart';
 final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 void main() {
+  WidgetsFlutterBinding();
   print('CruiseMonkey has started');
   RestTwitarrConfiguration.register();
   final CruiseModel model = CruiseModel(

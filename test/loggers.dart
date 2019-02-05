@@ -189,6 +189,12 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<List<AnnouncementSummary>> getAnnouncements() {
+    log.add('LoggingTwitarr(${_configuration.id}).getAnnouncements()');
+    return const Progress<List<AnnouncementSummary>>.idle();
+  }
+
+  @override
   Progress<Uint8List> fetchProfilePicture(String username) {
     log.add('fetchProfilePicture');
     return Progress<Uint8List>.completed(Uint8List.fromList(<int>[0]));

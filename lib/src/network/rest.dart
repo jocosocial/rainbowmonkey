@@ -260,6 +260,33 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<List<AnnouncementSummary>> getAnnouncements() {
+    final FormData body = FormData()
+      ..add('app', 'plain');
+    return Progress<List<AnnouncementSummary>>((ProgressController<List<AnnouncementSummary>> completer) async {
+      return await compute<String, List<AnnouncementSummary>>(
+        _parseAnnouncements,
+        await completer.chain<String>(
+          _requestUtf8('GET', 'api/v2/announcements?${body.toUrlEncoded()}'),
+        ),
+      );
+    });
+  }
+
+  static List<AnnouncementSummary> _parseAnnouncements(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    _checkStatusIsOk(data);
+    return (data.announcements.asIterable() as Iterable<dynamic>).map<AnnouncementSummary>((dynamic value) {
+      return AnnouncementSummary(
+        id: value.id.toString(),
+        user: _parseUser(value.author as Json),
+        message: value.text.toString(),
+        timestamp: _parseDateTime(value.timestamp as Json),
+      );
+    }).toList();
+  }
+  
+  @override
   Progress<Uint8List> fetchProfilePicture(String username) {
     return _requestBytes('GET', 'api/v2/user/photo/${Uri.encodeComponent(username)}');
   }

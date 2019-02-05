@@ -10,9 +10,6 @@ import 'models/user.dart';
 import 'progress.dart';
 import 'utils.dart';
 
-const Duration animationDuration = Duration(milliseconds: 100);
-const Curve animationCurve = Curves.fastOutSlowIn;
-
 class Cruise extends InheritedNotifier<CruiseModel> {
   const Cruise({
     Key key,
@@ -87,6 +84,9 @@ Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
     ],
   );
 }
+
+const Duration animationDuration = Duration(milliseconds: 150);
+const Curve animationCurve = Curves.fastOutSlowIn;
 
 Widget _defaultFadeWrapper(BuildContext context, Widget child) {
   return AnimatedSwitcher(
@@ -427,9 +427,9 @@ class ChatLine extends StatelessWidget {
   const ChatLine({
     Key key,
     @required this.user,
-    @required this.isCurrentUser,
+    this.isCurrentUser = false,
     @required this.messages,
-    @required this.photoIds,
+    this.photoIds,
     @required this.timestamp,
   }) : assert(user != null),
        assert(isCurrentUser != null),

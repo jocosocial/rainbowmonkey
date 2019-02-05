@@ -7,6 +7,7 @@ import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/logic/stream.dart';
+import 'package:cruisemonkey/src/models/announcements.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
@@ -155,6 +156,9 @@ class NullCruiseModel implements CruiseModel {
     @required String eventId,
     @required bool favorite,
   }) => null;
+
+  @override
+  final MutableContinuousProgress<List<Announcement>> announcements = null;
 
   @override
   Seamail get seamail => null;

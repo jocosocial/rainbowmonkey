@@ -8,6 +8,7 @@ import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/logic/stream.dart';
+import 'package:cruisemonkey/src/models/announcements.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
@@ -131,8 +132,10 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   TestCruiseModel({
     MutableContinuousProgress<AuthenticatedUser> user,
     MutableContinuousProgress<Calendar> calendar,
+    MutableContinuousProgress<List<Announcement>> announcements,
   }) : user = user ?? MutableContinuousProgress<AuthenticatedUser>(),
-       calendar = calendar ?? MutableContinuousProgress<Calendar>() {
+       calendar = calendar ?? MutableContinuousProgress<Calendar>(),
+       announcements = announcements ?? MutableContinuousProgress<List<Announcement>>() {
     _seamail = Seamail.empty();
     _forums = Forums.empty();
   }
@@ -226,6 +229,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     @required String eventId,
     @required bool favorite,
   }) => null;
+
+  @override
+  final MutableContinuousProgress<List<Announcement>> announcements;
 
   @override
   Future<Uint8List> putImageIfAbsent(String username, ImageFetcher callback) {

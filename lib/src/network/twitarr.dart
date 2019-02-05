@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 import '../logic/photo_manager.dart';
+import '../models/announcements.dart';
 import '../models/calendar.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -135,6 +136,8 @@ abstract class Twitarr {
     @required String eventId,
     @required bool favorite,
   });
+
+  Progress<List<AnnouncementSummary>> getAnnouncements();
 
   Progress<Uint8List> fetchProfilePicture(String username);
 
@@ -406,6 +409,32 @@ class ForumMessageSummary {
   final DateTime timestamp;
 
   final bool read;
+}
+
+class AnnouncementSummary {
+  const AnnouncementSummary({
+    this.id,
+    this.user,
+    this.message,
+    this.timestamp,
+  });
+
+  final String id;
+  
+  final UserSummary user;
+
+  final String message;
+
+  final DateTime timestamp;
+
+  Announcement toAnnouncement(PhotoManager photoManager) {
+    return Announcement(
+      id: id,
+      user: user.toUser(photoManager),
+      message: message,
+      timestamp: timestamp,
+    );
+  }
 }
 
 class UserSummary {
