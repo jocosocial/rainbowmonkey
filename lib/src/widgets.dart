@@ -5,13 +5,11 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'graphics.dart';
 import 'logic/cruise.dart';
 import 'models/user.dart';
 import 'progress.dart';
 import 'utils.dart';
-
-const Duration animationDuration = Duration(milliseconds: 100);
-const Curve animationCurve = Curves.fastOutSlowIn;
 
 class Cruise extends InheritedNotifier<CruiseModel> {
   const Cruise({
@@ -87,6 +85,9 @@ Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
     ],
   );
 }
+
+const Duration animationDuration = Duration(milliseconds: 150);
+const Curve animationCurve = Curves.fastOutSlowIn;
 
 Widget _defaultFadeWrapper(BuildContext context, Widget child) {
   return AnimatedSwitcher(
@@ -359,8 +360,9 @@ class Badge extends StatelessWidget {
 }
 
 abstract class View implements Widget {
+  Widget buildTabIcon(BuildContext context);
+  Widget buildTabLabel(BuildContext context);
   Widget buildFab(BuildContext context);
-  Widget buildTab(BuildContext context);
 }
 
 class Now extends InheritedNotifier<ValueNotifier<DateTime>> {
@@ -426,9 +428,9 @@ class ChatLine extends StatelessWidget {
   const ChatLine({
     Key key,
     @required this.user,
-    @required this.isCurrentUser,
+    this.isCurrentUser = false,
     @required this.messages,
-    @required this.photoIds,
+    this.photoIds,
     @required this.timestamp,
   }) : assert(user != null),
        assert(isCurrentUser != null),
@@ -661,4 +663,63 @@ class _VSyncBuilderState extends State<VSyncBuilder> with TickerProviderStateMix
   Widget build(BuildContext context) {
     return widget.builder(context, this);
   }
+}
+
+class LabeledIconButton extends StatelessWidget {
+  const LabeledIconButton({ Key key, this.onPressed, this.icon, this.label }) : super(key: key);
+
+  final VoidCallback onPressed;
+  final Widget icon;
+  final Widget label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FlatButton(
+        onPressed: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            children: <Widget>[
+              icon,
+              const SizedBox(height: 8.0),
+              label,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class Ship extends StatelessWidget {
+  const Ship({ Key key }) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20.0),
+        child: SizedBox.fromSize(
+          size: shipSize,
+          child: CustomPaint(
+            painter: _ShipPainter(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShipPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    assert(size == shipSize);
+    final Path path = ship();
+    final Paint paint = Paint()
+      ..color = Colors.grey[300];
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ShipPainter oldPainter) => false;
 }

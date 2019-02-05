@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
-import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/progress.dart';
+import 'package:cruisemonkey/src/views/calendar.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
 import '../mocks.dart';
@@ -14,9 +15,11 @@ Future<void> useModel(WidgetTester tester, CruiseModel model) {
   return tester.pumpWidget(
     Now.fixed(
       dateTime: DateTime(2019),
-      child: Cruise(
-        cruiseModel: model,
-        child: const CruiseMonkeyHome(),
+      child: MaterialApp(
+        home: Cruise(
+          cruiseModel: model,
+          child: const Material(child: CalendarView()),
+        ),
       ),
     ),
   );
@@ -26,13 +29,31 @@ void main() {
   testWidgets('Calendar', (WidgetTester tester) async {
     final TestCruiseModel model1 = TestCruiseModel();
 
-    await useModel(tester, model1);
+    Future<void> setupAppWithModel(WidgetTester tester, CruiseModel model) {
+      return tester.pumpWidget(
+        Now.fixed(
+          dateTime: DateTime(2019),
+          child: Cruise(
+            cruiseModel: model,
+            child: const CruiseMonkeyHome(),
+          ),
+        ),
+      );
+    }
 
+    await setupAppWithModel(tester, model1);
+
+    expect(find.text('Calendar is empty'), findsNothing);
     expect(find.byIcon(Icons.event), findsOneWidget);
     await tester.tap(find.byIcon(Icons.event));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Calendar is empty'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
+    model1.calendar.addProgress(Progress<Calendar>.completed(Calendar(events: const <Event>[])));
+    await tester.pump();
+    expect(find.text('Calendar is empty'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
     model1.calendar.addProgress(Progress<Calendar>((ProgressController<Calendar> completer) async {
@@ -161,7 +182,7 @@ void main() {
     expect(find.text('Elderberry'), findsNothing);
 
     final TestCruiseModel model2 = TestCruiseModel();
-    await useModel(tester, model2);
+    await setupAppWithModel(tester, model2);
 
     expect(find.text('Coconuts'), findsOneWidget);
     expect(find.text('Dragonfruit'), findsNothing);

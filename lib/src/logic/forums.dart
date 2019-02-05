@@ -22,7 +22,6 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
     @required this.onError,
   }) : assert(onError != null),
        assert(_twitarr != null),
-       assert(_credentials != null),
        assert(_photoManager != null);
 
   Forums.empty(
@@ -47,7 +46,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   bool _updating = false;
   @protected
   Future<void> update() async {
-    if (_updating || _credentials == null)
+    if (_updating)
       return;
     startBusy();
     _updating = true;
@@ -221,6 +220,8 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   }
 
   Progress<void> send(String text, { @required List<Uint8List> photos }) {
+    if (_credentials == null)
+      throw const LocalError('Cannot create a thread when not logged in.');
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain<void>(
         _twitarr.postForumMessage(
@@ -285,5 +286,5 @@ class ForumMessage {
 
   final DateTime timestamp;
 
-  final bool read;
+  final bool read; // this can be null
 }

@@ -9,8 +9,10 @@ import 'package:flutter/scheduler.dart';
 import 'package:meta/meta.dart';
 
 import '../basic_types.dart';
+import '../models/announcements.dart';
 import '../models/calendar.dart';
 import '../models/user.dart';
+import '../network/rest.dart' show kDefaultTwitarr;
 import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -29,28 +31,26 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   CruiseModel({
     @required TwitarrConfiguration initialTwitarrConfiguration,
     @required this.store,
-    this.frequentPollInterval = const Duration(seconds: 30), // e.g. twitarr
-    this.rarePollInterval = const Duration(seconds: 3600), // e.g. calendar
+    this.steadyPollInterval = const Duration(minutes: 10),
     @required this.onError,
     this.onCheckForMessages,
   }) : assert(initialTwitarrConfiguration != null),
        assert(store != null),
-       assert(frequentPollInterval != null),
-       assert(rarePollInterval != null),
+       assert(steadyPollInterval != null),
        assert(onError != null) {
-    _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
-    _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar); // TODO(ianh): autoretry faster on network failure
-    _seamail = Seamail.empty();
-    _forums = Forums.empty();
+    _user = PeriodicProgress<AuthenticatedUser>(steadyPollInterval, _updateUser);
+    _calendar = PeriodicProgress<Calendar>(steadyPollInterval, _updateCalendar);
+    _announcements = PeriodicProgress<List<Announcement>>(steadyPollInterval, _updateAnnouncements);
     _busy(() {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
+      _seamail = Seamail.empty();
+      _forums = _createForums();
       _restoreSettings(); // async
       _restorePhotos(); // async
     });
   }
 
-  final Duration rarePollInterval;
-  final Duration frequentPollInterval;
+  final Duration steadyPollInterval;
   final DataStore store;
   final ErrorCallback onError;
 
@@ -64,6 +64,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     if (_busyCounter == 0) {
       _user.pause();
       _calendar.pause();
+      _announcements.pause();
     }
     _busyCounter += 1;
     try {
@@ -73,6 +74,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       if (_busyCounter == 0) {
         _user.resume();
         _calendar.resume();
+        _announcements.resume();
       }
     }
   }
@@ -91,6 +93,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _twitarr.debugLatency = _debugLatency;
       _twitarr.debugReliability = _debugReliability;
       _calendar.triggerUnscheduledUpdate();
+      _announcements.triggerUnscheduledUpdate();
       notifyListeners();
     });
   }
@@ -136,11 +139,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
             debugLatency = settings[Setting.debugNetworkLatency] as double;
           if (settings.containsKey(Setting.debugNetworkReliability))
             debugReliability = settings[Setting.debugNetworkReliability] as double;
-          if (settings.containsKey(Setting.server)) {
-            final String serialization = settings[Setting.server] as String;
-            final int colon = serialization.indexOf(':');
-            selectTwitarrConfiguration(TwitarrConfiguration.from(serialization.substring(0, colon), serialization.substring(colon + 1)));
-          }
+          if (settings.containsKey(Setting.server))
+            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, kDefaultTwitarr));
           if (settings.containsKey(Setting.debugTimeDilation)) {
             timeDilation = settings[Setting.debugTimeDilation] as double;
             await SchedulerBinding.instance.reassembleApplication();
@@ -238,7 +238,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _user.reset();
       _calendar.reset();
       _seamail = Seamail.empty();
-      _forums = Forums.empty();
+      _forums = _createForums();
       if (_loggedIn.isCompleted)
         _loggedIn = Completer<void>();
     } else {
@@ -256,12 +256,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           },
           onThreadRead: _handleThreadRead,
         );
-        _forums = Forums(
-          _twitarr,
-          _currentCredentials,
-          this,
-          onError: onError,
-        );
+        _forums = _createForums();
         _loggedIn.complete();
       }
     }
@@ -270,6 +265,15 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       store.saveCredentials(_currentCredentials);
       notifyListeners();
     }
+  }
+
+  Forums _createForums() {
+    return Forums(
+      _twitarr,
+      _currentCredentials,
+      this,
+      onError: onError,
+    );
   }
 
   void _handleThreadRead(String threadId) async {
@@ -313,6 +317,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         onError('$error');
       }
     });
+  }
+
+  ContinuousProgress<List<Announcement>> get announcements => _announcements;
+  PeriodicProgress<List<Announcement>> _announcements;
+
+  Future<List<Announcement>> _updateAnnouncements(ProgressController<List<Announcement>> completer) async {
+    final List<AnnouncementSummary> summary = await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements());
+    return summary.map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this)).toList();
   }
 
   final Map<String, DateTime> _photoUpdates = <String, DateTime>{};
@@ -578,6 +590,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _alive = false;
     _user.dispose();
     _calendar.dispose();
+    _announcements.dispose();
     _twitarr.dispose();
     super.dispose();
   }

@@ -21,22 +21,22 @@ class CommsView extends StatelessWidget implements View {
   }) : super(key: key);
 
   @override
-  Widget buildTab(BuildContext context) {
+  Widget buildTabIcon(BuildContext context) {
     final Seamail seamail = Cruise.of(context).seamail;
     return AnimatedBuilder(
       animation: seamail,
       builder: (BuildContext context, Widget child) {
-        return Tab(
-          text: 'Messages',
-          icon: Badge(
-            child: child,
-            enabled: seamail.unreadCount > 0,
-          ),
+        return Badge(
+          child: child,
+          enabled: seamail.unreadCount > 0,
         );
       },
       child: const Icon(Icons.mail),
     );
   }
+
+  @override
+  Widget buildTabLabel(BuildContext context) => const Text('Messages');
 
   @override
   Widget buildFab(BuildContext context) {
@@ -132,7 +132,7 @@ class CommsView extends StatelessWidget implements View {
     final Seamail seamail = Cruise.of(context).seamail;
     final Forums forums = Cruise.of(context).forums;
     return BusyIndicator(
-      busy: OrListenable(<ValueListenable<bool>>[seamail.busy, /*forums.busy*/]),
+      busy: OrListenable(<ValueListenable<bool>>[seamail.busy, forums.busy]),
       child: AnimatedBuilder(
         animation: Listenable.merge(<Listenable>[seamail, forums]),
         builder: (BuildContext context, Widget child) {

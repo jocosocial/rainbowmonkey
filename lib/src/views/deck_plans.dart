@@ -11,12 +11,10 @@ class DeckPlanView extends StatefulWidget implements View {
   }) : super(key: key);
 
   @override
-  Widget buildTab(BuildContext context) {
-    return const Tab(
-      text: 'Deck Plans',
-      icon: Icon(Icons.directions_boat),
-    );
-  }
+  Widget buildTabIcon(BuildContext context) => const Icon(Icons.directions_boat);
+
+  @override
+  Widget buildTabLabel(BuildContext context) => const Text('Deck Plans');
 
   @override
   Widget buildFab(BuildContext context) {
@@ -105,16 +103,18 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
             child: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
                 return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minWidth: 0.0,
-                      maxWidth: constraints.maxWidth,
-                      minHeight: constraints.maxHeight,
-                      maxHeight: constraints.maxHeight * math.max(1.0, _scale * _dynamicScale),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: _decks,
+                  child: SafeArea(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: 0.0,
+                        maxWidth: constraints.maxWidth,
+                        minHeight: constraints.maxHeight,
+                        maxHeight: constraints.maxHeight * math.max(1.0, _scale * _dynamicScale),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: _decks,
+                      ),
                     ),
                   ),
                 );
@@ -122,36 +122,38 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
             ),
           ),
         ),
-        CustomPaint(
-          painter: Elevator(
-            min: kMinDeck.toDouble(),
-            max: kMaxDeck.toDouble(),
-            level: _currentLevel,
-            color: Theme.of(context).accentColor,
-          ),
-          child: DefaultTextStyle(
-            style: Theme.of(context).textTheme.button,
-            child: GestureDetector(
-              onVerticalDragStart: (DragStartDetails details) {
-                _currentLevel.stop();
-              },
-              onVerticalDragUpdate: (DragUpdateDetails details) {
-                final RenderBox box = context.findRenderObject() as RenderBox;
-                _currentLevel.value -= (details.primaryDelta / box.size.height) * (kMaxDeck - kMinDeck + 1);
-              },
-              onVerticalDragEnd: (DragEndDetails details) {
-                if (details.primaryVelocity > 0.0) {
-                  _goToDeck(_currentLevel.value.floor());
-                } else if (details.primaryVelocity < 0.0) {
-                  _goToDeck(_currentLevel.value.ceil());
-                } else {
-                  _goToDeck(_currentLevel.value.round());
-                }
-              },
-              child: Column(
-                verticalDirection: VerticalDirection.up,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: _buttons,
+        SafeArea(
+          child: CustomPaint(
+            painter: Elevator(
+              min: kMinDeck.toDouble(),
+              max: kMaxDeck.toDouble(),
+              level: _currentLevel,
+              color: Theme.of(context).accentColor,
+            ),
+            child: DefaultTextStyle(
+              style: Theme.of(context).textTheme.button,
+              child: GestureDetector(
+                onVerticalDragStart: (DragStartDetails details) {
+                  _currentLevel.stop();
+                },
+                onVerticalDragUpdate: (DragUpdateDetails details) {
+                  final RenderBox box = context.findRenderObject() as RenderBox;
+                  _currentLevel.value -= (details.primaryDelta / box.size.height) * (kMaxDeck - kMinDeck + 1);
+                },
+                onVerticalDragEnd: (DragEndDetails details) {
+                  if (details.primaryVelocity > 0.0) {
+                    _goToDeck(_currentLevel.value.floor());
+                  } else if (details.primaryVelocity < 0.0) {
+                    _goToDeck(_currentLevel.value.ceil());
+                  } else {
+                    _goToDeck(_currentLevel.value.round());
+                  }
+                },
+                child: Column(
+                  verticalDirection: VerticalDirection.up,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: _buttons,
+                ),
               ),
             ),
           ),

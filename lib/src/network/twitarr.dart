@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 import '../logic/photo_manager.dart';
+import '../models/announcements.dart';
 import '../models/calendar.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -85,10 +86,14 @@ abstract class TwitarrConfiguration {
 
   static final Map<String, TwitarrConfigurationFactory> _configurationClasses = <String, TwitarrConfigurationFactory>{};
   static void register(String prefix, TwitarrConfigurationFactory factory) {
-    assert(!_configurationClasses.containsKey(prefix));
     _configurationClasses[prefix] = factory;
   }
-  static TwitarrConfiguration from(String prefix, String settings) {
+  static TwitarrConfiguration from(String serialization, TwitarrConfiguration defaultConfig) {
+    if (serialization == null)
+      return defaultConfig;
+    final int colon = serialization.indexOf(':');
+    final String prefix = serialization.substring(0, colon);
+    final String settings = serialization.substring(colon + 1);
     if (!_configurationClasses.containsKey(prefix))
       throw Exception('unknown Twitarr configuration class "$prefix"');
     return _configurationClasses[prefix](settings);
@@ -131,6 +136,8 @@ abstract class Twitarr {
     @required String eventId,
     @required bool favorite,
   });
+
+  Progress<List<AnnouncementSummary>> getAnnouncements();
 
   Progress<Uint8List> fetchProfilePicture(String username);
 
@@ -402,6 +409,32 @@ class ForumMessageSummary {
   final DateTime timestamp;
 
   final bool read;
+}
+
+class AnnouncementSummary {
+  const AnnouncementSummary({
+    this.id,
+    this.user,
+    this.message,
+    this.timestamp,
+  });
+
+  final String id;
+
+  final UserSummary user;
+
+  final String message;
+
+  final DateTime timestamp;
+
+  Announcement toAnnouncement(PhotoManager photoManager) {
+    return Announcement(
+      id: id,
+      user: user.toUser(photoManager),
+      message: message,
+      timestamp: timestamp,
+    );
+  }
 }
 
 class UserSummary {

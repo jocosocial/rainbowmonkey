@@ -13,7 +13,8 @@ import '../progress.dart';
 import 'form_data.dart';
 import 'twitarr.dart';
 
-const String kDefaultTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
+const String _kDefaultTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
+const TwitarrConfiguration kDefaultTwitarr = RestTwitarrConfiguration(baseUrl: _kDefaultTwitarrUrl);
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
@@ -256,6 +257,33 @@ class RestTwitarr implements Twitarr {
         endTime: _parseDateTime(value.end_time as Json),
       );
     }).toList());
+  }
+
+  @override
+  Progress<List<AnnouncementSummary>> getAnnouncements() {
+    final FormData body = FormData()
+      ..add('app', 'plain');
+    return Progress<List<AnnouncementSummary>>((ProgressController<List<AnnouncementSummary>> completer) async {
+      return await compute<String, List<AnnouncementSummary>>(
+        _parseAnnouncements,
+        await completer.chain<String>(
+          _requestUtf8('GET', 'api/v2/announcements?${body.toUrlEncoded()}'),
+        ),
+      );
+    });
+  }
+
+  static List<AnnouncementSummary> _parseAnnouncements(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    _checkStatusIsOk(data);
+    return (data.announcements.asIterable() as Iterable<dynamic>).map<AnnouncementSummary>((dynamic value) {
+      return AnnouncementSummary(
+        id: value.id.toString(),
+        user: _parseUser(value.author as Json),
+        message: value.text.toString(),
+        timestamp: _parseDateTime(value.timestamp as Json),
+      );
+    }).toList();
   }
 
   @override
@@ -961,7 +989,7 @@ class RestTwitarr implements Twitarr {
           ? (post.photos as Json).asIterable().map<String>((dynamic photo) => photo.id.toString()).toList()
           : null,
         timestamp: _parseDateTime(post.timestamp as Json),
-        read: (post['new'] as Json).toBoolean(),
+        read: (post as Json).hasKey('new') ? (post['new'] as Json).toBoolean() : null,
       ));
     }
     return result;
