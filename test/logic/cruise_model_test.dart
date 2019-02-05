@@ -27,20 +27,20 @@ void main() {
     model.selectTwitarrConfiguration(config2);
     log.add('--- idling, expect settings restore to change the model');
     await tester.idle();
-    log.add('--- waiting one hour');
-    await tester.pump(const Duration(hours: 1));
+    log.add('--- waiting ten minutes');
+    await tester.pump(const Duration(minutes: 10));
     log.add('--- login');
     model.login(username: 'aaa', password: 'bbb');
     log.add('--- idling');
     await tester.idle();
-    log.add('--- waiting one hour');
-    await tester.pump(const Duration(hours: 1));
+    log.add('--- waiting ten minutes');
+    await tester.pump(const Duration(minutes: 10));
     log.add('--- examining user');
     model.user.best.addListener(() { log.add('user updated'); });
     log.add('--- idling');
     await tester.idle();
-    log.add('--- waiting 2 hours');
-    await tester.pump(const Duration(hours: 2));
+    log.add('--- waiting 20 minutes');
+    await tester.pump(const Duration(minutes: 20));
     log.add('--- end');
     model.dispose();
     expect(
@@ -53,19 +53,20 @@ void main() {
         '--- idling, expect settings restore to change the model',
         'LoggingDataStore.restoreCredentials',
         'LoggingTwitarr(2).getCalendar(null)',
-        '--- waiting one hour',
+        'LoggingTwitarr(2).getAnnouncements()',
+        '--- waiting ten minutes',
         '--- login',
         'LoggingTwitarr(2).login aaa / bbb',
         '--- idling',
         'LoggingDataStore.saveCredentials Credentials(aaa)',
         'model changed',
         'LoggingTwitarr(2).getCalendar(Credentials(aaa))',
-        '--- waiting one hour',
+        '--- waiting ten minutes',
         '--- examining user',
         '--- idling',
         'LoggingTwitarr(2).getAuthenticatedUser Credentials(aaa)',
         'user updated',
-        '--- waiting 2 hours',
+        '--- waiting 20 minutes',
         'LoggingTwitarr(2).getAuthenticatedUser Credentials(aaa)',
         'user updated',
         'LoggingTwitarr(2).getAuthenticatedUser Credentials(aaa)',
@@ -99,6 +100,7 @@ void main() {
         'LoggingTwitarr(1).login aaa / aaaaaa',
         'model changed (isLoggedIn = true)',
         'LoggingTwitarr(1).getCalendar(Credentials(aaa))',
+        'LoggingTwitarr(1).getAnnouncements()',
         '--- waiting one hour',
         '--- end',
         'LoggingTwitarr(1).dispose'
@@ -144,6 +146,7 @@ void main() {
       <String>[
         '--- idling',
         'LoggingTwitarr(0).getCalendar(null)',
+        'LoggingTwitarr(0).getAnnouncements()',
         '--- waiting 1 minute',
         '--- logging in 1',
         'LoggingTwitarr(0).login user1 / password1',
@@ -195,6 +198,7 @@ void main() {
         'LoggingTwitarr(1).login aaa / aaaaaa',
         'model changed (isLoggedIn = true)',
         'LoggingTwitarr(1).getCalendar(Credentials(aaa))',
+        'LoggingTwitarr(1).getAnnouncements()',
         '--- waiting one hour',
         '--- end',
         'LoggingTwitarr(1).dispose'

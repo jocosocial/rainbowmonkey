@@ -12,7 +12,7 @@ class Announcement {
   });
 
   final String id;
-  
+
   final User user;
 
   final String message;

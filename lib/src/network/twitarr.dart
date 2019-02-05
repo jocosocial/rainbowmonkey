@@ -420,7 +420,7 @@ class AnnouncementSummary {
   });
 
   final String id;
-  
+
   final UserSummary user;
 
   final String message;

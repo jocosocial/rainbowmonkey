@@ -52,6 +52,7 @@ Future<void> main() async {
     expect(log, <String>[
       'LoggingTwitarr(0).login username / password',
       'LoggingTwitarr(0).getCalendar(Credentials(username))',
+      'LoggingTwitarr(0).getAnnouncements()',
       'fetchProfilePicture',
       'updateProfile Hello/null/null/null/null/null/null/null/null',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)'

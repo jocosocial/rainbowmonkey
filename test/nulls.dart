@@ -96,10 +96,7 @@ class NullCruiseModel implements CruiseModel {
   final CheckForMessagesCallback onCheckForMessages = null;
 
   @override
-  final Duration rarePollInterval = null;
-
-  @override
-  final Duration frequentPollInterval = null;
+  final Duration steadyPollInterval = null;
 
   @override
   final DataStore store = null;

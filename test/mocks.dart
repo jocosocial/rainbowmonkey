@@ -147,10 +147,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final CheckForMessagesCallback onCheckForMessages = null;
 
   @override
-  final Duration rarePollInterval = const Duration(minutes: 10);
-
-  @override
-  final Duration frequentPollInterval = const Duration(minutes: 1);
+  final Duration steadyPollInterval = const Duration(minutes: 10);
 
   @override
   final DataStore store = const HangingDataStore();

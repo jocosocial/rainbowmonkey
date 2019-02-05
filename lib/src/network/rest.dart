@@ -285,7 +285,7 @@ class RestTwitarr implements Twitarr {
       );
     }).toList();
   }
-  
+
   @override
   Progress<Uint8List> fetchProfilePicture(String username) {
     return _requestBytes('GET', 'api/v2/user/photo/${Uri.encodeComponent(username)}');

@@ -256,7 +256,7 @@ class WaveShape extends NotchedShape {
     const double waveDiameter = 50.0;
     const double waveHeight = 13.0;
     const double waveWidth = 43.0;
-    
+
     final double phaseOffset = ((host.width - waveWidth) / 2.0) % waveWidth;
 
     final Path circles = Path();

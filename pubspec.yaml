@@ -6,10 +6,10 @@ dependencies:
     sdk: flutter
   path_provider: any
   flutter_local_notifications: ^0.4.5
-  image_picker: #any
-    path: ../plugins/packages/image_picker/
-  android_alarm_manager: #any
-    path: ../plugins/packages/android_alarm_manager/
+  image_picker: any
+    #path: ../plugins/packages/image_picker/
+  android_alarm_manager: any
+    #path: ../plugins/packages/android_alarm_manager/
   sqflite: any
 
 dev_dependencies:
@@ -20,6 +20,7 @@ dev_dependencies:
 flutter_icons:
   # update with: flutter packages pub run flutter_launcher_icons:main
   # create notification icon with: convert icons/foreground.png -trim +repage android/app/src/main/res/drawable/notifications.png
+  # create about dialog icon with: convert icons/cruise_monkey.png -resize 128x128 images/cruise_monkey.png
   android: true
   ios: true
   image_path: icons/cruise_monkey.png
@@ -40,3 +41,4 @@ flutter:
    - images/deck_9.png
    - images/deck_10.png
    - resources/JoCoKaraokeSongCatalog.txt
+   - images/cruise_monkey.png

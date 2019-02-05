@@ -31,18 +31,16 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   CruiseModel({
     @required TwitarrConfiguration initialTwitarrConfiguration,
     @required this.store,
-    this.frequentPollInterval = const Duration(seconds: 30), // e.g. twitarr
-    this.rarePollInterval = const Duration(seconds: 3600), // e.g. calendar
+    this.steadyPollInterval = const Duration(minutes: 10),
     @required this.onError,
     this.onCheckForMessages,
   }) : assert(initialTwitarrConfiguration != null),
        assert(store != null),
-       assert(frequentPollInterval != null),
-       assert(rarePollInterval != null),
+       assert(steadyPollInterval != null),
        assert(onError != null) {
-    _user = PeriodicProgress<AuthenticatedUser>(rarePollInterval, _updateUser);
-    _calendar = PeriodicProgress<Calendar>(rarePollInterval, _updateCalendar);
-    _announcements = PeriodicProgress<List<Announcement>>(rarePollInterval, _updateAnnouncements);
+    _user = PeriodicProgress<AuthenticatedUser>(steadyPollInterval, _updateUser);
+    _calendar = PeriodicProgress<Calendar>(steadyPollInterval, _updateCalendar);
+    _announcements = PeriodicProgress<List<Announcement>>(steadyPollInterval, _updateAnnouncements);
     _busy(() {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
       _seamail = Seamail.empty();
@@ -52,8 +50,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     });
   }
 
-  final Duration rarePollInterval;
-  final Duration frequentPollInterval;
+  final Duration steadyPollInterval;
   final DataStore store;
   final ErrorCallback onError;
 

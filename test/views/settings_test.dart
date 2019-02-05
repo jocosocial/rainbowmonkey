@@ -52,12 +52,15 @@ Future<void> main() async {
     expect(log, <String>[
       'LoggingTwitarr(497174609).login aaa / aaaaaa',
       'LoggingTwitarr(497174609).getCalendar(Credentials(aaa))',
+      'LoggingTwitarr(497174609).getAnnouncements()',
       '--',
       'LoggingTwitarr(497174609).dispose',
       'LoggingTwitarr(387053049).getCalendar(null)',
+      'LoggingTwitarr(387053049).getAnnouncements()',
       '--',
       'LoggingTwitarr(387053049).dispose',
       'LoggingTwitarr(207387977).getCalendar(null)',
+      'LoggingTwitarr(207387977).getAnnouncements()',
       '--',
     ]);
   });

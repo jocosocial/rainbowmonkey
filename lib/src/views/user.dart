@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../graphics.dart';
 import '../models/announcements.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -94,7 +93,7 @@ class _UserViewState extends State<UserView> {
       builder: (BuildContext context) => const LoginDialog(),
     );
   }
-            
+
   @override
   Widget build(BuildContext context) {
     final ProgressValue<AuthenticatedUser> _bestUserValue = this._bestUserValue; // https://github.com/dart-lang/sdk/issues/34480
@@ -104,21 +103,36 @@ class _UserViewState extends State<UserView> {
         Widget header;
         bool loggedIn;
         if (_bestUserValue is StartingProgress) {
-          header = Center(
+          header = Column(
             key: _progressHeader,
-            child: const CircularProgressIndicator(),
+            children: const <Widget>[
+              Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              Text('Logging in...\n'),
+            ],
           );
           loggedIn = false;
         } else if (_bestUserValue is ActiveProgress) {
           final ActiveProgress activeProgress = _bestUserValue;
-          header = Center(
+          header = Column(
             key: _progressHeader,
-            child: CircularProgressIndicator(value: activeProgress.progress / activeProgress.target),
+            children: <Widget>[
+              Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(value: activeProgress.progress / activeProgress.target),
+                ),
+              ),
+              const Text('Logging in...\n'),
+            ],
           );
           loggedIn = false;
         } else if (_bestUserValue is FailedProgress) {
-          header = Center(
+          header = Align(
             key: _errorHeader,
+            alignment: Alignment.bottomCenter,
             child: Text('Last error while logging in:\n${wrapError(_bestUserValue.error)}'),
           );
           loggedIn = false;
@@ -127,44 +141,26 @@ class _UserViewState extends State<UserView> {
           if (_bestUserValue is SuccessfulProgress<AuthenticatedUser>)
             user = _bestUserValue.value;
           if (user != null) {
-            header = Center(
+            header = Column(
               key: _userHeader,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: FittedBox(
-                        child: Cruise.of(context).avatarFor(user),
-                      ),
+              children: <Widget>[
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: FittedBox(
+                      child: Cruise.of(context).avatarFor(user),
                     ),
                   ),
-                  Text(user.toString(), style: textTheme.display1),
-                ],
-              ),
+                ),
+                Text(user.toString(), style: textTheme.display1),
+              ],
             );
             loggedIn = true;
           } else {
             header = Column(
               key: _idleHeader,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 12.0),
-                    child: FittedBox(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 20.0),
-                        child: SizedBox.fromSize(
-                          size: shipSize,
-                          child: CustomPaint(
-                            painter: ShipPainter(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
                 Text('Welcome to', style: textTheme.headline),
                 Text('Cruisemonkey', style: textTheme.headline),
               ],
@@ -179,11 +175,23 @@ class _UserViewState extends State<UserView> {
             textAlign: TextAlign.center,
             child: SizedBox(
               height: viewportConstraints.maxHeight * 0.3,
-              child: AnimatedSwitcher(
-                duration: animationDuration,
-                switchInCurve: animationCurve,
-                switchOutCurve: animationCurve,
-                child: header,
+              child: Stack(
+                children: <Widget>[
+                  const Positioned(
+                    top: 40.0,
+                    left: 40.0,
+                    right: 40.0,
+                    child: Ship(),
+                  ),
+                  Positioned.fill(
+                    child: AnimatedSwitcher(
+                      duration: animationDuration,
+                      switchInCurve: animationCurve,
+                      switchOutCurve: animationCurve,
+                      child: header,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -200,75 +208,39 @@ class _UserViewState extends State<UserView> {
                 children: loggedIn ?
                   <Widget>[
                     Expanded(
-                      child: Center(
-                        child: FlatButton(
-                          onPressed: loggedIn ? () { Cruise.of(context).logout(); } : null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              children: const <Widget>[
-                                Icon(Icons.clear),
-                                Text('Log out'),
-                              ],
-                            ),
-                          ),
-                        ),
+                      child: LabeledIconButton(
+                        onPressed: loggedIn ? () { Cruise.of(context).logout(); } : null,
+                        icon: const Icon(Icons.clear),
+                        label: const Text('LOG OUT'),
                       ),
                     ),
                     Expanded(
-                      child: Center(
-                        child: FlatButton(
-                          onPressed: loggedIn ? () { Navigator.pushNamed(context, '/profile'); } : null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              children: const <Widget>[
-                                Icon(Icons.edit),
-                                Text('Edit Profile'),
-                              ],
-                            ),
-                          ),
-                        ),
+                      child: LabeledIconButton(
+                        onPressed: loggedIn ? () { Navigator.pushNamed(context, '/profile'); } : null,
+                        icon: const Icon(Icons.edit),
+                        label: const Text('EDIT PROFILE'),
                       ),
                     ),
                   ] : <Widget>[
                     Expanded(
-                      child: Center(
-                        child: FlatButton(
-                          onPressed: loggedIn ? null : _login,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              children: const <Widget>[
-                                Icon(Icons.person),
-                                Text('Log in'),
-                              ],
-                            ),
-                          ),
-                        ),
+                      child: LabeledIconButton(
+                        onPressed: loggedIn ? null : _login,
+                        icon: const Icon(Icons.person),
+                        label: const Text('LOG IN'),
                       ),
                     ),
                     Expanded(
-                      child: Center(
-                        child: FlatButton(
-                          onPressed: loggedIn ? null : () { Navigator.pushNamed(context, '/create_account'); },
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              children: const <Widget>[
-                                Icon(Icons.person_add),
-                                Text('Create Account'),
-                              ],
-                            ),
-                          ),
-                        ),
+                      child: LabeledIconButton(
+                        onPressed: loggedIn ? null : () { Navigator.pushNamed(context, '/create_account'); },
+                        icon: const Icon(Icons.person_add),
+                        label: const Text('CREATE ACCOUNT'),
                       ),
                     ),
                   ],
               ),
             ),
           ),
-          Divider(),
+          const Divider(),
           ContinuousProgressBuilder<List<Announcement>>(
             progress: Cruise.of(context).announcements,
             nullChild: const SizedBox.shrink(),
@@ -290,36 +262,35 @@ class _UserViewState extends State<UserView> {
               );
             },
           ),
-          Divider(),
-          Center(
-            child: FlatButton(
-              child: const Text('ABOUT'),
-              onPressed: () {
-                showAboutDialog(
-                  context: context,
-                  applicationName: 'CruiseMonkey',
-                  applicationVersion: 'JoCo 2019',
-                  children: <Widget>[
-                    const Text('A project of the Seamonkey Social group.'),
-                  ],
-                );
-              },
-            ),
+          const Divider(),
+          LabeledIconButton(
+            icon: const Icon(Icons.help_outline),
+            label: const Text('ABOUT CRUISEMONKEY'),
+            onPressed: () {
+              showAboutDialog(
+                context: context,
+                applicationName: 'Cruise 0Monkey',
+                applicationVersion: 'JoCo 2019',
+                applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
+                children: <Widget>[
+                  const Text('A project of the Seamonkey Social group.'),
+                  // TODO(ianh): include a link to https://github.com/seamonkeysocial/
+                ],
+              );
+            },
           ),
         ];
-/*        
-
         assert(() {
           // Settings screen only shows up in debug builds,
           // because it's really just debug settings.
+          tiles.add(const SizedBox(height: 48.0));
           tiles.add(ValueListenableBuilder<bool>(
             valueListenable: Cruise.of(context).restoringSettings,
             builder: (BuildContext context, bool busy, Widget child) {
-              return ListTile(
-                leading: const Icon(Icons.settings),
-                title: const Text('Settings'),
-                enabled: !busy,
-                onTap: busy ? null : () {
+              return LabeledIconButton(
+                icon: const Icon(Icons.settings),
+                label: const Text('SETTINGS'),
+                onPressed: busy ? null : () {
                   Navigator.pushNamed(context, '/settings');
                 },
               );
@@ -328,10 +299,8 @@ class _UserViewState extends State<UserView> {
           return true;
         }());
 
-        tiles.add(const AboutListTile(
-        ));
         assert(_bestUserValue == this._bestUserValue); // https://github.com/dart-lang/sdk/issues/34480
-*/
+
         return SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -349,18 +318,4 @@ class _UserViewState extends State<UserView> {
       },
     );
   }
-}
-
-class ShipPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    assert(size == shipSize);
-    final Path path = ship();
-    final Paint paint = Paint()
-      ..color = Colors.grey[300];
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(ShipPainter oldPainter) => false;
 }
