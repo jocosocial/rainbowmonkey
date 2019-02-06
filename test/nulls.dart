@@ -9,6 +9,7 @@ import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/logic/stream.dart';
 import 'package:cruisemonkey/src/models/announcements.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/models/server_text.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -156,6 +157,9 @@ class NullCruiseModel implements CruiseModel {
 
   @override
   final MutableContinuousProgress<List<Announcement>> announcements = null;
+
+  @override
+  Progress<ServerText> fetchServerText(String filename) => null;
 
   @override
   Seamail get seamail => null;

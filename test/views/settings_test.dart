@@ -40,28 +40,40 @@ Future<void> main() async {
     );
     expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'https://example.com/'));
     log.add('--');
-    await tester.tap(find.text('gbasden\'s server'));
+    expect(find.text('URL is not valid'), findsNothing);
+    expect(find.text('https://example.com/'), findsOneWidget);
+    await tester.tap(find.text('Automatically pick server'));
     await tester.pump();
-    expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://69.62.137.54:42111/'));
+    expect(model.twitarrConfiguration, const AutoTwitarrConfiguration());
     log.add('--');
-    await tester.tap(find.text('hendusoone\'s server'));
+    await tester.enterText(find.text('https://example.com/'), 'bla');
     await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('https://example.com/'), findsNothing);
+    expect(find.text('bla'), findsOneWidget);
     log.add('--');
     await tester.idle();
-    expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://twitarrdev.wookieefive.net:3000/'));
+    expect(model.twitarrConfiguration, const AutoTwitarrConfiguration());
+    await tester.enterText(find.text('bla'), 'http://invalid');
+    await tester.pump();
+    expect(find.text('bla'), findsNothing);
+    expect(model.twitarrConfiguration, const RestTwitarrConfiguration(baseUrl: 'http://invalid'));
+    log.add('--');
+    await tester.idle();
     expect(log, <String>[
-      'LoggingTwitarr(497174609).login aaa / aaaaaa',
-      'LoggingTwitarr(497174609).getCalendar(Credentials(aaa))',
-      'LoggingTwitarr(497174609).getAnnouncements()',
+      'LoggingTwitarr(25).login aaa / aaaaaa',
+      'LoggingTwitarr(25).getCalendar(Credentials(aaa))',
+      'LoggingTwitarr(25).getAnnouncements()',
       '--',
-      'LoggingTwitarr(497174609).dispose',
-      'LoggingTwitarr(387053049).getCalendar(null)',
-      'LoggingTwitarr(387053049).getAnnouncements()',
+      'LoggingTwitarr(25).dispose',
+      'LoggingTwitarr(5).getCalendar(null)',
+      'LoggingTwitarr(5).getAnnouncements()',
       '--',
-      'LoggingTwitarr(387053049).dispose',
-      'LoggingTwitarr(207387977).getCalendar(null)',
-      'LoggingTwitarr(207387977).getAnnouncements()',
       '--',
+      'LoggingTwitarr(5).dispose',
+      'LoggingTwitarr(19).getCalendar(null)',
+      'LoggingTwitarr(19).getAnnouncements()',
+      '--'
     ]);
   });
 }
@@ -87,6 +99,6 @@ class _TestCruiseModel extends CruiseModel {
   @override
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
     _twitarrConfiguration = newConfiguration;
-    super.selectTwitarrConfiguration(LoggingTwitarrConfiguration(newConfiguration.hashCode));
+    super.selectTwitarrConfiguration(LoggingTwitarrConfiguration(newConfiguration.toString().length));
   }
 }

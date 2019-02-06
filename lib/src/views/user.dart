@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../graphics.dart';
 import '../models/announcements.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -181,7 +182,10 @@ class _UserViewState extends State<UserView> {
                     top: 40.0,
                     left: 40.0,
                     right: 40.0,
-                    child: Ship(),
+                    bottom: 0,
+                    child: Ship(
+                      alignment: Alignment.topCenter,
+                    ),
                   ),
                   Positioned.fill(
                     child: AnimatedSwitcher(
@@ -263,28 +267,44 @@ class _UserViewState extends State<UserView> {
             },
           ),
           const Divider(),
-          LabeledIconButton(
-            icon: const Icon(Icons.help_outline),
-            label: const Text('ABOUT CRUISEMONKEY'),
-            onPressed: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Cruise 0Monkey',
-                applicationVersion: 'JoCo 2019',
-                applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
-                children: <Widget>[
-                  const Text('A project of the Seamonkey Social group.'),
-                  // TODO(ianh): include a link to https://github.com/seamonkeysocial/
-                ],
-              );
-            },
+          IntrinsicHeight(
+            child: Row(
+              key: ValueKey<bool>(loggedIn),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                Expanded(
+                  child: LabeledIconButton(
+                    icon: const Icon(Icons.help_outline),
+                    label: const Text('ABOUT CRUISEMONKEY'),
+                    onPressed: () {
+                      showAboutDialog(
+                        context: context,
+                        applicationName: 'Cruise Monkey',
+                        applicationVersion: 'JoCo 2019',
+                        applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
+                        children: <Widget>[
+                          const Text('A project of the Seamonkey Social group.'),
+                          // TODO(ianh): include a link to https://github.com/seamonkeysocial/
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: LabeledIconButton(
+                    icon: const Icon(Icons.gavel),
+                    label: const Text('CODE OF CONDUCT'),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/code-of-conduct');
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-        ];
-        assert(() {
-          // Settings screen only shows up in debug builds,
-          // because it's really just debug settings.
-          tiles.add(const SizedBox(height: 48.0));
-          tiles.add(ValueListenableBuilder<bool>(
+          const SizedBox(height: 48.0),
+          ValueListenableBuilder<bool>(
             valueListenable: Cruise.of(context).restoringSettings,
             builder: (BuildContext context, bool busy, Widget child) {
               return LabeledIconButton(
@@ -295,9 +315,8 @@ class _UserViewState extends State<UserView> {
                 },
               );
             },
-          ));
-          return true;
-        }());
+          ),
+        ];
 
         assert(_bestUserValue == this._bestUserValue); // https://github.com/dart-lang/sdk/issues/34480
 

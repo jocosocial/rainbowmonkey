@@ -118,11 +118,7 @@ class _CreateAccountState extends State<CreateAccount> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
                   <Widget>[
-                    const Text(
-                      // TODO(ianh): get text from server, /api/v2/text/weclome
-                      'To create an account on the Twitarr server, please fill in the '
-                      'following fields, then press the "Create account" button below.'
-                    ),
+                    const ServerTextView('welcome'),
                     const SizedBox(height: 24.0),
                     SizedBox(
                       height: 96.0,

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/models/server_text.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -192,6 +193,12 @@ class LoggingTwitarr extends Twitarr {
   Progress<List<AnnouncementSummary>> getAnnouncements() {
     log.add('LoggingTwitarr(${_configuration.id}).getAnnouncements()');
     return const Progress<List<AnnouncementSummary>>.idle();
+  }
+
+  @override
+  Progress<ServerText> fetchServerText(String filename) {
+    log.add('LoggingTwitarr(${_configuration.id}).fetchServerText($filename)');
+    return const Progress<ServerText>.idle();
   }
 
   @override

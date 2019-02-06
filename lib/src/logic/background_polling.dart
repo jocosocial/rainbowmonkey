@@ -62,7 +62,7 @@ Future<void> _backgroundUpdate() async {
     }
     final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
     final String server = settings[Setting.server] as String;
-    final Twitarr twitarr = TwitarrConfiguration.from(server, kDefaultTwitarr).createTwitarr();
+    final Twitarr twitarr = TwitarrConfiguration.from(server, const AutoTwitarrConfiguration()).createTwitarr();
     if (settings.containsKey(Setting.debugNetworkLatency))
       twitarr.debugLatency = settings[Setting.debugNetworkLatency] as double;
     if (settings.containsKey(Setting.debugNetworkReliability))
