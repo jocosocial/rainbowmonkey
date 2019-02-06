@@ -11,8 +11,9 @@ import 'package:meta/meta.dart';
 import '../basic_types.dart';
 import '../models/announcements.dart';
 import '../models/calendar.dart';
+import '../models/server_text.dart';
 import '../models/user.dart';
-import '../network/rest.dart' show kDefaultTwitarr;
+import '../network/rest.dart' show AutoTwitarrConfiguration;
 import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -87,12 +88,13 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         if (newConfiguration == _twitarr.configuration)
           return;
         _twitarr.dispose();
-        logout();
       }
       _twitarr = newConfiguration.createTwitarr();
       _twitarr.debugLatency = _debugLatency;
       _twitarr.debugReliability = _debugReliability;
+      logout();
       _calendar.triggerUnscheduledUpdate();
+      _announcements.reset();
       _announcements.triggerUnscheduledUpdate();
       notifyListeners();
     });
@@ -140,7 +142,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           if (settings.containsKey(Setting.debugNetworkReliability))
             debugReliability = settings[Setting.debugNetworkReliability] as double;
           if (settings.containsKey(Setting.server))
-            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, kDefaultTwitarr));
+            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, const AutoTwitarrConfiguration()));
           if (settings.containsKey(Setting.debugTimeDilation)) {
             timeDilation = settings[Setting.debugTimeDilation] as double;
             await SchedulerBinding.instance.reassembleApplication();
@@ -325,6 +327,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   Future<List<Announcement>> _updateAnnouncements(ProgressController<List<Announcement>> completer) async {
     final List<AnnouncementSummary> summary = await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements());
     return summary.map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this)).toList();
+  }
+
+  Progress<ServerText> fetchServerText(String filename) {
+    return _twitarr.fetchServerText(filename);
   }
 
   final Map<String, DateTime> _photoUpdates = <String, DateTime>{};

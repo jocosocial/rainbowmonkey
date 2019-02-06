@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
+
 const Size shipSize = Size(384.25, 91.264);
 
 /// Paints a ship at 0,0.
@@ -52,4 +54,70 @@ Path ship() {
     ..cubicTo(0.639, 78.696, 7.632, 87.717, 7.632, 87.717)
     ..cubicTo(3.764, 88.954, 1.397, 90.269, 0.0, 91.264)
     ..close();
+}
+
+class WaveShape extends NotchedShape {
+  const WaveShape();
+
+  @override
+  Path getOuterPath(Rect host, Rect guest) {
+    const double waveDiameter = 50.0;
+    const double waveHeight = 13.0;
+    const double waveWidth = 43.0;
+
+    final double phaseOffset = ((host.width - waveWidth) / 2.0) % waveWidth;
+
+    final Path circles = Path();
+    double left = host.left - phaseOffset;
+    while (left < host.right) {
+      circles.addOval(
+        Rect.fromCircle(
+          center: Offset(left + waveWidth / 2.0, host.top + waveHeight - waveDiameter / 2.0),
+          radius: waveDiameter / 2.0,
+        ),
+      );
+      left += waveWidth;
+    }
+    final Path waves = Path.combine(PathOperation.difference, Path()..addRect(host), circles);
+
+    if (guest != null)
+      return Path.combine(PathOperation.difference, waves, Path()..addOval(guest.inflate(guest.width * 0.05)));
+    return waves;
+  }
+}
+
+class Ship extends StatelessWidget {
+  const Ship({ Key key, this.alignment = Alignment.center }) : assert(alignment != null), super(key: key);
+
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      alignment: alignment,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20.0),
+        child: SizedBox.fromSize(
+          size: shipSize,
+          child: CustomPaint(
+            painter: _ShipPainter(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShipPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    assert(size == shipSize);
+    final Path path = ship();
+    final Paint paint = Paint()
+      ..color = Colors.grey[300];
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ShipPainter oldPainter) => false;
 }

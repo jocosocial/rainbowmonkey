@@ -4,12 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'src/graphics.dart';
 import 'src/logic/background_polling.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
 import 'src/network/rest.dart';
 import 'src/views/calendar.dart';
+import 'src/views/code_of_conduct.dart';
 import 'src/views/comms.dart';
 import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
@@ -25,9 +27,10 @@ final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 void main() {
   WidgetsFlutterBinding();
   print('CruiseMonkey has started');
+  AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
   final CruiseModel model = CruiseModel(
-    initialTwitarrConfiguration: kDefaultTwitarr,
+    initialTwitarrConfiguration: const AutoTwitarrConfiguration(),
     store: DiskDataStore(),
     onError: _handleError,
     onCheckForMessages: checkForMessages,
@@ -216,18 +219,24 @@ class CruiseMonkeyHome extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 20.0),
                       child: Center(
                         heightFactor: 1.0,
-                        child: TabBar(
-                          isScrollable: true,
-                          indicator: BoxDecoration(
-                            color: const Color(0x10FFFFFF),
-                            border: Border(
-                              top: BorderSide(
-                                color: theme.accentColor,
-                                width: 10.0,
+                        child: LayoutBuilder(
+                          builder: (BuildContext context, BoxConstraints constraints) {
+                            if (constraints.maxWidth == 0)
+                              return const SizedBox.shrink();
+                            return TabBar(
+                              isScrollable: true,
+                              indicator: BoxDecoration(
+                                color: const Color(0x10FFFFFF),
+                                border: Border(
+                                  top: BorderSide(
+                                    color: theme.accentColor,
+                                    width: 10.0,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          tabs: pages.map<Widget>((View page) => buildTab(context, page, iconPadding: const EdgeInsets.only(top: 8.0))).toList(),
+                              tabs: pages.map<Widget>((View page) => buildTab(context, page, iconPadding: const EdgeInsets.only(top: 8.0))).toList(),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -242,38 +251,9 @@ class CruiseMonkeyHome extends StatelessWidget {
         '/profile': (BuildContext context) => const Profile(),
         '/create_account': (BuildContext context) => const CreateAccount(),
         '/settings': (BuildContext context) => const Settings(),
+        '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
         '/twitarr': (BuildContext context) => const TweetStreamView(),
       },
     );
-  }
-}
-
-class WaveShape extends NotchedShape {
-  const WaveShape();
-
-  @override
-  Path getOuterPath(Rect host, Rect guest) {
-    const double waveDiameter = 50.0;
-    const double waveHeight = 13.0;
-    const double waveWidth = 43.0;
-
-    final double phaseOffset = ((host.width - waveWidth) / 2.0) % waveWidth;
-
-    final Path circles = Path();
-    double left = host.left - phaseOffset;
-    while (left < host.right) {
-      circles.addOval(
-        Rect.fromCircle(
-          center: Offset(left + waveWidth / 2.0, host.top + waveHeight - waveDiameter / 2.0),
-          radius: waveDiameter / 2.0,
-        ),
-      );
-      left += waveWidth;
-    }
-    final Path waves = Path.combine(PathOperation.difference, Path()..addRect(host), circles);
-
-    if (guest != null)
-      return Path.combine(PathOperation.difference, waves, Path()..addOval(guest.inflate(guest.width * 0.05)));
-    return waves;
   }
 }

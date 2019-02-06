@@ -8,13 +8,14 @@ import 'package:flutter/foundation.dart';
 import '../json.dart';
 import '../logic/photo_manager.dart';
 import '../models/calendar.dart';
+import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import 'form_data.dart';
 import 'twitarr.dart';
 
-const String _kDefaultTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
-const TwitarrConfiguration kDefaultTwitarr = RestTwitarrConfiguration(baseUrl: _kDefaultTwitarrUrl);
+const String _kShipTwitarrUrl = 'http://joco.hollandamerica.com/';
+const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
@@ -52,18 +53,56 @@ class RestTwitarrConfiguration extends TwitarrConfiguration {
   String get settings => baseUrl;
 }
 
+class AutoTwitarrConfiguration extends TwitarrConfiguration {
+  const AutoTwitarrConfiguration();
+
+  @override
+  Twitarr createTwitarr() {
+    final DateTime now = DateTime.now();
+    if (now.isBefore(DateTime(2019, 3, 7)) || now.isAfter(DateTime(2019, 3, 18)))
+      return RestTwitarr(baseUrl: _kDevTwitarrUrl, isAuto: true);
+    return RestTwitarr(baseUrl: _kShipTwitarrUrl, isAuto: true);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other.runtimeType == runtimeType;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  static void register() {
+    TwitarrConfiguration.register(_prefix, _factory);
+  }
+
+  static const String _prefix = 'auto';
+
+  static AutoTwitarrConfiguration _factory(String settings) {
+    return const AutoTwitarrConfiguration();
+  }
+
+  @override
+  String get prefix => _prefix;
+
+  @override
+  String get settings => '';
+}
+
 /// An implementation of [Twitarr] that uses the HTTP protocol
 /// implemented by <https://github.com/seamonkeysocial/twitarr>.
 class RestTwitarr implements Twitarr {
-  RestTwitarr({ @required this.baseUrl }) : assert(baseUrl != null) {
+  RestTwitarr({ @required this.baseUrl, this.isAuto = false }) : assert(baseUrl != null), assert(isAuto != null) {
     _client = HttpClient();
     _parsedBaseUrl = Uri.parse(baseUrl);
   }
 
   final String baseUrl;
 
+  final bool isAuto;
+
   @override
-  TwitarrConfiguration get configuration => RestTwitarrConfiguration(baseUrl: baseUrl);
+  TwitarrConfiguration get configuration => isAuto ? const AutoTwitarrConfiguration() : RestTwitarrConfiguration(baseUrl: baseUrl);
 
   @override
   double debugLatency = 0.0;
@@ -245,7 +284,7 @@ class RestTwitarr implements Twitarr {
   static Calendar _parseCalendar(String rawData) {
     final dynamic data = Json.parse(rawData);
     _checkStatusIsOk(data);
-    return Calendar(events: (data.events.asIterable() as Iterable<dynamic>).map<Event>((dynamic value) {
+    return Calendar(events: (data.events as Json).asIterable().map<Event>((dynamic value) {
       return Event(
         id: value.id.toString(),
         title: value.title.toString(),
@@ -276,7 +315,7 @@ class RestTwitarr implements Twitarr {
   static List<AnnouncementSummary> _parseAnnouncements(String rawData) {
     final dynamic data = Json.parse(rawData);
     _checkStatusIsOk(data);
-    return (data.announcements.asIterable() as Iterable<dynamic>).map<AnnouncementSummary>((dynamic value) {
+    return (data.announcements as Json).asIterable().map<AnnouncementSummary>((dynamic value) {
       return AnnouncementSummary(
         id: value.id.toString(),
         user: _parseUser(value.author as Json),
@@ -284,6 +323,43 @@ class RestTwitarr implements Twitarr {
         timestamp: _parseDateTime(value.timestamp as Json),
       );
     }).toList();
+  }
+
+  @override
+  Progress<ServerText> fetchServerText(String filename) {
+    final FormData body = FormData()
+      ..add('app', 'plain');
+    return Progress<ServerText>((ProgressController<ServerText> completer) async {
+      return await compute<String, ServerText>(
+        _parseServerText,
+        await completer.chain<String>(
+          _requestUtf8('GET', 'api/v2/text/${Uri.encodeComponent(filename)}?${body.toUrlEncoded()}'),
+        ),
+      );
+    });
+  }
+
+  static ServerText _parseServerText(String rawData) {
+    final Json data = Json.parse(rawData);
+    final List<dynamic> sectionsList = ((data.asIterable().first as dynamic).sections as Json).asIterable().toList();
+    return ServerText(sectionsList.map<ServerTextSection>((dynamic section) {
+      String header;
+      if ((section as Json).hasKey('header'))
+        header = section.header.toString();
+      List<ServerTextParagraph> paragraphs;
+      if ((section as Json).hasKey('paragraphs')) {
+        paragraphs = (section.paragraphs as Json).asIterable().expand<ServerTextParagraph>((dynamic paragraph) sync* {
+          if ((paragraph as Json).hasKey('text'))
+            yield ServerTextParagraph(paragraph.text.toString());
+          if ((paragraph as Json).hasKey('list')) {
+            yield* (paragraph.list as Json).asIterable().map<ServerTextParagraph>((dynamic item) {
+              return ServerTextParagraph(item.toString(), hasBullet: true);
+            });
+          }
+        }).toList();
+      }
+      return ServerTextSection(header: header, paragraphs: paragraphs);
+    }).toList());
   }
 
   @override
@@ -1040,7 +1116,7 @@ class RestTwitarr implements Twitarr {
         .map((List<int> bytes) {
           if (response.contentLength > 0) {
             count += bytes.length;
-            completer.advance(count.toDouble(), response.contentLength.toDouble());
+            completer.advance(count.toDouble(), math.max(count, response.contentLength).toDouble());
           }
           return bytes;
         })
@@ -1129,6 +1205,8 @@ class RestTwitarr implements Twitarr {
         completer.advance(0.0, response.contentLength.toDouble());
       return response;
     } on SocketException catch (error) {
+      if (error.osError.errorCode == 7)
+        throw const ServerError(<String>['The DNS server is down or the Twitarr server is non-existent.']);
       if (error.osError.errorCode == 111)
         throw const ServerError(<String>['The server is down.']);
       if (error.osError.errorCode == 113)

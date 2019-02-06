@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../logic/photo_manager.dart';
 import '../models/announcements.dart';
 import '../models/calendar.dart';
+import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
 
@@ -138,6 +139,8 @@ abstract class Twitarr {
   });
 
   Progress<List<AnnouncementSummary>> getAnnouncements();
+
+  Progress<ServerText> fetchServerText(String filename);
 
   Progress<Uint8List> fetchProfilePicture(String username);
 

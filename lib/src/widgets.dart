@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'graphics.dart';
 import 'logic/cruise.dart';
+import 'models/server_text.dart';
 import 'models/user.dart';
 import 'progress.dart';
 import 'utils.dart';
@@ -683,7 +683,10 @@ class LabeledIconButton extends StatelessWidget {
             children: <Widget>[
               icon,
               const SizedBox(height: 8.0),
-              label,
+              DefaultTextStyle.merge(
+                textAlign: TextAlign.center,
+                child: label,
+              ),
             ],
           ),
         ),
@@ -692,34 +695,86 @@ class LabeledIconButton extends StatelessWidget {
   }
 }
 
-class Ship extends StatelessWidget {
-  const Ship({ Key key }) : super(key: key);
+class ServerTextView extends StatefulWidget {
+  const ServerTextView(this.filename, { Key key }) : super(key: key);
+
+  final String filename;
+
+  @override
+  State<ServerTextView> createState() => _ServerTextViewState();
+}
+
+class _ServerTextViewState extends State<ServerTextView> {
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateText();
+  }
+
+  @override
+  void didUpdateWidget(ServerTextView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.filename != oldWidget.filename)
+      _updateText();
+  }
+
+  Progress<ServerText> _serverText;
+
+  void _updateText() {
+    _serverText = Cruise.of(context).fetchServerText(widget.filename);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
+    assert(_serverText != null);
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.only(left: 20.0),
-        child: SizedBox.fromSize(
-          size: shipSize,
-          child: CustomPaint(
-            painter: _ShipPainter(),
+        padding: const EdgeInsets.fromLTRB(20.0, 5.0, 20.0, 20.0),
+        child: IntrinsicHeight(
+          child: ProgressBuilder<ServerText>(
+            progress: _serverText,
+            builder: (BuildContext context, ServerText text) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: text.sections.expand<Widget>((ServerTextSection section) sync* {
+                  if (section.header != null) {
+                    yield Padding(
+                      padding: EdgeInsets.only(
+                        top: textTheme.title.fontSize,
+                        bottom: textTheme.body1.fontSize / 2.0,
+                      ),
+                      child: Text(section.header, style: textTheme.title),
+                    );
+                  }
+                  if (section.paragraphs != null) {
+                    yield* section.paragraphs.map<Widget>((ServerTextParagraph paragraph) {
+                      final Widget body = Text(paragraph.text, style: textTheme.body1);
+                      if (paragraph.hasBullet) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: <Widget>[
+                            Text(' • ', style: textTheme.body1),
+                            Expanded(child: body),
+                          ],
+                        );
+                      }
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: textTheme.body1.fontSize / 2.0,
+                        ),
+                        child: body,
+                      );
+                    });
+                  }
+                }).toList(),
+              );
+            },
           ),
         ),
       ),
     );
   }
-}
-
-class _ShipPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    assert(size == shipSize);
-    final Path path = ship();
-    final Paint paint = Paint()
-      ..color = Colors.grey[300];
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(_ShipPainter oldPainter) => false;
 }
