@@ -61,18 +61,18 @@ Future<void> main() async {
     log.add('--');
     await tester.idle();
     expect(log, <String>[
-      'LoggingTwitarr(497174609).login aaa / aaaaaa',
-      'LoggingTwitarr(497174609).getCalendar(Credentials(aaa))',
-      'LoggingTwitarr(497174609).getAnnouncements()',
+      'LoggingTwitarr(25).login aaa / aaaaaa',
+      'LoggingTwitarr(25).getCalendar(Credentials(aaa))',
+      'LoggingTwitarr(25).getAnnouncements()',
       '--',
-      'LoggingTwitarr(497174609).dispose',
-      'LoggingTwitarr(1064653154).getCalendar(null)',
-      'LoggingTwitarr(1064653154).getAnnouncements()',
+      'LoggingTwitarr(25).dispose',
+      'LoggingTwitarr(5).getCalendar(null)',
+      'LoggingTwitarr(5).getAnnouncements()',
       '--',
       '--',
-      'LoggingTwitarr(1064653154).dispose',
-      'LoggingTwitarr(274681805).getCalendar(null)',
-      'LoggingTwitarr(274681805).getAnnouncements()',
+      'LoggingTwitarr(5).dispose',
+      'LoggingTwitarr(19).getCalendar(null)',
+      'LoggingTwitarr(19).getAnnouncements()',
       '--'
     ]);
   });
@@ -99,6 +99,6 @@ class _TestCruiseModel extends CruiseModel {
   @override
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
     _twitarrConfiguration = newConfiguration;
-    super.selectTwitarrConfiguration(LoggingTwitarrConfiguration(newConfiguration.hashCode));
+    super.selectTwitarrConfiguration(LoggingTwitarrConfiguration(newConfiguration.toString().length));
   }
 }
