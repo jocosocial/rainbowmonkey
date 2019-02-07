@@ -219,7 +219,7 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
                   child: SizedBox(
                     height: 160.0,
                     width: 160.0,
-                    child: Cruise.of(context).avatarFor(widget.user),
+                    child: Cruise.of(context).avatarFor(<User>[widget.user]),
                   ),
                 ),
               ),

@@ -186,7 +186,7 @@ class NullCruiseModel implements CruiseModel {
   void removeListenerForUserPhoto(String username, VoidCallback listener) { }
 
   @override
-  Widget avatarFor(User user, { double size: 40.0 }) => null;
+  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0 }) => null;
 
   @override
   Widget imageFor(String photoId) => null;

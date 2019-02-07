@@ -107,6 +107,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                 child: BusyIndicator(
                   busy: widget.thread.busy,
                   child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 8.0),
                     reverse: true,
                     itemBuilder: (BuildContext context, int index) {
                       final ForumMessage message = messages[index];

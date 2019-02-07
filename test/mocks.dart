@@ -259,7 +259,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
-  Widget avatarFor(User user, { double size: 40.0 }) => null;
+  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0 }) => null;
 
   @override
   Widget imageFor(String photoId) => null;

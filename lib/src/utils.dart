@@ -111,21 +111,22 @@ class VariableTimer {
   }
 }
 
-String prettyDuration(Duration duration) {
+String prettyDuration(Duration duration, { bool short = false }) {
+  assert(short != null);
   final int microseconds = duration.inMicroseconds;
   double minutes = microseconds / (1000 * 1000 * 60);
   if (minutes < 0.9)
-    return 'just now';
+    return short ? 'now' : 'just now';
   if (minutes < 1.5)
-    return '1 minute ago';
+    return short ? '1 min ago' : '1 minute ago';
   if (minutes < 59.5)
-    return '${minutes.round()} minutes ago';
+    return '${minutes.round()} ${short ? 'min' : 'minutes'} ago';
   double hours = microseconds / (1000 * 1000 * 60 * 60);
   minutes -= hours.truncate() * 60;
-  if (hours < 2 && minutes < 5)
-    return '${hours.truncate()} hour ago';
-  if (hours < 2)
-    return '${hours.truncate()} hour ${minutes.truncate()} minutes ago';
+  if (hours < 2 && (minutes < 5 || (minutes < 30 && short)))
+    return '1 hour ago';
+  if (hours < 2 && !short)
+    return '1 hour ${minutes.truncate()} minutes ago';
   if (hours < 5 && (minutes <= 20 || minutes >= 40))
     return '${hours.round()} hours ago';
   if (hours < 5)
