@@ -150,7 +150,7 @@ class _UserViewState extends State<UserView> {
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: FittedBox(
-                      child: Cruise.of(context).avatarFor(user),
+                      child: Cruise.of(context).avatarFor(<User>[user]),
                     ),
                   ),
                 ),

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 import 'logic/cruise.dart';
 import 'models/server_text.dart';
@@ -473,7 +475,7 @@ class ChatLine extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Directionality(
                       textDirection: TextDirection.ltr,
-                      child: Cruise.of(context).avatarFor(user),
+                      child: Cruise.of(context).avatarFor(<User>[user]),
                     ),
                   ),
                   Flexible(
@@ -777,4 +779,419 @@ class _ServerTextViewState extends State<ServerTextView> {
       ),
     );
   }
+}
+
+Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<ImageProvider> images, { double size }) {
+  switch (sortedUsers.length) {
+    case 1:
+      final User user = sortedUsers.single;
+      final String name = user.displayName ?? user.username;
+      List<String> names = name.split(RegExp(r'[^A-Z]+')).where((String value) => value.isNotEmpty).toList();
+      if (names.length == 1)
+        names = name.split(' ');
+      if (names.length <= 2)
+        names = name.split('');
+      return Builder(
+        builder: (BuildContext context) {
+          final ThemeData theme = Theme.of(context);
+          TextStyle textStyle = theme.primaryTextTheme.subhead;
+          switch (ThemeData.estimateBrightnessForColor(colors.single)) {
+            case Brightness.dark:
+              textStyle = textStyle.copyWith(color: theme.primaryColorLight);
+              break;
+            case Brightness.light:
+              textStyle = textStyle.copyWith(color: theme.primaryColorDark);
+              break;
+          }
+          return AnimatedContainer(
+            decoration: ShapeDecoration(
+              shape: const CircleBorder(),
+              color: colors.single,
+              shadows: kElevationToShadow[1],
+            ),
+            child: ClipOval(
+              child: Center(
+                child: Text(
+                  names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
+                  style: textStyle,
+                  textScaleFactor: 1.0,
+                ),
+              ),
+            ),
+            foregroundDecoration: ShapeDecoration(
+              shape: const CircleBorder(),
+              image: DecorationImage(
+                image: images.single,
+                fit: BoxFit.cover,
+              ),
+            ),
+            duration: const Duration(milliseconds: 250),
+            height: size,
+            width: size,
+          );
+        },
+      );
+    case 2:
+      return Stack(
+        children: <Widget>[
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            decoration: ShapeDecoration(
+              shape: const CircleBorder(),
+              color: Colors.white,
+              shadows: kElevationToShadow[1],
+            ),
+            height: size,
+            width: size,
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.topCenter,
+              heightFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_topSemicircle),
+                    color: colors[0],
+                    image: DecorationImage(
+                      image: images[0],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.bottomCenter,
+              heightFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_bottomSemicircle),
+                    color: colors[1],
+                    image: DecorationImage(
+                      image: images[1],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    case 3:
+      return Stack(
+        children: <Widget>[
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            decoration: ShapeDecoration(
+              shape: const CircleBorder(),
+              color: Colors.white,
+              shadows: kElevationToShadow[1],
+            ),
+            height: size,
+            width: size,
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.topLeft,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 0.5, right: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_topLeftQuarter),
+                    color: colors[0],
+                    image: DecorationImage(
+                      image: images[0],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.topRight,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 0.5, left: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_topRightQuarter),
+                    color: colors[1],
+                    image: DecorationImage(
+                      image: images[1],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.bottomCenter,
+              heightFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_bottomSemicircle),
+                    color: colors[2],
+                    image: DecorationImage(
+                      image: images[2],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    case 4:
+      return Stack(
+        children: <Widget>[
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            decoration: ShapeDecoration(
+              shape: const CircleBorder(),
+              color: Colors.white,
+              shadows: kElevationToShadow[1],
+            ),
+            height: size,
+            width: size,
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.topLeft,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 0.5, right: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_topLeftQuarter),
+                    color: colors[0],
+                    image: DecorationImage(
+                      image: images[0],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.topRight,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 0.5, left: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_topRightQuarter),
+                    color: colors[1],
+                    image: DecorationImage(
+                      image: images[1],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.bottomLeft,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 0.5, right: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_bottomLeftQuarter),
+                    color: colors[2],
+                    image: DecorationImage(
+                      image: images[2],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.bottomRight,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 0.5, left: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_bottomRightQuarter),
+                    color: colors[3],
+                    image: DecorationImage(
+                      image: images[3],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    default:
+      return Stack(
+        children: <Widget>[
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            decoration: ShapeDecoration(
+              shape: const CircleBorder(),
+              color: Colors.white,
+              shadows: kElevationToShadow[1],
+            ),
+            height: size,
+            width: size,
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.topLeft,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 0.5, right: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_topLeftQuarter),
+                    color: colors[0],
+                    image: DecorationImage(
+                      image: images[0],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.topRight,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 0.5, left: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_topRightQuarter),
+                    color: colors[1],
+                    image: DecorationImage(
+                      image: images[1],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.bottomLeft,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 0.5, right: 0.5),
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: PathBorder(_bottomLeftQuarter),
+                    color: colors[2],
+                    image: DecorationImage(
+                      image: images[2],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: FractionallySizedBox(
+              alignment: Alignment.bottomRight,
+              heightFactor: 0.5,
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 0.5, left: 0.5),
+                child: Builder(
+                  builder: (BuildContext context) {
+                    return DecoratedBox(
+                      decoration: ShapeDecoration(
+                        shape: PathBorder(_bottomRightQuarter),
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      child: ClipPath.shape(
+                        shape: PathBorder(_bottomRightQuarter),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(2.0, 1.0, 7.0, 5.0),
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: Text(
+                              '+${sortedUsers.length - 3}',
+                              style: Theme.of(context).primaryTextTheme.body2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+  }
+}
+
+final Path _topSemicircle = Path()..arcTo(Rect.fromLTWH(0.0, 0.0, 1.0, 2.0), 0, -math.pi, true);
+final Path _bottomSemicircle = Path()..arcTo(Rect.fromLTWH(0.0, -1.0, 1.0, 2.0), 0, math.pi, true);
+final Path _topLeftQuarter = Path()..arcTo(Rect.fromLTWH(0.0, 0.0, 2.0, 2.0), -math.pi, math.pi/2.0, true)..lineTo(1.0, 1.0);
+final Path _topRightQuarter = Path()..arcTo(Rect.fromLTWH(-1.0, 0.0, 2.0, 2.0), -math.pi/2.0, math.pi/2.0, true)..lineTo(0.0, 1.0);
+final Path _bottomLeftQuarter = Path()..arcTo(Rect.fromLTWH(0.0, -1.0, 2.0, 2.0), math.pi/2.0, math.pi/2.0, true)..lineTo(1.0, 0.0);
+final Path _bottomRightQuarter = Path()..arcTo(Rect.fromLTWH(-1.0, -1.0, 2.0, 2.0), 0, math.pi/2.0, true)..lineTo(0.0, 0.0);
+
+class PathBorder extends ShapeBorder {
+  const PathBorder(this.path);
+
+  final Path path;
+
+  static Path _scaled(Path path, Rect rect) {
+    return Path()..addPath(path, rect.topLeft, matrix4: Matrix4.diagonal3Values(rect.width, rect.height, 1.0).storage);
+  }
+
+  @override
+  Path getInnerPath(Rect rect, { TextDirection textDirection }) => _scaled(path, rect);
+
+  @override
+  Path getOuterPath(Rect rect, { TextDirection textDirection }) => _scaled(path, rect);
+
+  @override
+  ShapeBorder scale(double t) => this;
+
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  void paint(Canvas canvas, Rect rect, { TextDirection textDirection }) { }
 }

@@ -120,6 +120,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final TextStyle appBarTitleTextStyle = theme.primaryTextTheme.body1.apply(fontSizeFactor: 0.8);
     final CruiseModel cruise = Cruise.of(context);
     final List<User> users = widget.thread.users.toList();
     final List<SeamailMessage> messages = widget.thread.getMessages() ?? const <SeamailMessage>[];
@@ -143,7 +144,52 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
           currentUser = user.value;
         return Scaffold(
           appBar: AppBar(
-            title: Text(widget.thread.subject), // TODO(ianh): faces
+            centerTitle: true,
+            flexibleSpace: SafeArea(
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        final double height = constraints.maxHeight;
+                        return SizedBox(
+                          width: (users.length + 1) * height / 2.0,
+                          child: Stack(
+                            children: List<Widget>.generate(users.length, (int index) {
+                              return Positioned(
+                                top: 2.0,
+                                left: index * height / 2.0,
+                                bottom: 0.0,
+                                width: height,
+                                child: cruise.avatarFor(<User>[users[index]]),
+                              );
+                            }, growable: false),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Text('', style: appBarTitleTextStyle),
+                  ),
+                ],
+              ),
+            ),
+            title: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Text(
+                    widget.thread.subject,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.primaryTextTheme.body1.apply(fontSizeFactor: 0.8),
+                  ),
+                ),
+              ],
+            ),
           ),
           body: Column(
             children: <Widget>[
@@ -155,43 +201,45 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                     itemBuilder: (BuildContext context, int index) {
                       // the very first item is the user list
                       if (index == bubbles.length) {
-                        return ListBody(
-                          children: <Widget>[
-                            const SizedBox(height: 20.0),
-                            Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.display2),
-                            Center(
-                              child: DefaultTextStyle(
-                                style: theme.textTheme.subhead,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: users.map<Widget>(
-                                    (User user) {
-                                      return Padding(
-                                        padding: const EdgeInsetsDirectional.only(top: 10.0, end: 60.0),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: <Widget>[
-                                            cruise.avatarFor(user, size: 60.0),
-                                            const SizedBox(width: 20.0),
-                                            Text(user.displayName),
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                  ).toList(),
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 56.0),
+                          child: ListBody(
+                            children: <Widget>[
+                              Text(widget.thread.subject, textAlign: TextAlign.center, style: theme.textTheme.display1),
+                              const SizedBox(height: 24.0),
+                              const Divider(),
+                              const SizedBox(height: 24.0),
+                              Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.headline),
+                              Center(
+                                child: DefaultTextStyle(
+                                  style: theme.textTheme.subhead,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: users.map<Widget>(
+                                      (User user) {
+                                        return Padding(
+                                          padding: const EdgeInsetsDirectional.only(top: 10.0, end: 60.0),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: <Widget>[
+                                              cruise.avatarFor(<User>[user], size: 60.0),
+                                              const SizedBox(width: 20.0),
+                                              Flexible(
+                                                child: Text('$user'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    ).toList(),
+                                  ),
                                 ),
                               ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(top: 24.0, bottom: 48.0, left: 64.0, right: 64.0),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  top: BorderSide(width: 8.0, color: theme.dividerColor),
-                                ),
-                              ),
-                            ),
-                          ],
+                              const SizedBox(height: 24.0),
+                              const Divider(),
+                            ],
+                          ),
                         );
                       }
                       final int bubbleIndex = bubbles.length - (index + 1);
@@ -532,7 +580,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                       filteredUsers.map<Widget>((User user) {
                         return ListTile(
                           key: ValueKey<String>(user.username),
-                          leading: Cruise.of(context).avatarFor(user),
+                          leading: Cruise.of(context).avatarFor(<User>[user]),
                           title: Text(user.toString()),
                           onTap: () {
                             _addUser(user);
@@ -581,7 +629,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                                 message: user.username.toString(),
                                 child: GestureDetector(
                                   onTap: user == widget.currentUser ? null : () { _removeUser(user); },
-                                  child: Cruise.of(context).avatarFor(user, size: 60.0),
+                                  child: Cruise.of(context).avatarFor(<User>[user], size: 60.0),
                                 ),
                               ),
                             );

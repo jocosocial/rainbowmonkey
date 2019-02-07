@@ -10,9 +10,12 @@ void main() {
   testWidgets('Accounts page', (WidgetTester tester) async {
     final TestCruiseModel model = TestCruiseModel();
     await tester.pumpWidget(
-      Cruise(
-        cruiseModel: model,
-        child: const CruiseMonkeyHome(),
+      Now.fixed(
+        dateTime: DateTime(2019),
+        child: Cruise(
+          cruiseModel: model,
+          child: const CruiseMonkeyHome(),
+        ),
       ),
     );
 

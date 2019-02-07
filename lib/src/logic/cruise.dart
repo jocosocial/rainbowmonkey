@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui show Codec, FrameInfo;
 
@@ -430,50 +431,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     }
   }
 
-  Widget avatarFor(User user, { double size: 40.0 }) {
-    final String name = user.displayName ?? user.username;
-    List<String> names = name.split(RegExp(r'[^A-Z]+'));
-    if (names.length == 1)
-      names = name.split(' ');
-    if (names.length <= 2)
-      names = name.split('');
-    return Builder(
-      builder: (BuildContext context) {
-        final ThemeData theme = Theme.of(context);
-        final Color color = Color(user.username.hashCode | 0xFF000000);
-        TextStyle textStyle = theme.primaryTextTheme.subhead;
-        switch (ThemeData.estimateBrightnessForColor(color)) {
-          case Brightness.dark:
-            textStyle = textStyle.copyWith(color: theme.primaryColorLight);
-            break;
-          case Brightness.light:
-            textStyle = textStyle.copyWith(color: theme.primaryColorDark);
-            break;
-        }
-        return AnimatedContainer(
-          decoration: ShapeDecoration(
-            shape: const CircleBorder(),
-            color: color,
-          ),
-          child: ClipOval(
-            child: Center(
-              child: Text(
-                names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
-                style: textStyle,
-                textScaleFactor: 1.0,
-              ),
-            ),
-          ),
-          foregroundDecoration: ShapeDecoration(
-            shape: const CircleBorder(),
-            image: DecorationImage(image: AvatarImage(user.username, this, _twitarr, onError: onError)),
-          ),
-          duration: const Duration(milliseconds: 250),
-          height: size,
-          width: size,
-        );
-      },
-    );
+  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0 }) {
+    assert(users.isNotEmpty);
+    assert(seed != null);
+    final math.Random random = math.Random(seed);
+    final List<User> sortedUsers = users.toList()..shuffle(random);
+    final List<Color> colors = sortedUsers.map<Color>((User user) => Color((user.username.hashCode | 0xFF111111) & 0xFF7F7F7F)).toList();
+    final List<ImageProvider> images = sortedUsers.map<ImageProvider>((User user) => AvatarImage(user.username, this, _twitarr, onError: onError)).toList();
+    return createAvatarWidgetsFor(sortedUsers, colors, images, size: size);
   }
 
   Widget imageFor(String photoId) {

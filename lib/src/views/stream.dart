@@ -148,6 +148,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                   controller: _scrollController,
                   reverse: true,
                   cacheExtent: 1000.0,
+                  padding: EdgeInsets.only(top: 8.0, bottom: MediaQuery.of(context).padding.bottom),
                   childrenDelegate: _SliverChildBuilderDelegate(
                     builder: (BuildContext context, int index) {
                       if (index == 0) {
@@ -223,7 +224,6 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                       if (post == const StreamPost.sentinel())
                         return null;
                       return Entry(post: post, animation: _animationFor(post), currentUser: currentUser);
-                      // TODO(ianh): add a text field at the bottom, for sending posts
                     },
                     onDidFinishLayout: () {
                       if (_atZero) {

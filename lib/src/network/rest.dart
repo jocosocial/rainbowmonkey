@@ -486,6 +486,16 @@ class RestTwitarr implements Twitarr {
 
   @override
   Progress<List<User>> getUserList(String searchTerm) {
+    // Ruby tries to interpret the search term as a path,
+    // so "/", ".", and "\" are all problematic.
+    searchTerm = searchTerm
+      .replaceAll('.', '')
+      .replaceAll('/', '')
+      .replaceAll('\\', '')
+      .replaceAll('\0', ''); // %00 is particularly bad.
+    if (searchTerm.isEmpty)
+      return Progress<List<User>>.completed(const <User>[]);
+    searchTerm = searchTerm.runes.map<String>((int rune) => '[${String.fromCharCode(rune)}]').join('');
     return Progress<List<User>>((ProgressController<List<User>> completer) async {
       final List<User> result = await compute<String, List<User>>(
         _parseUserList,
@@ -1093,7 +1103,7 @@ class RestTwitarr implements Twitarr {
     throw FormatException('Could not interpret DateTime from server', '$value');
   }
 
-  static const List<int> _kTwitarrExpectedStatusCodes = <int>[200, 400, 401, 403, 404, 422];
+  static const List<int> _kTwitarrExpectedStatusCodes = <int>[200, 400, 401, 403, 422];
 
   Progress<String> _requestUtf8(String method, String path, {
     List<int> body,
@@ -1207,6 +1217,8 @@ class RestTwitarr implements Twitarr {
     } on SocketException catch (error) {
       if (error.osError.errorCode == 7)
         throw const ServerError(<String>['The DNS server is down or the Twitarr server is non-existent.']);
+      if (error.osError.errorCode == 110)
+        throw const ServerError(<String>['The network is too slow.']);
       if (error.osError.errorCode == 111)
         throw const ServerError(<String>['The server is down.']);
       if (error.osError.errorCode == 113)

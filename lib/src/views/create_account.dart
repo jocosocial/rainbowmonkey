@@ -204,11 +204,11 @@ class _CreateAccountState extends State<CreateAccount> {
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             labelText: 'Registration code',
-                            helperText: 'Provided to you in your cabin when you boarded.',
+                            helperText: 'Provided to you by e-mail before the cruise.',
                           ),
                           validator: (String registrationCode) {
                             if (!AuthenticatedUser.isValidRegistrationCode(registrationCode))
-                              return 'It was provided to you in your cabin.';
+                              return 'Ask the JoCo Cruise Info Desk for advice.';
                             return _latestServerResponse.fields[_AccountCreationField.registrationCode];
                           },
                         ),
@@ -239,6 +239,18 @@ class _CreateAccountState extends State<CreateAccount> {
                         ),
                       ),
                     ),
+                    ButtonBar(
+                      children: <Widget>[
+                        FlatButton(
+                          onPressed: () { Navigator.maybePop(context); },
+                          child: const Text('CANCEL'),
+                        ),
+                        FlatButton(
+                          onPressed: _valid ? _createAccount : null,
+                          child: const Text('CREATE ACCOUNT'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -246,16 +258,6 @@ class _CreateAccountState extends State<CreateAccount> {
           ],
         ),
       ),
-      persistentFooterButtons: <Widget>[
-        FlatButton(
-          onPressed: () { Navigator.maybePop(context); },
-          child: const Text('CANCEL'),
-        ),
-        FlatButton(
-          onPressed: _valid ? _createAccount : null,
-          child: const Text('CREATE ACCOUNT'),
-        ),
-      ],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../logic/cruise.dart';
 import '../logic/forums.dart';
 import '../logic/seamail.dart';
 import '../models/user.dart';
@@ -128,9 +129,12 @@ class CommsView extends StatelessWidget implements View {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle headerStyle = Theme.of(context).textTheme.title;
-    final Seamail seamail = Cruise.of(context).seamail;
-    final Forums forums = Cruise.of(context).forums;
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    final TextStyle headerStyle = textTheme.title;
+    final CruiseModel cruise = Cruise.of(context);
+    final Seamail seamail = cruise.seamail;
+    final Forums forums = cruise.forums;
+    final DateTime now = Now.of(context);
     return BusyIndicator(
       busy: OrListenable(<ValueListenable<bool>>[seamail.busy, forums.busy]),
       child: AnimatedBuilder(
@@ -163,7 +167,7 @@ class CommsView extends StatelessWidget implements View {
               index -= 1;
               if (seamailThreads.isEmpty) {
                 if (index == 0) { // ignore: invariant_booleans
-                  if (Cruise.of(context).isLoggedIn) {
+                  if (cruise.isLoggedIn) {
                     return const ListTile(
                       leading: Icon(Icons.phonelink_erase, size: 40.0),
                       title: Text('I check my messages'),
@@ -179,14 +183,44 @@ class CommsView extends StatelessWidget implements View {
               } else {
                 if (index < seamailThreads.length) {
                   final SeamailThread thread = seamailThreads[index];
+                  final List<SeamailMessage> messages = thread.getMessages();
+                  String lastMessage;
+                  if (messages.isNotEmpty) {
+                    lastMessage = '${messages.last.user}: ${messages.last.text}';
+                  } else if (thread.unreadCount > 0) {
+                    lastMessage = '${thread.unreadCount} new message${thread.unreadCount == 1 ? '' : "s"}';
+                  } else {
+                    lastMessage = '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}';
+                  }
                   return ListTile(
-                    leading: CircleAvatar(child: Text('${thread.users.length}')), // TODO(ianh): faces
-                    title: Text(thread.subject, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    leading: Badge(
+                      child: cruise.avatarFor(thread.users, size: 56.0),
+                      alignment: const AlignmentDirectional(1.1, 1.1),
+                      enabled: thread.hasUnread,
+                    ),
+                    title: Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            thread.subject,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Text(
+                          ' ${prettyDuration(now.difference(thread.lastMessageTimestamp), short: true)}',
+                          style: textTheme.caption,
+                        ),
+                      ],
+                    ),
                     subtitle: Text(
-                      '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}',
-                      style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+                      lastMessage,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     onTap: () { showSeamailThread(context, thread); },
+                    isThreeLine: true,
                   );
                 }
                 index -= seamailThreads.length;
@@ -208,7 +242,6 @@ class CommsView extends StatelessWidget implements View {
               // Forums
               final ForumThread forum = forumThreads[index];
               final String unread = forum.unreadCount > 0 ? ' (${forum.unreadCount} new)' : '';
-              final DateTime now = Now.of(context);
               final String duration = '${prettyDuration(now.difference(forum.lastMessageTimestamp))}';
               final String lastMessage = 'Most recent from ${forum.lastMessageUser} $duration';
               return ListTile(
