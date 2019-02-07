@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../graphics.dart';
 import '../models/announcements.dart';
@@ -252,17 +253,17 @@ class _UserViewState extends State<UserView> {
             builder: (BuildContext context, List<Announcement> announcements) {
               if (announcements.isEmpty)
                 return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
-              return ListBody(
-                children: announcements.map<Widget>((Announcement announcement) {
-                  return Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: ChatLine(
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 12.0, 8.0, 8.0),
+                child: ListBody(
+                  children: announcements.map<Widget>((Announcement announcement) {
+                    return ChatLine(
                       user: announcement.user,
                       messages: <String>[ announcement.message ],
                       timestamp: announcement.timestamp,
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               );
             },
           ),
@@ -285,7 +286,18 @@ class _UserViewState extends State<UserView> {
                         applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
                         children: <Widget>[
                           const Text('A project of the Seamonkey Social group.'),
-                          // TODO(ianh): include a link to https://github.com/seamonkeysocial/
+                          GestureDetector(
+                            onTap: () {
+                              launch('http://seamonkeysocial.cruises/');
+                            },
+                            child: Text(
+                              'http://seamonkeysocial.cruises/',
+                              style: Theme.of(context).textTheme.body1.copyWith(
+                                decoration: TextDecoration.underline,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ),
                         ],
                       );
                     },
@@ -326,10 +338,8 @@ class _UserViewState extends State<UserView> {
               minHeight: viewportConstraints.maxHeight,
             ),
             child: SafeArea(
-              child: IntrinsicHeight(
-                child: Column(
-                  children: tiles,
-                ),
+              child: ListBody(
+                children: tiles,
               ),
             ),
           ),

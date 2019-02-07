@@ -1,4 +1,4 @@
-package com.raccoonfink.cruisemonkey;
+package cruises.seamonkeysocial.cruisemonkey;
 
 import io.flutter.app.FlutterApplication;
 import io.flutter.plugin.common.PluginRegistry;

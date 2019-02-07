@@ -27,8 +27,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.raccoonfink.cruisemonkey"
+        applicationId "cruises.seamonkeysocial.cruisemonkey"
         minSdkVersion 16
         targetSdkVersion 27
         versionCode 1
