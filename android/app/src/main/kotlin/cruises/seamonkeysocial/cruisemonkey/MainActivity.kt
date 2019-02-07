@@ -1,4 +1,4 @@
-package com.raccoonfink.cruisemonkey
+package cruises.seamonkeysocial.cruisemonkey
 
 import android.os.Bundle
 

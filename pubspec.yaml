@@ -7,10 +7,9 @@ dependencies:
   path_provider: any
   flutter_local_notifications: ^0.4.5
   image_picker: ^0.4.12
-    #path: ../plugins/packages/image_picker/
   android_alarm_manager: ^0.2.3
-    #path: ../plugins/packages/android_alarm_manager/
   sqflite: any
+  url_launcher: ^4.2.0+3
 
 dev_dependencies:
   flutter_test:
