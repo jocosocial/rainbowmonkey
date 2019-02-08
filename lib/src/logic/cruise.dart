@@ -439,14 +439,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     }
   }
 
-  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0 }) {
+  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0, bool enabled = true }) {
     assert(users.isNotEmpty);
     assert(seed != null);
     final math.Random random = math.Random(seed);
     final List<User> sortedUsers = users.toList()..shuffle(random);
     final List<Color> colors = sortedUsers.map<Color>((User user) => Color((user.username.hashCode | 0xFF111111) & 0xFF7F7F7F)).toList();
     final List<ImageProvider> images = sortedUsers.map<ImageProvider>((User user) => AvatarImage(user.username, this, _twitarr, onError: onError)).toList();
-    return createAvatarWidgetsFor(sortedUsers, colors, images, size: size);
+    return createAvatarWidgetsFor(sortedUsers, colors, images, size: size, enabled: enabled);
   }
 
   Widget imageFor(String photoId) {
@@ -562,6 +562,11 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     );
   }
 
+  void forceUpdate() {
+    _calendar.triggerUnscheduledUpdate();
+    _announcements.triggerUnscheduledUpdate();
+  }
+  
   @override
   void dispose() {
     _alive = false;

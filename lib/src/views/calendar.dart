@@ -62,6 +62,7 @@ class _CalendarViewState extends State<CalendarView> {
     // TODO(ianh): filter to favorite events only
     return ContinuousProgressBuilder<Calendar>(
       progress: Cruise.of(context).calendar,
+      onRetry: () { Cruise.of(context).forceUpdate(); },
       builder: (BuildContext context, Calendar calendar) {
         if (calendar.events.isEmpty)
           return iconAndLabel(icon: Icons.sentiment_neutral, message: 'Calendar is empty');

@@ -62,12 +62,13 @@ Widget _defaultSecondaryActiveBuilder(BuildContext context, double progress, dou
   return CircularProgressIndicator(key: ProgressBuilder.activeKey, value: progress / target);
 
 }
-Widget _defaultSecondaryFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
+Widget _defaultSecondaryFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace, { VoidCallback onRetry }) {
   assert(error != null);
   return Tooltip(
     key: ProgressBuilder.failedKey,
     message: '$error',
-    child: const Icon(Icons.error_outline),
+    child: onRetry == null ? const Icon(Icons.error_outline)
+           : IconButton(icon: const Icon(Icons.error_outline), onPressed: onRetry),
   );
 }
 
@@ -115,13 +116,13 @@ class ProgressBuilder<T> extends StatelessWidget {
     this.idleChild: const SizedBox.expand(),
     this.startingChild: const Center(key: activeKey, child: CircularProgressIndicator()),
     this.activeBuilder: defaultActiveBuilder,
-    this.failedBuilder: defaultFailedBuilder,
+    this.failedBuilder,
     @required this.builder,
     this.fadeWrapper: _defaultFadeWrapper,
+    this.onRetry,
   }) : assert(idleChild != null),
        assert(startingChild != null),
        assert(activeBuilder != null),
-       assert(failedBuilder != null),
        assert(builder != null),
        assert(fadeWrapper != null),
        super(key: key);
@@ -136,6 +137,8 @@ class ProgressBuilder<T> extends StatelessWidget {
   final SuccessfulProgressBuilder<T> builder;
   final FadeWrapperBuilder fadeWrapper;
 
+  final VoidCallback onRetry;
+
   static const Key activeKey = _ActiveKey();
   static const Key failedKey = _FailedKey();
 
@@ -144,9 +147,26 @@ class ProgressBuilder<T> extends StatelessWidget {
     return Center(key: ProgressBuilder.activeKey, child: CircularProgressIndicator(value: progress / target));
   }
 
-  static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
+  static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace, { VoidCallback onRetry }) {
     assert(error != null);
-    return iconAndLabel(key: ProgressBuilder.failedKey, icon: Icons.warning, message: wrapError(error));
+    final Widget message = iconAndLabel(key: ProgressBuilder.failedKey, icon: Icons.warning, message: wrapError(error));
+    if (onRetry == null)
+      return message;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          message,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FlatButton(
+              child: const Text('RETRY'),
+              onPressed: onRetry,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -165,7 +185,8 @@ class ProgressBuilder<T> extends StatelessWidget {
         } else if (value is ActiveProgress) {
           result = activeBuilder(context, value.progress, value.target);
         } else if (value is FailedProgress) {
-          result = failedBuilder(context, value.error, value.stackTrace);
+          result = failedBuilder != null ? failedBuilder(context, value.error, value.stackTrace)
+                   : defaultFailedBuilder(context, value.error, value.stackTrace, onRetry: onRetry);
         } else if (value is SuccessfulProgress<T>) {
           result = builder(context, value.value);
         } else {
@@ -185,21 +206,20 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
     this.idleChild: const SizedBox.expand(),
     this.startingChild: const Center(child: CircularProgressIndicator()),
     this.activeBuilder: ProgressBuilder.defaultActiveBuilder,
-    this.failedBuilder: ProgressBuilder.defaultFailedBuilder,
+    this.failedBuilder,
     @required this.builder,
     this.secondaryStartingChild: const CircularProgressIndicator(key: ProgressBuilder.activeKey),
     this.secondaryActiveBuilder: _defaultSecondaryActiveBuilder,
-    this.secondaryFailedBuilder: _defaultSecondaryFailedBuilder,
+    this.secondaryFailedBuilder,
     this.wrap: _defaultWrap,
     this.fadeWrapper: _defaultFadeWrapper,
+    this.onRetry,
   }) : assert(idleChild != null),
        assert(startingChild != null),
        assert(activeBuilder != null),
-       assert(failedBuilder != null),
        assert(builder != null),
        assert(secondaryStartingChild != null),
        assert(secondaryActiveBuilder != null),
-       assert(secondaryFailedBuilder != null),
        assert(wrap != null),
        assert(fadeWrapper != null),
        super(key: key);
@@ -217,6 +237,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
   final FailedProgressBuilder secondaryFailedBuilder;
   final WrapBuilder wrap;
   final FadeWrapperBuilder fadeWrapper;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -231,6 +252,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
         activeBuilder: activeBuilder,
         failedBuilder: failedBuilder,
         builder: builder,
+        onRetry: onRetry,
       ),
       builder: (BuildContext context, Widget child) {
         return wrap(
@@ -248,7 +270,8 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
                 } else if (value is ActiveProgress) {
                   result = secondaryActiveBuilder(context, value.progress, value.target);
                 } else if (value is FailedProgress) {
-                  result = secondaryFailedBuilder(context, value.error, value.stackTrace);
+                  result = secondaryFailedBuilder != null ? secondaryFailedBuilder(context, value.error, value.stackTrace)
+                           : _defaultSecondaryFailedBuilder(context, value.error, value.stackTrace, onRetry: onRetry);
                 }
               }
               result ??= const SizedBox.shrink();
@@ -741,6 +764,7 @@ class _ServerTextViewState extends State<ServerTextView> {
         child: IntrinsicHeight(
           child: ProgressBuilder<ServerText>(
             progress: _serverText,
+            onRetry: () { setState(_updateText); },
             builder: (BuildContext context, ServerText text) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

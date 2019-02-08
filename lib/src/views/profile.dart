@@ -26,6 +26,10 @@ class _ProfileState extends State<Profile> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _start();
+  }
+
+  void _start() {
     _user = Cruise.of(context).fetchProfile(widget.user.username);
   }
 
@@ -39,6 +43,9 @@ class _ProfileState extends State<Profile> {
       ),
       body: ProgressBuilder<User>(
         progress: _user,
+        onRetry: () {
+          setState(_start);
+        },
         builder: (BuildContext context, User user) {
           final TextStyle italic = DefaultTextStyle.of(context).style.copyWith(fontStyle: FontStyle.italic);
           final Widget none = Text('none', style: italic);
@@ -48,7 +55,7 @@ class _ProfileState extends State<Profile> {
             children: <Widget>[
               LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
-                  return Cruise.of(context).avatarFor(<User>[user], size: math.min(256.0, constraints.maxWidth));
+                  return Cruise.of(context).avatarFor(<User>[user], size: math.min(256.0, constraints.maxWidth), enabled: false);
                 },
               ),
               const SizedBox(height: 24.0),

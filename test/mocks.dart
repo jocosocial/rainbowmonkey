@@ -226,7 +226,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
-  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0 }) => null;
+  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0, bool enabled = true }) => null;
 
   @override
   Widget imageFor(String photoId) => null;
@@ -264,6 +264,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
     @required Uint8List photo,
   }) => null;
 
+  @override
+  void forceUpdate() { }
+  
   @override
   void dispose() {
     user.dispose();

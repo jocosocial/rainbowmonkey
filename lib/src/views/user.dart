@@ -248,6 +248,7 @@ class _UserViewState extends State<UserView> {
           const Divider(),
           ContinuousProgressBuilder<List<Announcement>>(
             progress: Cruise.of(context).announcements,
+            onRetry: () { Cruise.of(context).forceUpdate(); },
             nullChild: const SizedBox.shrink(),
             idleChild: const SizedBox.shrink(),
             builder: (BuildContext context, List<Announcement> announcements) {
