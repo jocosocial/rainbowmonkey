@@ -13,15 +13,15 @@ Future<void> runBackground() async {
   if (!await AndroidAlarmManager.initialize()) {
     FlutterError.reportError(FlutterErrorDetails(
       exception: Exception('Android Alarm Manager failed to start up.'),
-      library: 'Cruisemonkey',
+      library: 'CruiseMonkey',
       context: 'during startup',
     ));
     return;
   }
-  if (!await AndroidAlarmManager.periodic(const Duration(minutes: 1), 0, _periodicCallback, /*exact: true,*/ wakeup: true)) {
+  if (!await AndroidAlarmManager.periodic(const Duration(minutes: 1), 0, _periodicCallback, wakeup: true, rescheduleOnReboot: true)) {
     FlutterError.reportError(FlutterErrorDetails(
       exception: Exception('Android Alarm Manager failed to schedule periodic background task.'),
-      library: 'Cruisemonkey',
+      library: 'CruiseMonkey',
       context: 'during startup',
     ));
     return;
@@ -30,22 +30,9 @@ Future<void> runBackground() async {
 }
 
 Future<void> _periodicCallback() async {
+  AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
   await _backgroundUpdate();
-  /// If this isn't reliable enough, we could try this:
-  // if (!await AndroidAlarmManager.oneShot(
-  //              const Duration(minutes: 1), 1, _periodicCallback,
-  //              /*exact: true,*/ /// If it's still not reliable enough, we could add this.
-  //              wakeup: true,
-  //              /*allowWhileIdle: true,*/ /// If it's still not reliable enough, we could add this.
-  //    )) {
-  //   FlutterError.reportError(FlutterErrorDetails(
-  //     exception: Exception('Android Alarm Manager failed to schedule one-shot task.'),
-  //     library: 'Cruisemonkey',
-  //     context: 'during periodic background task',
-  //   ));
-  //   return;
-  // }
 }
 
 Future<void> _backgroundUpdate() async {
@@ -77,10 +64,15 @@ Future<void> _backgroundUpdate() async {
 Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStore store) async {
   try {
     if (credentials == null) {
-      print('Not logged in; skipping check for messages.');
+      assert(() {
+        print('Not logged in; skipping check for messages.');
+        return true;
+      }());
       return;
     }
-    print('I call my phone and I check my messages.');
+    assert(() {
+      print('I call my phone and I check my messages.');
+    }());
     SeamailSummary summary;
     await store.updateFreshnessToken((int freshnessToken) async {
       summary = await twitarr.getUnreadSeamailMessages(

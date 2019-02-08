@@ -1132,7 +1132,9 @@ class RestTwitarr implements Twitarr {
         })
         .transform(utf8.decoder)
         .join();
-      debugPrint('<<< ${response.statusCode} $result');
+      assert(() {
+        debugPrint('<<< ${response.statusCode} $result');
+      }());
       return result;
     });
   }

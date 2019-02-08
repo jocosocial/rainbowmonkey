@@ -12,7 +12,7 @@ import '../mocks.dart';
 void main() {
   final List<String> log = <String>[];
   LoggingTwitarrConfiguration.register(log);
-  
+
   testWidgets('Deck Plans', (WidgetTester tester) async {
     log.clear();
     final CruiseModel model = CruiseModel(

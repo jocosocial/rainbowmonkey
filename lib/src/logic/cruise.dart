@@ -61,12 +61,15 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   bool _alive = true;
   Credentials _currentCredentials;
 
+  Credentials _preBusyCredentials;
+
   int _busyCounter = 0;
   void _busy(AsyncCallback callback) async {
     if (_busyCounter == 0) {
       _user.pause();
       _calendar.pause();
       _announcements.pause();
+      _preBusyCredentials = _currentCredentials;
     }
     _busyCounter += 1;
     try {
@@ -77,6 +80,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         _user.resume();
         _calendar.resume();
         _announcements.resume();
+        if (_preBusyCredentials != null && _preBusyCredentials != _currentCredentials)
+          await Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
       }
     }
   }
@@ -234,7 +239,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   void _updateCredentials(AuthenticatedUser user) {
-    Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
     final Credentials oldCredentials = _currentCredentials;
     if (user == null) {
       _currentCredentials = null;

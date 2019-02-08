@@ -26,7 +26,9 @@ final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 void main() {
   WidgetsFlutterBinding();
-  print('CruiseMonkey has started');
+  assert(() {
+    print('CruiseMonkey has started');
+  }());
   AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
   final CruiseModel model = CruiseModel(
@@ -40,7 +42,9 @@ void main() {
     runBackground();
   Notifications.instance.then((Notifications notifications) {
     notifications.onTap = (String threadId) async {
-      print('Received tap to view: $threadId');
+      assert(() {
+        print('Received tap to view: $threadId');
+      }());
       await model.loggedIn;
       Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
       CommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));

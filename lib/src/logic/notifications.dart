@@ -54,7 +54,9 @@ class Notifications {
   }
 
   Future<void> _handleSelection(String payload) async {
-    print('User tapped notification with payload: $payload');
+    assert(() {
+      print('User tapped notification with payload: $payload');
+    }());
     if (onTap == null) {
       _pendingPayload = payload;
     } else {
