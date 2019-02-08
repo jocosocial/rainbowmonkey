@@ -193,9 +193,13 @@ class CruiseMonkeyHome extends StatelessWidget {
             return AnimatedBuilder(
               animation: tabController,
               builder: (BuildContext context, Widget child) {
+                final Widget fab = pages[tabController.index].buildFab(context);
                 return Scaffold(
                   key: scaffoldKey,
-                  floatingActionButton: pages[tabController.index].buildFab(context),
+                  floatingActionButton: fab == null ? null : KeyedSubtree(
+                    key: ObjectKey(pages[tabController.index]),
+                    child: fab,
+                  ),
                   floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
                   resizeToAvoidBottomInset: false,
                   body: LayoutBuilder(
