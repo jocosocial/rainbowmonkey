@@ -73,18 +73,22 @@ Widget _defaultSecondaryFailedBuilder(BuildContext context, Exception error, Sta
 
 Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
   assert(main != null);
-  return Stack(
-    children: <Widget>[
-      main,
-      PositionedDirectional(
-        end: 0.0,
-        top: 0.0,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: secondary,
+  return ConstrainedBox(
+    constraints: const BoxConstraints(minWidth: double.infinity, maxWidth: double.infinity),
+    child: Stack(
+      fit: StackFit.passthrough,
+      children: <Widget>[
+        main,
+        PositionedDirectional(
+          end: 0.0,
+          top: 0.0,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: secondary,
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 
