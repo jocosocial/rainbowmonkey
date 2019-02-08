@@ -48,7 +48,7 @@ class LoggingTwitarr extends Twitarr {
 
   final List<String> log;
 
-  String overrideCurrentLocation;
+  String overrideHomeLocation;
 
   @override
   double debugLatency = 0.0;
@@ -72,7 +72,7 @@ class LoggingTwitarr extends Twitarr {
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
       displayName: displayName,
-      currentLocation: overrideCurrentLocation,
+      homeLocation: overrideHomeLocation,
       credentials: Credentials(
         username: username,
         password: password,
@@ -92,7 +92,7 @@ class LoggingTwitarr extends Twitarr {
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
       email: '<email for $username>',
-      currentLocation: overrideCurrentLocation,
+      homeLocation: overrideHomeLocation,
       credentials: Credentials(
         username: username,
         password: password,
@@ -108,8 +108,16 @@ class LoggingTwitarr extends Twitarr {
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: credentials.username,
       email: '<email for ${credentials.username}>',
-      currentLocation: overrideCurrentLocation,
+      homeLocation: overrideHomeLocation,
       credentials: credentials,
+    ));
+  }
+
+  @override
+  Progress<User> getUser(Credentials credentials, String username, PhotoManager photoManager) {
+    log.add('LoggingTwitarr(${_configuration.id}).getAuthenticatedUser $username, $credentials');
+    return Progress<User>.completed(User(
+      username: username,
     ));
   }
 
@@ -152,17 +160,14 @@ class LoggingTwitarr extends Twitarr {
   @override
   Progress<void> updateProfile({
     @required Credentials credentials,
-    String currentLocation,
     String displayName,
     String realName,
     String pronouns,
     String email,
-    bool emailPublic,
     String homeLocation,
     String roomNumber,
-    bool vcardPublic,
   }) {
-    log.add('updateProfile $currentLocation/$displayName/$realName/$pronouns/$email/$emailPublic/$homeLocation/$roomNumber/$vcardPublic');
+    log.add('updateProfile $displayName/$realName/$pronouns/$email/$homeLocation/$roomNumber');
     return Progress<void>.completed(null);
   }
 

@@ -72,6 +72,7 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
     }
     assert(() {
       print('I call my phone and I check my messages.');
+      return true;
     }());
     SeamailSummary summary;
     await store.updateFreshnessToken((int freshnessToken) async {

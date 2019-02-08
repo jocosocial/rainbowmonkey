@@ -305,6 +305,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return null;
   }
 
+  Progress<User> fetchProfile(String username) {
+    return _twitarr.getUser(_currentCredentials, username, this);
+  }
+
   ContinuousProgress<Calendar> get calendar => _calendar;
   PeriodicProgress<Calendar> _calendar;
 
@@ -494,7 +498,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   Progress<void> updateProfile({
-    String currentLocation,
     String displayName,
     String realName,
     String pronouns,
@@ -505,7 +508,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain(_twitarr.updateProfile(
         credentials: _currentCredentials,
-        currentLocation: currentLocation,
         displayName: displayName,
         realName: realName,
         pronouns: pronouns,

@@ -9,6 +9,7 @@ import 'src/logic/background_polling.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
+import 'src/models/user.dart';
 import 'src/network/rest.dart';
 import 'src/views/calendar.dart';
 import 'src/views/code_of_conduct.dart';
@@ -17,6 +18,7 @@ import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/karaoke.dart';
 import 'src/views/profile.dart';
+import 'src/views/profile_editor.dart';
 import 'src/views/settings.dart';
 import 'src/views/stream.dart';
 import 'src/views/user.dart';
@@ -28,6 +30,7 @@ void main() {
   WidgetsFlutterBinding();
   assert(() {
     print('CruiseMonkey has started');
+    return true;
   }());
   AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
@@ -252,11 +255,12 @@ class CruiseMonkeyHome extends StatelessWidget {
         ),
       ),
       routes: <String, WidgetBuilder>{
-        '/profile': (BuildContext context) => const Profile(),
-        '/create_account': (BuildContext context) => const CreateAccount(),
+        '/profile-editor': (BuildContext context) => const ProfileEditor(),
+        '/create-account': (BuildContext context) => const CreateAccount(),
         '/settings': (BuildContext context) => const Settings(),
         '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
         '/twitarr': (BuildContext context) => const TweetStreamView(),
+        '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
       },
     );
   }

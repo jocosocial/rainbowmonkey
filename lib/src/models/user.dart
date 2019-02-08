@@ -41,9 +41,9 @@ class User {
     this.displayName,
     this.realName,
     this.pronouns,
-    this.currentLocation,
     this.roomNumber,
     this.homeLocation,
+    this.email,
   }) : assert(username != null),
        assert(username != '');
 
@@ -52,26 +52,17 @@ class User {
       displayName = null,
       realName = null,
       pronouns = null,
-      currentLocation = null,
       roomNumber = null,
-      homeLocation = null;
+      homeLocation = null,
+      email = null;
 
   final String username;
   final String displayName;
   final String realName;
   final String pronouns;
-  final String currentLocation;
   final String roomNumber;
   final String homeLocation;
-
-  // final int numberOfTweets;
-  // final int numberOfMentions;
-
-  // final bool isAdmin;
-  // final String status;
-  // final String lastLogin;
-  // final bool emptyPassword;
-  // final bool unnoticedAlerts;
+  final String email;
 
   bool sameAs(User other) => other != null && username == other.username;
 
@@ -91,9 +82,9 @@ class User {
         && displayName == typedOther.displayName
         && realName == typedOther.realName
         && pronouns == typedOther.pronouns
-        && currentLocation == typedOther.currentLocation
         && roomNumber == typedOther.roomNumber
-        && homeLocation == typedOther.homeLocation;
+        && homeLocation == typedOther.homeLocation
+        && email == typedOther.email;
   }
 
   @override
@@ -102,9 +93,9 @@ class User {
     displayName,
     realName,
     pronouns,
-    currentLocation,
     roomNumber,
     homeLocation,
+    email,
   );
 }
 
@@ -114,34 +105,32 @@ class AuthenticatedUser extends User {
     String displayName,
     String realName,
     String pronouns,
-    String currentLocation,
     String roomNumber,
     String homeLocation,
-    this.email,
+    String email,
     this.credentials,
   }) : super(
     username: username,
     displayName: displayName,
     realName: realName,
     pronouns: pronouns,
-    currentLocation: currentLocation,
     roomNumber: roomNumber,
     homeLocation: homeLocation,
+    email: email,
   );
 
-  final String email;
   final Credentials credentials;
 
   static bool isValidUsername(String username) {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L10
     assert(username != null);
-    return username.contains(RegExp(r'^[\w&-]{3,}$'));
+    return username.contains(RegExp(r'^[\w&-]{3,40}$'));
   }
 
-  static bool isValidPassword(String password) {
+  static bool isValidPassword(String password, { bool allowShort = false }) {
     // https://github.com/hendusoone/twitarr/blob/master/app/controllers/api/v2/user_controller.rb#L71
     assert(password != null);
-    return password.length >= 6;
+    return password.length >= (allowShort ? 1 : 6);
   }
 
   static bool isValidDisplayName(String displayName) {

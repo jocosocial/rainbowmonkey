@@ -221,7 +221,7 @@ class _UserViewState extends State<UserView> {
                     ),
                     Expanded(
                       child: LabeledIconButton(
-                        onPressed: loggedIn ? () { Navigator.pushNamed(context, '/profile'); } : null,
+                        onPressed: loggedIn ? () { Navigator.pushNamed(context, '/profile-editor'); } : null,
                         icon: const Icon(Icons.edit),
                         label: const Text('EDIT PROFILE'),
                       ),
@@ -236,7 +236,7 @@ class _UserViewState extends State<UserView> {
                     ),
                     Expanded(
                       child: LabeledIconButton(
-                        onPressed: loggedIn ? null : () { Navigator.pushNamed(context, '/create_account'); },
+                        onPressed: loggedIn ? null : () { Navigator.pushNamed(context, '/create-account'); },
                         icon: const Icon(Icons.person_add),
                         label: const Text('CREATE ACCOUNT'),
                       ),

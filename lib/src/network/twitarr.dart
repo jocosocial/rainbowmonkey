@@ -128,6 +128,8 @@ abstract class Twitarr {
 
   Progress<AuthenticatedUser> getAuthenticatedUser(Credentials credentials, PhotoManager photoManager);
 
+  Progress<User> getUser(Credentials credentials, String username, PhotoManager photoManager);
+
   Progress<Calendar> getCalendar({
     Credentials credentials,
   });
@@ -150,7 +152,6 @@ abstract class Twitarr {
     String realName,
     String pronouns,
     String email,
-    String currentLocation,
     String homeLocation,
     String roomNumber,
   });

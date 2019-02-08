@@ -785,7 +785,7 @@ class _ServerTextViewState extends State<ServerTextView> {
   }
 }
 
-Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<ImageProvider> images, { double size }) {
+Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<ImageProvider> images, { double size, bool enabled = true }) {
   switch (sortedUsers.length) {
     case 1:
       final User user = sortedUsers.single;
@@ -795,8 +795,9 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         names = name.split(' ');
       if (names.length <= 2)
         names = name.split('');
-      return Builder(
-        builder: (BuildContext context) {
+      bool pressed = false;
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
           final ThemeData theme = Theme.of(context);
           TextStyle textStyle = theme.primaryTextTheme.subhead;
           switch (ThemeData.estimateBrightnessForColor(colors.single)) {
@@ -807,31 +808,51 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
               textStyle = textStyle.copyWith(color: theme.primaryColorDark);
               break;
           }
-          return AnimatedContainer(
-            decoration: ShapeDecoration(
-              shape: const CircleBorder(),
-              color: colors.single,
-              shadows: kElevationToShadow[1],
-            ),
-            child: ClipOval(
-              child: Center(
-                child: Text(
-                  names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
-                  style: textStyle,
-                  textScaleFactor: 1.0,
+          final Widget avatar = Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.fastOutSlowIn,
+              decoration: ShapeDecoration(
+                shape: const CircleBorder(),
+                color: colors.single,
+                shadows: kElevationToShadow[pressed ? 4 : 1],
+              ),
+              child: ClipOval(
+                child: Center(
+                  child: Text(
+                    names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
+                    style: textStyle,
+                    textScaleFactor: 1.0,
+                  ),
                 ),
               ),
-            ),
-            foregroundDecoration: ShapeDecoration(
-              shape: const CircleBorder(),
-              image: DecorationImage(
-                image: images.single,
-                fit: BoxFit.cover,
+              foregroundDecoration: ShapeDecoration(
+                shape: const CircleBorder(),
+                image: DecorationImage(
+                  image: images.single,
+                  fit: BoxFit.cover,
+                ),
               ),
+              height: size,
+              width: size,
             ),
-            duration: const Duration(milliseconds: 250),
-            height: size,
-            width: size,
+          );
+          if (!enabled)
+            return avatar;
+          return GestureDetector(
+            onTapDown: (TapDownDetails details) {
+              setState(() { pressed = true; });
+            },
+            onTapUp: (TapUpDetails details) {
+              setState(() { pressed = false; });
+            },
+            onTapCancel: () {
+              setState(() { pressed = false; });
+            },
+            onTap: () {
+              Navigator.pushNamed(context, '/profile', arguments: sortedUsers.single);
+            },
+            child: avatar,
           );
         },
       );
@@ -840,6 +861,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,
@@ -893,6 +915,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,
@@ -967,6 +990,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,
@@ -1062,6 +1086,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,

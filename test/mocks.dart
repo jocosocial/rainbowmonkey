@@ -176,6 +176,11 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final MutableContinuousProgress<AuthenticatedUser> user;
 
   @override
+  Progress<User> fetchProfile(String username) {
+    return const Progress<User>.idle();
+  }
+
+  @override
   bool get isLoggedIn => false;
 
   @override
