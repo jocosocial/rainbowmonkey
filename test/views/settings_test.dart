@@ -22,7 +22,7 @@ Future<void> main() async {
 
   testWidgets('Settings', (WidgetTester tester) async {
     log.clear();
-    final TrivialDataStore store = TrivialDataStore();
+    final TrivialDataStore store = TrivialDataStore(log);
     store.storedCredentials = const Credentials(username: 'aaa', password: 'aaaaaa', key: 'blabla');
     final CruiseModel model = _TestCruiseModel(
       initialTwitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'https://example.com/'),
@@ -61,16 +61,22 @@ Future<void> main() async {
     log.add('--');
     await tester.idle();
     expect(log, <String>[
+      'LoggingDataStore.restoreSettings',
+      'LoggingDataStore.restoreCredentials',
       'LoggingTwitarr(25).login aaa / aaaaaa',
+      'LoggingDataStore.saveCredentials Credentials(aaa)',
       'LoggingTwitarr(25).getCalendar(Credentials(aaa))',
       'LoggingTwitarr(25).getAnnouncements()',
       '--',
       'LoggingTwitarr(25).dispose',
+      'LoggingDataStore.saveCredentials null',
+      'LoggingDataStore.saveSetting Setting.server auto:',
       'LoggingTwitarr(5).getCalendar(null)',
       'LoggingTwitarr(5).getAnnouncements()',
       '--',
       '--',
       'LoggingTwitarr(5).dispose',
+      'LoggingDataStore.saveSetting Setting.server rest:http://invalid',
       'LoggingTwitarr(19).getCalendar(null)',
       'LoggingTwitarr(19).getAnnouncements()',
       '--'

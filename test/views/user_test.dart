@@ -23,6 +23,8 @@ void main() {
     expect(find.text('ABOUT CRUISEMONKEY'), findsOneWidget);
     expect(find.text('Welcome to'), findsOneWidget);
 
+//    expect(tester.getRect(find.text('Enjoy the cruise!')), Rect.fromLTRB(0,0,0,0));
+
     // To go another tab.
     await tester.tap(find.byIcon(Icons.directions_boat));
     await tester.pump();

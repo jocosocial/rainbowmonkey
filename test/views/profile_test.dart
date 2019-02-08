@@ -26,7 +26,7 @@ Future<void> main() async {
           twitarr = value;
         },
       ),
-      store: TrivialDataStore(),
+      store: TrivialDataStore(log),
       onError: (String error) { log.add('error: $error'); },
     );
     await model.login(username: 'username', password: 'password').asFuture();
@@ -50,7 +50,10 @@ Future<void> main() async {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
     expect(log, <String>[
+      'LoggingDataStore.restoreSettings',
       'LoggingTwitarr(0).login username / password',
+      'LoggingDataStore.restoreCredentials',
+      'LoggingDataStore.saveCredentials Credentials(username)',
       'LoggingTwitarr(0).getCalendar(Credentials(username))',
       'LoggingTwitarr(0).getAnnouncements()',
       'fetchProfilePicture',

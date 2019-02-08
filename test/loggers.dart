@@ -3,69 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
-import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/server_text.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
-
-class LoggingDataStore implements DataStore {
-  LoggingDataStore(this.log);
-
-  final List<String> log;
-
-  @override
-  Progress<void> saveCredentials(Credentials value) {
-    log.add('LoggingDataStore.saveCredentials $value');
-    return Progress<void>.completed(null);
-  }
-  @override
-  Progress<Credentials> restoreCredentials() {
-    log.add('LoggingDataStore.restoreCredentials');
-    return Progress<Credentials>.completed(null);
-  }
-
-  @override
-  Progress<void> saveSetting(Setting id, dynamic value) {
-    log.add('LoggingDataStore.saveSetting $id $value');
-    return Progress<void>.completed(null);
-  }
-
-  @override
-  Progress<Map<Setting, dynamic>> restoreSettings() {
-    log.add('LoggingDataStore.restoreSettings');
-    return Progress<Map<Setting, dynamic>>.completed(null);
-  }
-
-  @override
-  Progress<dynamic> restoreSetting(Setting id) {
-    log.add('LoggingDataStore.restoreSetting $id');
-    return Progress<dynamic>.completed(null);
-  }
-
-  @override
-  Future<void> addNotification(String threadId, String messageId) async {
-    log.add('LoggingDataStore.addNotification($threadId, $messageId)');
-  }
-
-  @override
-  Future<void> removeNotification(String threadId, String messageId) async {
-    log.add('LoggingDataStore.removeNotification($threadId, $messageId)');
-  }
-
-  @override
-  Future<List<String>> getNotifications(String threadId) async {
-    log.add('LoggingDataStore.getNotifications($threadId)');
-    return <String>[];
-  }
-
-  @override
-  Future<void> updateFreshnessToken(FreshnessCallback callback) async {
-    log.add('LoggingDataStore.updateFreshnessToken');
-    await callback(null);
-  }
-}
 
 @immutable
 class LoggingTwitarrConfiguration extends TwitarrConfiguration {

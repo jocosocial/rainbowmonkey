@@ -19,67 +19,22 @@ import 'package:flutter/widgets.dart';
 
 import 'nulls.dart' show NullTwitarrConfiguration;
 
-class HangingDataStore implements DataStore {
-  const HangingDataStore();
-
-  @override
-  Progress<void> saveCredentials(Credentials value) {
-    return const Progress<void>.idle();
-  }
-
-  @override
-  Progress<Credentials> restoreCredentials() {
-    return const Progress<Credentials>.idle();
-  }
-
-  @override
-  Progress<void> saveSetting(Setting id, dynamic value) {
-    return const Progress<void>.idle();
-  }
-
-  @override
-  Progress<Map<Setting, dynamic>> restoreSettings() {
-    return const Progress<Map<Setting, dynamic>>.idle();
-  }
-
-  @override
-  Progress<dynamic> restoreSetting(Setting id) {
-    return const Progress<dynamic>.idle();
-  }
-
-  @override
-  Future<void> addNotification(String threadId, String messageId) {
-    return Completer<void>().future;
-  }
-
-  @override
-  Future<void> removeNotification(String threadId, String messageId) {
-    return Completer<void>().future;
-  }
-
-  @override
-  Future<List<String>> getNotifications(String threadId) {
-    return Completer<List<String>>().future;
-  }
-
-  @override
-  Future<void> updateFreshnessToken(FreshnessCallback callback) {
-    return Completer<List<String>>().future;
-  }
-}
-
 class TrivialDataStore implements DataStore {
-  TrivialDataStore();
+  TrivialDataStore(this.log);
+
+  final List<String> log;
 
   Credentials storedCredentials;
 
   @override
   Progress<void> saveCredentials(Credentials value) {
+    log.add('LoggingDataStore.saveCredentials $value');
     return Progress<void>.completed(null);
   }
 
   @override
   Progress<Credentials> restoreCredentials() {
+    log.add('LoggingDataStore.restoreCredentials');
     return Progress<Credentials>.completed(storedCredentials);
   }
 
@@ -87,17 +42,20 @@ class TrivialDataStore implements DataStore {
 
   @override
   Progress<void> saveSetting(Setting id, dynamic value) {
+    log.add('LoggingDataStore.saveSetting $id $value');
     storedSettings[id] = value;
     return Progress<void>.completed(null);
   }
 
   @override
   Progress<Map<Setting, dynamic>> restoreSettings() {
+    log.add('LoggingDataStore.restoreSettings');
     return Progress<Map<Setting, dynamic>>.completed(storedSettings);
   }
 
   @override
   Progress<dynamic> restoreSetting(Setting id) {
+    log.add('LoggingDataStore.restoreSetting $id');
     return Progress<dynamic>.completed(storedSettings[id]);
   }
 
@@ -105,18 +63,21 @@ class TrivialDataStore implements DataStore {
 
   @override
   Future<void> addNotification(String threadId, String messageId) async {
+    log.add('LoggingDataStore.addNotification($threadId, $messageId)');
     final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
     thread.add(messageId);
   }
 
   @override
   Future<void> removeNotification(String threadId, String messageId) async {
+    log.add('LoggingDataStore.removeNotification($threadId, $messageId)');
     final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
     thread.remove(messageId);
   }
 
   @override
   Future<List<String>> getNotifications(String threadId) async {
+    log.add('LoggingDataStore.getNotifications($threadId)');
     final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
     return thread.toList();
   }
@@ -125,6 +86,7 @@ class TrivialDataStore implements DataStore {
 
   @override
   Future<void> updateFreshnessToken(FreshnessCallback callback) async {
+    log.add('LoggingDataStore.updateFreshnessToken');
     storedFreshnessToken = await callback(storedFreshnessToken);
   }
 }
@@ -151,7 +113,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   final Duration steadyPollInterval = const Duration(minutes: 10);
 
   @override
-  final DataStore store = const HangingDataStore();
+  final DataStore store = TrivialDataStore(<String>[]);
 
   @override
   TwitarrConfiguration get twitarrConfiguration => const NullTwitarrConfiguration();
