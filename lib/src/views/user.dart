@@ -135,7 +135,7 @@ class _UserViewState extends State<UserView> {
           header = Align(
             key: _errorHeader,
             alignment: Alignment.bottomCenter,
-            child: Text('Last error while logging in:\n${wrapError(_bestUserValue.error)}'),
+            child: Text('${wrapError(_bestUserValue.error)}\n'),
           );
           loggedIn = false;
         } else {

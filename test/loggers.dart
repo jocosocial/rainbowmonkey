@@ -134,7 +134,7 @@ class LoggingTwitarr extends Twitarr {
   @override
   Progress<List<AnnouncementSummary>> getAnnouncements() {
     log.add('LoggingTwitarr(${_configuration.id}).getAnnouncements()');
-    return const Progress<List<AnnouncementSummary>>.idle();
+    return Progress<List<AnnouncementSummary>>.completed(const <AnnouncementSummary>[]);
   }
 
   @override
@@ -290,7 +290,7 @@ class LoggingTwitarr extends Twitarr {
     Credentials credentials,
   }) {
     log.add('getForumThreads');
-    return null;
+    return const Progress<Set<ForumSummary>>.idle();
   }
 
   @override
