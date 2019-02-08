@@ -47,6 +47,7 @@ void main() {
     notifications.onTap = (String threadId) async {
       assert(() {
         print('Received tap to view: $threadId');
+        return true;
       }());
       await model.loggedIn;
       Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
