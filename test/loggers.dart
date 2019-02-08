@@ -3,69 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
-import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/server_text.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
-
-class LoggingDataStore implements DataStore {
-  LoggingDataStore(this.log);
-
-  final List<String> log;
-
-  @override
-  Progress<void> saveCredentials(Credentials value) {
-    log.add('LoggingDataStore.saveCredentials $value');
-    return Progress<void>.completed(null);
-  }
-  @override
-  Progress<Credentials> restoreCredentials() {
-    log.add('LoggingDataStore.restoreCredentials');
-    return Progress<Credentials>.completed(null);
-  }
-
-  @override
-  Progress<void> saveSetting(Setting id, dynamic value) {
-    log.add('LoggingDataStore.saveSetting $id $value');
-    return Progress<void>.completed(null);
-  }
-
-  @override
-  Progress<Map<Setting, dynamic>> restoreSettings() {
-    log.add('LoggingDataStore.restoreSettings');
-    return Progress<Map<Setting, dynamic>>.completed(null);
-  }
-
-  @override
-  Progress<dynamic> restoreSetting(Setting id) {
-    log.add('LoggingDataStore.restoreSetting $id');
-    return Progress<dynamic>.completed(null);
-  }
-
-  @override
-  Future<void> addNotification(String threadId, String messageId) async {
-    log.add('LoggingDataStore.addNotification($threadId, $messageId)');
-  }
-
-  @override
-  Future<void> removeNotification(String threadId, String messageId) async {
-    log.add('LoggingDataStore.removeNotification($threadId, $messageId)');
-  }
-
-  @override
-  Future<List<String>> getNotifications(String threadId) async {
-    log.add('LoggingDataStore.getNotifications($threadId)');
-    return <String>[];
-  }
-
-  @override
-  Future<void> updateFreshnessToken(FreshnessCallback callback) async {
-    log.add('LoggingDataStore.updateFreshnessToken');
-    await callback(null);
-  }
-}
 
 @immutable
 class LoggingTwitarrConfiguration extends TwitarrConfiguration {
@@ -106,7 +48,7 @@ class LoggingTwitarr extends Twitarr {
 
   final List<String> log;
 
-  String overrideCurrentLocation;
+  String overrideHomeLocation;
 
   @override
   double debugLatency = 0.0;
@@ -130,7 +72,7 @@ class LoggingTwitarr extends Twitarr {
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
       displayName: displayName,
-      currentLocation: overrideCurrentLocation,
+      homeLocation: overrideHomeLocation,
       credentials: Credentials(
         username: username,
         password: password,
@@ -150,7 +92,7 @@ class LoggingTwitarr extends Twitarr {
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
       email: '<email for $username>',
-      currentLocation: overrideCurrentLocation,
+      homeLocation: overrideHomeLocation,
       credentials: Credentials(
         username: username,
         password: password,
@@ -166,8 +108,16 @@ class LoggingTwitarr extends Twitarr {
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: credentials.username,
       email: '<email for ${credentials.username}>',
-      currentLocation: overrideCurrentLocation,
+      homeLocation: overrideHomeLocation,
       credentials: credentials,
+    ));
+  }
+
+  @override
+  Progress<User> getUser(Credentials credentials, String username, PhotoManager photoManager) {
+    log.add('LoggingTwitarr(${_configuration.id}).getAuthenticatedUser $username, $credentials');
+    return Progress<User>.completed(User(
+      username: username,
     ));
   }
 
@@ -192,7 +142,7 @@ class LoggingTwitarr extends Twitarr {
   @override
   Progress<List<AnnouncementSummary>> getAnnouncements() {
     log.add('LoggingTwitarr(${_configuration.id}).getAnnouncements()');
-    return const Progress<List<AnnouncementSummary>>.idle();
+    return Progress<List<AnnouncementSummary>>.completed(const <AnnouncementSummary>[]);
   }
 
   @override
@@ -210,17 +160,14 @@ class LoggingTwitarr extends Twitarr {
   @override
   Progress<void> updateProfile({
     @required Credentials credentials,
-    String currentLocation,
     String displayName,
     String realName,
     String pronouns,
     String email,
-    bool emailPublic,
     String homeLocation,
     String roomNumber,
-    bool vcardPublic,
   }) {
-    log.add('updateProfile $currentLocation/$displayName/$realName/$pronouns/$email/$emailPublic/$homeLocation/$roomNumber/$vcardPublic');
+    log.add('updateProfile $displayName/$realName/$pronouns/$email/$homeLocation/$roomNumber');
     return Progress<void>.completed(null);
   }
 
@@ -348,7 +295,7 @@ class LoggingTwitarr extends Twitarr {
     Credentials credentials,
   }) {
     log.add('getForumThreads');
-    return null;
+    return const Progress<Set<ForumSummary>>.idle();
   }
 
   @override

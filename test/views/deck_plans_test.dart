@@ -2,14 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
-import 'package:cruisemonkey/src/widgets.dart';
+import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/views/deck_plans.dart';
+import 'package:cruisemonkey/src/widgets.dart';
 
+import '../loggers.dart';
 import '../mocks.dart';
 
 void main() {
+  final List<String> log = <String>[];
+  LoggingTwitarrConfiguration.register(log);
+
   testWidgets('Deck Plans', (WidgetTester tester) async {
-    final TestCruiseModel model = TestCruiseModel();
+    log.clear();
+    final CruiseModel model = CruiseModel(
+      initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
+      store: TrivialDataStore(log),
+      onError: (String message) { log.add('error: $message'); },
+    );
     await tester.pumpWidget(
       Now.fixed(
         dateTime: DateTime(2019),

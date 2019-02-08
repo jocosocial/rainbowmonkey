@@ -61,12 +61,15 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   bool _alive = true;
   Credentials _currentCredentials;
 
+  Credentials _preBusyCredentials;
+
   int _busyCounter = 0;
   void _busy(AsyncCallback callback) async {
     if (_busyCounter == 0) {
       _user.pause();
       _calendar.pause();
       _announcements.pause();
+      _preBusyCredentials = _currentCredentials;
     }
     _busyCounter += 1;
     try {
@@ -77,6 +80,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
         _user.resume();
         _calendar.resume();
         _announcements.resume();
+        if (_preBusyCredentials != null && _preBusyCredentials != _currentCredentials)
+          await Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
       }
     }
   }
@@ -234,7 +239,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   void _updateCredentials(AuthenticatedUser user) {
-    Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
     final Credentials oldCredentials = _currentCredentials;
     if (user == null) {
       _currentCredentials = null;
@@ -299,6 +303,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     if (_currentCredentials?.key != null)
       return await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
     return null;
+  }
+
+  Progress<User> fetchProfile(String username) {
+    return _twitarr.getUser(_currentCredentials, username, this);
   }
 
   ContinuousProgress<Calendar> get calendar => _calendar;
@@ -431,14 +439,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     }
   }
 
-  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0 }) {
+  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0, bool enabled = true }) {
     assert(users.isNotEmpty);
     assert(seed != null);
     final math.Random random = math.Random(seed);
     final List<User> sortedUsers = users.toList()..shuffle(random);
     final List<Color> colors = sortedUsers.map<Color>((User user) => Color((user.username.hashCode | 0xFF111111) & 0xFF7F7F7F)).toList();
     final List<ImageProvider> images = sortedUsers.map<ImageProvider>((User user) => AvatarImage(user.username, this, _twitarr, onError: onError)).toList();
-    return createAvatarWidgetsFor(sortedUsers, colors, images, size: size);
+    return createAvatarWidgetsFor(sortedUsers, colors, images, size: size, enabled: enabled);
   }
 
   Widget imageFor(String photoId) {
@@ -490,7 +498,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   }
 
   Progress<void> updateProfile({
-    String currentLocation,
     String displayName,
     String realName,
     String pronouns,
@@ -501,7 +508,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain(_twitarr.updateProfile(
         credentials: _currentCredentials,
-        currentLocation: currentLocation,
         displayName: displayName,
         realName: realName,
         pronouns: pronouns,
@@ -554,6 +560,11 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       photo: photo,
       parentId: parentId,
     );
+  }
+
+  void forceUpdate() {
+    _calendar.triggerUnscheduledUpdate();
+    _announcements.triggerUnscheduledUpdate();
   }
 
   @override

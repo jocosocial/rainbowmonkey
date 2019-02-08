@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../models/calendar.dart';
 import '../widgets.dart';
 
+final ValueNotifier<bool> _filter = ValueNotifier<bool>(false);
+
 class CalendarView extends StatefulWidget implements View {
   const CalendarView({
     Key key,
@@ -17,7 +19,17 @@ class CalendarView extends StatefulWidget implements View {
 
   @override
   Widget buildFab(BuildContext context) {
-    return null;
+    return ValueListenableBuilder<bool>(
+      valueListenable: _filter,
+      builder: (BuildContext context, bool value, Widget child) {
+        return FloatingActionButton(
+          child: Icon(value ? Icons.favorite : Icons.favorite_border),
+          onPressed: () async {
+            _filter.value = !value;
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -31,10 +43,7 @@ class _PendingFavoriteUpdate {
   bool state;
 }
 
-class _CalendarViewState extends State<CalendarView> {
-  static final Key _beforeKey = UniqueKey();
-  static final Key _afterKey = UniqueKey();
-
+class _CalendarViewState extends State<CalendarView> with SingleTickerProviderStateMixin {
   final Map<String, _PendingFavoriteUpdate> _pendingUpdates = <String, _PendingFavoriteUpdate>{};
   int _activePendingUpdates = 0;
 
@@ -56,51 +65,41 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO(ianh): button to jump to "now"
-    // TODO(ianh): setState when the time changes sufficiently
     // TODO(ianh): show event overlaps somehow
-    // TODO(ianh): filter to favorite events only
     return ContinuousProgressBuilder<Calendar>(
       progress: Cruise.of(context).calendar,
+      onRetry: () { Cruise.of(context).forceUpdate(); },
       builder: (BuildContext context, Calendar calendar) {
-        if (calendar.events.isEmpty)
-          return iconAndLabel(icon: Icons.sentiment_neutral, message: 'Calendar is empty');
         return LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            final DateTime now = Now.of(context);
-            final bool isLoggedIn = Cruise.of(context).isLoggedIn;
-            final List<Event> beforeEvents = calendar.events.where((Event event) => !event.endTime.isAfter(now)).toList().reversed.toList();
-            final List<Event> afterEvents = calendar.events.where((Event event) => event.endTime.isAfter(now)).toList();
-            return CustomScrollView(
-              center: _afterKey,
-              anchor: MediaQuery.of(context).padding.top / constraints.maxHeight,
-              slivers: <Widget>[
-                SliverSafeArea(
-                  key: _beforeKey,
-                  top: false,
-                  bottom: false,
-                  sliver: EventList(
-                    events: beforeEvents,
-                    now: now,
-                    isLoggedIn: isLoggedIn,
-                    onSetFavorite: _handleFavorite,
-                    direction: GrowthDirection.reverse,
-                    pendingUpdates: _pendingUpdates,
-                  ),
-                ),
-                SliverSafeArea(
-                  key: _afterKey,
-                  top: false,
-                  sliver: EventList(
-                    events: afterEvents,
-                    now: now,
-                    isLoggedIn: isLoggedIn,
-                    onSetFavorite: _handleFavorite,
-                    direction: GrowthDirection.forward,
-                    pendingUpdates: _pendingUpdates,
-                  ),
-                ),
-              ],
+            return ValueListenableBuilder<bool>(
+              valueListenable: _filter,
+              builder: (BuildContext context, bool filtered, Widget child) {
+                List<Event> filteredEvents = calendar.events;
+                Widget excuse;
+                if (filteredEvents.isEmpty) {
+                  excuse = iconAndLabel(icon: Icons.sentiment_neutral, message: 'Calendar is empty');
+                } else if (filtered) {
+                  filteredEvents = filteredEvents.where((Event event) => _pendingUpdates.containsKey(event.id) || event.following).toList();
+                  if (filteredEvents.isEmpty)
+                    excuse = iconAndLabel(icon: Icons.sentiment_neutral, message: 'You have not marked any events');
+                }
+                final DateTime now = Now.of(context);
+                final bool isLoggedIn = Cruise.of(context).isLoggedIn;
+                final List<Event> beforeEvents = filteredEvents.where((Event event) => !event.endTime.isAfter(now)).toList().reversed.toList();
+                final List<Event> afterEvents = filteredEvents.where((Event event) => event.endTime.isAfter(now)).toList();
+                return _CalendarViewInternals(
+                  excuse: excuse,
+                  isLoggedIn: isLoggedIn,
+                  beforeEvents: beforeEvents,
+                  afterEvents: afterEvents,
+                  constraints: constraints,
+                  pendingUpdates: _pendingUpdates,
+                  onFavorite: _handleFavorite,
+                  now: now,
+                  filtered: filtered,
+                );
+              },
             );
           },
         );
@@ -109,10 +108,133 @@ class _CalendarViewState extends State<CalendarView> {
   }
 }
 
+class _CalendarViewInternals extends StatefulWidget {
+  const _CalendarViewInternals({
+    @required this.excuse,
+    @required this.isLoggedIn,
+    @required this.beforeEvents,
+    @required this.afterEvents,
+    @required this.constraints,
+    @required this.pendingUpdates,
+    @required this.onFavorite,
+    @required this.now,
+    @required this.filtered,
+  });
+
+  final Widget excuse;
+  final bool isLoggedIn;
+  final List<Event> beforeEvents;
+  final List<Event> afterEvents;
+  final BoxConstraints constraints;
+  final Map<String, _PendingFavoriteUpdate> pendingUpdates;
+  final FavoriteCallback onFavorite;
+  final DateTime now;
+  final bool filtered;
+
+  @override
+  State<_CalendarViewInternals> createState() => _CalendarViewInternalsState();
+}
+
+class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
+  static final Key _beforeKey = UniqueKey();
+  static final Key _afterKey = UniqueKey();
+
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _filter.addListener(_recenter);
+  }
+
+  void _recenter() {
+    _controller.animateTo(0.0, duration: const Duration(milliseconds: 350), curve: Curves.fastOutSlowIn);
+  }
+
+  @override
+  void dispose() {
+    _filter.removeListener(_recenter);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> children = <Widget>[
+      CustomScrollView(
+        controller: _controller,
+        center: _afterKey,
+        anchor: MediaQuery.of(context).padding.top / widget.constraints.maxHeight,
+        slivers: <Widget>[
+          SliverSafeArea(
+            key: _beforeKey,
+            bottom: false,
+            sliver: EventList(
+              events: widget.beforeEvents,
+              fallback: widget.excuse == null ? iconAndLabel(icon: Icons.sentiment_satisfied, message: 'The cruise has not yet begun') : null,
+              now: widget.now,
+              isLoggedIn: widget.isLoggedIn,
+              onSetFavorite: widget.onFavorite,
+              direction: GrowthDirection.reverse,
+              pendingUpdates: widget.pendingUpdates,
+            ),
+          ),
+          SliverSafeArea(
+            key: _afterKey,
+            top: false,
+            sliver: EventList(
+              events: widget.afterEvents,
+              fallback: widget.excuse == null ? iconAndLabel(icon: Icons.sentiment_dissatisfied, message: widget.filtered ? 'No more marked events' : 'The cruise is over until next year') : null,
+              now: widget.now,
+              isLoggedIn: widget.isLoggedIn,
+              onSetFavorite: widget.onFavorite,
+              direction: GrowthDirection.forward,
+              pendingUpdates: widget.pendingUpdates,
+            ),
+          ),
+        ],
+      ),
+      AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, Widget child) {
+          final double position = _controller.position.pixels;
+          final EdgeInsets padding = MediaQuery.of(context).padding;
+          final bool showIt = position < -widget.constraints.maxHeight || position > widget.constraints.maxHeight / 3.0;
+          return PositionedDirectional(
+            end: 24.0,
+            top: position < 0.0 ? padding.top + 16.0 : null,
+            bottom: position > 0.0 ? padding.bottom + 48.0 : null,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.fastOutSlowIn,
+              opacity: showIt ? 1.0 : 0.0,
+              child: IgnorePointer(
+                ignoring: !showIt,
+                child: RaisedButton(
+                  shape: StadiumBorder(),
+                  child: const Text('Jump to now'),
+                  onPressed: _recenter,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ];
+    if (widget.excuse != null)
+      children.add(widget.excuse);
+    return Stack(
+      alignment: Alignment.center,
+      children: children,
+    );
+  }
+}
+
+
 class EventList extends StatelessWidget {
   const EventList({
     Key key,
     @required this.events,
+    @required this.fallback,
     @required this.now,
     @required this.isLoggedIn,
     @required this.onSetFavorite,
@@ -127,6 +249,7 @@ class EventList extends StatelessWidget {
        super(key: key);
 
   final List<Event> events;
+  final Widget fallback;
   final DateTime now;
   final bool isLoggedIn;
   final FavoriteCallback onSetFavorite;
@@ -135,6 +258,14 @@ class EventList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (events.isEmpty && fallback != null) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 48.0),
+          child: fallback,
+        ),
+      );
+    }
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int index) {
@@ -150,7 +281,8 @@ class EventList extends StatelessWidget {
             isLast: index == events.length - 1,
             lastStartTime: lastTime,
             onFavorite: (bool value) { onSetFavorite(event, value); },
-            favoriteOverride: pendingUpdates[event.id]?.state,
+            isFavorite: pendingUpdates[event.id]?.state ?? event.following,
+            favoriteOverride: pendingUpdates.containsKey(event.id),
           );
         },
         childCount: events.length,
@@ -169,6 +301,7 @@ class TimeSlice extends StatelessWidget {
     @required this.isLast,
     this.lastStartTime,
     @required this.onFavorite,
+    @required this.isFavorite,
     @required this.favoriteOverride,
   }) : assert(event != null),
        assert(now != null),
@@ -176,6 +309,8 @@ class TimeSlice extends StatelessWidget {
        assert(direction != null),
        assert(isLast != null),
        assert(onFavorite != null),
+       assert(isFavorite != null),
+       assert(favoriteOverride != null),
        super(key: key ?? Key(event.id));
 
   final Event event;
@@ -185,6 +320,7 @@ class TimeSlice extends StatelessWidget {
   final bool isLast;
   final DateTime lastStartTime;
   final ValueSetter<bool> onFavorite;
+  final bool isFavorite;
   final bool favoriteOverride;
 
   String _getHours(DateTime time) {
@@ -220,7 +356,6 @@ class TimeSlice extends StatelessWidget {
         ..add(Text('-${_getHours(endTime)}'));
     }
     times.add(const Opacity(opacity: 0.0, child: Text('-88:88pm'))); // forces the column to the right width
-    final bool isFavorite = favoriteOverride ?? event.following;
     Widget row = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -244,7 +379,7 @@ class TimeSlice extends StatelessWidget {
           checked: isFavorite,
           child: IconButton(
             icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-            color: favoriteOverride == null ? null : Theme.of(context).accentColor,
+            color: favoriteOverride ? Theme.of(context).accentColor : null,
             tooltip: isFavorite ? 'Unmark this event.' : 'Mark this event as interesting.',
             onPressed: isLoggedIn ? () {
               onFavorite(!isFavorite);
@@ -266,6 +401,7 @@ class TimeSlice extends StatelessWidget {
         child: row,
       );
     }
+
     final List<Widget> children = <Widget>[row];
     DateTime dayAbove, dayBelow;
     switch (direction) {

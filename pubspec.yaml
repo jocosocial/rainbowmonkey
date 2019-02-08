@@ -5,11 +5,12 @@ dependencies:
   flutter:
     sdk: flutter
   path_provider: any
-  flutter_local_notifications: ^0.4.5
-  image_picker: ^0.4.12
-  android_alarm_manager: ^0.2.3
+  flutter_local_notifications: any
+  image_picker: any
+    #path: ../plugins/packages/image_picker
+  android_alarm_manager: any
   sqflite: any
-  url_launcher: ^4.2.0+3
+  url_launcher: any
 
 dev_dependencies:
   flutter_test:

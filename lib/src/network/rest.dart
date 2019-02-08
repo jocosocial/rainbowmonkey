@@ -223,22 +223,45 @@ class RestTwitarr implements Twitarr {
     });
   }
 
+  @override
+  Progress<User> getUser(Credentials credentials, String username, PhotoManager photoManager) {
+    return Progress<User>((ProgressController<User> completer) async {
+      final FormData body = FormData();
+      if (credentials != null)
+        body.add('key', credentials.key);
+      final String rawResult = await completer.chain<String>(_requestUtf8('GET', 'api/v2/user/profile/${Uri.encodeComponent(username)}?${body.toUrlEncoded()}'));
+      final dynamic data = Json.parse(rawResult);
+      _checkStatusIsOk(data);
+      photoManager.heardAboutUserPhoto(
+        data.user.username.toString(),
+        _parseDateTime(data.user.last_photo_updated as Json),
+      );
+      return _createUser(data.user);
+    });
+  }
+
   AuthenticatedUser _createAuthenticatedUser(dynamic user, Credentials credentials) {
     return AuthenticatedUser(
       username: (user.username as Json).toScalar() as String,
       displayName: (user.display_name as Json).toScalar() as String,
       realName: (user.real_name as Json).toScalar() as String,
       pronouns: (user.pronouns as Json).toScalar() as String,
-      email: (user.email as Json).toScalar() as String,
-      currentLocation: (user.current_location as Json).toScalar() as String,
       roomNumber: (user.room_number as Json).toScalar() as String,
       homeLocation: (user.home_location as Json).toScalar() as String,
-      // isAdmin: (user.isAdminas Json).toBoolean(),
-      // status: (user.status as Json).toScalar() as String,
-      // lastLogin: (user.last_login as Json).toScalar() as String, // TODO(ianh): parse to DateTime
-      // emptyPassword: (user['empty_password?'] as Json).toBoolean(),
-      // unnoticedAlerts: (user.unnoticed_alertsas Json).toBoolean(),
+      email: (user.email as Json).toScalar() as String,
       credentials: credentials.copyWith(username: (user.username as Json).toScalar() as String),
+    );
+  }
+
+  User _createUser(dynamic user) {
+    return User(
+      username: (user.username as Json).toScalar() as String,
+      displayName: (user.display_name as Json).toScalar() as String,
+      realName: (user.real_name as Json).toScalar() as String,
+      pronouns: (user.pronouns as Json).toScalar() as String,
+      roomNumber: (user.room_number as Json).toScalar() as String,
+      homeLocation: (user.home_location as Json).toScalar() as String,
+      email: (user.email as Json).toScalar() as String,
     );
   }
 
@@ -370,7 +393,6 @@ class RestTwitarr implements Twitarr {
   @override
   Progress<void> updateProfile({
     @required Credentials credentials,
-    String currentLocation,
     String displayName,
     String realName,
     String pronouns,
@@ -381,9 +403,6 @@ class RestTwitarr implements Twitarr {
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key);
-    if (currentLocation != null) {
-      body.add('current_location', currentLocation);
-    }
     if (displayName != null) {
       assert(AuthenticatedUser.isValidDisplayName(displayName));
       body.add('display_name', displayName);
@@ -1132,7 +1151,10 @@ class RestTwitarr implements Twitarr {
         })
         .transform(utf8.decoder)
         .join();
-      debugPrint('<<< ${response.statusCode} $result');
+      assert(() {
+        debugPrint('<<< ${response.statusCode} $result');
+        return true;
+      }());
       return result;
     });
   }

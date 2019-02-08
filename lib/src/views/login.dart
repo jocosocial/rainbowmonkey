@@ -75,7 +75,7 @@ class _LoginDialogState extends State<LoginDialog> {
                         labelText: 'Password',
                       ),
                       validator: (String password) {
-                        if (!AuthenticatedUser.isValidPassword(password))
+                        if (!AuthenticatedUser.isValidPassword(password, allowShort: true))
                           return 'Passwords are at least six characters long.';
                       },
                     ),

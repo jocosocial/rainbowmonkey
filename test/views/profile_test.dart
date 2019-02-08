@@ -7,7 +7,7 @@ import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
-import 'package:cruisemonkey/src/views/profile.dart';
+import 'package:cruisemonkey/src/views/profile_editor.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
 import '../loggers.dart';
@@ -26,7 +26,7 @@ Future<void> main() async {
           twitarr = value;
         },
       ),
-      store: TrivialDataStore(),
+      store: TrivialDataStore(log),
       onError: (String error) { log.add('error: $error'); },
     );
     await model.login(username: 'username', password: 'password').asFuture();
@@ -34,32 +34,40 @@ Future<void> main() async {
       MaterialApp(
         home: Cruise(
           cruiseModel: model,
-          child: const Profile(),
+          child: const ProfileEditor(),
         ),
       ),
     );
     expect(find.text('Display name'), findsOneWidget);
-    expect(find.text('Current location'), findsNothing);
-    await tester.drag(find.byType(CustomScrollView), const Offset(0.0, -400.0));
-    await tester.pump();
-    expect(find.text('Current location'), findsOneWidget);
+    expect(find.text('Home location'), findsNothing);
+    await tester.drag(find.byType(CustomScrollView), const Offset(0.0, -1000.0));
+    await tester.pumpAndSettle();
+    expect(find.text('Home location'), findsOneWidget);
     expect(find.text('Hello'), findsNothing);
     expect(find.text('override location set'), findsNothing);
-    await tester.enterText(find.byType(TextField).at(3), 'Hello');
-    twitarr.overrideCurrentLocation = 'override location set';
+    await tester.enterText(find.byType(TextField).at(5), 'Hello');
+    twitarr.overrideHomeLocation = 'override location set';
+    log.add('overridden');
+    expect(find.text('Home location'), findsOneWidget);
+    expect(find.text('Hello'), findsOneWidget);
+    expect(find.text('override location set'), findsNothing);
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
     expect(log, <String>[
+      'LoggingDataStore.restoreSettings',
       'LoggingTwitarr(0).login username / password',
+      'LoggingDataStore.restoreCredentials',
+      'LoggingDataStore.saveCredentials Credentials(username)',
       'LoggingTwitarr(0).getCalendar(Credentials(username))',
       'LoggingTwitarr(0).getAnnouncements()',
       'fetchProfilePicture',
-      'updateProfile Hello/null/null/null/null/null/null/null/null',
+      'overridden',
+      'updateProfile null/null/null/null/Hello/null',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)'
     ]);
-    expect(find.text('Current location'), findsOneWidget);
-    expect(find.text('Hello'), findsNothing);
+    expect(find.text('Home location'), findsOneWidget);
     expect(find.text('override location set'), findsOneWidget);
+    expect(find.text('Hello'), findsNothing);
   });
 }
 

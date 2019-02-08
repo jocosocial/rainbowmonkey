@@ -9,6 +9,7 @@ import 'src/logic/background_polling.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
+import 'src/models/user.dart';
 import 'src/network/rest.dart';
 import 'src/views/calendar.dart';
 import 'src/views/code_of_conduct.dart';
@@ -17,6 +18,7 @@ import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/karaoke.dart';
 import 'src/views/profile.dart';
+import 'src/views/profile_editor.dart';
 import 'src/views/settings.dart';
 import 'src/views/stream.dart';
 import 'src/views/user.dart';
@@ -26,7 +28,10 @@ final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 void main() {
   WidgetsFlutterBinding();
-  print('CruiseMonkey has started');
+  assert(() {
+    print('CruiseMonkey has started');
+    return true;
+  }());
   AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
   final CruiseModel model = CruiseModel(
@@ -40,7 +45,10 @@ void main() {
     runBackground();
   Notifications.instance.then((Notifications notifications) {
     notifications.onTap = (String threadId) async {
-      print('Received tap to view: $threadId');
+      assert(() {
+        print('Received tap to view: $threadId');
+        return true;
+      }());
       await model.loggedIn;
       Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
       CommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
@@ -186,9 +194,13 @@ class CruiseMonkeyHome extends StatelessWidget {
             return AnimatedBuilder(
               animation: tabController,
               builder: (BuildContext context, Widget child) {
+                final Widget fab = pages[tabController.index].buildFab(context);
                 return Scaffold(
                   key: scaffoldKey,
-                  floatingActionButton: pages[tabController.index].buildFab(context),
+                  floatingActionButton: fab == null ? null : KeyedSubtree(
+                    key: ObjectKey(pages[tabController.index]),
+                    child: fab,
+                  ),
                   floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
                   resizeToAvoidBottomInset: false,
                   body: LayoutBuilder(
@@ -248,11 +260,12 @@ class CruiseMonkeyHome extends StatelessWidget {
         ),
       ),
       routes: <String, WidgetBuilder>{
-        '/profile': (BuildContext context) => const Profile(),
-        '/create_account': (BuildContext context) => const CreateAccount(),
+        '/profile-editor': (BuildContext context) => const ProfileEditor(),
+        '/create-account': (BuildContext context) => const CreateAccount(),
         '/settings': (BuildContext context) => const Settings(),
         '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
         '/twitarr': (BuildContext context) => const TweetStreamView(),
+        '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
       },
     );
   }

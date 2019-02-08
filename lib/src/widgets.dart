@@ -62,29 +62,34 @@ Widget _defaultSecondaryActiveBuilder(BuildContext context, double progress, dou
   return CircularProgressIndicator(key: ProgressBuilder.activeKey, value: progress / target);
 
 }
-Widget _defaultSecondaryFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
+Widget _defaultSecondaryFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace, { VoidCallback onRetry }) {
   assert(error != null);
   return Tooltip(
     key: ProgressBuilder.failedKey,
     message: '$error',
-    child: const Icon(Icons.error_outline),
+    child: onRetry == null ? const Icon(Icons.error_outline)
+           : IconButton(icon: const Icon(Icons.error_outline), onPressed: onRetry),
   );
 }
 
 Widget _defaultWrap(BuildContext context, Widget main, Widget secondary) {
   assert(main != null);
-  return Stack(
-    children: <Widget>[
-      main,
-      PositionedDirectional(
-        end: 0.0,
-        top: 0.0,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: secondary,
+  return ConstrainedBox(
+    constraints: const BoxConstraints(minWidth: double.infinity, maxWidth: double.infinity),
+    child: Stack(
+      fit: StackFit.passthrough,
+      children: <Widget>[
+        main,
+        PositionedDirectional(
+          end: 0.0,
+          top: 0.0,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: secondary,
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 
@@ -111,13 +116,13 @@ class ProgressBuilder<T> extends StatelessWidget {
     this.idleChild: const SizedBox.expand(),
     this.startingChild: const Center(key: activeKey, child: CircularProgressIndicator()),
     this.activeBuilder: defaultActiveBuilder,
-    this.failedBuilder: defaultFailedBuilder,
+    this.failedBuilder,
     @required this.builder,
     this.fadeWrapper: _defaultFadeWrapper,
+    this.onRetry,
   }) : assert(idleChild != null),
        assert(startingChild != null),
        assert(activeBuilder != null),
-       assert(failedBuilder != null),
        assert(builder != null),
        assert(fadeWrapper != null),
        super(key: key);
@@ -132,6 +137,8 @@ class ProgressBuilder<T> extends StatelessWidget {
   final SuccessfulProgressBuilder<T> builder;
   final FadeWrapperBuilder fadeWrapper;
 
+  final VoidCallback onRetry;
+
   static const Key activeKey = _ActiveKey();
   static const Key failedKey = _FailedKey();
 
@@ -140,9 +147,26 @@ class ProgressBuilder<T> extends StatelessWidget {
     return Center(key: ProgressBuilder.activeKey, child: CircularProgressIndicator(value: progress / target));
   }
 
-  static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace) {
+  static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace, { VoidCallback onRetry }) {
     assert(error != null);
-    return iconAndLabel(key: ProgressBuilder.failedKey, icon: Icons.warning, message: wrapError(error));
+    final Widget message = iconAndLabel(key: ProgressBuilder.failedKey, icon: Icons.warning, message: wrapError(error));
+    if (onRetry == null)
+      return message;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          message,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FlatButton(
+              child: const Text('RETRY'),
+              onPressed: onRetry,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -161,7 +185,8 @@ class ProgressBuilder<T> extends StatelessWidget {
         } else if (value is ActiveProgress) {
           result = activeBuilder(context, value.progress, value.target);
         } else if (value is FailedProgress) {
-          result = failedBuilder(context, value.error, value.stackTrace);
+          result = failedBuilder != null ? failedBuilder(context, value.error, value.stackTrace)
+                   : defaultFailedBuilder(context, value.error, value.stackTrace, onRetry: onRetry);
         } else if (value is SuccessfulProgress<T>) {
           result = builder(context, value.value);
         } else {
@@ -181,21 +206,20 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
     this.idleChild: const SizedBox.expand(),
     this.startingChild: const Center(child: CircularProgressIndicator()),
     this.activeBuilder: ProgressBuilder.defaultActiveBuilder,
-    this.failedBuilder: ProgressBuilder.defaultFailedBuilder,
+    this.failedBuilder,
     @required this.builder,
     this.secondaryStartingChild: const CircularProgressIndicator(key: ProgressBuilder.activeKey),
     this.secondaryActiveBuilder: _defaultSecondaryActiveBuilder,
-    this.secondaryFailedBuilder: _defaultSecondaryFailedBuilder,
+    this.secondaryFailedBuilder,
     this.wrap: _defaultWrap,
     this.fadeWrapper: _defaultFadeWrapper,
+    this.onRetry,
   }) : assert(idleChild != null),
        assert(startingChild != null),
        assert(activeBuilder != null),
-       assert(failedBuilder != null),
        assert(builder != null),
        assert(secondaryStartingChild != null),
        assert(secondaryActiveBuilder != null),
-       assert(secondaryFailedBuilder != null),
        assert(wrap != null),
        assert(fadeWrapper != null),
        super(key: key);
@@ -213,6 +237,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
   final FailedProgressBuilder secondaryFailedBuilder;
   final WrapBuilder wrap;
   final FadeWrapperBuilder fadeWrapper;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -227,6 +252,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
         activeBuilder: activeBuilder,
         failedBuilder: failedBuilder,
         builder: builder,
+        onRetry: onRetry,
       ),
       builder: (BuildContext context, Widget child) {
         return wrap(
@@ -244,7 +270,8 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
                 } else if (value is ActiveProgress) {
                   result = secondaryActiveBuilder(context, value.progress, value.target);
                 } else if (value is FailedProgress) {
-                  result = secondaryFailedBuilder(context, value.error, value.stackTrace);
+                  result = secondaryFailedBuilder != null ? secondaryFailedBuilder(context, value.error, value.stackTrace)
+                           : _defaultSecondaryFailedBuilder(context, value.error, value.stackTrace, onRetry: onRetry);
                 }
               }
               result ??= const SizedBox.shrink();
@@ -737,6 +764,7 @@ class _ServerTextViewState extends State<ServerTextView> {
         child: IntrinsicHeight(
           child: ProgressBuilder<ServerText>(
             progress: _serverText,
+            onRetry: () { setState(_updateText); },
             builder: (BuildContext context, ServerText text) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -781,7 +809,7 @@ class _ServerTextViewState extends State<ServerTextView> {
   }
 }
 
-Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<ImageProvider> images, { double size }) {
+Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<ImageProvider> images, { double size, bool enabled = true }) {
   switch (sortedUsers.length) {
     case 1:
       final User user = sortedUsers.single;
@@ -791,8 +819,9 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         names = name.split(' ');
       if (names.length <= 2)
         names = name.split('');
-      return Builder(
-        builder: (BuildContext context) {
+      bool pressed = false;
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
           final ThemeData theme = Theme.of(context);
           TextStyle textStyle = theme.primaryTextTheme.subhead;
           switch (ThemeData.estimateBrightnessForColor(colors.single)) {
@@ -803,31 +832,51 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
               textStyle = textStyle.copyWith(color: theme.primaryColorDark);
               break;
           }
-          return AnimatedContainer(
-            decoration: ShapeDecoration(
-              shape: const CircleBorder(),
-              color: colors.single,
-              shadows: kElevationToShadow[1],
-            ),
-            child: ClipOval(
-              child: Center(
-                child: Text(
-                  names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
-                  style: textStyle,
-                  textScaleFactor: 1.0,
+          final Widget avatar = Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.fastOutSlowIn,
+              decoration: ShapeDecoration(
+                shape: const CircleBorder(),
+                color: colors.single,
+                shadows: kElevationToShadow[pressed ? 4 : 1],
+              ),
+              child: ClipOval(
+                child: Center(
+                  child: Text(
+                    names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
+                    style: textStyle,
+                    textScaleFactor: 1.0,
+                  ),
                 ),
               ),
-            ),
-            foregroundDecoration: ShapeDecoration(
-              shape: const CircleBorder(),
-              image: DecorationImage(
-                image: images.single,
-                fit: BoxFit.cover,
+              foregroundDecoration: ShapeDecoration(
+                shape: const CircleBorder(),
+                image: DecorationImage(
+                  image: images.single,
+                  fit: BoxFit.cover,
+                ),
               ),
+              height: size,
+              width: size,
             ),
-            duration: const Duration(milliseconds: 250),
-            height: size,
-            width: size,
+          );
+          if (!enabled)
+            return avatar;
+          return GestureDetector(
+            onTapDown: (TapDownDetails details) {
+              setState(() { pressed = true; });
+            },
+            onTapUp: (TapUpDetails details) {
+              setState(() { pressed = false; });
+            },
+            onTapCancel: () {
+              setState(() { pressed = false; });
+            },
+            onTap: () {
+              Navigator.pushNamed(context, '/profile', arguments: sortedUsers.single);
+            },
+            child: avatar,
           );
         },
       );
@@ -836,6 +885,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,
@@ -889,6 +939,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,
@@ -963,6 +1014,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,
@@ -1058,6 +1110,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
         children: <Widget>[
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+            curve: Curves.fastOutSlowIn,
             decoration: ShapeDecoration(
               shape: const CircleBorder(),
               color: Colors.white,

@@ -135,7 +135,7 @@ class _UserViewState extends State<UserView> {
           header = Align(
             key: _errorHeader,
             alignment: Alignment.bottomCenter,
-            child: Text('Last error while logging in:\n${wrapError(_bestUserValue.error)}'),
+            child: Text('${wrapError(_bestUserValue.error)}\n'),
           );
           loggedIn = false;
         } else {
@@ -221,7 +221,7 @@ class _UserViewState extends State<UserView> {
                     ),
                     Expanded(
                       child: LabeledIconButton(
-                        onPressed: loggedIn ? () { Navigator.pushNamed(context, '/profile'); } : null,
+                        onPressed: loggedIn ? () { Navigator.pushNamed(context, '/profile-editor'); } : null,
                         icon: const Icon(Icons.edit),
                         label: const Text('EDIT PROFILE'),
                       ),
@@ -236,7 +236,7 @@ class _UserViewState extends State<UserView> {
                     ),
                     Expanded(
                       child: LabeledIconButton(
-                        onPressed: loggedIn ? null : () { Navigator.pushNamed(context, '/create_account'); },
+                        onPressed: loggedIn ? null : () { Navigator.pushNamed(context, '/create-account'); },
                         icon: const Icon(Icons.person_add),
                         label: const Text('CREATE ACCOUNT'),
                       ),
@@ -248,11 +248,12 @@ class _UserViewState extends State<UserView> {
           const Divider(),
           ContinuousProgressBuilder<List<Announcement>>(
             progress: Cruise.of(context).announcements,
+            onRetry: () { Cruise.of(context).forceUpdate(); },
             nullChild: const SizedBox.shrink(),
             idleChild: const SizedBox.shrink(),
             builder: (BuildContext context, List<Announcement> announcements) {
               if (announcements.isEmpty)
-                return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
+                  return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
               return Padding(
                 padding: const EdgeInsets.fromLTRB(8.0, 12.0, 8.0, 8.0),
                 child: ListBody(

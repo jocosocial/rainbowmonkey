@@ -35,12 +35,25 @@
         </activity>
         <service
             android:name="io.flutter.plugins.androidalarmmanager.AlarmService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false"/>
-        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
-        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
-          <intent-filter>
-            <action android:name="android.intent.action.BOOT_COMPLETED"></action>
-          </intent-filter>
+        <receiver
+            android:name="io.flutter.plugins.androidalarmmanager.AlarmBroadcastReceiver"
+            android:exported="false"/>
+        <receiver
+            android:name="io.flutter.plugins.androidalarmmanager.RebootBroadcastReceiver"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
         </receiver>
+        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <!-- we don't actually schedule notifications, so we don't need to reschedule them
+        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+            </receiver>
+        -->
     </application>
 </manifest>
