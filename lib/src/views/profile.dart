@@ -15,7 +15,7 @@ class Profile extends StatefulWidget {
        super(key: key);
 
   final User user;
-  
+
   @override
   State<Profile> createState() => _ProfileState();
 }
@@ -34,7 +34,7 @@ class _ProfileState extends State<Profile> {
   }
 
   static bool _missing(String value) => value == null || value == '';
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

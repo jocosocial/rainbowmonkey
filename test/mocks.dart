@@ -266,7 +266,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
 
   @override
   void forceUpdate() { }
-  
+
   @override
   void dispose() {
     user.dispose();

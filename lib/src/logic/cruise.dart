@@ -566,7 +566,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _calendar.triggerUnscheduledUpdate();
     _announcements.triggerUnscheduledUpdate();
   }
-  
+
   @override
   void dispose() {
     _alive = false;

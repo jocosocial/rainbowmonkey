@@ -46,7 +46,7 @@ class _PendingFavoriteUpdate {
 class _CalendarViewState extends State<CalendarView> with SingleTickerProviderStateMixin {
   final Map<String, _PendingFavoriteUpdate> _pendingUpdates = <String, _PendingFavoriteUpdate>{};
   int _activePendingUpdates = 0;
-  
+
   void _handleFavorite(Event event, bool favorite) async {
     _activePendingUpdates += 1;
     final _PendingFavoriteUpdate update = _pendingUpdates.putIfAbsent(event.id, () => _PendingFavoriteUpdate());
@@ -150,7 +150,7 @@ class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
   void _recenter() {
     _controller.animateTo(0.0, duration: const Duration(milliseconds: 350), curve: Curves.fastOutSlowIn);
   }
-  
+
   @override
   void dispose() {
     _filter.removeListener(_recenter);
@@ -229,7 +229,7 @@ class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
   }
 }
 
-                
+
 class EventList extends StatelessWidget {
   const EventList({
     Key key,
@@ -401,7 +401,7 @@ class TimeSlice extends StatelessWidget {
         child: row,
       );
     }
-    
+
     final List<Widget> children = <Widget>[row];
     DateTime dayAbove, dayBelow;
     switch (direction) {
