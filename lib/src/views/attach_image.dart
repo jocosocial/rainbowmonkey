@@ -36,10 +36,10 @@ class AttachImageButton extends StatelessWidget {
             child: images.isEmpty ? Container() : Container(
               decoration: ShapeDecoration(
                 shape: const CircleBorder(),
-                color: Theme.of(context).primaryColor,
+                color: Theme.of(context).accentColor,
               ),
               padding: const EdgeInsets.all(4.0),
-              child: Text('${images.length}', style: Theme.of(context).primaryTextTheme.caption),
+              child: Text('${images.length}', style: Theme.of(context).accentTextTheme.caption),
             ),
           ),
         ],

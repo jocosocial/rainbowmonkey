@@ -83,7 +83,7 @@ class _ProfileState extends State<Profile> {
                     children: <Widget>[
                       const Text('Real name: ', textAlign: TextAlign.end),
                       const SizedBox(width: 24.0, height: 24.0),
-                      _missing(user.realName) ? none : Text(user.realName),
+                      _missing(user.realName) ? notSpecified : Text(user.realName),
                     ],
                   ),
                   TableRow(

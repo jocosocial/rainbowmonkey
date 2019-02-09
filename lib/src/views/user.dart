@@ -283,7 +283,7 @@ class _UserViewState extends State<UserView> {
                       showAboutDialog(
                         context: context,
                         applicationName: 'Cruise Monkey',
-                        applicationVersion: 'JoCo 2019 v1',
+                        applicationVersion: 'JoCo 2019 v1.2',
                         applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
                         children: <Widget>[
                           const Text('A project of the Seamonkey Social group.'),

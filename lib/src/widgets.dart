@@ -833,6 +833,8 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
               break;
           }
           final Widget avatar = Center(
+            heightFactor: 1.0,
+            widthFactor: 1.0,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               curve: Curves.fastOutSlowIn,
@@ -857,8 +859,8 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
                   fit: BoxFit.cover,
                 ),
               ),
-              height: size,
-              width: size,
+              height: size ?? 40.0,
+              width: size ?? 40.0,
             ),
           );
           if (!enabled)

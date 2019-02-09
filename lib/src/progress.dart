@@ -259,6 +259,10 @@ class ProgressController<T> {
   }
 
   void completeError(dynamic error, StackTrace stackTrace) {
+    assert(() {
+      debugPrint('Caught exception:\n$error\n${stackTrace}Reporting exception as failed progress.');
+      return true;
+    }());
     _update(FailedProgress(error is Exception ? error : Exception(error.toString()), stackTrace));
   }
 

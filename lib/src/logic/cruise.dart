@@ -439,7 +439,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     }
   }
 
-  Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0, bool enabled = true }) {
+  Widget avatarFor(Iterable<User> users, { double size, int seed = 0, bool enabled = true }) {
     assert(users.isNotEmpty);
     assert(seed != null);
     final math.Random random = math.Random(seed);
