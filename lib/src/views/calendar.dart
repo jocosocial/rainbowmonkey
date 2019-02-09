@@ -201,8 +201,8 @@ class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
           final bool showIt = position < -widget.constraints.maxHeight || position > widget.constraints.maxHeight / 3.0;
           return PositionedDirectional(
             end: 24.0,
-            top: position < 0.0 ? padding.top + 16.0 : null,
-            bottom: position > 0.0 ? padding.bottom + 48.0 : null,
+            top: position > 0.0 ? padding.top + 16.0 : null,
+            bottom: position < 0.0 ? padding.bottom + 48.0 : null,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               curve: Curves.fastOutSlowIn,
@@ -210,8 +210,8 @@ class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
               child: IgnorePointer(
                 ignoring: !showIt,
                 child: RaisedButton(
-                  shape: StadiumBorder(),
-                  child: const Text('Jump to now'),
+                  shape: const StadiumBorder(),
+                  child: Text('${ (position < 0.0) ? "▼" : "▲" } Jump to now'),
                   onPressed: _recenter,
                 ),
               ),

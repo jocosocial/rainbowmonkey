@@ -79,7 +79,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
   }
 
   void _submitCurrentMessage() {
-    _submitMessage(_textController.text, photos: _photos);
+    _submitMessage(_textController.text, photos: _photos.toList());
     setState(() {
       _textController.clear();
       _photos.clear();
