@@ -3,6 +3,9 @@
 .sconsign.dblite
 .svn/
 
+.generated/
+.symlinks/
+
 .DS_Store
 *.swp
 profile
