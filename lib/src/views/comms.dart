@@ -157,7 +157,7 @@ class CommsView extends StatelessWidget implements View {
               }
             );
           return ListView.builder(
-            itemCount: 2 /*headings*/ + math.max<int>(seamailThreads.length, 1) /*seamail*/ + 1 /*twitarr*/ + forums.length /*forums*/,
+            itemCount: 3 /*headings*/ + math.max<int>(seamailThreads.length, 1) /*seamail*/ + 1 /*twitarr*/ + forums.length /*forums*/,
             itemBuilder: (BuildContext context, int index) {
               if (index == 0) {
                 return ListTile(
@@ -240,6 +240,12 @@ class CommsView extends StatelessWidget implements View {
               }
               index -= 1;
               // Forums
+              if (index == 0) {
+                return ListTile(
+                  title: Text('Forums', style: headerStyle),
+                );
+              }
+              index -= 1;
               final ForumThread forum = forumThreads[index];
               final String unread = forum.unreadCount > 0 ? ' (${forum.unreadCount} new)' : '';
               final String duration = '${prettyDuration(now.difference(forum.lastMessageTimestamp))}';
