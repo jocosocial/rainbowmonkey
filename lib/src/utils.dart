@@ -81,10 +81,12 @@ mixin BusyMixin {
 }
 
 class VariableTimer {
-  VariableTimer(this.maxDuration, this.callback) {
+  VariableTimer(this.name, this.maxDuration, this.callback) {
     interested();
     Timer.run(tick);
   }
+
+  final String name;
 
   final Duration maxDuration;
 
@@ -95,6 +97,7 @@ class VariableTimer {
 
   void tick() async {
     _currentPeriod *= 1.5;
+    debugPrint("$name is ticking: $_currentPeriod interval.");
     await callback();
     if (_currentPeriod > maxDuration)
       _currentPeriod = maxDuration;
@@ -102,10 +105,12 @@ class VariableTimer {
   }
 
   void interested() {
+    debugPrint("$name is timing: 3 second interval.");
     _currentPeriod = const Duration(seconds: 3);
   }
 
   void cancel() {
+    debugPrint("$name's timer is canceled.");
     _timer?.cancel();
     _timer = null;
   }

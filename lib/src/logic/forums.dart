@@ -114,7 +114,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners && maxUpdatePeriod != null)
-      _timer = VariableTimer(maxUpdatePeriod, update);
+      _timer = VariableTimer('forums', maxUpdatePeriod, update);
     super.addListener(listener);
   }
 
@@ -242,7 +242,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners && maxUpdatePeriod != null)
-      _timer = VariableTimer(maxUpdatePeriod, update);
+      _timer = VariableTimer('forumThread', maxUpdatePeriod, update);
     super.addListener(listener);
   }
 

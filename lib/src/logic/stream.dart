@@ -193,7 +193,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners)
-      _timer = VariableTimer(maxUpdatePeriod, _fetchForwards);
+      _timer = VariableTimer('Twitarr', maxUpdatePeriod, _fetchForwards);
     super.addListener(listener);
   }
 

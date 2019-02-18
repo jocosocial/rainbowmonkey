@@ -24,8 +24,9 @@ class CommsView extends StatelessWidget implements View {
   @override
   Widget buildTabIcon(BuildContext context) {
     final Seamail seamail = Cruise.of(context).seamail;
+    final Forums forums = Cruise.of(context).forums;
     return AnimatedBuilder(
-      animation: seamail,
+      animation: Listenable.merge(<Listenable>[seamail, forums]),
       builder: (BuildContext context, Widget child) {
         return Badge(
           child: child,
