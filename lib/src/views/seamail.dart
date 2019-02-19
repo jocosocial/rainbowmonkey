@@ -205,14 +205,14 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                           padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 56.0),
                           child: ListBody(
                             children: <Widget>[
-                              Text(widget.thread.subject, textAlign: TextAlign.center, style: theme.textTheme.display1),
+                              Text(widget.thread.subject, textAlign: TextAlign.center, style: theme.textTheme.title),
                               const SizedBox(height: 24.0),
                               const Divider(),
                               const SizedBox(height: 24.0),
-                              Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.headline),
+                              Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.subhead),
                               Center(
                                 child: DefaultTextStyle(
-                                  style: theme.textTheme.subhead,
+                                  style: theme.textTheme.body2,
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.start,
