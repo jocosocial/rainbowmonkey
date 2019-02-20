@@ -22,7 +22,9 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
     @required this.onError,
   }) : assert(onError != null),
        assert(_twitarr != null),
-       assert(_photoManager != null);
+       assert(_photoManager != null) {
+    _timer = VariableTimer(maxUpdatePeriod, update);
+  }
 
   Forums.empty(
   ) : _twitarr = null,
@@ -59,7 +61,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
         if (_threads.containsKey(threadSummary.id)) {
           final ForumThread thread = _threads[threadSummary.id];
           if (thread.updateFrom(threadSummary))
-            _timer?.interested();
+            _timer.interested();
           removedThreads.remove(thread);
         } else {
           _threads[threadSummary.id] = ForumThread.from(threadSummary, this, _twitarr, _credentials, _photoManager);
@@ -67,7 +69,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
       }
       removedThreads.forEach(_threads.remove);
     } on UserFriendlyError catch (error) {
-      _timer?.interested();
+      _timer.interested();
       _reportError(error);
     } finally {
       _updating = false;
@@ -92,7 +94,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
           photos: photos,
         ),
       );
-      _timer?.interested();
+      _timer.interested();
       if (!_threads.containsKey(thread.id)) {
         _threads[thread.id] = ForumThread.from(thread, this, _twitarr, _credentials, _photoManager);
         notifyListeners();
@@ -114,17 +116,15 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners && maxUpdatePeriod != null)
-      _timer = VariableTimer(maxUpdatePeriod, update);
+      _timer.start();
     super.addListener(listener);
   }
 
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    if (!hasListeners && maxUpdatePeriod != null) {
-      _timer.cancel();
-      _timer = null;
-    }
+    if (!hasListeners && maxUpdatePeriod != null)
+      _timer.stop();
   }
 }
 
@@ -136,7 +136,9 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     this._credentials,
     this._photoManager, {
     this.maxUpdatePeriod = const Duration(minutes: 1),
-  });
+  }) {
+    _init();
+  }
 
   ForumThread.from(
     ForumSummary thread,
@@ -146,6 +148,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     this._photoManager, {
     this.maxUpdatePeriod = const Duration(minutes: 1),
   }) : id = thread.id {
+    _init();
     updateFrom(thread);
   }
 
@@ -192,7 +195,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
       ).asFuture();
       _messages = messages.map<ForumMessage>((ForumMessageSummary summary) => ForumMessage.from(summary, _photoManager)).toList();
     } on UserFriendlyError catch (error) {
-      _timer?.interested();
+      _timer.interested();
       _parent._reportError(error);
     } finally {
       _updating = false;
@@ -215,7 +218,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     _parent._childUpdated(this);
     notifyListeners();
     if (interesting)
-      _timer?.interested();
+      _timer.interested();
     return interesting;
   }
 
@@ -232,27 +235,29 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
         ),
       );
       await update();
-      _timer?.interested();
+      _timer.interested();
       _parent._childUpdated(this);
     });
   }
 
   VariableTimer _timer;
 
+  void _init() {
+    _timer = VariableTimer(maxUpdatePeriod, update);
+  }
+
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners && maxUpdatePeriod != null)
-      _timer = VariableTimer(maxUpdatePeriod, update);
+      _timer.start();
     super.addListener(listener);
   }
 
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    if (!hasListeners && maxUpdatePeriod != null) {
-      _timer.cancel();
-      _timer = null;
-    }
+    if (!hasListeners && maxUpdatePeriod != null)
+      _timer.stop();
   }
 }
 
