@@ -23,6 +23,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
        assert(maxUpdatePeriod != null) {
     _fetchBackwards();
     assert(_seekingForwards);
+    _timer = VariableTimer(maxUpdatePeriod, _fetchForwards);
   }
 
   final Twitarr _twitarr;
@@ -34,7 +35,6 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   final List<StreamPost> _posts = <StreamPost>[];
   final Map<String, int> _postIds = <String, int>{};
 
-  VariableTimer _timer;
   bool _pinned = false;
   int _anchorIndex = 0;
   bool _seekingBackwards = false;
@@ -190,20 +190,20 @@ class TweetStream extends ChangeNotifier with BusyMixin {
     }
   }
 
+  VariableTimer _timer;
+
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners)
-      _timer = VariableTimer(maxUpdatePeriod, _fetchForwards);
+      _timer.start();
     super.addListener(listener);
   }
 
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    if (!hasListeners) {
-      _timer.cancel();
-      _timer = null;
-    }
+    if (!hasListeners)
+      _timer.stop();
   }
 
   Progress<void> send({
