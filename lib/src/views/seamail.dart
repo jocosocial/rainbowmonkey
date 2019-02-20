@@ -36,7 +36,7 @@ class MessageBubble {
 
 class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
-  final Set<_PendingSend> _pending = Set<_PendingSend>();
+  final Set<_PendingSend> _pending = <_PendingSend>{};
 
   @override
   void initState() {
@@ -341,7 +341,7 @@ class StartSeamailView extends StatefulWidget {
 
 class _StartSeamailViewState extends State<StartSeamailView> {
   final TextEditingController _nextUser = TextEditingController();
-  final Set<User> _users = Set<User>();
+  final Set<User> _users = <User>{};
   final TextEditingController _subject = TextEditingController();
   final TextEditingController _text = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
