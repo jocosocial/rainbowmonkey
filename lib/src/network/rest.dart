@@ -695,7 +695,7 @@ class RestTwitarr implements Twitarr {
 
   static SeamailSummary _parseSeamailSummary(String rawData) {
     final dynamic data = Json.parse(rawData);
-    final Set<SeamailThreadSummary> threads = Set<SeamailThreadSummary>();
+    final Set<SeamailThreadSummary> threads = <SeamailThreadSummary>{};
     for (Json thread in (data.seamail_threads as Json).asIterable()) {
       threads.add(_parseSeamailThread(thread));
     }
@@ -855,7 +855,7 @@ class RestTwitarr implements Twitarr {
 
   static StreamSliceSummary _parseStream(String rawData, StreamDirection direction) {
     final dynamic data = Json.parse(rawData);
-    final Set<StreamMessageSummary> posts = Set<StreamMessageSummary>();
+    final Set<StreamMessageSummary> posts = <StreamMessageSummary>{};
     for (dynamic post in (data.stream_posts as Json).asIterable()) {
       posts.add(_parseStreamPost(post as Json));
       if ((post as Json).hasKey('children')) {
@@ -1047,7 +1047,7 @@ class RestTwitarr implements Twitarr {
 
   static Set<ForumSummary> _parseForumList(String rawData) {
     final dynamic data = Json.parse(rawData);
-    final Set<ForumSummary> result = Set<ForumSummary>();
+    final Set<ForumSummary> result = <ForumSummary>{};
     for (dynamic forum in (data.forum_threads as Json).asIterable())
       result.add(_parseForumBody(forum as Json));
     return result;
