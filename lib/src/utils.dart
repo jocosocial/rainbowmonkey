@@ -80,34 +80,150 @@ mixin BusyMixin {
   }
 }
 
+enum _VariableTimerState { disabled, enabled, ticking, disabling, tickingDisabling }
+
 class VariableTimer {
-  VariableTimer(this.maxDuration, this.callback) {
-    interested();
-    Timer.run(tick);
-  }
+  VariableTimer(this.maxDuration, this.callback);
 
   final Duration maxDuration;
+  static const Duration minDuration = Duration(seconds: 3);
 
   final AsyncCallback callback;
 
+  static const double multiplier = 1.5;
+
+  _VariableTimerState _state = _VariableTimerState.disabled;
   Timer _timer;
   Duration _currentPeriod;
+  final Stopwatch _stopwatch = Stopwatch();
 
-  void tick() async {
-    _currentPeriod *= 1.5;
+  // State machine:
+  //                    ,-------------------.
+  //                    |                   |
+  //                   \|/                  |
+  //          ,--> disabled -----.          |
+  // microtask|                  |          |
+  //          |                  |start()   |
+  //        disabling* -.        |          |
+  //             /|\    |start() |          |
+  //        stop()|     |        |          |
+  //              |    \|/       |          |
+  //             enabled*        |          |
+  //             /|\  |          |          |
+  //      complete|   |tick      |          |
+  //              |  \|/         |          |
+  //             ticking* <------'          |
+  //                |                       |
+  //                |stop()                 |
+  //               \|/                      |microtask
+  //         tickingDisabling* -------------'
+  //
+  //  * handle interested()
+
+  void start() {
+    assert(_state != null);
+    switch (_state) {
+      case _VariableTimerState.disabled:
+        _state = _VariableTimerState.enabled;
+        _currentPeriod = minDuration;
+        _tick();
+        return;
+      case _VariableTimerState.disabling:
+        _state = _VariableTimerState.enabled;
+        return;
+      case _VariableTimerState.enabled:
+        return;
+      case _VariableTimerState.ticking:
+        return;
+      case _VariableTimerState.tickingDisabling:
+        _state = _VariableTimerState.ticking;
+        return;
+    }
+  }
+
+  void _tick() async {
+    if (_state != _VariableTimerState.enabled)
+      return;
+    assert(_timer == null || !_timer.isActive);
+    _timer = null;
+    _state = _VariableTimerState.ticking;
     await callback();
-    if (_currentPeriod > maxDuration)
-      _currentPeriod = maxDuration;
-    _timer = Timer(_currentPeriod, tick);
+    if (_state == _VariableTimerState.ticking) {
+      _timer = Timer(_currentPeriod, _tick);
+      _stopwatch..reset()..start();
+      _currentPeriod *= multiplier;
+      _state = _VariableTimerState.enabled;
+    }
+  }
+
+  void stop() {
+    assert(_state != null);
+    switch (_state) {
+      case _VariableTimerState.disabled:
+        return;
+      case _VariableTimerState.disabling:
+        return;
+      case _VariableTimerState.enabled:
+        scheduleMicrotask(_disable);
+        return;
+      case _VariableTimerState.ticking:
+        scheduleMicrotask(_disable);
+        return;
+      case _VariableTimerState.tickingDisabling:
+        return;
+    }
+  }
+
+  void _disable() {
+    assert(_state != null);
+    switch (_state) {
+      case _VariableTimerState.disabled:
+        return;
+      case _VariableTimerState.disabling:
+        assert(_timer != null);
+        _timer.cancel();
+        _timer = null;
+        _state = _VariableTimerState.disabled;
+        break;
+      case _VariableTimerState.enabled:
+        return;
+      case _VariableTimerState.ticking:
+        return;
+      case _VariableTimerState.tickingDisabling:
+        _state = _VariableTimerState.disabled;
+        return;
+    }
   }
 
   void interested() {
-    _currentPeriod = const Duration(seconds: 3);
-  }
-
-  void cancel() {
-    _timer?.cancel();
-    _timer = null;
+    assert(_state != null);
+    switch (_state) {
+      case _VariableTimerState.disabled:
+        _currentPeriod = minDuration;
+        return;
+      case _VariableTimerState.disabling:
+        _currentPeriod = minDuration;
+        return;
+      case _VariableTimerState.enabled:
+        final Duration elapsed = _stopwatch.elapsed;
+        if (elapsed >= minDuration) {
+          _timer.cancel();
+          _timer = null;
+          _currentPeriod = minDuration * multiplier;
+          _tick();
+        } else {
+          _timer.cancel();
+          _currentPeriod = minDuration;
+          _timer = Timer(minDuration - elapsed, _tick);
+        }
+        return;
+      case _VariableTimerState.ticking:
+        _currentPeriod = minDuration;
+        return;
+      case _VariableTimerState.tickingDisabling:
+        _currentPeriod = minDuration;
+        return;
+    }
   }
 }
 

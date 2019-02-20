@@ -23,7 +23,9 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
   }) : assert(onError != null),
        assert(_twitarr != null),
        assert(_credentials != null),
-       assert(_photoManager != null);
+       assert(_photoManager != null) {
+    _timer = VariableTimer(maxUpdatePeriod, update);
+  }
 
   Seamail.empty(
   ) : _twitarr = null,
@@ -98,17 +100,17 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
           hasNewUnread = true;
         if (_threads.containsKey(thread.id)) {
           if (_threads[thread.id].updateFrom(thread))
-            _timer?.interested();
+            _timer.interested();
         } else {
           _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
-          _timer?.interested();
+          _timer.interested();
         }
       }
       if (onCheckForMessages != null && hasNewUnread)
         onCheckForMessages();
       _freshnessToken = summary.freshnessToken;
     } on UserFriendlyError catch (error) {
-      _timer?.interested();
+      _timer.interested();
       _reportError(error);
     } finally {
       _updating = false;
@@ -133,7 +135,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
           text: text,
         ),
       );
-      _timer?.interested();
+      _timer.interested();
       if (!_threads.containsKey(thread.id)) {
         _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
         notifyListeners();
@@ -155,17 +157,15 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners && maxUpdatePeriod != null)
-      _timer = VariableTimer(maxUpdatePeriod, update);
+      _timer.start();
     super.addListener(listener);
   }
 
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    if (!hasListeners && maxUpdatePeriod != null) {
-      _timer.cancel();
-      _timer = null;
-    }
+    if (!hasListeners && maxUpdatePeriod != null)
+      _timer.stop();
   }
 }
 
@@ -178,7 +178,9 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
     this._photoManager, {
     this.maxUpdatePeriod = const Duration(minutes: 1),
     @required this.onThreadRead,
-  });
+  }) {
+    _init();
+  }
 
   SeamailThread.from(
     SeamailThreadSummary thread,
@@ -189,6 +191,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
     this.maxUpdatePeriod = const Duration(minutes: 1),
     @required this.onThreadRead,
   }) : id = thread.id {
+    _init();
     updateFrom(thread);
   }
 
@@ -249,7 +252,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
       if (onThreadRead != null)
         onThreadRead(id);
     } on UserFriendlyError catch (error) {
-      _timer?.interested();
+      _timer.interested();
       _parent._reportError(error);
     } finally {
       _updating = false;
@@ -305,7 +308,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
     notifyListeners();
     _parent._childUpdated(this);
     if (interesting)
-      _timer?.interested();
+      _timer.interested();
     return interesting;
   }
 
@@ -318,7 +321,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
           text: text,
         ),
       );
-      _timer?.interested();
+      _timer.interested();
       if (_messages != null && _messages.containsKey(message.id))
         return;
       _messages[message.id] = SeamailMessage.from(message, _photoManager);
@@ -329,20 +332,22 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
 
   VariableTimer _timer;
 
+  void _init() {
+    _timer = VariableTimer(maxUpdatePeriod, update);
+  }
+
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners && maxUpdatePeriod != null)
-      _timer = VariableTimer(maxUpdatePeriod, update);
+      _timer.start();
     super.addListener(listener);
   }
 
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    if (!hasListeners && maxUpdatePeriod != null) {
-      _timer.cancel();
-      _timer = null;
-    }
+    if (!hasListeners && maxUpdatePeriod != null)
+      _timer.stop();
   }
 }
 
