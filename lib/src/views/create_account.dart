@@ -45,7 +45,7 @@ class _CreateAccountState extends State<CreateAccount> {
            AuthenticatedUser.isValidPassword(_password1.text) &&
            (_password1.text == _password2.text) &&
            AuthenticatedUser.isValidRegistrationCode(_registrationCode.text) &&
-           _displayName.text == '' || AuthenticatedUser.isValidDisplayName(_displayName.text);
+           (_displayName.text == '' || AuthenticatedUser.isValidDisplayName(_displayName.text));
   }
 
   void _createAccount() async {
