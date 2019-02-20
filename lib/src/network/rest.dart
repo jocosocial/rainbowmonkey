@@ -1241,7 +1241,7 @@ class RestTwitarr implements Twitarr {
         throw const ServerError(<String>['The DNS server is down or the Twitarr server is non-existent.']);
       if (error.osError.errorCode == 110)
         throw const ServerError(<String>['The network is too slow.']);
-      if (error.osError.errorCode == 111)
+      if (error.osError.errorCode == 111 || error.osError.errorCode == 61)
         throw const ServerError(<String>['The server is down.']);
       if (error.osError.errorCode == 113)
         throw const ServerError(<String>['The server cannot be reached.']);
