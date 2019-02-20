@@ -419,7 +419,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 
   @override
   void addListenerForUserPhoto(String username, VoidCallback listener) {
-    final Set<VoidCallback> callbacks = _photoListeners.putIfAbsent(username, () => Set<VoidCallback>());
+    final Set<VoidCallback> callbacks = _photoListeners.putIfAbsent(username, () => <VoidCallback>{});
     callbacks.add(listener);
   }
 
