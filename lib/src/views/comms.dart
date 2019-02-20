@@ -203,7 +203,7 @@ class CommsView extends StatelessWidget implements View {
                         Expanded(
                           child: Text(
                             thread.subject,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
@@ -246,7 +246,7 @@ class CommsView extends StatelessWidget implements View {
               final String lastMessage = 'Most recent from ${forum.lastMessageUser} $duration';
               return ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.forum)),
-                title: Text(forum.subject),
+                title: Text(forum.subject, maxLines: 2),
                 subtitle: Text('${forum.totalCount} message${forum.totalCount == 1 ? '' : "s"}$unread\n$lastMessage'),
                 isThreeLine: true,
                 onTap: () { showForumThread(context, forum); },

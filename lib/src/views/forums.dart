@@ -110,6 +110,13 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                     padding: const EdgeInsets.only(top: 8.0),
                     reverse: true,
                     itemBuilder: (BuildContext context, int index) {
+                      // the very first item is the subject.
+                      if (index == messages.length) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 56.0),
+                          child: Text(widget.thread.subject, textAlign: TextAlign.center, style: Theme.of(context).textTheme.title),
+                        );
+                      }
                       final ForumMessage message = messages[index];
                       return ChatLine(
                         user: message.user,
@@ -119,7 +126,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         timestamp: message.timestamp,
                       );
                     },
-                    itemCount: messages.length,
+                    itemCount: messages.length + 1,
                   ),
                 ),
               ),
