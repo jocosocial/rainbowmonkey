@@ -64,21 +64,21 @@ class TrivialDataStore implements DataStore {
   @override
   Future<void> addNotification(String threadId, String messageId) async {
     log.add('LoggingDataStore.addNotification($threadId, $messageId)');
-    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
+    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => <String>{});
     thread.add(messageId);
   }
 
   @override
   Future<void> removeNotification(String threadId, String messageId) async {
     log.add('LoggingDataStore.removeNotification($threadId, $messageId)');
-    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
+    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => <String>{});
     thread.remove(messageId);
   }
 
   @override
   Future<List<String>> getNotifications(String threadId) async {
     log.add('LoggingDataStore.getNotifications($threadId)');
-    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => Set<String>());
+    final Set<String> thread = storedNotifications.putIfAbsent(threadId, () => <String>{});
     return thread.toList();
   }
 
