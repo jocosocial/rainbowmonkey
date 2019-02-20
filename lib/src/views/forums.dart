@@ -32,7 +32,7 @@ class _PendingSend {
 
 class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
-  final Set<_PendingSend> _pending = Set<_PendingSend>();
+  final Set<_PendingSend> _pending = <_PendingSend>{};
 
   List<Uint8List> _photos = <Uint8List>[];
 
