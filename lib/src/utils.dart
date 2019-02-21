@@ -164,9 +164,11 @@ class VariableTimer {
       case _VariableTimerState.disabling:
         return;
       case _VariableTimerState.enabled:
+        _state = _VariableTimerState.disabling;
         scheduleMicrotask(_disable);
         return;
       case _VariableTimerState.ticking:
+        _state = _VariableTimerState.tickingDisabling;
         scheduleMicrotask(_disable);
         return;
       case _VariableTimerState.tickingDisabling:
