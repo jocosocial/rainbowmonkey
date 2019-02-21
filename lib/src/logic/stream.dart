@@ -230,7 +230,7 @@ class StreamPost {
     this.id,
     this.user,
     this.text,
-    this.photoId,
+    this.photo,
     this.timestamp,
     this.boundaryToken,
   });
@@ -239,11 +239,11 @@ class StreamPost {
      : id = summary.id,
        user = summary.user.toUser(photoManager),
        text = summary.text,
-       photoId = summary.photoId,
+       photo = summary.photo,
        timestamp = summary.timestamp,
        boundaryToken = summary.boundaryToken;
 
-  const StreamPost.sentinel() : id = null, user = null, text = null, photoId = null, timestamp = null, boundaryToken = null;
+  const StreamPost.sentinel() : id = null, user = null, text = null, photo = null, timestamp = null, boundaryToken = null;
 
   final String id;
 
@@ -251,7 +251,7 @@ class StreamPost {
 
   final String text;
 
-  final String photoId;
+  final Photo photo;
 
   final DateTime timestamp;
 

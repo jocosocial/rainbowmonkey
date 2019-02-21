@@ -122,7 +122,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         user: message.user,
                         isCurrentUser: message.user.sameAs(currentUser),
                         messages: <String>[ message.text ],
-                        photoIds: message.photoIds,
+                        photos: message.photos,
                         timestamp: message.timestamp,
                       );
                     },

@@ -449,52 +449,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return createAvatarWidgetsFor(sortedUsers, colors, images, size: size, enabled: enabled);
   }
 
-  Widget imageFor(String photoId) {
-    // TODO(ianh): long-press to download image
-    final Widget image = Hero(
-      tag: photoId,
-      child: Image(
-        image: TwitarrImage(photoId, this, _twitarr, onError: onError),
-      ),
-    );
-    return VSyncBuilder(
-      builder: (BuildContext context, TickerProvider vsync) {
-        final MediaQueryData metrics = MediaQuery.of(context);
-        return Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.fastOutSlowIn,
-            vsync: vsync,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: metrics.size.height - metrics.padding.vertical - (56.0 * 3.0),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push<void>(context, MaterialPageRoute<void>(
-                      builder: (BuildContext context) {
-                        return Container(
-                          color: Colors.black,
-                          child: SafeArea(
-                            child: Center(
-                              child: image,
-                            ),
-                          ),
-                        );
-                      },
-                    ));
-                  },
-                  child: image,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
+  ImageProvider imageFor(Photo photo, { bool thumbnail = false }) {
+    return TwitarrImage(photo, this, _twitarr, onError: onError, thumbnail: thumbnail);
   }
 
   Progress<void> updateProfile({
@@ -680,15 +636,17 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
 }
 
 class TwitarrImage extends ImageProvider<TwitarrImage> {
-  const TwitarrImage(this.photoId, this.photoManager, this.twitarr, { this.onError });
+  const TwitarrImage(this.photo, this.photoManager, this.twitarr, { this.onError, this.thumbnail });
 
-  final String photoId;
+  final Photo photo;
 
   final PhotoManager photoManager;
 
   final Twitarr twitarr;
 
   final ErrorCallback onError;
+
+  final bool thumbnail;
 
   @override
   Future<TwitarrImage> obtainKey(ImageConfiguration configuration) {
@@ -698,32 +656,35 @@ class TwitarrImage extends ImageProvider<TwitarrImage> {
   @override
   ImageStreamCompleter load(TwitarrImage key) {
     assert(key == this);
-    return TwitarrImageStreamCompleter(photoId, photoManager, twitarr, onError: onError);
+    return TwitarrImageStreamCompleter(photo.id, photoManager, twitarr, onError: onError, thumbnail: thumbnail);
   }
 
   @override
-  String toString() => '$runtimeType($photoId)';
+  String toString() => '$runtimeType($photo)';
 
   @override
   bool operator ==(Object other) {
     if (other.runtimeType != runtimeType)
       return false;
     final TwitarrImage typedOther = other as TwitarrImage;
-    return photoId == typedOther.photoId
-        && photoManager == typedOther.photoManager
+    return photo.id == typedOther.photo.id
+        && thumbnail == typedOther.thumbnail
         && twitarr == typedOther.twitarr;
   }
 
   @override
   int get hashCode => hashValues(
-    photoId,
-    photoManager,
+    photo.id,
+    thumbnail,
     twitarr,
   );
 }
 
 class TwitarrImageStreamCompleter extends ImageStreamCompleter {
-  TwitarrImageStreamCompleter(this.photoId, this.photoManager, this.twitarr, { this.onError }) {
+  TwitarrImageStreamCompleter(this.photoId, this.photoManager, this.twitarr, {
+    this.onError,
+    @required this.thumbnail,
+  }) : assert(thumbnail != null) {
     _update();
   }
 
@@ -735,11 +696,13 @@ class TwitarrImageStreamCompleter extends ImageStreamCompleter {
 
   final ErrorCallback onError;
 
+  final bool thumbnail;
+
   Future<void> _update() async {
     try {
       final Uint8List bytes = await photoManager.putImageIfAbsent(
         photoId,
-        () => twitarr.fetchImage(photoId).asFuture(),
+        () => twitarr.fetchImage(photoId, thumbnail: thumbnail).asFuture(),
       );
       final ui.Codec codec = await PaintingBinding.instance.instantiateImageCodec(bytes);
       final ui.FrameInfo frameInfo = await codec.getNextFrame();

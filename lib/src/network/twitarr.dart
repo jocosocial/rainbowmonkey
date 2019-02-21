@@ -165,7 +165,7 @@ abstract class Twitarr {
     @required Credentials credentials,
   });
 
-  Progress<Uint8List> fetchImage(String photoId);
+  Progress<Uint8List> fetchImage(String photoId, { bool thumbnail = false });
 
   Progress<String> uploadImage({
     @required Credentials credentials,
@@ -330,7 +330,7 @@ class StreamMessageSummary {
     this.id,
     this.user,
     this.text,
-    this.photoId,
+    this.photo,
     @required this.timestamp,
     this.boundaryToken,
     this.reactions,
@@ -345,7 +345,7 @@ class StreamMessageSummary {
   }) : assert(timestamp != null),
        user = null,
        text = null,
-       photoId = null,
+       photo = null,
        reactions = null,
        parents = null,
        deleted = true;
@@ -356,7 +356,7 @@ class StreamMessageSummary {
 
   final String text;
 
-  final String photoId;
+  final Photo photo;
 
   final DateTime timestamp;
 
@@ -397,7 +397,7 @@ class ForumMessageSummary {
     this.id,
     this.user,
     this.text,
-    this.photoIds,
+    this.photos,
     this.timestamp,
     this.read,
   });
@@ -408,7 +408,7 @@ class ForumMessageSummary {
 
   final String text;
 
-  final List<String> photoIds;
+  final List<Photo> photos;
 
   final DateTime timestamp;
 

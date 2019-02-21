@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../logic/photo_manager.dart';
 import '../logic/stream.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -288,7 +289,7 @@ class Entry extends StatelessWidget {
         user: post.user,
         isCurrentUser: post.user.sameAs(currentUser),
         messages: <String>[ post.text ],
-        photoIds: post.photoId != null ? <String>[ post.photoId, ] : null,
+        photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         timestamp: post.timestamp,
       ),
     );

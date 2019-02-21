@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 import 'logic/cruise.dart';
+import 'logic/photo_manager.dart';
 import 'models/server_text.dart';
 import 'models/user.dart';
 import 'progress.dart';
@@ -459,7 +460,7 @@ class ChatLine extends StatelessWidget {
     @required this.user,
     this.isCurrentUser = false,
     @required this.messages,
-    this.photoIds,
+    this.photos,
     @required this.timestamp,
   }) : assert(user != null),
        assert(isCurrentUser != null),
@@ -470,7 +471,7 @@ class ChatLine extends StatelessWidget {
   final User user;
   final bool isCurrentUser;
   final List<String> messages;
-  final List<String> photoIds;
+  final List<Photo> photos;
   final DateTime timestamp;
 
   @override
@@ -479,10 +480,10 @@ class ChatLine extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     for (String message in messages)
       lines.add(Text(message));
-    if (photoIds != null) {
-      final CruiseModel cruise = Cruise.of(context);
-      for (String photoId in photoIds)
-        lines.add(cruise.imageFor(photoId));
+    if (photos != null) {
+      for (Photo photo in photos) {
+        lines.add(PhotoImage(photo: photo));
+      }
     }
     final TextDirection direction = isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
     final DateTime now = Now.of(context);
@@ -817,7 +818,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
       List<String> names = name.split(RegExp(r'[^A-Z]+')).where((String value) => value.isNotEmpty).toList();
       if (names.length == 1)
         names = name.split(' ');
-      if (names.length <= 2)
+      if (names.length < 2)
         names = name.split('');
       bool pressed = false;
       return StatefulBuilder(
@@ -1216,6 +1217,98 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
           ),
         ],
       );
+  }
+}
+
+class PhotoImage extends StatelessWidget {
+  const PhotoImage({
+    Key key,
+    @required this.photo,
+  }) : super(key: key);
+
+  final Photo photo;
+
+  @override
+  Widget build(BuildContext context) {
+    final CruiseModel cruise = Cruise.of(context);
+    final MediaQueryData metrics = MediaQuery.of(context);
+    final double maxHeight = math.min(
+      metrics.size.height - metrics.padding.vertical - (56.0 * 3.0),
+      photo.mediumSize.height / metrics.devicePixelRatio,
+    );
+    final ImageProvider thumbnail = cruise.imageFor(
+      photo,
+      thumbnail: true,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: AspectRatio(
+        aspectRatio: photo.mediumSize.width / photo.mediumSize.height,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: GestureDetector(
+            onTap: () {
+              bool appBarVisible = false;
+              Navigator.push<void>(context, MaterialPageRoute<void>(
+                builder: (BuildContext context) {
+                  // TODO(ianh): download button in app bar
+                  // TODO(ianh): pinch zoom
+                  return StatefulBuilder(
+                    builder: (BuildContext context, StateSetter setState) {
+                      return Container(
+                        color: Colors.black,
+                        child: Stack(
+                          children: <Widget>[
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                setState(() {
+                                  appBarVisible = !appBarVisible;
+                                });
+                              },
+                              child: SafeArea(
+                                child: Center(
+                                  child: Hero(
+                                    tag: photo.id,
+                                    child: FadeInImage(
+                                      placeholder: thumbnail,
+                                      image: cruise.imageFor(photo),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 0.0,
+                              left: 0.0,
+                              right: 0.0,
+                              child: AnimatedOpacity(
+                                opacity: appBarVisible ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 150),
+                                curve: Curves.fastOutSlowIn,
+                                child: AppBar(
+                                  backgroundColor: Colors.transparent,
+                                  brightness: Brightness.dark,
+                                  iconTheme: const IconThemeData(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ));
+            },
+            child: Hero(
+              tag: photo.id,
+              child: Image(image: thumbnail, height: maxHeight),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

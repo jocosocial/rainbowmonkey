@@ -266,7 +266,7 @@ class ForumMessage {
     this.id,
     this.user,
     this.text,
-    this.photoIds,
+    this.photos,
     this.timestamp,
     this.read,
   });
@@ -277,7 +277,7 @@ class ForumMessage {
   ) : id = message.id,
       user = message.user.toUser(photoManager),
       text = message.text,
-      photoIds = message.photoIds,
+      photos = message.photos,
       timestamp = message.timestamp,
       read = message.read;
 
@@ -287,7 +287,7 @@ class ForumMessage {
 
   final String text;
 
-  final List<String> photoIds;
+  final List<Photo> photos;
 
   final DateTime timestamp;
 

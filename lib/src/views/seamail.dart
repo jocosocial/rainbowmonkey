@@ -249,7 +249,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                         user: bubble.user,
                         isCurrentUser: bubble.user.sameAs(currentUser),
                         messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
-                        photoIds: null,
+                        photos: null,
                         timestamp: bubble.messages.first.timestamp,
                       );
                     },
@@ -580,7 +580,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                       filteredUsers.map<Widget>((User user) {
                         return ListTile(
                           key: ValueKey<String>(user.username),
-                          leading: Cruise.of(context).avatarFor(<User>[user]),
+                          leading: Cruise.of(context).avatarFor(<User>[user], enabled: false),
                           title: Text(user.toString()),
                           onTap: () {
                             _addUser(user);
@@ -629,7 +629,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                                 message: user.username.toString(),
                                 child: GestureDetector(
                                   onTap: user == widget.currentUser ? null : () { _removeUser(user); },
-                                  child: Cruise.of(context).avatarFor(<User>[user], size: 60.0),
+                                  child: Cruise.of(context).avatarFor(<User>[user], size: 60.0, enabled: false),
                                 ),
                               ),
                             );
