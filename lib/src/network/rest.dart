@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' show Size;
 
 import 'package:flutter/foundation.dart';
 
@@ -466,7 +467,9 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
-  Progress<Uint8List> fetchImage(String photoId) {
+  Progress<Uint8List> fetchImage(String photoId, { bool thumbnail = false }) {
+    if (thumbnail)
+      return _requestBytes('GET', 'api/v2/photo/medium_thumb/${Uri.encodeComponent(photoId)}');
     return _requestBytes('GET', 'api/v2/photo/full/${Uri.encodeComponent(photoId)}');
   }
 
@@ -902,7 +905,7 @@ class RestTwitarr implements Twitarr {
       text: post.text.toString(),
       timestamp: _parseDateTime(post.timestamp as Json),
       boundaryToken: (post.timestamp as Json).toInt(),
-      photoId: (post as Json).hasKey('photo') ? post.photo.id.toString() : null,
+      photo: (post as Json).hasKey('photo') ? _parsePhoto(post.photo) : null,
       reactions: _parseReactions(post.reactions as Json),
       parents: (post as Json).hasKey('parent_chain') ? _parseParents(post.parent_chain as Json) : parents,
     );
@@ -1090,8 +1093,8 @@ class RestTwitarr implements Twitarr {
         id: post.id.toString(),
         user: _parseUser(post.author as Json),
         text: post.text.toString(),
-        photoIds: (post as Json).hasKey('photos')
-          ? (post.photos as Json).asIterable().map<String>((dynamic photo) => photo.id.toString()).toList()
+        photos: (post as Json).hasKey('photos')
+          ? (post.photos as Json).asIterable().map<Photo>(_parsePhoto).toList()
           : null,
         timestamp: _parseDateTime(post.timestamp as Json),
         read: (post as Json).hasKey('new') ? (post['new'] as Json).toBoolean() : null,
@@ -1120,6 +1123,20 @@ class RestTwitarr implements Twitarr {
     if (value.valueType == String)
       return DateTime.parse(value.toString());
     throw FormatException('Could not interpret DateTime from server', '$value');
+  }
+
+  static Photo _parsePhoto(dynamic value) {
+    final bool hasSizes = (value.sizes as Json).asIterable().isNotEmpty;
+    return Photo(
+      id: value.id.toString(),
+      size: hasSizes ? _parseSize(value.sizes.full.toString()) : Size.zero,
+      mediumSize: hasSizes ? _parseSize(value.sizes.medium_thumb.toString()) : Size.zero,
+    );
+  }
+
+  static Size _parseSize(String resolution) {
+    final List<int> values = resolution.split('x').map<int>((String value) => int.parse(value, radix: 10)).toList();
+    return Size(values[0].toDouble(), values[1].toDouble());
   }
 
   static const List<int> _kTwitarrExpectedStatusCodes = <int>[200, 400, 401, 403, 422];

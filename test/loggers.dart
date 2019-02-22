@@ -189,8 +189,8 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
-  Progress<Uint8List> fetchImage(String photoId) {
-    log.add('fetchImage $photoId');
+  Progress<Uint8List> fetchImage(String photoId, { bool thumbnail = false }) {
+    log.add('fetchImage $photoId (thumbnail=$thumbnail)');
     return null;
   }
 

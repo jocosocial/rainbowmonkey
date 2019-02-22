@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui' show Size;
 
 import 'package:flutter/foundation.dart';
 
@@ -10,4 +11,20 @@ abstract class PhotoManager {
   void heardAboutUserPhoto(String username, DateTime lastUpdate);
   void addListenerForUserPhoto(String username, VoidCallback listener);
   void removeListenerForUserPhoto(String username, VoidCallback listener);
+}
+
+class Photo {
+  const Photo({
+    this.id,
+    this.size,
+    this.mediumSize,
+  });
+
+  final String id;
+
+  final Size size;
+
+  final Size mediumSize;
+
+  bool get hasThumbnail => size != mediumSize;
 }
