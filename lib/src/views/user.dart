@@ -135,7 +135,21 @@ class _UserViewState extends State<UserView> {
           header = Align(
             key: _errorHeader,
             alignment: Alignment.bottomCenter,
-            child: Text('${wrapError(_bestUserValue.error)}\n'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                iconAndLabel(icon: Icons.warning, message: 'Could not log in:\n${wrapError(_bestUserValue.error)}'),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: FlatButton(
+                    child: const Text('RETRY'),
+                    onPressed: () {
+                      Cruise.of(context).retryUserLogin();
+                    },
+                  ),
+                ),
+              ],
+            ),
           );
           loggedIn = false;
         } else {
@@ -283,7 +297,7 @@ class _UserViewState extends State<UserView> {
                       showAboutDialog(
                         context: context,
                         applicationName: 'Cruise Monkey',
-                        applicationVersion: 'JoCo 2019 v1.2',
+                        applicationVersion: 'JoCo 2019 v1.3',
                         applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
                         children: <Widget>[
                           const Text('A project of the Seamonkey Social group.'),

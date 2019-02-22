@@ -16,27 +16,27 @@ typedef ThreadReadCallback = void Function(String threadId);
 class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   Forums(
     this._twitarr,
-    this._credentials,
-    this._photoManager, {
+    this._credentials, {
+    @required this.photoManager,
     this.maxUpdatePeriod = const Duration(minutes: 10),
     @required this.onError,
   }) : assert(onError != null),
        assert(_twitarr != null),
-       assert(_photoManager != null) {
+       assert(photoManager != null) {
     _timer = VariableTimer(maxUpdatePeriod, update);
   }
 
   Forums.empty(
   ) : _twitarr = null,
       _credentials = null,
-      _photoManager = null,
+      photoManager = null,
       maxUpdatePeriod = null,
       onError = null;
 
   final Twitarr _twitarr;
   final Credentials _credentials;
-  final PhotoManager _photoManager;
 
+  final PhotoManager photoManager;
   final Duration maxUpdatePeriod;
   final ErrorCallback onError;
 
@@ -64,7 +64,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
             _timer.interested();
           removedThreads.remove(thread);
         } else {
-          _threads[threadSummary.id] = ForumThread.from(threadSummary, this, _twitarr, _credentials, _photoManager);
+          _threads[threadSummary.id] = ForumThread.from(threadSummary, this, _twitarr, _credentials, photoManager);
         }
       }
       removedThreads.forEach(_threads.remove);
@@ -96,7 +96,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
       );
       _timer.interested();
       if (!_threads.containsKey(thread.id)) {
-        _threads[thread.id] = ForumThread.from(thread, this, _twitarr, _credentials, _photoManager);
+        _threads[thread.id] = ForumThread.from(thread, this, _twitarr, _credentials, photoManager);
         notifyListeners();
       }
       return _threads[thread.id];
@@ -163,6 +163,8 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
 
   String get subject => _subject ?? '';
   String _subject;
+
+  bool get hasUnread => unreadCount > 0;
 
   int get unreadCount => _unreadCount ?? 0;
   int _unreadCount;

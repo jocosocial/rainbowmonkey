@@ -21,8 +21,6 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   }) : assert(_twitarr != null),
        assert(photoManager != null),
        assert(maxUpdatePeriod != null) {
-    _fetchBackwards();
-    assert(_seekingForwards);
     _timer = VariableTimer(maxUpdatePeriod, _fetchForwards);
   }
 
@@ -35,6 +33,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   final List<StreamPost> _posts = <StreamPost>[];
   final Map<String, int> _postIds = <String, int>{};
 
+  bool _started = false;
   bool _pinned = false;
   int _anchorIndex = 0;
   bool _seekingBackwards = false;
@@ -55,7 +54,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   int pageSize = 100;
   static const int kEmergencyPageSizeDelta = 10;
 
-  void _fetchBackwards() async {
+  Future<void> _fetchBackwards() async {
     if (_seekingBackwards)
       return null;
     startBusy();
@@ -115,10 +114,14 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       if (isInitialFetch)
         _seekingForwards = false;
       endBusy();
+      _started = true;
     }
   }
 
   Future<void> _fetchForwards() async {
+    if (!_started)
+      await _fetchBackwards();
+    assert(_started);
     if (_seekingForwards || _posts.isEmpty)
       return;
     assert(_posts.isNotEmpty);

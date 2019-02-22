@@ -89,19 +89,13 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   }
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()
-      ..addListener(_scrolled);
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final TweetStream newStream = Cruise.of(context).createTweetStream();
+    final TweetStream newStream = Cruise.of(context).tweetStream;
     if (newStream != _stream) {
-      if (_scrollController.hasClients)
-        _scrollController.jumpTo(0.0);
+      _scrollController?.dispose();
+      _scrollController = ScrollController()
+        ..addListener(_scrolled);
       _stream = newStream;
       _stream.pin(false);
     }
@@ -146,6 +140,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
               animation: _stream,
               builder: (BuildContext context, Widget child) {
                 return ListView.custom(
+                  key: ObjectKey(_stream),
                   controller: _scrollController,
                   reverse: true,
                   cacheExtent: 1000.0,

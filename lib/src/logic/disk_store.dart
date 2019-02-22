@@ -40,10 +40,10 @@ class DiskDataStore extends DataStore {
     return Progress<void>((ProgressController<void> completer) async {
       final Database database = await _database;
       await database.update('credentials', <String, dynamic>{
-        'username': value.username,
-        'password': value.password,
-        'key': value.key,
-        'loginTimestamp': value.loginTimestamp.millisecondsSinceEpoch,
+        'username': value?.username,
+        'password': value?.password,
+        'key': value?.key,
+        'loginTimestamp': value?.loginTimestamp?.millisecondsSinceEpoch,
       });
     });
   }
@@ -165,7 +165,7 @@ class DiskDataStore extends DataStore {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-   });
+    });
   }
 
   Uint8List _encodeValue(dynamic value) {

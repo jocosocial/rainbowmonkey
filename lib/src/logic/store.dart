@@ -7,6 +7,7 @@ enum Setting {
   debugNetworkReliability,
   debugTimeDilation,
   notificationFreshnessToken,
+  lastNotificationsCheck,
 }
 
 typedef FreshnessCallback = Future<int> Function(int token);

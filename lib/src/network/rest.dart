@@ -18,6 +18,8 @@ import 'twitarr.dart';
 const String _kShipTwitarrUrl = 'http://joco.hollandamerica.com/';
 const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
 
+const bool _debugVerbose = false;
+
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
 
@@ -1169,7 +1171,8 @@ class RestTwitarr implements Twitarr {
         .transform(utf8.decoder)
         .join();
       assert(() {
-        debugPrint('<<< ${response.statusCode} $result');
+        if (_debugVerbose)
+          debugPrint('<<< ${response.statusCode} $result');
         return true;
       }());
       return result;
@@ -1228,7 +1231,11 @@ class RestTwitarr implements Twitarr {
                      : bodyParts != null ? bodyParts.fold(0, (int length, Uint8List part) => length + part.length)
                      : null;
     assert(() {
-      debugPrint('>>> $method $url (body length: $length)');
+      if (_debugVerbose) {
+        debugPrint('>>> $method $url (body length: $length)');
+      } else {
+        debugPrint('>>> $method ${url.path}');
+      }
       return true;
     }());
     try {
