@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 
 import 'utils.dart';
 
+const bool _verbose = false;
+
 enum _ProgressIndex { idle, starting, active, failed, successful }
 
 abstract class ProgressValue<T> {
@@ -260,7 +262,16 @@ class ProgressController<T> {
 
   void completeError(dynamic error, StackTrace stackTrace) {
     assert(() {
-      debugPrint('Caught exception:\n$error\n${stackTrace}Reporting exception as failed progress.');
+      if (_verbose) {
+        debugPrint(
+          '$runtimeType converted exception into failed progress.\n'
+          'Message: $error\n'
+          'Exception raised from:\n'
+          '${stackTrace ?? "<null>\n"}'
+          'Exception reported from:\n'
+          '${StackTrace.current ?? "<null>\n"}'
+        );
+      }
       return true;
     }());
     _update(FailedProgress(error is Exception ? error : Exception(error.toString()), stackTrace));

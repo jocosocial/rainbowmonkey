@@ -69,6 +69,14 @@ class _CalendarViewState extends State<CalendarView> with SingleTickerProviderSt
     return ContinuousProgressBuilder<Calendar>(
       progress: Cruise.of(context).calendar,
       onRetry: () { Cruise.of(context).forceUpdate(); },
+      idleChild: Center(
+        child: FlatButton(
+          child: const Text('LOAD CALENDAR'),
+          onPressed: () {
+            Cruise.of(context).forceUpdate();
+          },
+        ),
+      ),
       builder: (BuildContext context, Calendar calendar) {
         return LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
@@ -170,7 +178,7 @@ class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
             bottom: false,
             sliver: EventList(
               events: widget.beforeEvents,
-              fallback: widget.excuse == null ? iconAndLabel(icon: Icons.sentiment_satisfied, message: 'The cruise has not yet begun') : null,
+              fallback: widget.excuse == null ? iconAndLabel(icon: Icons.sentiment_satisfied, message: widget.filtered ? 'No earlier marked events' : 'The cruise has not yet begun') : null,
               now: widget.now,
               isLoggedIn: widget.isLoggedIn,
               onSetFavorite: widget.onFavorite,

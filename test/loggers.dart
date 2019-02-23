@@ -276,7 +276,7 @@ class LoggingTwitarr extends Twitarr {
     int limit = 100,
   }) {
     log.add('getStream');
-    return null;
+    return const Progress<StreamSliceSummary>.idle();
   }
 
   @override

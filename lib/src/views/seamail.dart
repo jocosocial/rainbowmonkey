@@ -331,9 +331,11 @@ class StartSeamailView extends StatefulWidget {
   const StartSeamailView({
     Key key,
     this.currentUser,
+    this.initialOtherUsers,
   }) : super(key: key);
 
   final User currentUser;
+  final List<User> initialOtherUsers;
 
   @override
   _StartSeamailViewState createState() => _StartSeamailViewState();
@@ -356,6 +358,8 @@ class _StartSeamailViewState extends State<StartSeamailView> {
   void initState() {
     super.initState();
     _users.add(widget.currentUser);
+    if (widget.initialOtherUsers != null)
+      _users.addAll(widget.initialOtherUsers);
   }
 
   @override

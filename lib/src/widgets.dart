@@ -1243,7 +1243,7 @@ class PhotoImage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: AspectRatio(
-        aspectRatio: photo.mediumSize.width / photo.mediumSize.height,
+        aspectRatio: photo.mediumSize.width == 0 ? 1.0 : photo.mediumSize.width / photo.mediumSize.height,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
           child: GestureDetector(

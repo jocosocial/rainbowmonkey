@@ -27,7 +27,7 @@ import 'stream.dart';
 
 // TODO(ianh): Move polling logic into RestTwitarr class
 
-typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store);
+typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store, { bool forced });
 
 class CruiseModel extends ChangeNotifier implements PhotoManager {
   CruiseModel({
@@ -47,6 +47,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
       _seamail = Seamail.empty();
       _forums = _createForums();
+      _tweetStream = _createTweetStream();
       _restoreSettings(); // async
       _restorePhotos(); // async
     });
@@ -174,14 +175,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   Forums get forums => _forums;
   Forums _forums;
 
-  TweetStream createTweetStream() {
-    return TweetStream(
-      _twitarr,
-      _currentCredentials,
-      photoManager: this,
-      onError: (dynamic error, StackTrace stack) => onError('$error'),
-    );
-  }
+  TweetStream get tweetStream => _tweetStream;
+  TweetStream _tweetStream;
 
   Progress<String> createAccount({
     @required String username,
@@ -204,10 +199,16 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     });
   }
 
+  Credentials _lastAttemptedCredentials;
+
   Progress<void> login({
     @required String username,
     @required String password,
   }) {
+    _lastAttemptedCredentials = Credentials(
+      username: username,
+      password: password,
+    );
     return Progress<void>((ProgressController<void> controller) async {
       logout();
       AuthenticatedUser user;
@@ -234,6 +235,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     });
   }
 
+  void retryUserLogin() {
+    assert(_lastAttemptedCredentials != null);
+    login(
+      username: _lastAttemptedCredentials.username,
+      password: _lastAttemptedCredentials.password,
+    );
+  }
+
   void logout() {
     _updateCredentials(null);
   }
@@ -246,6 +255,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _calendar.reset();
       _seamail = Seamail.empty();
       _forums = _createForums();
+      _tweetStream = _createTweetStream();
       if (_loggedIn.isCompleted)
         _loggedIn = Completer<void>();
     } else {
@@ -259,12 +269,14 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           onError: onError,
           onCheckForMessages: () {
             if (onCheckForMessages != null)
-              onCheckForMessages(_currentCredentials, _twitarr, store);
+              onCheckForMessages(_currentCredentials, _twitarr, store, forced: true);
           },
           onThreadRead: _handleThreadRead,
         );
         _forums = _createForums();
-        _loggedIn.complete();
+        _tweetStream = _createTweetStream();
+        if (!_loggedIn.isCompleted)
+          _loggedIn.complete();
       }
     }
     if (_currentCredentials != oldCredentials) {
@@ -278,8 +290,17 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return Forums(
       _twitarr,
       _currentCredentials,
-      this,
+      photoManager: this,
       onError: onError,
+    );
+  }
+
+  TweetStream _createTweetStream() {
+    return TweetStream(
+      _twitarr,
+      _currentCredentials,
+      photoManager: this,
+      onError: (dynamic error, StackTrace stack) => onError('$error'),
     );
   }
 

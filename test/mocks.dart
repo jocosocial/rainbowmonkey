@@ -147,7 +147,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   Forums _forums;
 
   @override
-  TweetStream createTweetStream() => TweetStream(null, null, photoManager: this);
+  TweetStream get tweetStream => TweetStream(null, null, photoManager: this);
 
   @override
   Progress<String> createAccount({
@@ -166,6 +166,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }) {
     return const Progress<Credentials>.idle();
   }
+
+  @override
+  void retryUserLogin() { }
 
   @override
   Progress<Credentials> logout({ bool serverChanging = false }) {

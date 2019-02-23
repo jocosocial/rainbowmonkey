@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -37,6 +39,7 @@ class CruiseMonkeyBinding extends BindingBase with GestureBinding, ServicesBindi
 }
 
 final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+CruiseModel model;
 
 void main() {
   WidgetsFlutterBinding();
@@ -46,7 +49,7 @@ void main() {
   }());
   AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
-  final CruiseModel model = CruiseModel(
+  model = CruiseModel(
     initialTwitarrConfiguration: const AutoTwitarrConfiguration(),
     store: DiskDataStore(),
     onError: _handleError,
@@ -56,16 +59,30 @@ void main() {
   if (Platform.isAndroid)
     runBackground();
   Notifications.instance.then((Notifications notifications) {
-    notifications.onTap = (String threadId) async {
+    notifications.onTap = (String payload) {
       assert(() {
-        print('Received tap to view: $threadId');
+        print('Main thread handled user tapping notification with payload "$payload".');
         return true;
       }());
-      await model.loggedIn;
-      Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
-      CommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
+      showThread(payload);
     };
   });
+  final ReceivePort port = ReceivePort()
+    ..forEach((dynamic event) {
+      if (event is String)
+        showThread(event);
+    });
+  IsolateNameServer.registerPortWithName(port.sendPort, 'main');
+}
+
+void showThread(String threadId) async {
+  assert(() {
+    print('Received tap to view: $threadId');
+    return true;
+  }());
+  await model.loggedIn;
+  Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
+  CommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
 }
 
 void _handleError(String message) {
