@@ -31,7 +31,7 @@ void main() {
     );
 
     // Check that the app starts on the Accounts page
-    expect(find.text('ABOUT CRUISEMONKEY'), findsOneWidget);
+    expect(find.text('ABOUT RAINBOW MONKEY'), findsOneWidget);
     expect(find.text('Welcome to'), findsOneWidget);
 
     expect(
@@ -45,7 +45,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     // Check that the Accounts page is gone.
-    expect(find.text('ABOUT CRUISEMONKEY'), findsNothing);
+    expect(find.text('ABOUT RAINBOW MONKEY'), findsNothing);
     expect(find.text('Welcome to'), findsNothing);
 
     await tester.pumpWidget(Container());

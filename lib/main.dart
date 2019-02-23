@@ -44,7 +44,7 @@ CruiseModel model;
 void main() {
   WidgetsFlutterBinding();
   assert(() {
-    print('CruiseMonkey has started');
+    print('Rainbow Monkey has started');
     return true;
   }());
   AutoTwitarrConfiguration.register();

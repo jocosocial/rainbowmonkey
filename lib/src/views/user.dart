@@ -178,7 +178,7 @@ class _UserViewState extends State<UserView> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 Text('Welcome to', style: textTheme.headline),
-                Text('Cruisemonkey', style: textTheme.headline),
+                Text('Rainbow Monkey', style: textTheme.headline),
               ],
             );
             loggedIn = false;
@@ -292,15 +292,15 @@ class _UserViewState extends State<UserView> {
                 Expanded(
                   child: LabeledIconButton(
                     icon: const Icon(Icons.help_outline),
-                    label: const Text('ABOUT CRUISEMONKEY'),
+                    label: const Text('ABOUT RAINBOW MONKEY'),
                     onPressed: () {
                       showAboutDialog(
                         context: context,
-                        applicationName: 'Cruise Monkey',
+                        applicationName: 'Rainbow Monkey',
                         applicationVersion: 'JoCo 2019 v1.3',
                         applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
                         children: <Widget>[
-                          const Text('A project of the Seamonkey Social group.'),
+                        const Text('A project of the Seamonkey Social group.'),
                           GestureDetector(
                             onTap: () {
                               launch('http://seamonkeysocial.cruises/');
