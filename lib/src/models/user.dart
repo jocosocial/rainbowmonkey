@@ -2,6 +2,8 @@ import 'dart:ui' show hashValues;
 
 import 'package:flutter/foundation.dart';
 
+enum Role { admin, tho, moderator, user, muted, banned, none }
+
 @immutable
 class Credentials {
   const Credentials({
@@ -44,6 +46,7 @@ class User {
     this.roomNumber,
     this.homeLocation,
     this.email,
+    this.role,
   }) : assert(username != null),
        assert(username != '');
 
@@ -54,7 +57,8 @@ class User {
       pronouns = null,
       roomNumber = null,
       homeLocation = null,
-      email = null;
+      email = null,
+      role = Role.none;
 
   final String username;
   final String displayName;
@@ -63,6 +67,7 @@ class User {
   final String roomNumber;
   final String homeLocation;
   final String email;
+  final Role role;
 
   bool sameAs(User other) => other != null && username == other.username;
 
@@ -84,7 +89,8 @@ class User {
         && pronouns == typedOther.pronouns
         && roomNumber == typedOther.roomNumber
         && homeLocation == typedOther.homeLocation
-        && email == typedOther.email;
+        && email == typedOther.email
+        && role == typedOther.role;
   }
 
   @override
@@ -96,6 +102,7 @@ class User {
     roomNumber,
     homeLocation,
     email,
+    role,
   );
 }
 
@@ -108,6 +115,7 @@ class AuthenticatedUser extends User {
     String roomNumber,
     String homeLocation,
     String email,
+    Role role,
     this.credentials,
   }) : super(
     username: username,
@@ -117,6 +125,7 @@ class AuthenticatedUser extends User {
     roomNumber: roomNumber,
     homeLocation: homeLocation,
     email: email,
+    role: role,
   );
 
   final Credentials credentials;

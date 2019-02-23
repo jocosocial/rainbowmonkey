@@ -252,6 +252,7 @@ class RestTwitarr implements Twitarr {
       roomNumber: (user.room_number as Json).toScalar() as String,
       homeLocation: (user.home_location as Json).toScalar() as String,
       email: (user.email as Json).toScalar() as String,
+      role: _parseRole((user.role as Json).toScalar() as String),
       credentials: credentials.copyWith(username: (user.username as Json).toScalar() as String),
     );
   }
@@ -265,7 +266,20 @@ class RestTwitarr implements Twitarr {
       roomNumber: (user.room_number as Json).toScalar() as String,
       homeLocation: (user.home_location as Json).toScalar() as String,
       email: (user.email as Json).toScalar() as String,
+      role: _parseRole((user.role as Json).toScalar() as String),
     );
+  }
+
+  Role _parseRole(String role) {
+    switch (role) {
+      case 'admin': return Role.admin;
+      case 'tho': return Role.tho;
+      case 'moderator': return Role.moderator;
+      case 'user': return Role.user;
+      case 'muted': return Role.muted;
+      case 'banned': return Role.banned;
+      default: return Role.none;
+    }
   }
 
   @override
