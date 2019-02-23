@@ -1,6 +1,10 @@
-# cruisemonkey
+# Rainbow Monkey
 
 The client application for the cruise, for Android and iOS. Useless without a server; see the accompanying repository.
+
+This app is codenamed "cruisemonkey", named after @rangerrick's app,
+but to reduce confusion it is branded as Rainbow Monkey is the stores
+and in the application itself.
 
 
 ## Updating the Karaoke list
