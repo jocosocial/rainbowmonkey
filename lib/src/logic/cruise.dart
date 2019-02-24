@@ -211,27 +211,21 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     );
     return Progress<void>((ProgressController<void> controller) async {
       logout();
-      AuthenticatedUser user;
-      do {
-        try {
-          final Progress<AuthenticatedUser> userProgress = _twitarr.login(
-            username: username,
-            password: password,
-            photoManager: this,
-          );
-          _user.addProgress(userProgress);
-          user = await controller.chain<AuthenticatedUser>(
-            userProgress,
-            steps: null,
-          );
-        } on InvalidUsernameOrPasswordError {
-          rethrow;
-        } on UserFriendlyError catch (error) {
-          onError('$error');
-          await Future<void>.delayed(const Duration(seconds: 3));
-        }
-      } while (user == null);
-      _updateCredentials(user);
+      try {
+        final Progress<AuthenticatedUser> userProgress = _twitarr.login(
+          username: username,
+          password: password,
+          photoManager: this,
+        );
+        _user.addProgress(userProgress);
+        _updateCredentials(await controller.chain<AuthenticatedUser>(
+          userProgress,
+        ));
+      } on InvalidUsernameOrPasswordError {
+        rethrow;
+      } on UserFriendlyError catch (error) {
+        onError('$error');
+      }
     });
   }
 
@@ -279,8 +273,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           _loggedIn.complete();
       }
     }
-    if (_currentCredentials != oldCredentials) {
+    if (_currentCredentials != oldCredentials || user == null) {
       _calendar.triggerUnscheduledUpdate();
+    }
+    if (_currentCredentials != oldCredentials) {
       store.saveCredentials(_currentCredentials);
       notifyListeners();
     }

@@ -69,7 +69,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
       }
       removedThreads.forEach(_threads.remove);
     } on UserFriendlyError catch (error) {
-      _timer.interested();
+      _timer.interested(wasError: true);
       _reportError(error);
     } finally {
       _updating = false;
@@ -197,7 +197,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
       ).asFuture();
       _messages = messages.map<ForumMessage>((ForumMessageSummary summary) => ForumMessage.from(summary, _photoManager)).toList();
     } on UserFriendlyError catch (error) {
-      _timer.interested();
+      _timer.interested(wasError: true);
       _parent._reportError(error);
     } finally {
       _updating = false;
