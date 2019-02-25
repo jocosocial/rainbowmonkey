@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import '../models/user.dart';
 import '../progress.dart';
+import 'photo_manager.dart';
 
 enum Setting {
   server,
@@ -25,4 +28,9 @@ abstract class DataStore {
   Future<List<String>> getNotifications(String threadId);
 
   Future<void> updateFreshnessToken(FreshnessCallback callback);
+
+  Future<void> heardAboutUserPhoto(String id, DateTime updateTime);
+  Future<Map<String, DateTime>> restoreUserPhotoList();
+  Future<Uint8List> putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback);
+  Future<void> removeImage(String serverKey, String cacheName, String photoId);
 }

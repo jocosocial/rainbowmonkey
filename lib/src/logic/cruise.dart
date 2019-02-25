@@ -367,79 +367,37 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return _twitarr.fetchServerText(filename);
   }
 
-  final Map<String, DateTime> _photoUpdates = <String, DateTime>{};
+  Map<String, DateTime> _photoUpdates = <String, DateTime>{};
   final Map<String, Set<VoidCallback>> _photoListeners = <String, Set<VoidCallback>>{};
 
-  Future<void> _photosBusy = Future<void>.value();
-  Future<T> _queuePhotosWork<T>(AsyncValueGetter<T> callback) async {
-    final Future<void> lastLock = _photosBusy;
-    final Completer<void> currentLock = Completer<void>();
-    _photosBusy = currentLock.future;
-    T result;
-    try {
-      await lastLock;
-      result = await callback();
-    } finally {
-      currentLock.complete();
-    }
-    return result;
-  }
-
-  bool _storeQueued = false;
-  Future<void> _storePhotos() async {
-    if (_storeQueued)
-      return;
-    _storeQueued = true;
-    await _queuePhotosWork<void>(() {
-      // TODO(ianh): store the _photoUpdates map to disk
-      _storeQueued = false;
-    });
-  }
-
   Future<void> _restorePhotos() async {
-    await _queuePhotosWork<void>(() {
-      // TODO(ianh): restore the _photoUpdates map from disk
-    });
+    _photoUpdates = await store.restoreUserPhotoList();
   }
 
   @override
-  Future<Uint8List> putImageIfAbsent(String photoId, ImageFetcher callback) {
-    return _queuePhotosWork<Uint8List>(() {
-      // TODO(ianh): cache the image obtained by callback to disk
-      // TODO(ianh): return the cached version if we have one
-      _storePhotos();
-      return callback();
-    });
+  Future<Uint8List> putImageIfAbsent(String photoId, ImageFetcher callback, { @required bool thumbnail }) {
+    assert(thumbnail != null);
+    return store.putImageIfAbsent(_twitarr.photoCacheKey, thumbnail ? 'thumbnail' : 'image', photoId, callback);
   }
 
   @override
   Future<Uint8List> putUserPhotoIfAbsent(String username, ImageFetcher callback) {
-    return _queuePhotosWork<Uint8List>(() {
-      // TODO(ianh): cache the image obtained by callback to disk
-      // TODO(ianh): return the cached version if we have one
-      _storePhotos();
-      return callback();
-    });
+    return store.putImageIfAbsent(_twitarr.photoCacheKey, 'avatar', username, callback);
   }
 
   @override
-  void heardAboutUserPhoto(String username, DateTime lastUpdate) {
-    _queuePhotosWork<void>(() {
-      if (!_photoUpdates.containsKey(username) || _photoUpdates[username].isBefore(lastUpdate)) {
-        _photoUpdates[username] = lastUpdate;
-        _notifyUserPhotoListeners(username);
-        _storePhotos();
-      }
-    });
+  void heardAboutUserPhoto(String username, DateTime lastUpdate) async {
+    if (!_photoUpdates.containsKey(username) || _photoUpdates[username].isBefore(lastUpdate)) {
+      await _resetUserPhoto(username); // this calls _notifyUserPhotoListeners for us
+      _photoUpdates[username] = lastUpdate;
+      await store.heardAboutUserPhoto(username, lastUpdate);
+    }
   }
 
-  void _resetUserPhoto(String username) {
-    _queuePhotosWork<void>(() {
-      // TODO(ianh): clear the cache
-      _photoUpdates.remove(username);
-      _notifyUserPhotoListeners(username);
-      _storePhotos();
-    });
+  Future<void> _resetUserPhoto(String username) async {
+    await store.removeImage(_twitarr.photoCacheKey, 'avatar', username);
+    _photoUpdates.remove(username);
+    _notifyUserPhotoListeners(username);
   }
 
   @override
@@ -512,7 +470,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           credentials: _currentCredentials,
         ));
       }
-      _resetUserPhoto(_currentCredentials.username);
+      await _resetUserPhoto(_currentCredentials.username);
     });
   }
 
@@ -728,6 +686,7 @@ class TwitarrImageStreamCompleter extends ImageStreamCompleter {
       final Uint8List bytes = await photoManager.putImageIfAbsent(
         photoId,
         () => twitarr.fetchImage(photoId, thumbnail: thumbnail).asFuture(),
+        thumbnail: thumbnail,
       );
       final ui.Codec codec = await PaintingBinding.instance.instantiateImageCodec(bytes);
       final ui.FrameInfo frameInfo = await codec.getNextFrame();

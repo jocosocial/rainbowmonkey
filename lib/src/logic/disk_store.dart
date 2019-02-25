@@ -1,10 +1,17 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/user.dart';
 import '../progress.dart';
+import 'photo_manager.dart';
 import 'store.dart';
 
 export 'package:sqflite/sqflite.dart' show DatabaseException;
@@ -17,7 +24,7 @@ class DiskDataStore extends DataStore {
   static Future<Database> _init() async {
     return await openDatabase(
       '${await getDatabasesPath()}/config.db',
-      version: 3,
+      version: 4,
       onUpgrade: (Database database, int oldVersion, int newVersion) async {
         final Batch batch = database.batch();
         if (oldVersion < 1) {
@@ -29,6 +36,9 @@ class DiskDataStore extends DataStore {
         }
         if (oldVersion < 3) {
           batch.execute('CREATE TABLE notifications (thread STRING NOT NULL, message STRING NOT NULL)');
+        }
+        if (oldVersion < 4) {
+          batch.execute('CREATE TABLE userPhotos (id STRING PRIMARY KEY, value INTEGER NOT NULL)');
         }
         await batch.commit(noResult: true);
       },
@@ -59,9 +69,9 @@ class DiskDataStore extends DataStore {
       if (results['username'] == null)
         return null;
       return Credentials(
-        username: results['username'] as String,
+        username: results['username'].toString(),
         password: results['password'].toString(), // Passwords may be numbers and dynamic may retrieve them as such.
-        key: results['key'] as String,
+        key: results['key'].toString(),
         loginTimestamp: DateTime.fromMillisecondsSinceEpoch(results['loginTimestamp'] as int),
       );
     });
@@ -144,7 +154,7 @@ class DiskDataStore extends DataStore {
       'SELECT message FROM notifications WHERE thread=?',
       <dynamic>[threadId],
     );
-    return rows.map<String>((Map<String, dynamic> row) => row['message'] as String).toList();
+    return rows.map<String>((Map<String, dynamic> row) => row['message'].toString()).toList();
   }
 
   @override
@@ -166,6 +176,69 @@ class DiskDataStore extends DataStore {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     });
+  }
+
+  @override
+  Future<void> heardAboutUserPhoto(String id, DateTime updateTime) async {
+    final Database database = await _database;
+    await database.insert(
+      'userPhotos',
+      <String, dynamic>{
+        'id': id,
+        'value': updateTime.toUtc().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  @override
+  Future<Map<String, DateTime>> restoreUserPhotoList() async {
+    final Database database = await _database;
+    final List<Map<String, dynamic>> rows = await database.query(
+      'userPhotos',
+      columns: <String>['id', 'value'],
+    );
+    final Map<String, DateTime> result = <String, DateTime>{};
+    for (Map<String, dynamic> row in rows) {
+      result[row['id'].toString()] = DateTime.fromMillisecondsSinceEpoch(row['value'] as int, isUtc: true);
+    }
+    return result;
+  }
+
+  static String _encodePhotoKey(String serverKey, String cacheName, String photoId) {
+    return '$serverKey $cacheName $photoId';
+  }
+
+  Future<String> _keyToPath(String key) async {
+    return path.join((await getTemporaryDirectory()).path, 'photo_store', base64.encode(utf8.encode(key)).replaceAll('/', '-'));
+  }
+
+  @override
+  Future<Uint8List> putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) async {
+    Uint8List bytes;
+    final String key = _encodePhotoKey(serverKey, cacheName, photoId);
+    final File cache = File(await _keyToPath(key));
+    try {
+      bytes = await cache.readAsBytes() as Uint8List;
+    } on FileSystemException {
+      bytes = await callback();
+      try {
+        await cache.create(recursive: true);
+        await cache.writeAsBytes(bytes);
+      } on FileSystemException catch (error) {
+        debugPrint('Failed to cache "$key": $error');
+      }
+    }
+    return bytes;
+  }
+
+  @override
+  Future<void> removeImage(String serverKey, String cacheName, String photoId) async {
+    try {
+      await File(await _keyToPath(_encodePhotoKey(serverKey, cacheName, photoId))).delete();
+    } on FileSystemException {
+      // ignore errors
+    }
   }
 
   Uint8List _encodeValue(dynamic value) {

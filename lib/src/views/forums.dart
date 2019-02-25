@@ -117,7 +117,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                       final ForumMessage message = messages[index];
                       return ChatLine(
                         user: message.user,
-                        isCurrentUser: message.user.sameAs(currentUser.effectiveUser),
+                        isCurrentUser: message.user.sameAs(currentUser?.effectiveUser),
                         messages: <String>[ message.text ],
                         photos: message.photos,
                         timestamp: message.timestamp,
