@@ -99,9 +99,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _twitarr = newConfiguration.createTwitarr();
       _twitarr.debugLatency = _debugLatency;
       _twitarr.debugReliability = _debugReliability;
-      logout();
-      _calendar.triggerUnscheduledUpdate();
+      _calendar.reset();
       _announcements.reset();
+      logout(); // may also reset the calendar
+      _calendar.triggerUnscheduledUpdate();
       _announcements.triggerUnscheduledUpdate();
       notifyListeners();
     });
@@ -253,7 +254,8 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     if (user == null) {
       _currentCredentials = null;
       _user.reset();
-      _calendar.reset();
+      if (_currentCredentials != oldCredentials)
+        _calendar.reset();
       _seamail = Seamail.empty();
       _forums = _createForums();
       _tweetStream = _createTweetStream();
@@ -280,7 +282,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
           _loggedIn.complete();
       }
     }
-    if (_currentCredentials != oldCredentials || user == null)
+    if (_currentCredentials != oldCredentials)
       _calendar.triggerUnscheduledUpdate();
     if (_currentCredentials != oldCredentials) {
       store.saveCredentials(_currentCredentials);
