@@ -93,6 +93,7 @@ class VariableTimer {
   static const double multiplier = 1.5;
 
   _VariableTimerState _state = _VariableTimerState.disabled;
+  double _backoffMultiplier = 1;
   Timer _timer;
   Duration _currentPeriod;
   final Stopwatch _stopwatch = Stopwatch();
@@ -112,10 +113,10 @@ class VariableTimer {
   //             /|\  |          |          |
   //      complete|   |tick      |          |
   //              |  \|/         |          |
-  //             ticking* <------'          |
-  //                |                       |
-  //                |stop()                 |
-  //               \|/                      |microtask
+  //         .-> ticking* <------'          |
+  //         |      |                       |
+  //  start()|      |stop()                 |
+  //         |     \|/                      |microtask
   //         tickingDisabling* -------------'
   //
   //  * handle interested()
@@ -149,7 +150,7 @@ class VariableTimer {
     _state = _VariableTimerState.ticking;
     await callback();
     if (_state == _VariableTimerState.ticking) {
-      _timer = Timer(_currentPeriod, _tick);
+      _timer = Timer(_currentPeriod * _backoffMultiplier, _tick);
       _stopwatch..reset()..start();
       _currentPeriod *= multiplier;
       _state = _VariableTimerState.enabled;
@@ -197,7 +198,12 @@ class VariableTimer {
     }
   }
 
-  void interested() {
+  void interested({ bool wasError = false }) {
+    if (wasError) {
+      _backoffMultiplier += 1;
+    } else {
+      _backoffMultiplier = 1;
+    }
     assert(_state != null);
     switch (_state) {
       case _VariableTimerState.disabled:
@@ -216,7 +222,7 @@ class VariableTimer {
         } else {
           _timer.cancel();
           _currentPeriod = minDuration;
-          _timer = Timer(minDuration - elapsed, _tick);
+          _timer = Timer((minDuration * _backoffMultiplier) - elapsed, _tick);
         }
         return;
       case _VariableTimerState.ticking:

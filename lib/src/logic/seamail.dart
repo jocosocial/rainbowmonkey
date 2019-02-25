@@ -110,7 +110,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
         onCheckForMessages();
       _freshnessToken = summary.freshnessToken;
     } on UserFriendlyError catch (error) {
-      _timer.interested();
+      _timer.interested(wasError: true);
       _reportError(error);
     } finally {
       _updating = false;
@@ -252,7 +252,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
       if (onThreadRead != null)
         onThreadRead(id);
     } on UserFriendlyError catch (error) {
-      _timer.interested();
+      _timer.interested(wasError: true);
       _parent._reportError(error);
     } finally {
       _updating = false;
@@ -293,7 +293,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
       if (thread.messages != null) {
         _unreadCount = 0;
         for (SeamailMessage message in _messages.values) {
-          if (!message.readReceipts.containsKey(_credentials.username))
+          if (!message.readReceipts.containsKey(_credentials.effectiveUsername))
             _unreadCount += 1;
         }
         _hasUnread = _unreadCount > 0;

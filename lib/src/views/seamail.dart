@@ -136,62 +136,58 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
       currentBubble.messages.add(message);
       lastMessage = message;
     }
-    return ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
-      valueListenable: Cruise.of(context).user.best,
-      builder: (BuildContext context, ProgressValue<AuthenticatedUser> user, Widget child) {
-        User currentUser;
-        if (user is SuccessfulProgress<AuthenticatedUser>)
-          currentUser = user.value;
-        return Scaffold(
-          appBar: AppBar(
-            centerTitle: true,
-            flexibleSpace: SafeArea(
-              child: Column(
-                children: <Widget>[
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (BuildContext context, BoxConstraints constraints) {
-                        final double height = constraints.maxHeight;
-                        return SizedBox(
-                          width: (users.length + 1) * height / 2.0,
-                          child: Stack(
-                            children: List<Widget>.generate(users.length, (int index) {
-                              return Positioned(
-                                top: 2.0,
-                                left: index * height / 2.0,
-                                bottom: 0.0,
-                                width: height,
-                                child: cruise.avatarFor(<User>[users[index]]),
-                              );
-                            }, growable: false),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Text('', style: appBarTitleTextStyle),
-                  ),
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        flexibleSpace: SafeArea(
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    final double height = constraints.maxHeight;
+                    return SizedBox(
+                      width: (users.length + 1) * height / 2.0,
+                      child: Stack(
+                        children: List<Widget>.generate(users.length, (int index) {
+                          return Positioned(
+                            top: 2.0,
+                            left: index * height / 2.0,
+                            bottom: 0.0,
+                            width: height,
+                            child: cruise.avatarFor(<User>[users[index]]),
+                          );
+                        }, growable: false),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Text('', style: appBarTitleTextStyle),
+              ),
+            ],
+          ),
+        ),
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Text(
+                widget.thread.subject,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.primaryTextTheme.body1.apply(fontSizeFactor: 0.8),
               ),
             ),
-            title: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Text(
-                    widget.thread.subject,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.primaryTextTheme.body1.apply(fontSizeFactor: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          body: Column(
+          ],
+        ),
+      ),
+      body: ModeratorBuilder(
+        builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
+          return Column(
             children: <Widget>[
               Expanded(
                 child: BusyIndicator(
@@ -247,7 +243,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                       return ChatLine(
                         key: ValueKey<int>(bubbleIndex),
                         user: bubble.user,
-                        isCurrentUser: bubble.user.sameAs(currentUser),
+                        isCurrentUser: bubble.user.sameAs(currentUser.effectiveUser),
                         messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
                         photos: null,
                         timestamp: bubble.messages.first.timestamp,
@@ -260,7 +256,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: _pending.map((_PendingSend entry) {
-                  // TODO(ianh): Use a ChatLine for this, somehow, so it matches the direction and style of other speech bubbles.
+                  // TODO(ianh): Use a ChatLine or ProgressChatLine for this
                   if (entry.error != null) {
                     return ListTile(
                       key: ObjectKey(entry),
@@ -293,6 +289,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                   Expanded(
                     child: TextField(
                       controller: _textController,
+                      maxLength: 10000,
                       onChanged: (String value) {
                         setState(() {
                           // changed state is in _textController
@@ -305,34 +302,36 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                           _submitCurrentMessage();
                       },
                       textInputAction: TextInputAction.send,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         border: InputBorder.none,
-                        contentPadding: EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                        hintText: 'Message',
+                        contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                        counter: const SizedBox.shrink(),
+                        hintText: 'Message${ isModerating ? " (as moderator)" : ""}',
                       ),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.send),
-                    tooltip: 'Send message',
+                    tooltip: 'Send message${ isModerating ? " (as moderator)" : ""}',
                     onPressed: _textController.text.isNotEmpty ? _submitCurrentMessage : null,
                   ),
                 ],
               ),
             ],
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
 
 class StartSeamailView extends StatefulWidget {
-  const StartSeamailView({
+  StartSeamailView({
     Key key,
     this.currentUser,
     this.initialOtherUsers,
-  }) : super(key: key);
+  }) : assert(currentUser is! AuthenticatedUser || !(currentUser as AuthenticatedUser).credentials.asMod),
+       super(key: key);
 
   final User currentUser;
   final List<User> initialOtherUsers;
@@ -434,219 +433,226 @@ class _StartSeamailViewState extends State<StartSeamailView> {
             foregroundColor: Colors.grey.shade400,
           ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-      body: Form(
-        key: _formKey,
-        onChanged: () {
-          setState(() {
-            /* need to recheck whether the submit button should be enabled */
-          });
-        },
-        onWillPop: () async {
-          return await showDialog<bool>(
-            context: context,
-            builder: (BuildContext context) => AlertDialog(
-              title: const Text('Abandon creating this conversation?'),
-              actions: <Widget>[
-                FlatButton(
-                  onPressed: () { Navigator.of(context).pop(true); },
-                  child: const Text('YES'),
-                ),
-                FlatButton(
-                  onPressed: () { Navigator.of(context).pop(false); },
-                  child: const Text('NO'),
-                ),
-              ],
-            ),
-          ) == true;
-        },
-        child: CustomScrollView(
-          slivers: <Widget>[
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12.0, 20.0, 12.0, 0.0),
-              sliver: SliverToBoxAdapter(
-                child: Align(
-                  alignment: AlignmentDirectional.topStart,
-                  child: TextFormField(
-                    controller: _subject,
-                    focusNode: _subjectFocus,
-                    autofocus: true,
-                    onFieldSubmitted: (String value) {
-                      FocusScope.of(context).requestFocus(_firstMessageFocus);
-                    },
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Subject',
-                    ),
+      body: ModeratorBuilder(
+        builder: (BuildContext context, _, __, bool isModerating) { // using _ to avoid potential conflicts with widget.currentUser
+        assert(isModerating == widget.currentUser.isModerator);
+        return Form(
+          key: _formKey,
+          onChanged: () {
+            setState(() {
+              /* need to recheck whether the submit button should be enabled */
+            });
+          },
+          onWillPop: () async {
+            return await showDialog<bool>(
+              context: context,
+              builder: (BuildContext context) => AlertDialog(
+                title: const Text('Abandon creating this conversation?'),
+                actions: <Widget>[
+                  FlatButton(
+                    onPressed: () { Navigator.of(context).pop(true); },
+                    child: const Text('YES'),
                   ),
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
-              sliver: SliverToBoxAdapter(
-                child: Align(
-                  alignment: AlignmentDirectional.topStart,
-                  child: TextFormField(
-                    controller: _text,
-                    focusNode: _firstMessageFocus,
-                    onFieldSubmitted: (String value) {
-                      FocusScope.of(context).requestFocus(_usernameFocus);
-                    },
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'First message',
-                    ),
+                  FlatButton(
+                    onPressed: () { Navigator.of(context).pop(false); },
+                    child: const Text('NO'),
                   ),
-                ),
+                ],
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 0.0),
-              sliver: SliverToBoxAdapter(
-                child: Text(
-                  'Participants',
-                  style: Theme.of(context).textTheme.title,
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
-              sliver: SliverToBoxAdapter(
-                child: Align(
-                  alignment: AlignmentDirectional.topStart,
-                  child: TextField(
-                    controller: _nextUser,
-                    focusNode: _usernameFocus,
-                    textInputAction: TextInputAction.search,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.search),
-                      labelText: 'User name',
-                    ),
-                    onChanged: (String value) {
-                      setState(() {
-                        if (value.isNotEmpty) {
-                          _autocompleteProgress = Cruise.of(context).getUserList(value);
-                        } else {
-                          _autocompleteProgress = const Progress<List<User>>.idle();
-                        }
-                      });
-                    },
-                  ),
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 12.0),
-              sliver: ProgressBuilder<List<User>>(
-                // TODO(ianh): create a SliverStack, SliverAnimatedOpacity, SliverAnimatedSwitcher, etc
-                // and make this look as half-reasonable as it would in a box world.
-                progress: _autocompleteProgress,
-                nullChild: _autocompletePlaceholder,
-                idleChild: _autocompletePlaceholder,
-                startingChild: const SliverToBoxAdapter(
-                  key: ProgressBuilder.activeKey,
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: CircularProgressIndicator()
-                    ),
-                  ),
-                ),
-                activeBuilder: (BuildContext context, double progress, double target) {
-                  return SliverToBoxAdapter(
-                    key: ProgressBuilder.activeKey,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: CircularProgressIndicator(value: progress / target)
+            ) == true;
+          },
+          child: CustomScrollView(
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12.0, 20.0, 12.0, 0.0),
+                sliver: SliverToBoxAdapter(
+                  child: Align(
+                    alignment: AlignmentDirectional.topStart,
+                    child: TextFormField(
+                      controller: _subject,
+                      maxLength: 200,
+                      focusNode: _subjectFocus,
+                      autofocus: true,
+                      onFieldSubmitted: (String value) {
+                        FocusScope.of(context).requestFocus(_firstMessageFocus);
+                      },
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Subject',
                       ),
                     ),
-                  );
-                },
-                failedBuilder: (BuildContext context, Exception error, StackTrace stackTrace) {
-                  return SliverToBoxAdapter(
-                    child: ProgressBuilder.defaultFailedBuilder(context, error, stackTrace),
-                  );
-                },
-                builder: (BuildContext context, List<User> users) {
-                  assert(users != null);
-                  final Iterable<User> filteredUsers = users.where(_shouldShowUser);
-                  if (filteredUsers.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 6.0),
-                        child: Text('No users match "${_nextUser.text}".', textAlign: TextAlign.center),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Align(
+                      alignment: AlignmentDirectional.topStart,
+                      child: TextFormField(
+                        controller: _text,
+                        maxLength: 10000,
+                        focusNode: _firstMessageFocus,
+                        onFieldSubmitted: (String value) {
+                          FocusScope.of(context).requestFocus(_usernameFocus);
+                        },
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'First message${ isModerating ? " (as moderator)" : ""}',
+                        ),
                       ),
-                    );
-                  }
-                  return SliverList(
-                    delegate: SliverChildListDelegate(
-                      filteredUsers.map<Widget>((User user) {
-                        return ListTile(
-                          key: ValueKey<String>(user.username),
-                          leading: Cruise.of(context).avatarFor(<User>[user], enabled: false),
-                          title: Text(user.toString()),
-                          onTap: () {
-                            _addUser(user);
-                            setState(() {
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 0.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      'Participants',
+                      style: Theme.of(context).textTheme.title,
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Align(
+                      alignment: AlignmentDirectional.topStart,
+                      child: TextField(
+                        controller: _nextUser,
+                        focusNode: _usernameFocus,
+                        textInputAction: TextInputAction.search,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.search),
+                          labelText: 'User name',
+                        ),
+                        onChanged: (String value) {
+                          setState(() {
+                            if (value.isNotEmpty) {
+                              _autocompleteProgress = Cruise.of(context).getUserList(value);
+                            } else {
                               _autocompleteProgress = const Progress<List<User>>.idle();
-                              _nextUser.clear();
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  );
-                },
-                fadeWrapper: (BuildContext context, Widget child) => child,
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(12.0),
-              sliver: SliverToBoxAdapter(
-                child: ListBody(
-                  children: <Widget>[
-                    const Text('Selected users (tap to remove):'),
-                    const SizedBox(
-                      height: 8.0,
-                    ),
-                    Container(
-                      decoration: ShapeDecoration(
-                        shape: const StadiumBorder(
-                          side: BorderSide(),
-                        ),
-                        color: Theme.of(context).accentColor,
+                            }
+                          });
+                        },
                       ),
-                      height: 76.0,
-                      child: ClipPath(
-                        clipper: const ShapeBorderClipper(
-                          shape: StadiumBorder(),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 12.0),
+                  sliver: ProgressBuilder<List<User>>(
+                    // TODO(ianh): create a SliverStack, SliverAnimatedOpacity, SliverAnimatedSwitcher, etc
+                    // and make this look as half-reasonable as it would in a box world.
+                    progress: _autocompleteProgress,
+                    nullChild: _autocompletePlaceholder,
+                    idleChild: _autocompletePlaceholder,
+                    startingChild: const SliverToBoxAdapter(
+                      key: ProgressBuilder.activeKey,
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: CircularProgressIndicator()
                         ),
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(4.0, 4.0, 4.0, 4.0),
-                          scrollDirection: Axis.horizontal,
-                          children: _users.map<Widget>((User user) {
-                            return Padding(
+                      ),
+                    ),
+                    activeBuilder: (BuildContext context, double progress, double target) {
+                      return SliverToBoxAdapter(
+                        key: ProgressBuilder.activeKey,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: CircularProgressIndicator(value: progress / target)
+                          ),
+                        ),
+                      );
+                    },
+                    failedBuilder: (BuildContext context, Exception error, StackTrace stackTrace) {
+                      return SliverToBoxAdapter(
+                        child: ProgressBuilder.defaultFailedBuilder(context, error, stackTrace),
+                      );
+                    },
+                    builder: (BuildContext context, List<User> users) {
+                      assert(users != null);
+                      final Iterable<User> filteredUsers = users.where(_shouldShowUser);
+                      if (filteredUsers.isEmpty) {
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(12.0, 6.0, 12.0, 6.0),
+                            child: Text('No users match "${_nextUser.text}".', textAlign: TextAlign.center),
+                          ),
+                        );
+                      }
+                      return SliverList(
+                        delegate: SliverChildListDelegate(
+                          filteredUsers.map<Widget>((User user) {
+                            return ListTile(
                               key: ValueKey<String>(user.username),
-                              padding: const EdgeInsets.all(4.0),
-                              child: Tooltip(
-                                message: user.username.toString(),
-                                child: GestureDetector(
-                                  onTap: user == widget.currentUser ? null : () { _removeUser(user); },
-                                  child: Cruise.of(context).avatarFor(<User>[user], size: 60.0, enabled: false),
-                                ),
-                              ),
+                              leading: Cruise.of(context).avatarFor(<User>[user], enabled: false),
+                              title: Text(user.toString()),
+                              onTap: () {
+                                _addUser(user);
+                                setState(() {
+                                  _autocompleteProgress = const Progress<List<User>>.idle();
+                                  _nextUser.clear();
+                                });
+                              },
                             );
                           }).toList(),
                         ),
-                      ),
-                    ),
-                  ],
+                      );
+                    },
+                    fadeWrapper: (BuildContext context, Widget child) => child,
+                  ),
                 ),
-              ),
+                SliverPadding(
+                  padding: const EdgeInsets.all(12.0),
+                  sliver: SliverToBoxAdapter(
+                    child: ListBody(
+                      children: <Widget>[
+                        const Text('Selected users (tap to remove):'),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                        Container(
+                          decoration: ShapeDecoration(
+                            shape: const StadiumBorder(
+                              side: BorderSide(),
+                            ),
+                            color: Theme.of(context).accentColor,
+                          ),
+                          height: 76.0,
+                          child: ClipPath(
+                            clipper: const ShapeBorderClipper(
+                              shape: StadiumBorder(),
+                            ),
+                            child: ListView(
+                              padding: const EdgeInsets.fromLTRB(4.0, 4.0, 4.0, 4.0),
+                              scrollDirection: Axis.horizontal,
+                              children: _users.map<Widget>((User user) {
+                                return Padding(
+                                  key: ValueKey<String>(user.username),
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: Tooltip(
+                                    message: user.username.toString(),
+                                    child: GestureDetector(
+                                      onTap: user == widget.currentUser ? null : () { _removeUser(user); },
+                                      child: Cruise.of(context).avatarFor(<User>[user], size: 60.0, enabled: false),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

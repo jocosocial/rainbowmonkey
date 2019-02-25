@@ -41,90 +41,98 @@ class _ProfileEditorState extends State<ProfileEditor> {
               SliverAppBar(
                 title: Text('Edit Profile (@${user.username})'),
               ),
-              SliverList(
-                delegate: SliverChildListDelegate(
-                  <Widget>[
-                    AvatarEditor(user: user),
-                    ProfileField(
-                      title: 'Display name',
-                      autofocus: true,
-                      focusNode: _displayNameFocus,
-                      nextNode: _realNameFocus,
-                      textCapitalization: TextCapitalization.words,
-                      value: user.displayName,
-                      onUpdate: (String value) {
-                        if (!AuthenticatedUser.isValidDisplayName(value))
-                          throw const LocalError('Your display name must be at least three characters long but shorter than 40 characters, and may only consist of letters and some minimal punctuation.');
-                        return Cruise.of(context).updateProfile(
-                          displayName: value,
-                        );
-                      },
-                    ),
-                    ProfileField(
-                      title: 'Real name',
-                      focusNode: _realNameFocus,
-                      nextNode: _pronounsFocus,
-                      textCapitalization: TextCapitalization.words,
-                      value: user.realName,
-                      onUpdate: (String value) {
-                        return Cruise.of(context).updateProfile(
-                          realName: value,
-                        );
-                      },
-                    ),
-                    ProfileField(
-                      title: 'Pronouns',
-                      focusNode: _pronounsFocus,
-                      nextNode: _emailFocus,
-                      textCapitalization: TextCapitalization.sentences,
-                      value: user.pronouns,
-                      onUpdate: (String value) {
-                        return Cruise.of(context).updateProfile(
-                          pronouns: value,
-                        );
-                      },
-                    ),
-                    ProfileField(
-                      title: 'E-mail address',
-                      focusNode: _emailFocus,
-                      nextNode: _roomNumberFocus,
-                      keyboardType: TextInputType.emailAddress,
-                      value: user.email,
-                      onUpdate: (String value) {
-                        if (!AuthenticatedUser.isValidEmail(value))
-                          throw const LocalError('E-mail is not valid.');
-                        return Cruise.of(context).updateProfile(
-                          email: value,
-                        );
-                      },
-                    ),
-                    ProfileField(
-                      title: 'Room number',
-                      focusNode: _roomNumberFocus,
-                      nextNode: _homeLocationFocus,
-                      keyboardType: TextInputType.number,
-                      value: user.roomNumber,
-                      onUpdate: (String value) {
-                        if (!AuthenticatedUser.isValidRoomNumber(value))
-                          throw const LocalError('Room number must be numeric.');
-                        return Cruise.of(context).updateProfile(
-                          roomNumber: value,
-                        );
-                      },
-                    ),
-                    ProfileField(
-                      title: 'Home location',
-                      focusNode: _homeLocationFocus,
-                      nextNode: _displayNameFocus,
-                      textCapitalization: TextCapitalization.words,
-                      value: user.homeLocation,
-                      onUpdate: (String value) {
-                        return Cruise.of(context).updateProfile(
-                          homeLocation: value,
-                        );
-                      },
-                    ),
-                  ],
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 26.0),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate(
+                    <Widget>[
+                      AvatarEditor(user: user),
+                      ProfileField(
+                        title: 'Display name',
+                        autofocus: true,
+                        focusNode: _displayNameFocus,
+                        nextNode: _realNameFocus,
+                        textCapitalization: TextCapitalization.words,
+                        maxLength: 40,
+                        value: user.displayName,
+                        onUpdate: (String value) {
+                          if (!AuthenticatedUser.isValidDisplayName(value))
+                            throw const LocalError('Your display name must be at least three characters long but shorter than 40 characters, and may only consist of letters and some minimal punctuation.');
+                          return Cruise.of(context).updateProfile(
+                            displayName: value,
+                          );
+                        },
+                      ),
+                      ProfileField(
+                        title: 'Real name',
+                        focusNode: _realNameFocus,
+                        nextNode: _pronounsFocus,
+                        textCapitalization: TextCapitalization.words,
+                        maxLength: 100,
+                        value: user.realName,
+                        onUpdate: (String value) {
+                          return Cruise.of(context).updateProfile(
+                            realName: value,
+                          );
+                        },
+                      ),
+                      ProfileField(
+                        title: 'Pronouns',
+                        focusNode: _pronounsFocus,
+                        nextNode: _emailFocus,
+                        textCapitalization: TextCapitalization.sentences,
+                        maxLength: 100,
+                        value: user.pronouns,
+                        onUpdate: (String value) {
+                          return Cruise.of(context).updateProfile(
+                            pronouns: value,
+                          );
+                        },
+                      ),
+                      ProfileField(
+                        title: 'Room number',
+                        focusNode: _roomNumberFocus,
+                        nextNode: _homeLocationFocus,
+                        keyboardType: TextInputType.number,
+                        maxLength: 5,
+                        value: user.roomNumber,
+                        onUpdate: (String value) {
+                          if (!AuthenticatedUser.isValidRoomNumber(value))
+                            throw const LocalError('Room number must be between 1000 and 99999 and must be numeric.');
+                          return Cruise.of(context).updateProfile(
+                            roomNumber: value,
+                          );
+                        },
+                      ),
+                      ProfileField(
+                        title: 'Home location',
+                        focusNode: _homeLocationFocus,
+                        nextNode: _displayNameFocus,
+                        textCapitalization: TextCapitalization.words,
+                        maxLength: 100,
+                        value: user.homeLocation,
+                        onUpdate: (String value) {
+                          return Cruise.of(context).updateProfile(
+                            homeLocation: value,
+                          );
+                        },
+                      ),
+                      ProfileField(
+                        title: 'E-mail address',
+                        focusNode: _emailFocus,
+                        nextNode: _roomNumberFocus,
+                        keyboardType: TextInputType.emailAddress,
+                        value: user.email,
+                        onUpdate: (String value) {
+                          if (!AuthenticatedUser.isValidEmail(value))
+                            throw const LocalError('E-mail is not valid.');
+                          return Cruise.of(context).updateProfile(
+                            email: value,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -194,56 +202,53 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
   Widget build(BuildContext context) {
     super.build(context);
     final ThemeData themeData = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: <Widget>[
-          Stack(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Center(
-                  child: SizedBox(
-                    height: 160.0,
-                    width: 160.0,
-                    child: Cruise.of(context).avatarFor(<User>[widget.user], size: 160.0),
+    return Column(
+      children: <Widget>[
+        Stack(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Center(
+                child: SizedBox(
+                  height: 160.0,
+                  width: 160.0,
+                  child: Cruise.of(context).avatarFor(<User>[widget.user], size: 160.0),
+                ),
+              ),
+            ),
+            PositionedDirectional(
+              end: 0.0,
+              bottom: 0.0,
+              child: Column(
+                children: <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.camera_alt),
+                    tooltip: 'Take photograph to use as new avatar.',
+                    onPressed: _busy ? null : () { _updateImage(ImageSource.camera); },
                   ),
-                ),
+                  IconButton(
+                    icon: const Icon(Icons.image),
+                    tooltip: 'Select new image for avatar from gallery.',
+                    onPressed: _busy ? null : () { _updateImage(ImageSource.gallery); },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    tooltip: 'Revert to the default image.',
+                    onPressed: _busy ? null : _deleteImage,
+                  ),
+                ],
               ),
-              PositionedDirectional(
-                end: 0.0,
-                bottom: 0.0,
-                child: Column(
-                  children: <Widget>[
-                    IconButton(
-                      icon: const Icon(Icons.camera_alt),
-                      tooltip: 'Take photograph to use as new avatar.',
-                      onPressed: _busy ? null : () { _updateImage(ImageSource.camera); },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.image),
-                      tooltip: 'Select new image for avatar from gallery.',
-                      onPressed: _busy ? null : () { _updateImage(ImageSource.gallery); },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      tooltip: 'Revert to the default image.',
-                      onPressed: _busy ? null : _deleteImage,
-                    ),
-                  ],
-                ),
+            ),
+            Visibility(
+              visible: _busy,
+              child: const Center(
+                child: CircularProgressIndicator(),
               ),
-              Visibility(
-                visible: _busy,
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-            ],
-          ),
-          Text(_error, style: themeData.textTheme.subhead.copyWith(color: themeData.errorColor), textAlign: TextAlign.center),
-        ],
-      ),
+            ),
+          ],
+        ),
+        Text(_error, style: themeData.textTheme.subhead.copyWith(color: themeData.errorColor), textAlign: TextAlign.center),
+      ],
     );
   }
 }
@@ -260,6 +265,7 @@ class ProfileField extends StatefulWidget {
     this.value,
     this.textCapitalization = TextCapitalization.none,
     this.keyboardType,
+    this.maxLength,
     @required this.onUpdate,
   }) : assert(onUpdate != null),
        assert(autofocus != null),
@@ -278,6 +284,8 @@ class ProfileField extends StatefulWidget {
   final TextCapitalization textCapitalization;
 
   final TextInputType keyboardType;
+
+  final int maxLength;
 
   final ProgressValueSetter<String> onUpdate;
 
@@ -341,7 +349,7 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
   Widget build(BuildContext context) {
     super.build(context);
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.only(top: 24.0),
       child: Stack(
         children: <Widget>[
           TextField(
@@ -354,6 +362,7 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
             textInputAction: widget.nextNode != null ? TextInputAction.next : TextInputAction.done,
             keyboardType: widget.keyboardType,
             textCapitalization: widget.textCapitalization,
+            maxLength: widget.maxLength,
             enabled: !_updating,
             decoration: InputDecoration(
               labelText: widget.title,

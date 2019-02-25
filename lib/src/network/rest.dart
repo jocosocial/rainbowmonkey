@@ -252,6 +252,7 @@ class RestTwitarr implements Twitarr {
       roomNumber: (user.room_number as Json).toScalar() as String,
       homeLocation: (user.home_location as Json).toScalar() as String,
       email: (user.email as Json).toScalar() as String,
+      role: _parseRole((user.role as Json).toScalar() as String),
       credentials: credentials.copyWith(username: (user.username as Json).toScalar() as String),
     );
   }
@@ -265,7 +266,20 @@ class RestTwitarr implements Twitarr {
       roomNumber: (user.room_number as Json).toScalar() as String,
       homeLocation: (user.home_location as Json).toScalar() as String,
       email: (user.email as Json).toScalar() as String,
+      role: _parseRole((user.role as Json).toScalar() as String),
     );
+  }
+
+  Role _parseRole(String role) {
+    switch (role) {
+      case 'admin': return Role.admin;
+      case 'tho': return Role.tho;
+      case 'moderator': return Role.moderator;
+      case 'user': return Role.user;
+      case 'muted': return Role.muted;
+      case 'banned': return Role.banned;
+      default: return Role.none;
+    }
   }
 
   @override
@@ -552,6 +566,8 @@ class RestTwitarr implements Twitarr {
       ..add('key', credentials.key)
       ..add('exclude_read_messages', 'true')
       ..add('app', 'plain');
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
     if (freshnessToken != null)
       body.add('after', '$freshnessToken');
     final String encodedBody = body.toUrlEncoded();
@@ -578,6 +594,8 @@ class RestTwitarr implements Twitarr {
     final FormData body = FormData()
       ..add('key', credentials.key)
       ..add('unread', 'true');
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
     if (freshnessToken != null)
       body.add('after', '$freshnessToken');
     final String encodedBody = body.toUrlEncoded();
@@ -607,6 +625,8 @@ class RestTwitarr implements Twitarr {
     final FormData body = FormData()
       ..add('key', credentials.key)
       ..add('app', 'plain');
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
     if (!markRead)
       body.add('skip_mark_read', 'true');
     final String encodedBody = body.toUrlEncoded();
@@ -642,9 +662,10 @@ class RestTwitarr implements Twitarr {
       final FormData body = FormData()
         ..add('key', credentials.key)
         ..add('app', 'plain');
+      if (credentials.asMod)
+        body.add('as_mod', 'true');
       final String jsonBody = json.encode(<String, dynamic>{
         'users': users
-          .where((User user) => user.username != credentials.username)
           .map<String>((User user) => user.username)
           .toList(),
         'subject': subject,
@@ -680,6 +701,8 @@ class RestTwitarr implements Twitarr {
       final FormData body = FormData()
         ..add('key', credentials.key)
         ..add('app', 'plain');
+      if (credentials.asMod)
+        body.add('as_mod', 'true');
       final String jsonBody = json.encode(<String, dynamic>{
         'text': text,
       });
@@ -831,6 +854,8 @@ class RestTwitarr implements Twitarr {
       final Map<String, dynamic> details = <String, dynamic>{
         'text': text,
       };
+      if (credentials.asMod)
+        details['as_mod'] = true;
       if (photo != null)
         details['photo'] = await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: 2);
       if (parentId != null)
@@ -946,18 +971,18 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
-  Progress<List<ForumMessageSummary>> getForumMessages({
+  Progress<ForumSummary> getForumThread({
     Credentials credentials,
     @required String threadId,
   }) {
     assert(credentials == null || credentials.key != null);
     assert(threadId != null);
-    return Progress<List<ForumMessageSummary>>((ProgressController<List<ForumMessageSummary>> completer) async {
+    return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
       final FormData body = FormData()
         ..add('app', 'plain');
       if (credentials != null)
         body.add('key', credentials.key);
-      return await compute<String, List<ForumMessageSummary>>(
+      return await compute<String, ForumSummary>(
         _parseForumThread,
         await completer.chain<String>(
           _requestUtf8(
@@ -989,6 +1014,8 @@ class RestTwitarr implements Twitarr {
         'subject': subject,
         'text': text,
       };
+      if (credentials.asMod)
+        details['as_mod'] = true;
       if (photos != null) {
         final List<String> photoIds = <String>[];
         for (Uint8List photo in photos)
@@ -1005,7 +1032,7 @@ class RestTwitarr implements Twitarr {
         ),
         steps: (photos != null ? photos.length : 0) + 1,
       );
-      return _parseForumCreationResult(rawData);
+      return _parseForumThread(rawData);
     });
   }
 
@@ -1020,7 +1047,7 @@ class RestTwitarr implements Twitarr {
     assert(threadId != null);
     assert(text != null);
     assert(photos == null || photos.isNotEmpty);
-    return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
+    return Progress<void>((ProgressController<void> completer) async {
       final FormData body = FormData()
         ..add('app', 'plain');
       if (credentials != null)
@@ -1028,6 +1055,8 @@ class RestTwitarr implements Twitarr {
       final Map<String, dynamic> details = <String, dynamic>{
         'text': text,
       };
+      if (credentials.asMod)
+        details['as_mod'] = true;
       if (photos != null) {
         final List<String> photoIds = <String>[];
         for (Uint8List photo in photos)
@@ -1058,34 +1087,34 @@ class RestTwitarr implements Twitarr {
     return result;
   }
 
-  static ForumSummary _parseForumBody(dynamic data) {
+  static ForumSummary _parseForumBody(dynamic forum) {
     return ForumSummary(
-      id: data.id.toString(),
-      subject: data.subject.toString(),
-      totalCount: (data.posts as Json).toInt(),
-      unreadCount: (data as Json).hasKey('new_posts') ? (data.new_posts as Json).toInt() : null,
-      lastMessageUser: _parseUser(data.last_post_author as Json),
-      lastMessageTimestamp: _parseDateTime(data.timestamp as Json),
+      id: forum.id.toString(),
+      subject: forum.subject.toString(),
+      sticky: (forum.sticky as Json).toBoolean(),
+      locked: (forum.locked as Json).toBoolean(),
+      totalCount: (forum.posts as Json).toInt(),
+      unreadCount: (forum as Json).hasKey('new_posts') ? (forum.new_posts as Json).toInt() : null,
+      lastMessageUser: _parseUser(forum.last_post_author as Json),
+      lastMessageTimestamp: _parseDateTime(forum.timestamp as Json),
     );
   }
 
-  static ForumSummary _parseForumCreationResult(String rawData) {
+  static ForumSummary _parseForumThread(String rawData) {
     final dynamic data = Json.parse(rawData);
     final dynamic forum = data.forum_thread as Json;
     final List<ForumMessageSummary> posts = _parseForumMessageList(forum.posts as Json);
     return ForumSummary(
       id: forum.id.toString(),
       subject: forum.subject.toString(),
+      sticky: (forum.sticky as Json).toBoolean(),
+      locked: (forum.locked as Json).toBoolean(),
       totalCount: (forum.post_count as Json).toInt(),
       unreadCount: (forum as Json).hasKey('new_posts') ? (forum.new_posts as Json).toInt() : null,
-      lastMessageUser: posts.single.user,
-      lastMessageTimestamp: posts.single.timestamp,
+      lastMessageUser: posts.last.user,
+      lastMessageTimestamp: posts.last.timestamp,
+      messages: posts,
     );
-  }
-
-  static List<ForumMessageSummary> _parseForumThread(String rawData) {
-    final dynamic data = Json.parse(rawData);
-    return _parseForumMessageList(data.forum_thread.posts as Json);
   }
 
   static List<ForumMessageSummary> _parseForumMessageList(dynamic posts) {
@@ -1255,8 +1284,17 @@ class RestTwitarr implements Twitarr {
       }
       final HttpClientResponse response = await request.close();
       await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
-      if (!expectedStatusCodes.contains(response.statusCode))
+      if (!expectedStatusCodes.contains(response.statusCode)) {
+        assert(() {
+          if (_debugVerbose) {
+            response.transform(utf8.decoder).join().then((String message) {
+              debugPrint('Full response:\n$message');
+            });
+          }
+          return true;
+        }());
         throw HttpServerError(response.statusCode, response.reasonPhrase, url);
+      }
       if (response.contentLength > 0)
         completer.advance(0.0, response.contentLength.toDouble());
       return response;

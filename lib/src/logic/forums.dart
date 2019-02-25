@@ -69,7 +69,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
       }
       removedThreads.forEach(_threads.remove);
     } on UserFriendlyError catch (error) {
-      _timer.interested();
+      _timer.interested(wasError: true);
       _reportError(error);
     } finally {
       _updating = false;
@@ -164,6 +164,12 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   String get subject => _subject ?? '';
   String _subject;
 
+  bool get sticky => _sticky ?? false;
+  bool _sticky;
+
+  bool get locked => _locked ?? false;
+  bool _locked;
+  
   bool get hasUnread => unreadCount > 0;
 
   int get unreadCount => _unreadCount ?? 0;
@@ -191,13 +197,12 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     startBusy();
     _updating = true;
     try {
-      final List<ForumMessageSummary> messages = await _twitarr.getForumMessages(
+      updateFrom(await _twitarr.getForumThread(
         credentials: _credentials,
         threadId: id,
-      ).asFuture();
-      _messages = messages.map<ForumMessage>((ForumMessageSummary summary) => ForumMessage.from(summary, _photoManager)).toList();
+      ).asFuture());
     } on UserFriendlyError catch (error) {
-      _timer.interested();
+      _timer.interested(wasError: true);
       _parent._reportError(error);
     } finally {
       _updating = false;
@@ -213,10 +218,14 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   bool updateFrom(ForumSummary thread) {
     final bool interesting = _totalCount != thread.totalCount || _unreadCount != thread.unreadCount;
     _subject = thread.subject;
+    _sticky = thread.sticky;
+    _locked = thread.locked;
     _totalCount = thread.totalCount;
     _unreadCount = thread.unreadCount;
     _lastMessageUser = thread.lastMessageUser.toUser(_photoManager);
     _lastMessageTimestamp = thread.lastMessageTimestamp;
+    if (thread.messages != null)
+      _messages = thread.messages.map<ForumMessage>((ForumMessageSummary summary) => ForumMessage.from(summary, _photoManager)).toList();
     _parent._childUpdated(this);
     notifyListeners();
     if (interesting)

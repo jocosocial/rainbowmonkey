@@ -227,7 +227,7 @@ abstract class Twitarr {
     Credentials credentials,
   });
 
-  Progress<List<ForumMessageSummary>> getForumMessages({
+  Progress<ForumSummary> getForumThread({
     Credentials credentials,
     @required String threadId,
   });
@@ -373,16 +373,23 @@ class ForumSummary {
   const ForumSummary({
     this.id,
     this.subject,
+    this.sticky,
+    this.locked,
     this.totalCount,
     this.unreadCount,
     this.lastMessageUser,
     this.lastMessageTimestamp,
+    this.messages,
   });
 
   final String id;
 
   final String subject;
 
+  final bool sticky;
+
+  final bool locked;
+  
   final int totalCount;
 
   final int unreadCount;
@@ -390,6 +397,8 @@ class ForumSummary {
   final UserSummary lastMessageUser;
 
   final DateTime lastMessageTimestamp;
+
+  final List<ForumMessageSummary> messages;
 }
 
 class ForumMessageSummary {

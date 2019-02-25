@@ -157,19 +157,41 @@ class _UserViewState extends State<UserView> {
           if (_bestUserValue is SuccessfulProgress<AuthenticatedUser>)
             user = _bestUserValue.value;
           if (user != null) {
-            header = Column(
-              key: _userHeader,
-              children: <Widget>[
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: FittedBox(
-                      child: Cruise.of(context).avatarFor(<User>[user]),
-                    ),
+            final List<Widget> children = <Widget>[
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: FittedBox(
+                    child: Cruise.of(context).avatarFor(<User>[user]),
                   ),
                 ),
-                Text(user.toString(), style: textTheme.display1),
-              ],
+              ),
+              Text(user.toString(), style: textTheme.display1),
+            ];
+            switch (user.role) {
+              case Role.admin:
+                children.add(Text('ADMINISTRATOR', style: textTheme.caption));
+                break;
+              case Role.tho:
+                children.add(Text('THO', style: textTheme.caption));
+                break;
+              case Role.moderator:
+                children.add(Text('MODERATOR', style: textTheme.caption));
+                break;
+              case Role.user:
+                break;
+              case Role.muted:
+                children.add(Text('ACCOUNT MUTED', style: textTheme.caption));
+                break;
+              case Role.banned:
+                children.add(Text('ACCOUNT BANNED', style: textTheme.caption));
+                break;
+              case Role.none:
+                break;
+            }
+            header = Column(
+              key: _userHeader,
+              children: children,
             );
             loggedIn = true;
           } else {

@@ -45,7 +45,7 @@ Future<void> main() async {
     expect(find.text('Home location'), findsOneWidget);
     expect(find.text('Hello'), findsNothing);
     expect(find.text('override location set'), findsNothing);
-    await tester.enterText(find.byType(TextField).at(5), 'Hello');
+    await tester.enterText(find.byType(TextField).at(4), 'Hello');
     twitarr.overrideHomeLocation = 'override location set';
     log.add('overridden');
     expect(find.text('Home location'), findsOneWidget);
