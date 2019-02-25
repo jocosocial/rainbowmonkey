@@ -217,7 +217,7 @@ class AuthenticatedUser extends User {
 
   static bool isValidRoomNumber(String roomNumber) {
     assert(roomNumber != null);
-    return roomNumber.contains(RegExp(r'^[0-9]+$'));
+    return roomNumber.contains(RegExp(r'^[0-9]{4,5}$'));
   }
 
   AuthenticatedUser copyWith({

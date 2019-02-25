@@ -149,6 +149,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                             Expanded(
                               child: TextField(
                                 controller: _textController,
+                                maxLength: 2000,
                                 onChanged: (String value) {
                                   setState(() {
                                     // changed state is in _textController
@@ -165,6 +166,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                                  counter: const SizedBox.shrink(),
                                   hintText: !loggedIn ? 'Log in to send messages'
                                           : _photo != null ? 'Image caption${ isModerating ? " (as moderator)" : ""}'
                                           : 'Message${ isModerating ? " (as moderator)" : ""}',

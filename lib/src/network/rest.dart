@@ -18,7 +18,7 @@ import 'twitarr.dart';
 const String _kShipTwitarrUrl = 'http://joco.hollandamerica.com/';
 const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
 
-const bool _debugVerbose = true;
+const bool _debugVerbose = false;
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);

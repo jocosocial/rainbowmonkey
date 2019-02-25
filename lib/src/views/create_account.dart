@@ -132,6 +132,7 @@ class _CreateAccountState extends State<CreateAccount> {
                             FocusScope.of(context).requestFocus(_password1Focus);
                           },
                           textInputAction: TextInputAction.next,
+                          maxLength: 40,
                           decoration: const InputDecoration(
                             labelText: 'User name',
                           ),
@@ -157,6 +158,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           },
                           obscureText: true,
                           textInputAction: TextInputAction.next,
+                          maxLength: 100,
                           decoration: const InputDecoration(
                             labelText: 'Password',
                           ),
@@ -180,6 +182,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           },
                           obscureText: true,
                           textInputAction: TextInputAction.next,
+                          maxLength: 100,
                           decoration: const InputDecoration(
                             labelText: 'Confirm password',
                             helperText: 'To make sure you know it.',
@@ -227,6 +230,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           },
                           textCapitalization: TextCapitalization.words,
                           textInputAction: TextInputAction.next,
+                          maxLength: 40,
                           decoration: const InputDecoration(
                             labelText: 'Display name (optional)',
                             helperText: 'Defaults to the username if not specified.',

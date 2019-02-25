@@ -289,6 +289,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                   Expanded(
                     child: TextField(
                       controller: _textController,
+                      maxLength: 10000,
                       onChanged: (String value) {
                         setState(() {
                           // changed state is in _textController
@@ -304,6 +305,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                        counter: const SizedBox.shrink(),
                         hintText: 'Message${ isModerating ? " (as moderator)" : ""}',
                       ),
                     ),
@@ -468,6 +470,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                     alignment: AlignmentDirectional.topStart,
                     child: TextFormField(
                       controller: _subject,
+                      maxLength: 200,
                       focusNode: _subjectFocus,
                       autofocus: true,
                       onFieldSubmitted: (String value) {
@@ -488,6 +491,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                       alignment: AlignmentDirectional.topStart,
                       child: TextFormField(
                         controller: _text,
+                        maxLength: 10000,
                         focusNode: _firstMessageFocus,
                         onFieldSubmitted: (String value) {
                           FocusScope.of(context).requestFocus(_usernameFocus);

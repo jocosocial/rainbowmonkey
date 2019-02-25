@@ -167,10 +167,12 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                           _submitCurrentMessage();
                       } : null,
                       textInputAction: TextInputAction.send,
+                      maxLength: 10000,
                       enabled: canPostInPrinciple,
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                        counter: const SizedBox.shrink(),
                         hintText: !loggedIn ? 'Log in to send messages'
                                 : widget.thread.locked ? 'Forum locked'
                                 : _photos.isEmpty ? 'Message${ isModerating ? " (as moderator)" : ""}'
@@ -299,6 +301,7 @@ class _StartForumViewState extends State<StartForumView> {
                       controller: _subject,
                       focusNode: _subjectFocus,
                       autofocus: true,
+                      maxLength: 200,
                       onFieldSubmitted: (String value) {
                         FocusScope.of(context).requestFocus(_firstMessageFocus);
                       },
@@ -322,6 +325,7 @@ class _StartForumViewState extends State<StartForumView> {
                       },
                       textInputAction: TextInputAction.send,
                       textCapitalization: TextCapitalization.sentences,
+                      maxLength: 10000,
                       maxLines: null,
                       decoration: InputDecoration(
                         labelText: 'First message${ isModerating ? " (as moderator)" : ""}',
