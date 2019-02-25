@@ -91,6 +91,38 @@ class User {
 
   User get effectiveUser => this; // ignore: avoid_returning_this
 
+  bool get canPost {
+    assert(role != null);
+    switch (role) {
+      case Role.admin:
+      case Role.tho:
+      case Role.moderator:
+      case Role.user:
+        return true;
+      case Role.muted:
+      case Role.banned:
+      case Role.none:
+        return false;
+    }
+    return null;
+  }
+
+  bool get canPostWhenLocked {
+    assert(role != null);
+    switch (role) {
+      case Role.admin:
+      case Role.tho:
+      case Role.moderator:
+        return true;
+      case Role.user:
+      case Role.muted:
+      case Role.banned:
+      case Role.none:
+        return false;
+    }
+    return null;
+  }
+
   @override
   String toString() {
     if (displayName == username || displayName == '')

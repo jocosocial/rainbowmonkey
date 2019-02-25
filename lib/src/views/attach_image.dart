@@ -13,8 +13,10 @@ class AttachImageButton extends StatelessWidget {
     @required List<Uint8List> images,
     @required this.onUpdate,
     @required this.allowMultiple,
+    this.enabled = true,
   }) : assert(onUpdate != null),
        assert(allowMultiple != null),
+       assert(enabled != null),
        images = images == null ? const <Uint8List>[] : images,
        super(key: key);
 
@@ -23,6 +25,8 @@ class AttachImageButton extends StatelessWidget {
   final ValueSetter<List<Uint8List>> onUpdate;
 
   final bool allowMultiple;
+
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +52,7 @@ class AttachImageButton extends StatelessWidget {
              : !allowMultiple ? 'Remove or replace the currently attached image'
              : images.length > 2 ? 'Attach another image or remove one of the attached images'
              : 'Attach another image or remove the attached image',
-      onPressed: Cruise.of(context).isLoggedIn ? () {
+      onPressed: Cruise.of(context).isLoggedIn && enabled ? () {
         List<Uint8List> currentImages = images;
         showDialog<void>(
           context: context,

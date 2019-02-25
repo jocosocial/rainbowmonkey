@@ -299,11 +299,11 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
-  Progress<List<ForumMessageSummary>> getForumMessages({
+  Progress<ForumSummary> getForumThread({
     Credentials credentials,
     @required String threadId,
   }) {
-    log.add('getForumMessages $threadId');
+    log.add('getForumThread $threadId');
     return null;
   }
 

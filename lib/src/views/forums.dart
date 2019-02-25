@@ -90,13 +90,14 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
   Widget build(BuildContext context) {
     final List<ForumMessage> messages = widget.thread.toList().reversed.toList() ?? const <ForumMessage>[];
     final bool loggedIn = Cruise.of(context).isLoggedIn;
-    final bool canPost = loggedIn && _textController.text.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.thread.subject),
       ),
       body: ModeratorBuilder(
         builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
+          final bool canPostInPrinciple = loggedIn && (widget.thread.locked ? currentUser.canPostWhenLocked : currentUser.canPost);
+          final bool canPost = canPostInPrinciple && _textController.text.isNotEmpty;
           return Column(
             children: <Widget>[
               Expanded(
@@ -166,19 +167,21 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                           _submitCurrentMessage();
                       } : null,
                       textInputAction: TextInputAction.send,
-                      enabled: loggedIn,
+                      enabled: canPostInPrinciple,
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
                         hintText: !loggedIn ? 'Log in to send messages'
+                                : widget.thread.locked ? 'Forum locked'
                                 : _photos.isEmpty ? 'Message${ isModerating ? " (as moderator)" : ""}'
                                 : _photos.length == 1 ? 'Image caption${ isModerating ? " (as moderator)" : ""}'
-                                : 'Image captions',
+                                : 'Image captions${ isModerating ? " (as moderator)" : ""}',
                       ),
                     ),
                   ),
                   AttachImageButton(
                     images: _photos,
+                    enabled: canPostInPrinciple,
                     onUpdate: (List<Uint8List> newPhotos) {
                       setState(() {
                         _photos = newPhotos;

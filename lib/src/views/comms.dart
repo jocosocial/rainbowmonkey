@@ -154,6 +154,12 @@ class CommsView extends StatelessWidget implements View {
               final List<ForumThread> forumThreads = forums.toList()
                 ..sort(
                   (ForumThread a, ForumThread b) {
+                    if (a.sticky != b.sticky) {
+                      if (a.sticky)
+                        return -1;
+                      assert(b.sticky);
+                      return 1;
+                    }
                     if (b.lastMessageTimestamp != a.lastMessageTimestamp)
                       return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
                     return b.id.compareTo(a.id);
@@ -274,10 +280,13 @@ class CommsView extends StatelessWidget implements View {
                     final String unread = forum.unreadCount > 0 ? ' (${forum.unreadCount} new)' : '';
                     final String lastMessage = 'Most recent from ${forum.lastMessageUser}';
                     return ListTile(
-                      leading: Badge(
-                        child: const CircleAvatar(child: Icon(Icons.forum)),
-                        alignment: const AlignmentDirectional(1.1, 1.1),
-                        enabled: forum.hasUnread,
+                      leading: Tooltip(
+                        message: forum.sticky ? 'Sticky forum' : 'Forum',
+                        child: Badge(
+                          child: CircleAvatar(child: Icon(forum.sticky ? Icons.feedback : Icons.forum)),
+                          alignment: const AlignmentDirectional(1.1, 1.1),
+                          enabled: forum.hasUnread,
+                        ),
                       ),
                       title: Row(
                         children: <Widget>[
