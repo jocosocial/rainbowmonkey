@@ -11,19 +11,22 @@ class Credentials {
     this.password,
     this.key,
     this.loginTimestamp,
-  });
+    this.asMod = false,
+  }) : assert(asMod != null);
 
   Credentials copyWith({
     String username,
     String password,
     String key,
     DateTime loginTimestamp,
+    bool asMod,
   }) {
     return Credentials(
       username: username ?? this.username,
       password: password ?? this.password,
       key: key ?? this.key,
       loginTimestamp: loginTimestamp ?? this.loginTimestamp,
+      asMod: asMod ?? this.asMod,
     );
   }
 
@@ -31,9 +34,12 @@ class Credentials {
   final String password;
   final String key;
   final DateTime loginTimestamp;
+  final bool asMod;
 
+  String get effectiveUsername => asMod ? 'moderator' : username;
+  
   @override
-  String toString() => '$runtimeType($username)';
+  String toString() => '$runtimeType(${ asMod ? "moderator; login " : ""}$username)';
 }
 
 @immutable
@@ -60,6 +66,16 @@ class User {
       email = null,
       role = Role.none;
 
+  const User.moderator(
+  ) : username = 'moderator',
+      displayName = null,
+      realName = null,
+      pronouns = null,
+      roomNumber = null,
+      homeLocation = null,
+      email = null,
+      role = Role.moderator;
+
   final String username;
   final String displayName;
   final String realName;
@@ -71,13 +87,17 @@ class User {
 
   bool sameAs(User other) => other != null && username == other.username;
 
+  bool get isModerator => username == 'moderator';
+
+  User get effectiveUser => this; // ignore: avoid_returning_this
+
   @override
   String toString() {
     if (displayName == username || displayName == '')
       return '@$username';
     return '$displayName (@$username)';
   }
-
+  
   @override
   bool operator ==(Object other) {
     if (other.runtimeType != runtimeType)
@@ -130,6 +150,9 @@ class AuthenticatedUser extends User {
 
   final Credentials credentials;
 
+  @override
+  User get effectiveUser => credentials.asMod ? const User.moderator() : this;
+
   static bool isValidUsername(String username) {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L10
     assert(username != null);
@@ -163,5 +186,29 @@ class AuthenticatedUser extends User {
   static bool isValidRoomNumber(String roomNumber) {
     assert(roomNumber != null);
     return roomNumber.contains(RegExp(r'^[0-9]+$'));
+  }
+
+  AuthenticatedUser copyWith({
+    String username,
+    String displayName,
+    String realName,
+    String pronouns,
+    String roomNumber,
+    String homeLocation,
+    String email,
+    Role role,
+    Credentials credentials,
+  }) {
+    return AuthenticatedUser(
+      username: username ?? this.username,
+      displayName: displayName ?? this.displayName,
+      realName: realName ?? this.realName,
+      pronouns: pronouns ?? this.pronouns,
+      roomNumber: roomNumber ?? this.roomNumber,
+      homeLocation: homeLocation ?? this.homeLocation,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      credentials: credentials ?? this.credentials,
+    );
   }
 }

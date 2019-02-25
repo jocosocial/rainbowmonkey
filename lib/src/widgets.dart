@@ -1343,3 +1343,51 @@ class PathBorder extends ShapeBorder {
   @override
   void paint(Canvas canvas, Rect rect, { TextDirection textDirection }) { }
 }
+
+typedef ModeratorBuilderCallback = Widget Function(BuildContext context, AuthenticatedUser user, bool canModerate, bool isModerating);
+
+class ModeratorBuilder extends StatelessWidget {
+  const ModeratorBuilder({
+    Key key,
+    this.builder,
+  }) : super(key: key);
+
+  final ModeratorBuilderCallback builder;
+  
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
+      valueListenable: Cruise.of(context).user.best,
+      builder: (BuildContext context, ProgressValue<AuthenticatedUser> userProgress, Widget child) {
+        final AuthenticatedUser user = userProgress is SuccessfulProgress<AuthenticatedUser> ? userProgress.value : null;
+        bool canModerate = false;
+        if (user != null) {
+          switch (user.role) {
+            case Role.admin:
+            case Role.tho:
+            case Role.moderator:
+              canModerate = true;
+              break;
+            case Role.user:
+            case Role.muted:
+            case Role.banned:
+            case Role.none:
+              break;
+          }
+        }
+        final bool isModerating = canModerate && user.credentials.asMod;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.fastOutSlowIn,
+          decoration: BoxDecoration(
+            border: Border.all(
+              width: isModerating ? 12.0 : 0,
+              color: Theme.of(context).accentColor,
+            ),
+          ),
+          child: builder(context, user, canModerate, isModerating),
+        );
+      },
+    );
+  }
+}

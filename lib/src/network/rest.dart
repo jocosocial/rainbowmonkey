@@ -18,7 +18,7 @@ import 'twitarr.dart';
 const String _kShipTwitarrUrl = 'http://joco.hollandamerica.com/';
 const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
 
-const bool _debugVerbose = false;
+const bool _debugVerbose = true;
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
@@ -566,6 +566,8 @@ class RestTwitarr implements Twitarr {
       ..add('key', credentials.key)
       ..add('exclude_read_messages', 'true')
       ..add('app', 'plain');
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
     if (freshnessToken != null)
       body.add('after', '$freshnessToken');
     final String encodedBody = body.toUrlEncoded();
@@ -592,6 +594,8 @@ class RestTwitarr implements Twitarr {
     final FormData body = FormData()
       ..add('key', credentials.key)
       ..add('unread', 'true');
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
     if (freshnessToken != null)
       body.add('after', '$freshnessToken');
     final String encodedBody = body.toUrlEncoded();
@@ -621,6 +625,8 @@ class RestTwitarr implements Twitarr {
     final FormData body = FormData()
       ..add('key', credentials.key)
       ..add('app', 'plain');
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
     if (!markRead)
       body.add('skip_mark_read', 'true');
     final String encodedBody = body.toUrlEncoded();
@@ -656,9 +662,10 @@ class RestTwitarr implements Twitarr {
       final FormData body = FormData()
         ..add('key', credentials.key)
         ..add('app', 'plain');
+      if (credentials.asMod)
+        body.add('as_mod', 'true');
       final String jsonBody = json.encode(<String, dynamic>{
         'users': users
-          .where((User user) => user.username != credentials.username)
           .map<String>((User user) => user.username)
           .toList(),
         'subject': subject,
@@ -694,6 +701,8 @@ class RestTwitarr implements Twitarr {
       final FormData body = FormData()
         ..add('key', credentials.key)
         ..add('app', 'plain');
+      if (credentials.asMod)
+        body.add('as_mod', 'true');
       final String jsonBody = json.encode(<String, dynamic>{
         'text': text,
       });
@@ -845,6 +854,8 @@ class RestTwitarr implements Twitarr {
       final Map<String, dynamic> details = <String, dynamic>{
         'text': text,
       };
+      if (credentials.asMod)
+        details['as_mod'] = true;
       if (photo != null)
         details['photo'] = await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: 2);
       if (parentId != null)
@@ -1003,6 +1014,8 @@ class RestTwitarr implements Twitarr {
         'subject': subject,
         'text': text,
       };
+      if (credentials.asMod)
+        details['as_mod'] = true;
       if (photos != null) {
         final List<String> photoIds = <String>[];
         for (Uint8List photo in photos)
@@ -1042,6 +1055,8 @@ class RestTwitarr implements Twitarr {
       final Map<String, dynamic> details = <String, dynamic>{
         'text': text,
       };
+      if (credentials.asMod)
+        details['as_mod'] = true;
       if (photos != null) {
         final List<String> photoIds = <String>[];
         for (Uint8List photo in photos)
@@ -1269,8 +1284,17 @@ class RestTwitarr implements Twitarr {
       }
       final HttpClientResponse response = await request.close();
       await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
-      if (!expectedStatusCodes.contains(response.statusCode))
+      if (!expectedStatusCodes.contains(response.statusCode)) {
+        assert(() {
+          if (_debugVerbose) {
+            response.transform(utf8.decoder).join().then((String message) {
+              debugPrint('Full response:\n$message');
+            });
+          }
+          return true;
+        }());
         throw HttpServerError(response.statusCode, response.reasonPhrase, url);
+      }
       if (response.contentLength > 0)
         completer.advance(0.0, response.contentLength.toDouble());
       return response;

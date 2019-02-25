@@ -293,7 +293,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
       if (thread.messages != null) {
         _unreadCount = 0;
         for (SeamailMessage message in _messages.values) {
-          if (!message.readReceipts.containsKey(_credentials.username))
+          if (!message.readReceipts.containsKey(_credentials.effectiveUsername))
             _unreadCount += 1;
         }
         _hasUnread = _unreadCount > 0;

@@ -128,12 +128,8 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
       appBar: AppBar(
         title: const Text('Twitarr'),
       ),
-      body: ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
-        valueListenable: Cruise.of(context).user.best,
-        builder: (BuildContext context, ProgressValue<AuthenticatedUser> user, Widget child) {
-          User currentUser;
-          if (user is SuccessfulProgress<AuthenticatedUser>)
-            currentUser = user.value;
+      body: ModeratorBuilder(
+        builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
           return BusyIndicator(
             busy: _stream.busy,
             child: AnimatedBuilder(
@@ -170,8 +166,8 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
                                   hintText: !loggedIn ? 'Log in to send messages'
-                                          : _photo != null ? 'Enter a message to submit with the image'
-                                          : 'Message',
+                                          : _photo != null ? 'Image caption${ isModerating ? " (as moderator)" : ""}'
+                                          : 'Message${ isModerating ? " (as moderator)" : ""}',
                                 ),
                               ),
                             ),
@@ -186,7 +182,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                             ),
                             IconButton(
                               icon: const Icon(Icons.send),
-                              tooltip: 'Send message',
+                              tooltip: 'Send message{ isModerating ? " (as moderator)" : ""}',
                               onPressed: canPost ? _submitCurrentMessage : null,
                             ),
                           ],
@@ -219,7 +215,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                       final StreamPost post = _stream[index];
                       if (post == const StreamPost.sentinel())
                         return null;
-                      return Entry(post: post, animation: _animationFor(post), currentUser: currentUser);
+                      return Entry(post: post, animation: _animationFor(post), currentUser: currentUser.effectiveUser);
                     },
                     onDidFinishLayout: () {
                       if (_atZero) {

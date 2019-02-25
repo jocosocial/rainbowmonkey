@@ -171,6 +171,9 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   void retryUserLogin() { }
 
   @override
+  void setAsMod({ @required bool enabled }) { }
+
+  @override
   Progress<Credentials> logout({ bool serverChanging = false }) {
     return const Progress<Credentials>.idle();
   }
