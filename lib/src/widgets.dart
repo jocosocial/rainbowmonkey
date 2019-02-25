@@ -1353,7 +1353,7 @@ class ModeratorBuilder extends StatelessWidget {
   }) : super(key: key);
 
   final ModeratorBuilderCallback builder;
-  
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(

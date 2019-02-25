@@ -169,7 +169,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
 
   bool get locked => _locked ?? false;
   bool _locked;
-  
+
   bool get hasUnread => unreadCount > 0;
 
   int get unreadCount => _unreadCount ?? 0;

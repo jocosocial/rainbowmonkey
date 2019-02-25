@@ -86,6 +86,7 @@ class CommsView extends StatelessWidget implements View {
   }
 
   static Future<void> createNewSeamail(BuildContext context, User currentUser, { List<User> others }) async {
+    assert(currentUser != null);
     final SeamailThread thread = await Navigator.push(
       context,
       MaterialPageRoute<SeamailThread>(

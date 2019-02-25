@@ -217,7 +217,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                       final StreamPost post = _stream[index];
                       if (post == const StreamPost.sentinel())
                         return null;
-                      return Entry(post: post, animation: _animationFor(post), currentUser: currentUser.effectiveUser);
+                      return Entry(post: post, animation: _animationFor(post), currentUser: currentUser?.effectiveUser);
                     },
                     onDidFinishLayout: () {
                       if (_atZero) {

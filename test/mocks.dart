@@ -89,6 +89,22 @@ class TrivialDataStore implements DataStore {
     log.add('LoggingDataStore.updateFreshnessToken');
     storedFreshnessToken = await callback(storedFreshnessToken);
   }
+
+  @override
+  Future<void> heardAboutUserPhoto(String id, DateTime updateTime) async { }
+
+  @override
+  Future<Uint8List> putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) async {
+    return await callback();
+  }
+
+  @override
+  Future<void> removeImage(String serverKey, String cacheName, String photoId) async { }
+
+  @override
+  Future<Map<String, DateTime>> restoreUserPhotoList() async {
+    return <String, DateTime>{};
+  }
 }
 
 class TestCruiseModel extends ChangeNotifier implements CruiseModel {
@@ -210,7 +226,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }
 
   @override
-  Future<Uint8List> putImageIfAbsent(String username, ImageFetcher callback) {
+  Future<Uint8List> putImageIfAbsent(String username, ImageFetcher callback, { @required bool thumbnail }) {
     return callback();
   }
 

@@ -59,6 +59,9 @@ class LoggingTwitarr extends Twitarr {
   @override
   TwitarrConfiguration get configuration => _configuration;
 
+  @override
+  String get photoCacheKey => '$runtimeType';
+
   int _stamp = 0;
 
   @override

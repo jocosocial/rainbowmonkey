@@ -113,6 +113,8 @@ abstract class Twitarr {
 
   TwitarrConfiguration get configuration;
 
+  String get photoCacheKey; // a key that's unique to the current source of photos
+
   Progress<AuthenticatedUser> createAccount({
     @required String username,
     @required String password,
@@ -389,7 +391,7 @@ class ForumSummary {
   final bool sticky;
 
   final bool locked;
-  
+
   final int totalCount;
 
   final int unreadCount;

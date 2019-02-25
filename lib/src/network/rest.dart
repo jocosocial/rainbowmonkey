@@ -108,6 +108,9 @@ class RestTwitarr implements Twitarr {
   TwitarrConfiguration get configuration => isAuto ? const AutoTwitarrConfiguration() : RestTwitarrConfiguration(baseUrl: baseUrl);
 
   @override
+  String get photoCacheKey => baseUrl;
+
+  @override
   double debugLatency = 0.0;
 
   @override
@@ -1146,13 +1149,13 @@ class RestTwitarr implements Twitarr {
     if (value.valueType == double) {
       final int epoch = value.toInt();
       if (epoch >= 10000000000000)
-        return DateTime.fromMicrosecondsSinceEpoch(epoch);
+        return DateTime.fromMicrosecondsSinceEpoch(epoch, isUtc: true);
       if (epoch >= 10000000000)
-        return DateTime.fromMillisecondsSinceEpoch(epoch);
-     return DateTime.fromMillisecondsSinceEpoch(epoch * 1000);
+        return DateTime.fromMillisecondsSinceEpoch(epoch, isUtc: true);
+     return DateTime.fromMillisecondsSinceEpoch(epoch * 1000, isUtc: true);
     }
     if (value.valueType == String)
-      return DateTime.parse(value.toString());
+      return DateTime.parse(value.toString()).toUtc();
     throw FormatException('Could not interpret DateTime from server', '$value');
   }
 

@@ -37,7 +37,7 @@ class Credentials {
   final bool asMod;
 
   String get effectiveUsername => asMod ? 'moderator' : username;
-  
+
   @override
   String toString() => '$runtimeType(${ asMod ? "moderator; login " : ""}$username)';
 }
@@ -129,7 +129,7 @@ class User {
       return '@$username';
     return '$displayName (@$username)';
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (other.runtimeType != runtimeType)
