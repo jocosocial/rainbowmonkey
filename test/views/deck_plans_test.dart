@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -43,43 +44,45 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
-    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, -height));
+    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, -height - kDragSlopDefault));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
-    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 1.6));
+    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 1.6 - kDragSlopDefault));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
 
-    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 1.1));
+    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 1.1 - kDragSlopDefault));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]);
 
-    await tester.flingFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 1.1), 1000.0);
+    await tester.flingFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 1.1 - kDragSlopDefault), 1000.0);
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
 
-    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, height * 7.1));
+    await tester.dragFrom(tester.getCenter(find.text('5')), Offset(0.0, height * 7.1 + kDragSlopDefault));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
-    await tester.flingFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 7.1), 1000.0);
+    await tester.flingFrom(tester.getCenter(find.text('5')), Offset(0.0, -height * 7.1 - kDragSlopDefault), 1000.0);
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
 
-    await tester.flingFrom(tester.getCenter(find.text('5')), Offset(0.0, height * 6.2), 1000.0);
+    await tester.flingFrom(tester.getCenter(find.text('5')), Offset(0.0, height * 6.2 + kDragSlopDefault), 1000.0);
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expectOpacities(tester, <double>[0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
     final TestGesture gesture = await tester.startGesture(tester.getCenter(find.text('9')));
+    await gesture.moveBy(const Offset(0.0, kDragSlopDefault));
     await gesture.moveBy(Offset(0.0, height * 0.5));
+    await tester.pump();
     expectOpacities(tester, <double>[0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
     await tester.pumpWidget(const Placeholder());
