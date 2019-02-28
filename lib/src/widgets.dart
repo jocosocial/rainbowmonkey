@@ -735,7 +735,6 @@ class ServerTextView extends StatefulWidget {
 }
 
 class _ServerTextViewState extends State<ServerTextView> {
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
