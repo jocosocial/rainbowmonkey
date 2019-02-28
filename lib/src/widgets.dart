@@ -454,7 +454,7 @@ class TimerNotifier extends ValueNotifier<DateTime> {
   }
 }
 
-class ChatLine extends StatelessWidget {
+class ChatLine extends StatefulWidget {
   const ChatLine({
     Key key,
     @required this.user,
@@ -462,6 +462,7 @@ class ChatLine extends StatelessWidget {
     @required this.messages,
     this.photos,
     @required this.timestamp,
+    this.onPressed,
   }) : assert(user != null),
        assert(isCurrentUser != null),
        assert(messages != null),
@@ -473,27 +474,62 @@ class ChatLine extends StatelessWidget {
   final List<String> messages;
   final List<Photo> photos;
   final DateTime timestamp;
+  final VoidCallback onPressed;
+
+  @override
+  State<ChatLine> createState() => _ChatLineState();
+}
+
+class _ChatLineState extends State<ChatLine> {
+  bool _pressed = false;
+
+  void _handleTapDown(TapDownDetails details) {
+    setState(() {
+      _pressed = true;
+    });
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    setState(() {
+      _pressed = false;
+    });
+    if (widget.onPressed != null)
+      widget.onPressed();
+  }
+
+  void _handleTapCancel() {
+    setState(() {
+      _pressed = false;
+    });
+  }
+
+  @override
+  void didUpdateWidget(ChatLine oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.onPressed == null)
+      _pressed = false;
+  }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> lines = <Widget>[];
     final ThemeData theme = Theme.of(context);
-    for (String message in messages)
+    for (String message in widget.messages)
       lines.add(Text(message));
-    if (photos != null) {
-      for (Photo photo in photos) {
+    if (widget.photos != null) {
+      for (Photo photo in widget.photos) {
         lines.add(PhotoImage(photo: photo));
       }
     }
-    final TextDirection direction = isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
+    final TextDirection direction = widget.isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
     final DateTime now = Now.of(context);
-    final String duration = '${prettyDuration(now.difference(timestamp))}';
+    final String duration = '${prettyDuration(now.difference(widget.timestamp))}';
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
       child: Directionality(
         textDirection: direction,
         child: Tooltip(
-          message: '$user • $timestamp',
+          message: '${widget.user} • ${widget.timestamp}',
           child: ListBody(
             children: <Widget>[
               Row(
@@ -503,7 +539,7 @@ class ChatLine extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Directionality(
                       textDirection: TextDirection.ltr,
-                      child: Cruise.of(context).avatarFor(<User>[user]),
+                      child: Cruise.of(context).avatarFor(<User>[widget.user]),
                     ),
                   ),
                   Flexible(
@@ -511,32 +547,39 @@ class ChatLine extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         IntrinsicWidth(
-                          child: Container(
-                            margin: const EdgeInsetsDirectional.only(end: 20.0),
-                            padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
-                            decoration: ShapeDecoration(
-                              gradient: LinearGradient(
-                                begin: const Alignment(0.0, -1.0),
-                                end: const Alignment(0.0, 0.6),
-                                colors: <Color>[
-                                  Color.lerp(theme.primaryColor, Colors.white, 0.15),
-                                  theme.primaryColor,
-                                ],
+                          child: GestureDetector(
+                            onTapDown: widget.onPressed != null ? _handleTapDown : null,
+                            onTapUp: widget.onPressed != null ? _handleTapUp : null,
+                            onTapCancel: widget.onPressed != null ? _handleTapCancel : null,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              curve: Curves.fastOutSlowIn,
+                              margin: const EdgeInsetsDirectional.only(end: 20.0),
+                              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                              decoration: ShapeDecoration(
+                                gradient: LinearGradient(
+                                  begin: _pressed ? const Alignment(0.0, 0.6) : const Alignment(0.0, -1.0),
+                                  end: _pressed ? const Alignment(0.0, -1.0) : const Alignment(0.0, 0.6),
+                                  colors: <Color>[
+                                    Color.lerp(theme.primaryColor, Colors.white, 0.15),
+                                    theme.primaryColor,
+                                  ],
+                                ),
+                                shadows: kElevationToShadow[1],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
                               ),
-                              shadows: kElevationToShadow[1],
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                            ),
-                            child: DefaultTextStyle(
-                              style: theme.primaryTextTheme.body1,
-                              textAlign: isCurrentUser ? TextAlign.right : TextAlign.left,
-                              child: Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: lines,
+                              child: DefaultTextStyle(
+                                style: theme.primaryTextTheme.body1,
+                                textAlign: widget.isCurrentUser ? TextAlign.right : TextAlign.left,
+                                child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: lines,
+                                  ),
                                 ),
                               ),
                             ),
@@ -548,7 +591,7 @@ class ChatLine extends StatelessWidget {
                           textAlign: TextAlign.end,
                           child: Directionality(
                             textDirection: TextDirection.ltr,
-                            child: isCurrentUser ? Text(duration) : Text('$user • $duration'),
+                            child: widget.isCurrentUser ? Text(duration) : Text('${widget.user} • $duration'),
                           ),
                         ),
                       ],

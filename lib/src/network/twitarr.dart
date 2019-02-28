@@ -218,6 +218,11 @@ abstract class Twitarr {
     int limit = 100,
   });
 
+  Progress<StreamMessageSummary> getTweet({
+    Credentials credentials,
+    String threadId,
+  });
+
   Progress<void> postTweet({
     @required Credentials credentials,
     @required String text,
@@ -335,22 +340,11 @@ class StreamMessageSummary {
     this.photo,
     @required this.timestamp,
     this.boundaryToken,
+    this.locked,
     this.reactions,
     this.parents,
-  }) : assert(timestamp != null),
-       deleted = false;
-
-  const StreamMessageSummary.deleted({
-    this.id,
-    @required this.timestamp,
-    this.boundaryToken,
-  }) : assert(timestamp != null),
-       user = null,
-       text = null,
-       photo = null,
-       reactions = null,
-       parents = null,
-       deleted = true;
+    this.children,
+  }) : assert(timestamp != null);
 
   final String id;
 
@@ -364,11 +358,13 @@ class StreamMessageSummary {
 
   final int boundaryToken;
 
+  final bool locked;
+
   final Map<String, Set<UserSummary>> reactions; // String=null is "likes"
 
   final List<String> parents;
 
-  final bool deleted;
+  final List<StreamMessageSummary> children;
 }
 
 class ForumSummary {
@@ -454,10 +450,11 @@ class AnnouncementSummary {
 
 class UserSummary {
   const UserSummary({
-    this.username,
+    @required this.username,
     this.displayName,
-    this.photoTimestamp,
-  });
+    @required this.photoTimestamp,
+  }) : assert(username != null),
+       assert(photoTimestamp != null);
 
   final String username;
 

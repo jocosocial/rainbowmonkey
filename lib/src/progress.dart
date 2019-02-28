@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import 'utils.dart';
 
-const bool _verbose = false;
+const bool _verbose = true;
 
 enum _ProgressIndex { idle, starting, active, failed, successful }
 

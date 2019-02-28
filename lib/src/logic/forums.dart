@@ -45,6 +45,14 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
 
   final Map<String, ForumThread> _threads = <String, ForumThread>{};
 
+  VariableTimer _timer;
+
+  ValueListenable<bool> get active => _timer.active;
+
+  void reload() {
+    _timer.reload();
+  }
+
   bool _updating = false;
   @protected
   Future<void> update() async {
@@ -60,8 +68,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
       for (ForumSummary threadSummary in newThreads) {
         if (_threads.containsKey(threadSummary.id)) {
           final ForumThread thread = _threads[threadSummary.id];
-          if (thread.updateFrom(threadSummary))
-            _timer.interested();
+          thread.updateFrom(threadSummary);
           removedThreads.remove(thread);
         } else {
           _threads[threadSummary.id] = ForumThread.from(threadSummary, this, _twitarr, _credentials, photoManager);
@@ -110,8 +117,6 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   void _reportError(UserFriendlyError error) {
     onError(error.toString());
   }
-
-  VariableTimer _timer;
 
   @override
   void addListener(VoidCallback listener) {
@@ -212,11 +217,8 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     notifyListeners();
   }
 
-  // Returns if something interesting was in the update.
-  // implying we should check again soon
   @protected
-  bool updateFrom(ForumSummary thread) {
-    final bool interesting = _totalCount != thread.totalCount || _unreadCount != thread.unreadCount;
+  void updateFrom(ForumSummary thread) {
     _subject = thread.subject;
     _sticky = thread.sticky;
     _locked = thread.locked;
@@ -228,9 +230,6 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
       _messages = thread.messages.map<ForumMessage>((ForumMessageSummary summary) => ForumMessage.from(summary, _photoManager)).toList();
     _parent._childUpdated(this);
     notifyListeners();
-    if (interesting)
-      _timer.interested();
-    return interesting;
   }
 
   Progress<void> send(String text, { @required List<Uint8List> photos }) {
@@ -252,6 +251,12 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   }
 
   VariableTimer _timer;
+
+  ValueListenable<bool> get active => _timer.active;
+
+  void reload() {
+    _timer.reload();
+  }
 
   void _init() {
     _timer = VariableTimer(maxUpdatePeriod, update);
