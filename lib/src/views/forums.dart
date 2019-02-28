@@ -93,6 +93,18 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.thread.subject),
+        actions: <Widget>[
+          ValueListenableBuilder<bool>(
+            valueListenable: widget.thread.active,
+            builder: (BuildContext context, bool active, Widget child) {
+              return IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Force refresh',
+                onPressed: active ? null : widget.thread.reload,
+              );
+            },
+          ),
+        ],
       ),
       body: ModeratorBuilder(
         builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
