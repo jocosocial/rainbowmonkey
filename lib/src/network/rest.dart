@@ -368,17 +368,23 @@ class RestTwitarr implements Twitarr {
     }).toList();
   }
 
+  final Map<String, ServerText> _serverTextCache = <String, ServerText>{};
+
   @override
   Progress<ServerText> fetchServerText(String filename) {
+    if (_serverTextCache.containsKey(filename))
+      return Progress<ServerText>.completed(_serverTextCache[filename]);
     final FormData body = FormData()
       ..add('app', 'plain');
     return Progress<ServerText>((ProgressController<ServerText> completer) async {
-      return await compute<String, ServerText>(
+      final ServerText result = await compute<String, ServerText>(
         _parseServerText,
         await completer.chain<String>(
           _requestUtf8('GET', 'api/v2/text/${Uri.encodeComponent(filename)}?${body.toUrlEncoded()}'),
         ),
       );
+      _serverTextCache[filename] = result;
+      return result;
     });
   }
 
