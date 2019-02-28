@@ -24,6 +24,8 @@
 	<string>3</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>${PRODUCT_NAME} would like access to your camera for photo posting.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Used when saving a photo from Twit-arr.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
