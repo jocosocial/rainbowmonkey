@@ -123,7 +123,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final bool loggedIn = Cruise.of(context).isLoggedIn;
-    final bool canPost = loggedIn && _textController.text.isNotEmpty;
+    final bool canPost = loggedIn && _textController.text.trim().isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Twitarr'),
@@ -158,8 +158,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                                 },
                                 onSubmitted: canPost ? (String value) {
                                   assert(_textController.text == value);
-                                  if (_textController.text.isNotEmpty)
-                                    _submitCurrentMessage();
+                                  _submitCurrentMessage();
                                 } : null,
                                 textInputAction: TextInputAction.send,
                                 enabled: loggedIn,

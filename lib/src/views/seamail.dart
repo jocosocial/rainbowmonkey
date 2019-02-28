@@ -296,11 +296,10 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                           assert(_textController.text == value);
                         });
                       },
-                      onSubmitted: (String value) {
+                      onSubmitted: _textController.text.trim().isNotEmpty ? (String value) {
                         assert(_textController.text == value);
-                        if (_textController.text.isNotEmpty)
-                          _submitCurrentMessage();
-                      },
+                        _submitCurrentMessage();
+                      } : null,
                       textInputAction: TextInputAction.send,
                       decoration: InputDecoration(
                         border: InputBorder.none,
@@ -313,7 +312,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                   IconButton(
                     icon: const Icon(Icons.send),
                     tooltip: 'Send message${ isModerating ? " (as moderator)" : ""}',
-                    onPressed: _textController.text.isNotEmpty ? _submitCurrentMessage : null,
+                    onPressed: _textController.text.trim().isNotEmpty ? _submitCurrentMessage : null,
                   ),
                 ],
               ),
@@ -372,8 +371,8 @@ class _StartSeamailViewState extends State<StartSeamailView> {
 
   bool get _valid {
     return _users.length >= 2
-        && _subject.text.isNotEmpty
-        && _text.text.isNotEmpty;
+        && _subject.text.trim().isNotEmpty
+        && _text.text.trim().isNotEmpty;
   }
 
   static const Widget _autocompletePlaceholder = SliverToBoxAdapter(
