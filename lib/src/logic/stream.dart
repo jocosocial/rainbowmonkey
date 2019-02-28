@@ -195,6 +195,12 @@ class TweetStream extends ChangeNotifier with BusyMixin {
 
   VariableTimer _timer;
 
+  ValueListenable<bool> get active => _timer.active;
+
+  void reload() {
+    _timer.reload();
+  }
+
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners)

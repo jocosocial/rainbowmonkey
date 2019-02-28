@@ -154,6 +154,12 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
 
   VariableTimer _timer;
 
+  ValueListenable<bool> get active => _timer.active;
+
+  void reload() {
+    _timer.reload();
+  }
+
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners && maxUpdatePeriod != null)
@@ -331,6 +337,12 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
   }
 
   VariableTimer _timer;
+
+  ValueListenable<bool> get active => _timer.active;
+
+  void reload() {
+    _timer.reload();
+  }
 
   void _init() {
     _timer = VariableTimer(maxUpdatePeriod, update);

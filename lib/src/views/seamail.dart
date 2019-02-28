@@ -184,6 +184,18 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
             ),
           ],
         ),
+        actions: <Widget>[
+          ValueListenableBuilder<bool>(
+            valueListenable: widget.thread.active,
+            builder: (BuildContext context, bool active, Widget child) {
+              return IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Force refresh',
+                onPressed: active ? null : widget.thread.reload,
+              );
+            },
+          ),
+        ],
       ),
       body: ModeratorBuilder(
         builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {

@@ -127,6 +127,18 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
     return Scaffold(
       appBar: AppBar(
         title: const Text('Twitarr'),
+        actions: <Widget>[
+          ValueListenableBuilder<bool>(
+            valueListenable: _stream.active,
+            builder: (BuildContext context, bool active, Widget child) {
+              return IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Force refresh',
+                onPressed: active ? null : _stream.reload,
+              );
+            },
+          ),
+        ],
       ),
       body: ModeratorBuilder(
         builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
