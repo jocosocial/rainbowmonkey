@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cruisemonkey/src/basic_types.dart';
@@ -96,6 +97,11 @@ class TrivialDataStore implements DataStore {
   @override
   Future<Uint8List> putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) async {
     return await callback();
+  }
+
+  @override
+  Future<File> putImageFileIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) {
+    return Completer<File>().future;
   }
 
   @override
