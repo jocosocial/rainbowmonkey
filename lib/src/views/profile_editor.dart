@@ -293,7 +293,7 @@ class ProfileField extends StatefulWidget {
   State<ProfileField> createState() => _ProfileFieldState();
 }
 
-class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClientMixin<ProfileField> {
+class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClientMixin<ProfileField>, TickerProviderStateMixin {
   final TextEditingController _field = TextEditingController();
 
   String _error;
@@ -301,15 +301,19 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
   bool _updating = false;
   Progress<void> _progress; // TODO(ianh): use this in the build method for the progress meter
 
+  bool _saved = false;
+
   @override
   bool get wantKeepAlive => _updating || _error != null;
 
   void _update() async {
-    setState(() { _updating = true; });
+    setState(() { _updating = true; _saved = false; });
     try {
       _error = null;
       _progress = widget.onUpdate(_field.text);
       await _progress.asFuture();
+      if (mounted)
+        setState(() { _saved = true; });
     } on UserFriendlyError catch (message) {
       if (mounted)
         setState(() { _error = message.toString(); });
@@ -341,6 +345,7 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
   }
 
   void _focusChange() {
+    setState(() { _saved = false; });
     if (!widget.focusNode.hasFocus)
       _update();
   }
@@ -359,6 +364,9 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
               if (widget.nextNode != null)
                 FocusScope.of(context).requestFocus(widget.nextNode);
             },
+            onChanged: (String value) {
+              setState(() { _saved = false; });
+            },
             textInputAction: widget.nextNode != null ? TextInputAction.next : TextInputAction.done,
             keyboardType: widget.keyboardType,
             textCapitalization: widget.textCapitalization,
@@ -368,6 +376,15 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
               labelText: widget.title,
               errorText: _error,
               errorMaxLines: 5,
+              suffixIcon: AnimatedOpacity(
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.fastOutSlowIn,
+                opacity: _saved ? 1.0 : 0.0,
+                child: const Tooltip(
+                  message: 'Saved automatically.',
+                  child: Icon(Icons.check),
+                ),
+              ),
             ),
           ),
           Visibility(
