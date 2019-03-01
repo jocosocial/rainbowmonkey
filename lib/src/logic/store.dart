@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import '../models/user.dart';
@@ -33,5 +34,6 @@ abstract class DataStore {
   Future<void> heardAboutUserPhoto(String id, DateTime updateTime);
   Future<Map<String, DateTime>> restoreUserPhotoList();
   Future<Uint8List> putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback);
+  Future<File> putImageFileIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback);
   Future<void> removeImage(String serverKey, String cacheName, String photoId);
 }

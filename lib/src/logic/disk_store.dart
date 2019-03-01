@@ -213,8 +213,7 @@ class DiskDataStore extends DataStore {
     return path.join((await getTemporaryDirectory()).path, 'photo_store', base64.encode(utf8.encode(key)).replaceAll('/', '-'));
   }
 
-  @override
-  Future<Uint8List> putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) async {
+  Future<_BytesAndFile> _putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) async {
     Uint8List bytes;
     final String key = _encodePhotoKey(serverKey, cacheName, photoId);
     final File cache = File(await _keyToPath(key));
@@ -229,7 +228,17 @@ class DiskDataStore extends DataStore {
         debugPrint('Failed to cache "$key": $error');
       }
     }
-    return bytes;
+    return _BytesAndFile(bytes, cache);
+  }
+
+  @override
+  Future<Uint8List> putImageIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) async {
+    return (await _putImageIfAbsent(serverKey, cacheName, photoId, callback)).bytes;
+  }
+
+  @override
+  Future<File> putImageFileIfAbsent(String serverKey, String cacheName, String photoId, ImageFetcher callback) async {
+    return (await _putImageIfAbsent(serverKey, cacheName, photoId, callback)).file;
   }
 
   @override
@@ -255,4 +264,10 @@ class DiskDataStore extends DataStore {
     final dynamic value = const StandardMessageCodec().decodeMessage(data);
     return value;
   }
+}
+
+class _BytesAndFile {
+  _BytesAndFile(this.bytes, this.file);
+  final Uint8List bytes;
+  final File file;
 }

@@ -3,6 +3,9 @@ import 'dart:typed_data';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../network/twitarr.dart';
+import 'store.dart';
+
 typedef NotificationCallback = void Function(String payload);
 
 class Notifications {
@@ -75,12 +78,23 @@ class Notifications {
 
   final Int64List _fantasticDrumBeat = Int64List.fromList(<int>[0, 60, 60, 60, 60, 180, 60, 60, 60, 60, 60, 180, 60]);
 
-  Future<void> messageUnread(String threadId, String messageId, String subject, String message) async {
+  Future<String> _fetchAvatar(String username, Twitarr twitarr, DataStore store) async {
+    return (await store.putImageFileIfAbsent(
+      twitarr.photoCacheKey,
+      'avatar',
+      username,
+      () => twitarr.fetchProfilePicture(username).asFuture(),
+    )).absolute.path;
+  }
+
+  Future<void> messageUnread(String threadId, String messageId, String subject, String username, String message, Twitarr twitarr, DataStore store) async {
     final AndroidNotificationDetails android = AndroidNotificationDetails(
       'cruisemonkey-seamail',
       'Seamail',
       'Seamail notifications',
       // icon
+      largeIcon: await _fetchAvatar(username, twitarr, store),
+      largeIconBitmapSource: BitmapSource.FilePath,
       importance: Importance.High,
       priority: Priority.High,
       // style
