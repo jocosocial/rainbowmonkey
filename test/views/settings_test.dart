@@ -34,7 +34,7 @@ Future<void> main() async {
       MaterialApp(
         home: Cruise(
           cruiseModel: model,
-          child: const Settings(),
+          child: Settings(store: store),
         ),
       ),
     );

@@ -12,7 +12,7 @@ import 'disk_store.dart';
 import 'notifications.dart';
 import 'store.dart';
 
-Future<void> runBackground() async {
+Future<void> runBackground(DataStore store) async {
   if (!await AndroidAlarmManager.initialize()) {
     FlutterError.reportError(FlutterErrorDetails(
       exception: Exception('Android Alarm Manager failed to start up.'),
@@ -21,15 +21,27 @@ Future<void> runBackground() async {
     ));
     return;
   }
-  if (!await AndroidAlarmManager.periodic(const Duration(minutes: 1), 0, _periodicCallback, wakeup: true, rescheduleOnReboot: true)) {
+  await rescheduleBackground(store);
+}
+
+int backgroundPollingPeriodMinutes = 1;
+
+Future<void> rescheduleBackground(DataStore store) async {
+  backgroundPollingPeriodMinutes = (await store.restoreSetting(Setting.notificationCheckPeriod).asFuture() as int).clamp(1, 60).toInt();
+  if (!await AndroidAlarmManager.periodic(
+    Duration(minutes: backgroundPollingPeriodMinutes),
+    0, // id
+    _periodicCallback,
+    wakeup: true,
+    rescheduleOnReboot: true,
+  )) {
     FlutterError.reportError(FlutterErrorDetails(
       exception: Exception('Android Alarm Manager failed to schedule periodic background task.'),
       library: 'CruiseMonkey',
-      context: 'during startup',
+      context: 'when scheduling background task',
     ));
     return;
   }
-  await _periodicCallback();
 }
 
 bool _initialized = false;
@@ -56,10 +68,6 @@ Future<void> _periodicCallback() async {
     };
     _initialized = true;
   }
-  await _backgroundUpdate();
-}
-
-Future<void> _backgroundUpdate() async {
   try {
     try {
       final DataStore store = DiskDataStore();

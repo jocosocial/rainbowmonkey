@@ -18,6 +18,7 @@ import 'src/logic/background_polling.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
+import 'src/logic/store.dart';
 import 'src/models/user.dart';
 import 'src/network/rest.dart';
 import 'src/views/calendar.dart';
@@ -49,15 +50,16 @@ void main() {
   }());
   AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
+  final DataStore store = DiskDataStore();
   model = CruiseModel(
     initialTwitarrConfiguration: const AutoTwitarrConfiguration(),
-    store: DiskDataStore(),
+    store: store,
     onError: _handleError,
     onCheckForMessages: checkForMessages,
   );
-  runApp(CruiseMonkeyApp(cruiseModel: model, scaffoldKey: scaffoldKey));
+  runApp(CruiseMonkeyApp(cruiseModel: model, store: store, scaffoldKey: scaffoldKey));
   if (Platform.isAndroid)
-    runBackground();
+    runBackground(store);
   Notifications.instance.then((Notifications notifications) {
     notifications.onTap = (String payload) {
       assert(() {
@@ -160,10 +162,13 @@ class CruiseMonkeyApp extends StatelessWidget {
   const CruiseMonkeyApp({
     Key key,
     this.cruiseModel,
+    this.store,
     this.scaffoldKey,
   }) : super(key: key);
 
   final CruiseModel cruiseModel;
+
+  final DataStore store;
 
   final GlobalKey<ScaffoldState> scaffoldKey;
 
@@ -173,7 +178,7 @@ class CruiseMonkeyApp extends StatelessWidget {
       cruiseModel: cruiseModel,
       child: Now(
         period: const Duration(seconds: 15),
-        child: CruiseMonkeyHome(scaffoldKey: scaffoldKey),
+        child: CruiseMonkeyHome(scaffoldKey: scaffoldKey, store: store),
       ),
     );
   }
@@ -183,9 +188,12 @@ class CruiseMonkeyHome extends StatelessWidget {
   const CruiseMonkeyHome({
     Key key,
     this.scaffoldKey,
+    this.store,
   }) : super(key: key);
 
   final GlobalKey<ScaffoldState> scaffoldKey;
+
+  final DataStore store;
 
   static const List<View> pages = <View>[
     UserView(),
@@ -294,7 +302,7 @@ class CruiseMonkeyHome extends StatelessWidget {
       routes: <String, WidgetBuilder>{
         '/profile-editor': (BuildContext context) => const ProfileEditor(),
         '/create-account': (BuildContext context) => const CreateAccount(),
-        '/settings': (BuildContext context) => const Settings(),
+        '/settings': (BuildContext context) => Settings(store: store),
         '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
         '/twitarr': (BuildContext context) => const TweetStreamView(),
         '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
