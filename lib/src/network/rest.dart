@@ -464,7 +464,7 @@ class RestTwitarr implements Twitarr {
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
-      ..addFile('file', 'avatar.png', bytes, ContentType('image', 'jpeg'));
+      ..addImage('file', bytes);
     final MultipartFormData encoded = body.toMultipartEncoded();
     return Progress<void>((ProgressController<void> completer) async {
       final String result = await completer.chain<String>(_requestUtf8(
@@ -506,7 +506,7 @@ class RestTwitarr implements Twitarr {
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
-      ..addFile('file', 'image.png', bytes, ContentType('image', 'jpeg'));
+      ..addImage('file', bytes);
     final MultipartFormData encoded = body.toMultipartEncoded();
     return Progress<String>((ProgressController<String> completer) async {
       final String result = await completer.chain<String>(_requestUtf8(
