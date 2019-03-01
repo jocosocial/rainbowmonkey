@@ -53,6 +53,10 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
     _timer.reload();
   }
 
+  ForumThread getThreadById(String id) {
+    return _threads[id];
+  }
+
   bool _updating = false;
   @protected
   Future<void> update() async {

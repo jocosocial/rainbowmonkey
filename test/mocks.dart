@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:cruisemonkey/src/basic_types.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/forums.dart';
+import 'package:cruisemonkey/src/logic/mentions.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
@@ -122,6 +123,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
        calendar = calendar ?? MutableContinuousProgress<Calendar>(),
        announcements = announcements ?? MutableContinuousProgress<List<Announcement>>() {
     _seamail = Seamail.empty();
+    _mentions = Mentions.empty();
     _forums = Forums.empty();
   }
 
@@ -163,6 +165,10 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   @override
   Seamail get seamail => _seamail;
   Seamail _seamail;
+
+  @override
+  Mentions get mentions => _mentions;
+  Mentions _mentions;
 
   @override
   Forums get forums => _forums;
