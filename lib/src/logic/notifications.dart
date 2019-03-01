@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../models/user.dart';
 import '../network/twitarr.dart';
 import 'store.dart';
 
@@ -87,18 +88,30 @@ class Notifications {
     )).absolute.path;
   }
 
-  Future<void> messageUnread(String threadId, String messageId, String subject, String username, String message, Twitarr twitarr, DataStore store) async {
+  Future<void> messageUnread(String threadId, String messageId, DateTime timestamp, String subject, User user, String message, Twitarr twitarr, DataStore store) async {
     final AndroidNotificationDetails android = AndroidNotificationDetails(
       'cruisemonkey-seamail',
       'Seamail',
       'Seamail notifications',
       // icon
-      largeIcon: await _fetchAvatar(username, twitarr, store),
-      largeIconBitmapSource: BitmapSource.FilePath,
       importance: Importance.High,
       priority: Priority.High,
-      // style
-      // styleInformation
+      style: AndroidNotificationStyle.Messaging,
+      styleInformation: MessagingStyleInformation(
+        Person(name: 'You'),
+        conversationTitle: subject,
+        messages: <Message>[
+          Message(
+            message,
+            timestamp,
+            Person(
+              icon: await _fetchAvatar(user.username, twitarr, store),
+              iconSource: IconSource.FilePath,
+              name: '$user',
+            ),
+          ),
+        ],
+      ),
       playSound: true,
       // sound
       enableVibration: true,
