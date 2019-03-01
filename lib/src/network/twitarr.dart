@@ -253,6 +253,15 @@ abstract class Twitarr {
     @required List<Uint8List> photos,
   });
 
+  Progress<MentionsSummary> getMentions({
+    Credentials credentials,
+  });
+
+  Progress<void> clearMentions({
+    Credentials credentials,
+    int freshnessToken,
+  });
+
   void dispose();
 }
 
@@ -474,4 +483,18 @@ class UserSummary {
       displayName: displayName,
     );
   }
+}
+
+class MentionsSummary {
+  const MentionsSummary({
+    this.streamPosts,
+    this.forums,
+    this.freshnessToken,
+  });
+
+  final List<StreamMessageSummary> streamPosts;
+
+  final List<ForumSummary> forums;
+
+  final int freshnessToken;
 }

@@ -232,7 +232,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
   List<SeamailMessage> getMessages() {
     return _messages.values.toList()..sort(
       (SeamailMessage a, SeamailMessage b) {
-        if (a.timestamp == b.timestamp)
+        if (a.timestamp != b.timestamp)
           return a.timestamp.compareTo(b.timestamp);
         return a.id.compareTo(b.id);
       },

@@ -19,6 +19,7 @@ import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
 import 'forums.dart';
+import 'mentions.dart';
 import 'notifications.dart';
 import 'photo_manager.dart';
 import 'seamail.dart';
@@ -46,6 +47,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _busy(() {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
       _seamail = Seamail.empty();
+      _mentions = Mentions.empty();
       _forums = _createForums();
       _tweetStream = _createTweetStream();
       _restoreSettings(); // async
@@ -173,6 +175,9 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
   Seamail get seamail => _seamail;
   Seamail _seamail;
 
+  Mentions get mentions => _mentions;
+  Mentions _mentions;
+
   Forums get forums => _forums;
   Forums _forums;
 
@@ -257,6 +262,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       if (_currentCredentials != oldCredentials)
         _calendar.reset();
       _seamail = Seamail.empty();
+      _mentions = Mentions.empty();
       _forums = _createForums();
       _tweetStream = _createTweetStream();
       if (_loggedIn.isCompleted)
@@ -275,6 +281,12 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
               onCheckForMessages(_currentCredentials, _twitarr, store, forced: true);
           },
           onThreadRead: _handleThreadRead,
+        );
+        _mentions = Mentions(
+          _twitarr,
+          _currentCredentials,
+          this,
+          onError: onError,
         );
         _forums = _createForums();
         _tweetStream = _createTweetStream();

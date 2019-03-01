@@ -342,6 +342,23 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<MentionsSummary> getMentions({
+    Credentials credentials,
+  }) {
+    log.add('getMentions');
+    return null;
+  }
+
+  @override
+  Progress<void> clearMentions({
+    Credentials credentials,
+    int freshnessToken,
+  }) {
+    log.add('clearMentions $freshnessToken');
+    return null;
+  }
+
+  @override
   void dispose() {
     log.add('LoggingTwitarr(${_configuration.id}).dispose');
   }

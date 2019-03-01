@@ -27,6 +27,7 @@ import 'src/views/comms.dart';
 import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
 import 'src/views/karaoke.dart';
+import 'src/views/mentions.dart';
 import 'src/views/profile.dart';
 import 'src/views/profile_editor.dart';
 import 'src/views/settings.dart';
@@ -305,6 +306,7 @@ class CruiseMonkeyHome extends StatelessWidget {
         '/settings': (BuildContext context) => Settings(store: store),
         '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
         '/twitarr': (BuildContext context) => const TweetStreamView(),
+        '/mentions': (BuildContext context) => const MentionsView(),
         '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
       },
     );

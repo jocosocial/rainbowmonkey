@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../logic/cruise.dart';
 import '../logic/forums.dart';
+import '../logic/mentions.dart';
 import '../logic/seamail.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -136,13 +137,14 @@ class CommsView extends StatelessWidget implements View {
     final CruiseModel cruise = Cruise.of(context);
     final Seamail seamail = cruise.seamail;
     final Forums forums = cruise.forums;
+    final Mentions mentions = cruise.mentions;
     final DateTime now = Now.of(context);
     return ModeratorBuilder(
       builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
         return BusyIndicator(
           busy: OrListenable(<ValueListenable<bool>>[seamail.busy, forums.busy]),
           child: AnimatedBuilder(
-            animation: Listenable.merge(<Listenable>[seamail, forums]),
+            animation: Listenable.merge(<Listenable>[seamail, forums, mentions]),
             builder: (BuildContext context, Widget child) {
               final List<SeamailThread> seamailThreads = seamail.toList()
                 ..sort(
@@ -169,10 +171,11 @@ class CommsView extends StatelessWidget implements View {
               final bool showDividers = theme.platform == TargetPlatform.iOS;
               return ListView.builder(
                 itemCount: (canModerate ? 1 : 0) +
-                           2 /*headings*/ +
-                           math.max<int>(seamailThreads.length, 1) /*seamail*/ +
-                           1 /*twitarr*/ +
-                           forums.length /*forums*/,
+                           2 /* headings */ +
+                           math.max<int>(seamailThreads.length, 1) /* seamail */ +
+                           (!isModerating && cruise.isLoggedIn ? 1 : 0 /* mentions */) +
+                           1 /* twitarr */ +
+                           forums.length /* forums */,
                 itemBuilder: (BuildContext context, int index) {
                   Widget generateTile() {
                     if (canModerate) {
@@ -191,7 +194,7 @@ class CommsView extends StatelessWidget implements View {
                       return ListTile(
                         title: Text('Private messages', style: headerStyle),
                         trailing: ValueListenableBuilder<bool>(
-                          valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(false),
+                          valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(true),
                           builder: (BuildContext context, bool active, Widget child) {
                             return IconButton(
                               icon: const Icon(Icons.refresh),
@@ -290,6 +293,25 @@ class CommsView extends StatelessWidget implements View {
                       );
                     }
                     index -= 1;
+                    if (!isModerating && cruise.isLoggedIn) {
+                      if (index == 0) {
+                        return ValueListenableBuilder<bool>(
+                          valueListenable: mentions.hasMentions,
+                          builder: (BuildContext context, bool hasMentions, Widget child) {
+                            return ListTile(
+                              leading: Badge(
+                                child: CircleAvatar(child: Icon(hasMentions ? Icons.notifications_active : Icons.notifications)),
+                                alignment: const AlignmentDirectional(1.1, 1.1),
+                                enabled: hasMentions,
+                              ),
+                              title: const Text('Mentions'),
+                              onTap: () { Navigator.pushNamed(context, '/mentions'); },
+                            );
+                          },
+                        );
+                      }
+                      index -= 1;
+                    }
                     if (index == 0) {
                       return ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.speaker_notes)),
@@ -299,6 +321,7 @@ class CommsView extends StatelessWidget implements View {
                     }
                     index -= 1;
                     // Forums
+                    // TODO(ianh): make these appear less suddenly
                     final ForumThread forum = forumThreads[index];
                     final String unread = forum.unreadCount > 0 ? ' (${forum.unreadCount} new)' : '';
                     final String lastMessage = 'Most recent from ${forum.lastMessageUser}';

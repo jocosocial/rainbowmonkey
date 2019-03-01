@@ -1160,6 +1160,61 @@ class RestTwitarr implements Twitarr {
     return result;
   }
 
+  @override
+  Progress<MentionsSummary> getMentions({
+    Credentials credentials,
+    bool reset = false,
+  }) {
+    assert(credentials.key != null);
+    final FormData body = FormData()
+      ..add('key', credentials.key)
+      ..add('app', 'plain');
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
+    if (!reset)
+      body.add('no_reset', 'true');
+    final String encodedBody = body.toUrlEncoded();
+    return Progress<MentionsSummary>((ProgressController<MentionsSummary> completer) async {
+      return await compute<String, MentionsSummary>(
+        _parseMentionsSummary,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/alerts?$encodedBody',
+            expectedStatusCodes: <int>[200],
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<void> clearMentions({
+    Credentials credentials,
+    @required int freshnessToken,
+  }) {
+    assert(freshnessToken != null);
+    assert(credentials.key != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      // TODO(ianh): Once the server is updated, fix the race condition
+      // (right now, the freshnessToken is ignored on clear, which means
+      // that any new mentions since we called getMentions originally
+      // will be cleared as well).
+      await completer.chain<MentionsSummary>(
+        getMentions(credentials: credentials, reset: true),
+      );
+    });
+  }
+
+  static MentionsSummary _parseMentionsSummary(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    return MentionsSummary(
+      streamPosts: (data.tweet_mentions as Json).asIterable().map<StreamMessageSummary>(_parseStreamPost).toList(),
+      forums: (data.forum_mentions as Json).asIterable().map<ForumSummary>(_parseForumBody).toList(),
+      freshnessToken: (data.last_checked_time as Json).toInt(),
+    );
+  }
+
   static UserSummary _parseUser(dynamic user) {
     return UserSummary(
       username: user.username.toString(),
@@ -1226,8 +1281,11 @@ class RestTwitarr implements Twitarr {
         .transform(utf8.decoder)
         .join();
       assert(() {
-        if (_debugVerbose)
-          debugPrint('<<< ${response.statusCode} $result');
+        if (_debugVerbose) {
+          debugPrint('<<< ${response.statusCode} from $path:');
+          for (int index = 0; index < result.length; index += 128)
+            debugPrint(' 0x${index.toRadixString(16).padLeft(4, "0")}: ${result.substring(index, math.min(index + 100, result.length))}');
+        }
         return true;
       }());
       return result;
@@ -1313,8 +1371,10 @@ class RestTwitarr implements Twitarr {
       if (!expectedStatusCodes.contains(response.statusCode)) {
         assert(() {
           if (_debugVerbose) {
-            response.transform(utf8.decoder).join().then((String message) {
-              debugPrint('Full response:\n$message');
+            response.transform(utf8.decoder).join().then((String result) {
+              debugPrint('<<< (!!) ${response.statusCode} from $path:');
+              for (int index = 0; index < result.length; index += 128)
+                debugPrint(' 0x${index.toRadixString(16).padLeft(4, "0")}: ${result.substring(index, math.min(index + 100, result.length))}');
             });
           }
           return true;
