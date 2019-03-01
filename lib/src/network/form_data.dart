@@ -41,6 +41,36 @@ class FormData {
     _data.add(_FormDataFile(name, filename, bytes, contentType));
   }
 
+  void addImage(String name, Uint8List bytes) {
+    ContentType type;
+    String filename;
+    if (bytes.length >= 6 &&
+        bytes[0] == 0x47 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x38 &&
+        (bytes[4] == 0x39 || bytes[4] == 0x37) &&
+        bytes[5] == 0x61) {
+      type = ContentType('image', 'gif');
+      filename = 'image.gif';
+    } else if (bytes.length >= 8 &&
+               bytes[0] == 0x89 &&
+               bytes[1] == 0x50 &&
+               bytes[2] == 0x4E &&
+               bytes[3] == 0x47 &&
+               bytes[4] == 0x0D &&
+               bytes[5] == 0x0A &&
+               bytes[6] == 0x1A &&
+               bytes[7] == 0x0A) {
+      type = ContentType('image', 'png');
+      filename = 'image.png';
+    } else {
+      type = ContentType('image', 'jpeg');
+      filename = 'image.jpeg';
+    }
+    addFile(name, filename, bytes, type);
+  }
+
   /// Returns the encoded data as a `x-www-form-urlencoded` string.
   ///
   /// The `encoding` argument controls the encoding used to %-encode the data.
