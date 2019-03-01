@@ -205,7 +205,7 @@ class CruiseMonkeyHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CruiseMonkey',
+      title: 'Rainbow Monkey',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         primaryColor: Colors.blue[900],
