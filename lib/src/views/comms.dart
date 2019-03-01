@@ -190,6 +190,17 @@ class CommsView extends StatelessWidget implements View {
                     if (index == 0) {
                       return ListTile(
                         title: Text('Private messages', style: headerStyle),
+                        trailing: ValueListenableBuilder<bool>(
+                          valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(false),
+                          builder: (BuildContext context, bool active, Widget child) {
+                            return IconButton(
+                              icon: const Icon(Icons.refresh),
+                              color: Colors.black,
+                              tooltip: 'Force refresh',
+                              onPressed: active ? null : seamail.reload,
+                            );
+                          },
+                        ),
                       );
                     }
                     index -= 1;
@@ -265,6 +276,17 @@ class CommsView extends StatelessWidget implements View {
                     if (index == 0) {
                       return ListTile(
                         title: Text('Public messages', style: headerStyle),
+                        trailing: ValueListenableBuilder<bool>(
+                          valueListenable: forums.active,
+                          builder: (BuildContext context, bool active, Widget child) {
+                            return IconButton(
+                              icon: const Icon(Icons.refresh),
+                              color: Colors.black,
+                              tooltip: 'Force refresh',
+                              onPressed: active ? null : forums.reload,
+                            );
+                          },
+                        ),
                       );
                     }
                     index -= 1;

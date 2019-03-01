@@ -93,11 +93,23 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.thread.subject),
+        actions: <Widget>[
+          ValueListenableBuilder<bool>(
+            valueListenable: widget.thread.active,
+            builder: (BuildContext context, bool active, Widget child) {
+              return IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Force refresh',
+                onPressed: active ? null : widget.thread.reload,
+              );
+            },
+          ),
+        ],
       ),
       body: ModeratorBuilder(
         builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
           final bool canPostInPrinciple = loggedIn && (widget.thread.locked ? currentUser.canPostWhenLocked : currentUser.canPost);
-          final bool canPost = canPostInPrinciple && _textController.text.isNotEmpty;
+          final bool canPost = canPostInPrinciple && _textController.text.trim().isNotEmpty;
           return Column(
             children: <Widget>[
               Expanded(
@@ -163,7 +175,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                       },
                       onSubmitted: canPost ? (String value) {
                         assert(_textController.text == value);
-                        if (_textController.text.isNotEmpty)
+                        if (_textController.text.trim().isNotEmpty)
                           _submitCurrentMessage();
                       } : null,
                       textInputAction: TextInputAction.send,
@@ -226,8 +238,8 @@ class _StartForumViewState extends State<StartForumView> {
   List<Uint8List> _photos = <Uint8List>[];
 
   bool get _valid {
-    return _subject.text.isNotEmpty
-        && _text.text.isNotEmpty;
+    return _subject.text.trim().isNotEmpty
+        && _text.text.trim().isNotEmpty;
   }
 
   void _send() async {

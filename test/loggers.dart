@@ -283,6 +283,15 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<StreamMessageSummary> getTweet({
+    Credentials credentials,
+    String threadId,
+  }) {
+    log.add('getTweet');
+    return const Progress<StreamMessageSummary>.idle();
+  }
+
+  @override
   Progress<void> postTweet({
     @required Credentials credentials,
     @required String text,

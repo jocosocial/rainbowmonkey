@@ -195,6 +195,12 @@ class TweetStream extends ChangeNotifier with BusyMixin {
 
   VariableTimer _timer;
 
+  ValueListenable<bool> get active => _timer.active;
+
+  void reload() {
+    _timer.reload();
+  }
+
   @override
   void addListener(VoidCallback listener) {
     if (!hasListeners)
@@ -226,6 +232,20 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       await _fetchForwards();
     });
   }
+
+  Progress<StreamPost> fetchFullThread(String rootId) {
+    return Progress<StreamPost>((ProgressController<StreamPost> completer) async {
+      return StreamPost.from(
+        await completer.chain<StreamMessageSummary>(
+          _twitarr.getTweet(
+            credentials: _credentials,
+            threadId: rootId,
+          ),
+        ),
+        photoManager,
+      );
+    });
+  }
 }
 
 class StreamPost {
@@ -236,6 +256,9 @@ class StreamPost {
     this.photo,
     this.timestamp,
     this.boundaryToken,
+    this.locked,
+    this.parents,
+    this.children,
   });
 
   StreamPost.from(StreamMessageSummary summary, PhotoManager photoManager)
@@ -244,9 +267,12 @@ class StreamPost {
        text = summary.text,
        photo = summary.photo,
        timestamp = summary.timestamp,
-       boundaryToken = summary.boundaryToken;
+       boundaryToken = summary.boundaryToken,
+       locked = summary.locked,
+       parents = summary.parents,
+       children = summary.children?.map<StreamPost>((StreamMessageSummary summary) => StreamPost.from(summary, photoManager))?.toList();
 
-  const StreamPost.sentinel() : id = null, user = null, text = null, photo = null, timestamp = null, boundaryToken = null;
+  const StreamPost.sentinel() : id = null, user = null, text = null, photo = null, timestamp = null, boundaryToken = null, locked = null, parents = null, children = null;
 
   final String id;
 
@@ -260,8 +286,13 @@ class StreamPost {
 
   final int boundaryToken;
 
+  final bool locked;
+
   // TODO(ianh): reactions
-  // TODO(ianh): parents
+
+  final List<String> parents;
+
+  final List<StreamPost> children;
 
   @override
   String toString() => '$runtimeType($id, $timestamp, $user, "$text")';

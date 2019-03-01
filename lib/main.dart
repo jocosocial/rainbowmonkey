@@ -205,7 +205,7 @@ class CruiseMonkeyHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CruiseMonkey',
+      title: 'Rainbow Monkey',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         primaryColor: Colors.blue[900],
@@ -232,25 +232,28 @@ class CruiseMonkeyHome extends StatelessWidget {
                   ),
                   floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
                   resizeToAvoidBottomInset: false,
-                  body: LayoutBuilder(
-                    builder: (BuildContext context, BoxConstraints constraints) {
-                      const double bottomPadding = 50.0;
-                      final double height = constraints.maxHeight + bottomPadding;
-                      final MediaQueryData metrics = MediaQuery.of(context);
-                      return OverflowBox(
-                        minWidth: constraints.maxWidth,
-                        maxWidth: constraints.maxWidth,
-                        minHeight: height,
-                        maxHeight: height,
-                        alignment: Alignment.topCenter,
-                        child: MediaQuery(
-                          data: metrics.copyWith(padding: metrics.padding.copyWith(bottom: bottomPadding)),
-                          child: TabBarView(
-                            children: pages,
+                  body: AnnotatedRegion<SystemUiOverlayStyle>(
+                    value: SystemUiOverlayStyle.dark,
+                    child: LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        const double bottomPadding = 50.0;
+                        final double height = constraints.maxHeight + bottomPadding;
+                        final MediaQueryData metrics = MediaQuery.of(context);
+                        return OverflowBox(
+                          minWidth: constraints.maxWidth,
+                          maxWidth: constraints.maxWidth,
+                          minHeight: height,
+                          maxHeight: height,
+                          alignment: Alignment.topCenter,
+                          child: MediaQuery(
+                            data: metrics.copyWith(padding: metrics.padding.copyWith(bottom: bottomPadding)),
+                            child: TabBarView(
+                              children: pages,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   bottomNavigationBar: BottomAppBar(
                     color: theme.primaryColor,

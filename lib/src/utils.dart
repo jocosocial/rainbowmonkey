@@ -92,7 +92,6 @@ class VariableTimer {
 
   static const double multiplier = 1.5;
 
-  _VariableTimerState _state = _VariableTimerState.disabled;
   double _backoffMultiplier = 1;
   Timer _timer;
   Duration _currentPeriod;
@@ -121,23 +120,33 @@ class VariableTimer {
   //
   //  * handle interested()
 
+  ValueListenable<bool> get active => _active;
+  final ValueNotifier<bool> _active = ValueNotifier<bool>(false);
+
+  _VariableTimerState _state = _VariableTimerState.disabled;
+  void _updateState(_VariableTimerState value) {
+    _state = value;
+    _active.value = value == _VariableTimerState.ticking ||
+                    value == _VariableTimerState.tickingDisabling;
+  }
+
   void start() {
     assert(_state != null);
     switch (_state) {
       case _VariableTimerState.disabled:
-        _state = _VariableTimerState.enabled;
+        _updateState(_VariableTimerState.enabled);
         _currentPeriod = minDuration;
         _tick();
         return;
       case _VariableTimerState.disabling:
-        _state = _VariableTimerState.enabled;
+        _updateState(_VariableTimerState.enabled);
         return;
       case _VariableTimerState.enabled:
         return;
       case _VariableTimerState.ticking:
         return;
       case _VariableTimerState.tickingDisabling:
-        _state = _VariableTimerState.ticking;
+        _updateState(_VariableTimerState.ticking);
         return;
     }
   }
@@ -147,13 +156,13 @@ class VariableTimer {
       return;
     assert(_timer == null || !_timer.isActive);
     _timer = null;
-    _state = _VariableTimerState.ticking;
+    _updateState(_VariableTimerState.ticking);
     await callback();
     if (_state == _VariableTimerState.ticking) {
       _timer = Timer(_currentPeriod * _backoffMultiplier, _tick);
       _stopwatch..reset()..start();
       _currentPeriod *= multiplier;
-      _state = _VariableTimerState.enabled;
+      _updateState(_VariableTimerState.enabled);
     }
   }
 
@@ -165,11 +174,11 @@ class VariableTimer {
       case _VariableTimerState.disabling:
         return;
       case _VariableTimerState.enabled:
-        _state = _VariableTimerState.disabling;
+        _updateState(_VariableTimerState.disabling);
         scheduleMicrotask(_disable);
         return;
       case _VariableTimerState.ticking:
-        _state = _VariableTimerState.tickingDisabling;
+        _updateState(_VariableTimerState.tickingDisabling);
         scheduleMicrotask(_disable);
         return;
       case _VariableTimerState.tickingDisabling:
@@ -186,14 +195,14 @@ class VariableTimer {
         assert(_timer != null);
         _timer.cancel();
         _timer = null;
-        _state = _VariableTimerState.disabled;
+        _updateState(_VariableTimerState.disabled);
         break;
       case _VariableTimerState.enabled:
         return;
       case _VariableTimerState.ticking:
         return;
       case _VariableTimerState.tickingDisabling:
-        _state = _VariableTimerState.disabled;
+        _updateState(_VariableTimerState.disabled);
         return;
     }
   }
@@ -230,6 +239,27 @@ class VariableTimer {
         return;
       case _VariableTimerState.tickingDisabling:
         _currentPeriod = minDuration;
+        return;
+    }
+  }
+
+  void reload() {
+    _backoffMultiplier = 1;
+    _currentPeriod = minDuration;
+    assert(_state != null);
+    switch (_state) {
+      case _VariableTimerState.disabled:
+        return;
+      case _VariableTimerState.disabling:
+        return;
+      case _VariableTimerState.enabled:
+        _timer.cancel();
+        _timer = null;
+        _tick();
+        return;
+      case _VariableTimerState.ticking:
+        return;
+      case _VariableTimerState.tickingDisabling:
         return;
     }
   }

@@ -368,17 +368,23 @@ class RestTwitarr implements Twitarr {
     }).toList();
   }
 
+  final Map<String, ServerText> _serverTextCache = <String, ServerText>{};
+
   @override
   Progress<ServerText> fetchServerText(String filename) {
+    if (_serverTextCache.containsKey(filename))
+      return Progress<ServerText>.completed(_serverTextCache[filename]);
     final FormData body = FormData()
       ..add('app', 'plain');
     return Progress<ServerText>((ProgressController<ServerText> completer) async {
-      return await compute<String, ServerText>(
+      final ServerText result = await compute<String, ServerText>(
         _parseServerText,
         await completer.chain<String>(
           _requestUtf8('GET', 'api/v2/text/${Uri.encodeComponent(filename)}?${body.toUrlEncoded()}'),
         ),
       );
+      _serverTextCache[filename] = result;
+      return result;
     });
   }
 
@@ -534,7 +540,7 @@ class RestTwitarr implements Twitarr {
       .replaceAll('/', '')
       .replaceAll('\\', '')
       .replaceAll('\0', ''); // %00 is particularly bad.
-    if (searchTerm.isEmpty)
+    if (searchTerm.trim().isEmpty)
       return Progress<List<User>>.completed(const <User>[]);
     searchTerm = searchTerm.runes.map<String>((int rune) => '[${String.fromCharCode(rune)}]').join('');
     return Progress<List<User>>((ProgressController<List<User>> completer) async {
@@ -811,7 +817,6 @@ class RestTwitarr implements Twitarr {
     assert(limit > 0);
     return Progress<StreamSliceSummary>((ProgressController<StreamSliceSummary> completer) async {
       final FormData body = FormData()
-        ..add('include_deleted', 'true')
         ..add('limit', '$limit')
         ..add('app', 'plain');
       if (credentials != null)
@@ -834,6 +839,30 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/stream?${body.toUrlEncoded()}',
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Progress<StreamMessageSummary> getTweet({
+    Credentials credentials,
+    String threadId,
+  }) {
+    assert(credentials == null || credentials.key != null);
+    return Progress<StreamMessageSummary>((ProgressController<StreamMessageSummary> completer) async {
+      final FormData body = FormData()
+        ..add('limit', '2147483647')
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      return await compute<String, StreamMessageSummary>(
+        _parseStreamPostRoot,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/thread/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
           ),
         ),
       );
@@ -888,17 +917,6 @@ class RestTwitarr implements Twitarr {
 
   static StreamSliceSummary _parseStream(String rawData, StreamDirection direction) {
     final dynamic data = Json.parse(rawData);
-    final Set<StreamMessageSummary> posts = <StreamMessageSummary>{};
-    for (dynamic post in (data.stream_posts as Json).asIterable()) {
-      posts.add(_parseStreamPost(post as Json));
-      if ((post as Json).hasKey('children')) {
-        final List<String> parents = <String>[post.id.toString()];
-        for (dynamic subpost in (post.children as Json).asIterable()) {
-          posts.add(_parseStreamPost(subpost as Json, parents));
-          parents.add(subpost.id.toString());
-        }
-      }
-    }
     int adjustment;
     switch (direction) {
       case StreamDirection.forwards:
@@ -917,38 +935,43 @@ class RestTwitarr implements Twitarr {
     return StreamSliceSummary(
       direction: direction,
       boundaryToken: (data.next_page as Json).toInt() + adjustment,
-      posts: posts.toList(), // we assume server's sort order is good
+      posts: (data.stream_posts as Json).asIterable().map<StreamMessageSummary>(_parseStreamPost).toList(),
     );
   }
 
-  static StreamMessageSummary _parseStreamPost(dynamic post, [ List<String> parents ]) {
-    if ((post as Json).hasKey('deleted') && (post.deleted as bool)) {
-      return StreamMessageSummary.deleted(
-        id: post.id.toString(),
-        timestamp: _parseDateTime(post.timestamp as Json),
-        boundaryToken: (post.timestamp as Json).toInt(),
-      );
-    }
+  static StreamMessageSummary _parseStreamPostRoot(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    return _parseStreamPost(data.post as Json);
+  }
+
+  static StreamMessageSummary _parseStreamPost(dynamic post) {
     return StreamMessageSummary(
       id: post.id.toString(),
       user: _parseUser(post.author as Json),
       text: post.text.toString(),
       timestamp: _parseDateTime(post.timestamp as Json),
       boundaryToken: (post.timestamp as Json).toInt(),
+      locked: (post.locked as Json).toBoolean(),
       photo: (post as Json).hasKey('photo') ? _parsePhoto(post.photo) : null,
       reactions: _parseReactions(post.reactions as Json),
-      parents: (post as Json).hasKey('parent_chain') ? _parseParents(post.parent_chain as Json) : parents,
+      parents: (post as Json).hasKey('parent_chain')
+        ? _nullOrNonEmpty<String>((post.parent_chain as Json).asIterable().map<String>((Json value) => value.toString()).toList())
+        : null,
+      children: (post as Json).hasKey('children')
+        ? _nullOrNonEmpty<StreamMessageSummary>((post.children as Json).asIterable().map<StreamMessageSummary>(_parseStreamPost).toList())
+        : null,
     );
+  }
+
+  static List<T> _nullOrNonEmpty<T>(List<T> list) {
+    if (list == null || list.isEmpty)
+      return null;
+    return list;
   }
 
   static Map<String, Set<UserSummary>> _parseReactions(dynamic reactions) {
     // TODO(ianh): parse this
     return <String, Set<UserSummary>>{}; // DO NOT MAKE THIS CONST -- SEE https://github.com/dart-lang/sdk/issues/35778
-  }
-
-  static List<String> _parseParents(dynamic parentChain) {
-    // TODO(ianh): parse this
-    return const <String>[];
   }
 
   @override
