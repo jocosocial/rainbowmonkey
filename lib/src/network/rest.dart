@@ -863,6 +863,7 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/thread/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200], // TODO(ianh): handle 404 cleanly (can happen if tweet was deleted by someone else)
           ),
         ),
       );
@@ -903,6 +904,30 @@ class RestTwitarr implements Twitarr {
         steps: 2
       );
       final dynamic data = Json.parse(result);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
+  Progress<void> deleteTweet({
+    Credentials credentials,
+    @required String postId,
+  }) {
+    assert(credentials.key != null);
+    assert(postId != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'DELETE',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[204, 403, 404],
+        ),
+      );
+      if (rawData.isEmpty)
+        return;
+      final dynamic data = Json.parse(rawData);
       _checkStatusIsOk(data);
     });
   }
@@ -1102,6 +1127,31 @@ class RestTwitarr implements Twitarr {
       );
       // We ignore the return value. It's the forum post, but what are you going to do with it?
       // You don't know where it belongs in the forum...
+    });
+  }
+
+  @override
+  Progress<bool> deleteForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(messageId != null);
+    return Progress<bool>((ProgressController<bool> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'DELETE',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 401, 403, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+      return (data.thread_deleted as Json).toBoolean();
     });
   }
 

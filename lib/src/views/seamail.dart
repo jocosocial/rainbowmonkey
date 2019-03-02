@@ -427,12 +427,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                 subject: _subject.text,
                 text: _text.text,
               );
-              final SeamailThread thread = await showDialog<SeamailThread>(
-                context: context,
-                builder: (BuildContext context) => ProgressDialog<SeamailThread>(
-                  progress: progress,
-                ),
-              );
+              final SeamailThread thread = await ProgressDialog.show<SeamailThread>(context, progress);
               if (mounted && thread != null)
                 Navigator.pop(context, thread);
             },

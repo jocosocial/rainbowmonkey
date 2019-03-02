@@ -64,7 +64,7 @@ class HttpServerError implements Exception, UserFriendlyError {
       case 403: return 'There was an authentication problem (server said "$reasonPhrase"). Try logging in again.';
       case 400:
       case 405: return 'There is probably a bug (server said "$reasonPhrase"). Try again, maybe?';
-      default: return 'There was an unexpected error. The server said "$statusCode $reasonPhrase" in response to a request to: $url';
+      default: return 'There was an unexpected error. The server said "$reasonPhrase".';
     }
   }
 }
@@ -230,6 +230,11 @@ abstract class Twitarr {
     @required Uint8List photo,
   });
 
+  Progress<void> deleteTweet({
+    @required Credentials credentials,
+    @required String postId,
+  });
+
   Progress<Set<ForumSummary>> getForumThreads({
     Credentials credentials,
   });
@@ -251,6 +256,12 @@ abstract class Twitarr {
     @required String threadId,
     @required String text,
     @required List<Uint8List> photos,
+  });
+
+  Progress<bool> deleteForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String messageId,
   });
 
   Progress<MentionsSummary> getMentions({

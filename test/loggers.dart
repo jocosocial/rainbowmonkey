@@ -303,6 +303,15 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<void> deleteTweet({
+    @required Credentials credentials,
+    @required String postId,
+  }) {
+    log.add('deleteTweet');
+    return null;
+  }
+
+  @override
   Progress<Set<ForumSummary>> getForumThreads({
     Credentials credentials,
   }) {
@@ -341,6 +350,15 @@ class LoggingTwitarr extends Twitarr {
     return null;
   }
 
+  @override
+  Progress<bool> deleteForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+  }) {
+    log.add('deleteForumMessage $threadId $messageId');
+  }
+    
   @override
   Progress<MentionsSummary> getMentions({
     Credentials credentials,

@@ -127,12 +127,23 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         );
                       }
                       final ForumMessage message = messages[index];
+                      final bool isCurrentUser = message.user.sameAs(currentUser?.effectiveUser);
                       return ChatLine(
                         user: message.user,
-                        isCurrentUser: message.user.sameAs(currentUser?.effectiveUser),
+                        isCurrentUser: isCurrentUser,
                         messages: <String>[ message.text ],
                         photos: message.photos,
                         timestamp: message.timestamp,
+                        onDelete: isCurrentUser ? () async {
+                          final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.delete(message.id));
+                          if (threadDeleted)
+                            Navigator.pop(context);
+                        } : null,
+                        onDeleteModerator: !isCurrentUser && canModerate ? () async {
+                          final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.delete(message.id));
+                          if (threadDeleted)
+                            Navigator.pop(context);
+                        } : null,
                       );
                     },
                     itemCount: messages.length + 1,
@@ -248,12 +259,7 @@ class _StartForumViewState extends State<StartForumView> {
       text: _text.text,
       photos: _photos.isEmpty ? null : _photos,
     );
-    final ForumThread thread = await showDialog<ForumThread>(
-      context: context,
-      builder: (BuildContext context) => ProgressDialog<ForumThread>(
-        progress: progress,
-      ),
-    );
+    final ForumThread thread = await ProgressDialog.show<ForumThread>(context, progress);
     if (mounted && thread != null)
       Navigator.pop(context, thread);
   }

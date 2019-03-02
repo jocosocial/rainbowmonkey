@@ -78,7 +78,8 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
           _threads[threadSummary.id] = ForumThread.from(threadSummary, this, _twitarr, _credentials, photoManager);
         }
       }
-      removedThreads.forEach(_threads.remove);
+      for (ForumThread thread in removedThreads)
+        _threads.remove(thread.id);
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
       _reportError(error);
@@ -251,6 +252,27 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
       await update();
       _timer.interested();
       _parent._childUpdated(this);
+    });
+  }
+
+  Progress<bool> delete(String messageId) {
+    assert(_credentials != null);
+    return Progress<bool>((ProgressController<void> completer) async {
+      final bool threadDeleted = await completer.chain<bool>(
+        _twitarr.deleteForumMessage(
+          credentials: _credentials,
+          threadId: id,
+          messageId: messageId,
+        ),
+      );
+      if (threadDeleted) {
+        _parent.reload();
+      } else {
+        reload();
+        _timer.interested();
+        _parent._childUpdated(this);
+      }
+      return threadDeleted;
     });
   }
 

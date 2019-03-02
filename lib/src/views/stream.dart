@@ -229,7 +229,15 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                       final StreamPost post = _stream[index];
                       if (post == const StreamPost.sentinel())
                         return null;
-                      return Entry(post: post, animation: _animationFor(post), currentUser: currentUser?.effectiveUser);
+                      if (post != null && post.isDeleted)
+                        return const SizedBox(height: 0.0);
+                      return Entry(
+                        post: post,
+                        animation: _animationFor(post),
+                        effectiveCurrentUser: currentUser?.effectiveUser,
+                        stream: _stream,
+                        canModerate: canModerate,
+                      );
                     },
                     onDidFinishLayout: () {
                       if (_atZero) {
@@ -269,15 +277,23 @@ class Entry extends StatelessWidget {
     Key key,
     @required this.post,
     @required this.animation,
-    @required this.currentUser,
+    @required this.effectiveCurrentUser,
+    @required this.stream,
+    @required this.canModerate,
   }) : assert(post == null || animation != null),
+       assert(stream != null),
+       assert(canModerate != null),
        super(key: key);
 
   final StreamPost post;
 
   final Animation<double> animation;
 
-  final User currentUser;
+  final User effectiveCurrentUser;
+
+  final TweetStream stream;
+
+  final bool canModerate;
 
   @override
   Widget build(BuildContext context) {
@@ -287,12 +303,13 @@ class Entry extends StatelessWidget {
         title: Text('...'),
       );
     }
+    final bool isCurrentUser = post.user.sameAs(effectiveCurrentUser);
     return SizeTransition(
       sizeFactor: animation,
       axisAlignment: -1.0,
       child: ChatLine(
         user: post.user,
-        isCurrentUser: post.user.sameAs(currentUser),
+        isCurrentUser: isCurrentUser,
         messages: <String>[ post.text ],
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         timestamp: post.timestamp,
@@ -304,6 +321,12 @@ class Entry extends StatelessWidget {
             ),
           );
         },
+        onDelete: isCurrentUser && (!post.locked || canModerate) ? () {
+          ProgressDialog.show<void>(context, stream.delete(post.id));
+        } : null,
+        onDeleteModerator: !isCurrentUser && canModerate ? () {
+          ProgressDialog.show<void>(context, stream.delete(post.id));
+        } : null,
       ),
     );
   }
@@ -452,8 +475,18 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                             );
                           }
                           index -= _pending.length;
-                          if (index < _flatList.length)
-                            return NestedEntry(details: _flatList[index]);
+                          if (index < _flatList.length) {
+                            return NestedEntry(
+                              details: _flatList[index],
+                              canModerate: canModerate,
+                              effectiveCurrentUser: currentUser.effectiveUser,
+                              stream: _stream,
+                              onDeleted: () {
+                                if (index == 0)
+                                  Navigator.pop(context);
+                              },
+                            );
+                          }
                           assert(post.parents.isNotEmpty);
                           return ListTile(
                             leading: const Icon(Icons.arrow_upward),
@@ -545,13 +578,26 @@ class NestedEntry extends StatelessWidget {
   const NestedEntry({
     Key key,
     @required this.details,
+    @required this.effectiveCurrentUser,
+    @required this.stream,
+    @required this.canModerate,
+    @required this.onDeleted,
   }) : assert(details != null),
        super(key: key);
 
   final FlatStreamPost details;
 
+  final User effectiveCurrentUser;
+
+  final TweetStream stream;
+
+  final bool canModerate;
+
+  final VoidCallback onDeleted;
+
   @override
   Widget build(BuildContext context) {
+    final bool isCurrentUser = details.post.user.sameAs(effectiveCurrentUser);
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(
         math.min(details.depth, 6) * 24.0,
@@ -565,6 +611,16 @@ class NestedEntry extends StatelessWidget {
         messages: <String>[ details.post.text ],
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
         timestamp: details.post.timestamp,
+        onDelete: isCurrentUser && (!details.post.locked || canModerate) ? () async {
+          await ProgressDialog.show<void>(context, stream.delete(details.post.id));
+          if (onDeleted != null)
+            onDeleted();
+        } : null,
+        onDeleteModerator: !isCurrentUser && canModerate ? () async {
+          await ProgressDialog.show<void>(context, stream.delete(details.post.id));
+          if (onDeleted != null)
+            onDeleted();
+        } : null,
         onPressed: details.depth == 0 ? null : () {
           Navigator.pushReplacement(
             context,
