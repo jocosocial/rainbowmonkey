@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:ui' show hashValues;
 
 import 'package:flutter/foundation.dart';
@@ -11,7 +10,7 @@ import 'photo_manager.dart';
 
 typedef ThreadReadCallback = void Function(String threadId);
 
-class Mentions extends ChangeNotifier with IterableMixin<MentionsItem>, BusyMixin {
+class Mentions extends ChangeNotifier with BusyMixin {
   Mentions(
     this._twitarr,
     this._credentials,
@@ -39,15 +38,13 @@ class Mentions extends ChangeNotifier with IterableMixin<MentionsItem>, BusyMixi
   final Duration maxUpdatePeriod;
   final ErrorCallback onError;
 
-  @override
-  Iterator<MentionsItem> get iterator => _currentMentions.iterator;
-
   ValueListenable<bool> get hasMentions => _hasMentions;
   final ValueNotifier<bool> _hasMentions = ValueNotifier<bool>(false);
 
-  Set<MentionsItem> _currentMentions = <MentionsItem>{};
+  Iterable<MentionsItem> get items => _currentMentions;
+  List<MentionsItem> _currentMentions = <MentionsItem>[];
 
-  int _lastToken;
+  int _lastFreshnessToken;
 
   bool _updating = false;
   @protected
@@ -59,13 +56,20 @@ class Mentions extends ChangeNotifier with IterableMixin<MentionsItem>, BusyMixi
     bool newMentions = false;
     try {
       final MentionsSummary summary = await _twitarr.getMentions(credentials: _credentials).asFuture();
-      final Set<MentionsItem> oldList = _currentMentions;
-      _currentMentions = <MentionsItem>{}
+      final List<MentionsItem> oldList = _currentMentions;
+      _currentMentions = <MentionsItem>[]
         ..addAll(summary.forums.map<MentionsItem>((ForumSummary summary) => ForumMentionsItem.from(summary, _photoManager)))
-        ..addAll(summary.streamPosts.map<MentionsItem>((StreamMessageSummary summary) => StreamMentionsItem.from(summary, _photoManager)));
-      _lastToken = summary.freshnessToken;
+        ..addAll(summary.streamPosts.map<MentionsItem>((StreamMessageSummary summary) => StreamMentionsItem.from(summary, _photoManager)))
+        ..sort(
+          (MentionsItem a, MentionsItem b) {
+            if (a.timestamp != b.timestamp)
+              return a.timestamp.compareTo(b.timestamp);
+            return a.id.compareTo(b.id); // just to give some sort of stable sort
+          },
+        );
+      _lastFreshnessToken = summary.freshnessToken;
       _hasMentions.value = _currentMentions.isNotEmpty;
-      newMentions = setEquals<MentionsItem>(oldList, _currentMentions);
+      newMentions = listEquals<MentionsItem>(oldList, _currentMentions);
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
       _reportError(error);
@@ -90,7 +94,7 @@ class Mentions extends ChangeNotifier with IterableMixin<MentionsItem>, BusyMixi
     _hasMentions.value = false;
     notifyListeners();
     try {
-      await _twitarr.clearMentions(credentials: _credentials, freshnessToken: _lastToken).asFuture();
+      await _twitarr.clearMentions(credentials: _credentials, freshnessToken: _lastFreshnessToken).asFuture();
       _updating = false;
       await update();
     } finally {

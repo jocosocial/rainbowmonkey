@@ -51,6 +51,16 @@ class TweetStream extends ChangeNotifier with BusyMixin {
     return null;
   }
 
+  void _debugVerifyIntegrity() {
+    assert(() {
+      for (String id in _postIds.keys)
+        assert(_posts[_postIds[id]].id == id);
+      for (int index = 0; index < _posts.length; index += 1)
+        assert(_postIds[_posts[index].id] == index);
+      return true;
+    }());
+  }
+  
   int pageSize = 100;
   static const int kEmergencyPageSizeDelta = 10;
 
@@ -91,6 +101,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
             index += 1;
           }
           _posts.addAll(newPosts);
+          _debugVerifyIntegrity();
           didSomething = true;
         } else if (overlap == localPageSize) {
           pageSize = math.max(pageSize, localPageSize + kEmergencyPageSizeDelta);
@@ -150,10 +161,11 @@ class TweetStream extends ChangeNotifier with BusyMixin {
           ).toList();
           _posts.insertAll(0, newPosts);
           int index = 0;
-          for (StreamPost post in newPosts) {
+          for (StreamPost post in _posts) {
             _postIds[post.id] = index;
             index += 1;
           }
+          _debugVerifyIntegrity();
           if (_pinned) {
             _anchorIndex += count - overlap;
           } else {
@@ -233,6 +245,24 @@ class TweetStream extends ChangeNotifier with BusyMixin {
     });
   }
 
+  Progress<void> delete(String postId) {
+    assert(_credentials != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.deleteTweet(
+          credentials: _credentials,
+          postId: postId,
+        ),
+      );
+      if (_postIds.containsKey(postId)) {
+        final int postPosition = _postIds[postId];
+        assert(_posts[postPosition].id == postId);
+        _posts[postPosition] = _posts[postPosition].asDeleted();
+      }
+      notifyListeners();
+    });
+  }
+
   Progress<StreamPost> fetchFullThread(String rootId) {
     return Progress<StreamPost>((ProgressController<StreamPost> completer) async {
       return StreamPost.from(
@@ -259,6 +289,7 @@ class StreamPost {
     this.locked,
     this.parents,
     this.children,
+    this.isDeleted,
   });
 
   StreamPost.from(StreamMessageSummary summary, PhotoManager photoManager)
@@ -270,9 +301,10 @@ class StreamPost {
        boundaryToken = summary.boundaryToken,
        locked = summary.locked,
        parents = summary.parents,
-       children = summary.children?.map<StreamPost>((StreamMessageSummary summary) => StreamPost.from(summary, photoManager))?.toList();
+       children = summary.children?.map<StreamPost>((StreamMessageSummary summary) => StreamPost.from(summary, photoManager))?.toList(),
+       isDeleted = false;
 
-  const StreamPost.sentinel() : id = null, user = null, text = null, photo = null, timestamp = null, boundaryToken = null, locked = null, parents = null, children = null;
+  const StreamPost.sentinel() : id = null, user = null, text = null, photo = null, timestamp = null, boundaryToken = null, locked = null, parents = null, children = null, isDeleted = false;
 
   final String id;
 
@@ -293,6 +325,23 @@ class StreamPost {
   final List<String> parents;
 
   final List<StreamPost> children;
+
+  final bool isDeleted;
+
+  StreamPost asDeleted() {
+    return StreamPost(
+      id: id,
+      user: user,
+      text: text,
+      photo: photo,
+      timestamp: timestamp,
+      boundaryToken: boundaryToken,
+      locked: locked,
+      parents: parents,
+      children: children,
+      isDeleted: true,
+    );
+  }
 
   @override
   String toString() => '$runtimeType($id, $timestamp, $user, "$text")';

@@ -293,6 +293,15 @@ class ProgressDialog<T> extends StatefulWidget {
 
   final Progress<T> progress;
 
+  static Future<T> show<T>(BuildContext context, Progress<T> progress) {
+    return showDialog<T>(
+      context: context,
+      builder: (BuildContext context) => ProgressDialog<T>(
+        progress: progress,
+      ),
+    );
+  }
+
   @override
   _ProgressDialogState<T> createState() => _ProgressDialogState<T>();
 }
@@ -454,6 +463,8 @@ class TimerNotifier extends ValueNotifier<DateTime> {
   }
 }
 
+typedef ProgressCallback<T> = Progress<T> Function();
+
 class ChatLine extends StatefulWidget {
   const ChatLine({
     Key key,
@@ -462,11 +473,20 @@ class ChatLine extends StatefulWidget {
     @required this.messages,
     this.photos,
     @required this.timestamp,
+    this.likes = 0,
     this.onPressed,
+    this.onDelete,
+    this.onDeleteModerator,
+    this.onEdit,
+    this.onLike,
+    this.onUnlike,
+    this.getLikesCallback,
   }) : assert(user != null),
        assert(isCurrentUser != null),
        assert(messages != null),
        assert(timestamp != null),
+       assert(likes != null),
+       assert(likes >= 0),
        super(key: key);
 
   final User user;
@@ -474,7 +494,14 @@ class ChatLine extends StatefulWidget {
   final List<String> messages;
   final List<Photo> photos;
   final DateTime timestamp;
+  final int likes;
   final VoidCallback onPressed;
+  final VoidCallback onDelete;
+  final VoidCallback onDeleteModerator;
+  final VoidCallback onEdit;
+  final VoidCallback onLike;
+  final VoidCallback onUnlike;
+  final ProgressCallback<List<User>> getLikesCallback;
 
   @override
   State<ChatLine> createState() => _ChatLineState();
@@ -503,6 +530,81 @@ class _ChatLineState extends State<ChatLine> {
     });
   }
 
+  void _viewLikes() {
+    final Progress<List<User>> progress = widget.getLikesCallback();
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Likes'),
+            ),
+            body: ProgressBuilder<List<User>>(
+              progress: progress,
+              builder: (BuildContext context, List<User> users) {
+                return ListView.builder(
+                  itemCount: users.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final User user = users[index];
+                    return ListTile(
+                      key: ValueKey<String>(user.username),
+                      leading: Cruise.of(context).avatarFor(<User>[user]),
+                      title: Text(user.toString()),
+                    );
+                  },
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _handleLongPress() async {
+    final List<Widget> actions = <Widget>[];
+    void action(String label, IconData icon, VoidCallback callback) {
+      if (callback != null) {
+        actions.add(LabeledIconButton(label: Text(label), icon: Icon(icon), center: false, onPressed: () {
+          Navigator.pop(context);
+          callback();
+        }));
+      }
+    }
+    action('DELETE', Icons.delete_forever, widget.onDelete);
+    action('DELETE\n(MODERATOR ACTION)', Icons.delete_forever, widget.onDeleteModerator);
+    action('EDIT', Icons.delete_forever, widget.onEdit);
+    action('VIEW LIKES', Icons.group, widget.getLikesCallback != null && widget.likes > 0 ? _viewLikes : null);
+    action('LIKE', Icons.thumb_up, widget.onLike);
+    action('UNLIKE', Icons.thumb_down, widget.onUnlike);
+    final List<Widget> children = <Widget>[
+      Text('Posted by: ${widget.user}'),
+      Text('Timestamp: ${widget.timestamp}'),
+      const Divider(),
+      Wrap(
+        alignment: WrapAlignment.spaceEvenly,
+        spacing: 8.0,
+        crossAxisAlignment: WrapCrossAlignment.start,
+        runSpacing: 8.0,
+        children: actions,
+      ),
+    ];
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) => Dialog(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 12.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void didUpdateWidget(ChatLine oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -523,13 +625,21 @@ class _ChatLineState extends State<ChatLine> {
     }
     final TextDirection direction = widget.isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
     final DateTime now = Now.of(context);
-    final String duration = '${prettyDuration(now.difference(widget.timestamp))}';
+    final List<String> metadata = <String>[];
+    if (!widget.isCurrentUser)
+      metadata.add('${widget.user}');
+    metadata.add('${prettyDuration(now.difference(widget.timestamp))}');
+    if (widget.likes == 1) {
+      metadata.add('1 like');
+    } else if (widget.likes > 0) {
+      metadata.add('${widget.likes} likes');
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
       child: Directionality(
         textDirection: direction,
-        child: Tooltip(
-          message: '${widget.user} • ${widget.timestamp}',
+        child: GestureDetector(
+          onLongPress: _handleLongPress,
           child: ListBody(
             children: <Widget>[
               Row(
@@ -591,7 +701,7 @@ class _ChatLineState extends State<ChatLine> {
                           textAlign: TextAlign.end,
                           child: Directionality(
                             textDirection: TextDirection.ltr,
-                            child: widget.isCurrentUser ? Text(duration) : Text('${widget.user} • $duration'),
+                            child: Text(metadata.join(' • ')),
                           ),
                         ),
                       ],
@@ -739,32 +849,34 @@ class _VSyncBuilderState extends State<VSyncBuilder> with TickerProviderStateMix
 }
 
 class LabeledIconButton extends StatelessWidget {
-  const LabeledIconButton({ Key key, this.onPressed, this.icon, this.label }) : super(key: key);
+  const LabeledIconButton({ Key key, this.onPressed, this.icon, this.label, this.center = true }) : super(key: key);
 
   final VoidCallback onPressed;
   final Widget icon;
   final Widget label;
+  final bool center;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: FlatButton(
-        onPressed: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: <Widget>[
-              icon,
-              const SizedBox(height: 8.0),
-              DefaultTextStyle.merge(
-                textAlign: TextAlign.center,
-                child: label,
-              ),
-            ],
-          ),
+    Widget result = FlatButton(
+      onPressed: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: <Widget>[
+            icon,
+            const SizedBox(height: 8.0),
+            DefaultTextStyle.merge(
+              textAlign: TextAlign.center,
+              child: label,
+            ),
+          ],
         ),
       ),
     );
+    if (center)
+      result = Center(child: result);
+    return result;
   }
 }
 

@@ -32,13 +32,7 @@ class _MentionsViewState extends State<MentionsView> {
     return AnimatedBuilder(
       animation: mentions,
       builder: (BuildContext context, Widget child) {
-        final List<MentionsItem> items = mentions.toList()..sort(
-          (MentionsItem a, MentionsItem b) {
-            if (a.timestamp != b.timestamp)
-              return b.timestamp.compareTo(a.timestamp);
-            return a.id.compareTo(b.id); // just to give some sort of stable sort
-          },
-        );
+        final List<MentionsItem> items = mentions.items.toList().reversed.toList();
         final bool hasMentions = items.isNotEmpty;
         return ValueListenableBuilder<bool>(
           valueListenable: mentions.busy,
@@ -74,23 +68,29 @@ class _MentionsViewState extends State<MentionsView> {
                           child: ListView.builder(
                             itemBuilder: (BuildContext context, int index) {
                               if (!hasMentions) {
-                                return iconAndLabel(icon: Icons.chat_bubble_outline, message: 'No mentions.');
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 48.0),
+                                  child: iconAndLabel(icon: Icons.chat_bubble_outline, message: 'No mentions.'),
+                                );
                               }
                               final MentionsItem item = items[index];
                               if (item is StreamMentionsItem) {
-                                return ChatLine(
-                                  user: item.user,
-                                  messages: <String>[ item.text ],
-                                  photos: null,
-                                  timestamp: item.timestamp,
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute<void>(
-                                        builder: (BuildContext context) => TweetThreadView(threadId: item.id),
-                                      ),
-                                    );
-                                  },
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  child: ChatLine(
+                                    user: item.user,
+                                    messages: <String>[ item.text ],
+                                    photos: null,
+                                    timestamp: item.timestamp,
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute<void>(
+                                          builder: (BuildContext context) => TweetThreadView(threadId: item.id),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 );
                               }
                               if (item is ForumMentionsItem) {
