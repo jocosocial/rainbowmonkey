@@ -441,7 +441,7 @@ class _TweetThreadViewState extends State<TweetThreadView> {
           return ProgressBuilder<StreamPost>(
             progress: _thread,
             builder: (BuildContext context, StreamPost post) {
-              _flatList ??= _flatten(post);
+              _flatList ??= _flatten(post); // this list is "in reverse", index 0 is the newest
               final bool loggedIn = Cruise.of(context).isLoggedIn;
               final bool canPostInPrinciple = loggedIn && (post.locked ? currentUser.canPostWhenLocked : currentUser.canPost);
               final bool canPost = canPostInPrinciple && _textController.text.trim().isNotEmpty;
@@ -482,8 +482,11 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                               effectiveCurrentUser: currentUser.effectiveUser,
                               stream: _stream,
                               onDeleted: () {
-                                if (index == 0)
+                                if (index == _flatList.length - 1) {
                                   Navigator.pop(context);
+                                } else {
+                                  _reload();
+                                }
                               },
                             );
                           }

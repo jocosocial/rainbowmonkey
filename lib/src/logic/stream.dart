@@ -51,6 +51,16 @@ class TweetStream extends ChangeNotifier with BusyMixin {
     return null;
   }
 
+  void _debugVerifyIntegrity() {
+    assert(() {
+      for (String id in _postIds.keys)
+        assert(_posts[_postIds[id]].id == id);
+      for (int index = 0; index < _posts.length; index += 1)
+        assert(_postIds[_posts[index].id] == index);
+      return true;
+    }());
+  }
+  
   int pageSize = 100;
   static const int kEmergencyPageSizeDelta = 10;
 
@@ -91,6 +101,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
             index += 1;
           }
           _posts.addAll(newPosts);
+          _debugVerifyIntegrity();
           didSomething = true;
         } else if (overlap == localPageSize) {
           pageSize = math.max(pageSize, localPageSize + kEmergencyPageSizeDelta);
@@ -150,10 +161,11 @@ class TweetStream extends ChangeNotifier with BusyMixin {
           ).toList();
           _posts.insertAll(0, newPosts);
           int index = 0;
-          for (StreamPost post in newPosts) {
+          for (StreamPost post in _posts) {
             _postIds[post.id] = index;
             index += 1;
           }
+          _debugVerifyIntegrity();
           if (_pinned) {
             _anchorIndex += count - overlap;
           } else {
@@ -244,6 +256,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       );
       if (_postIds.containsKey(postId)) {
         final int postPosition = _postIds[postId];
+        assert(_posts[postPosition].id == postId);
         _posts[postPosition] = _posts[postPosition].asDeleted();
       }
       notifyListeners();
