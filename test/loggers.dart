@@ -357,8 +357,9 @@ class LoggingTwitarr extends Twitarr {
     @required String messageId,
   }) {
     log.add('deleteForumMessage $threadId $messageId');
+    return null;
   }
-    
+
   @override
   Progress<MentionsSummary> getMentions({
     Credentials credentials,

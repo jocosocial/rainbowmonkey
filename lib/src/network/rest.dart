@@ -1245,14 +1245,27 @@ class RestTwitarr implements Twitarr {
   }) {
     assert(freshnessToken != null);
     assert(credentials.key != null);
+    final FormData body = FormData()
+      ..add('key', credentials.key);
+    if (credentials.asMod)
+      body.add('as_mod', 'true');
+      final Map<String, dynamic> details = <String, dynamic>{
+      'last_checked_time': freshnessToken,
+    };
+    if (credentials.asMod)
+      details['as_mod'] = true;
+    final String jsonBody = json.encode(details);
     return Progress<void>((ProgressController<void> completer) async {
-      // TODO(ianh): Once the server is updated, fix the race condition
-      // (right now, the freshnessToken is ignored on clear, which means
-      // that any new mentions since we called getMentions originally
-      // will be cleared as well).
-      await completer.chain<MentionsSummary>(
-        getMentions(credentials: credentials, reset: true),
+      final String result = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/alerts/last_checked?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        ),
       );
+      final dynamic data = Json.parse(result);
+      _checkStatusIsOk(data);
     });
   }
 
@@ -1261,7 +1274,7 @@ class RestTwitarr implements Twitarr {
     return MentionsSummary(
       streamPosts: (data.tweet_mentions as Json).asIterable().map<StreamMessageSummary>(_parseStreamPost).toList(),
       forums: (data.forum_mentions as Json).asIterable().map<ForumSummary>(_parseForumBody).toList(),
-      freshnessToken: (data.last_checked_time as Json).toInt(),
+      freshnessToken: (data.query_time as Json).toInt(),
     );
   }
 

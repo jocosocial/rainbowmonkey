@@ -270,7 +270,7 @@ abstract class Twitarr {
 
   Progress<void> clearMentions({
     Credentials credentials,
-    int freshnessToken,
+    @required int freshnessToken,
   });
 
   void dispose();
