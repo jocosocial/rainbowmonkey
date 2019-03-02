@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import '../json.dart';
 import '../logic/photo_manager.dart';
 import '../models/calendar.dart';
+import '../models/reactions.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -932,6 +933,56 @@ class RestTwitarr implements Twitarr {
     });
   }
 
+  @override
+  Progress<Map<String, ReactionSummary>> reactTweet({
+    @required Credentials credentials,
+    @required String postId,
+    @required String reaction,
+    @required bool selected,
+  }) {
+    assert(credentials.key != null);
+    assert(postId != null);
+    assert(reaction != null);
+    assert(selected != null);
+    return Progress<Map<String, ReactionSummary>>((ProgressController<Map<String, ReactionSummary>> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          selected ? 'POST' : 'DELETE',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}/react/${Uri.encodeComponent(reaction)}?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 400, 403, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+      return _parseReactions(data.reactions as Json);
+    });
+  }
+
+  @override
+  Progress<Map<String, Set<UserSummary>>> getTweetReactions({
+    @required Credentials credentials,
+    @required String postId,
+  }) {
+    assert(credentials.key != null);
+    assert(postId != null);
+    return Progress<Map<String, Set<UserSummary>>>((ProgressController<Map<String, Set<UserSummary>>> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'GET',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}/react?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+      return _parseReactionsList(data.reactions as Json);
+    });
+  }
+
   static StreamSliceSummary _parseStreamBackwards(String rawData) {
     return _parseStream(rawData, StreamDirection.backwards);
   }
@@ -992,11 +1043,6 @@ class RestTwitarr implements Twitarr {
     if (list == null || list.isEmpty)
       return null;
     return list;
-  }
-
-  static Map<String, Set<UserSummary>> _parseReactions(dynamic reactions) {
-    // TODO(ianh): parse this
-    return <String, Set<UserSummary>>{}; // DO NOT MAKE THIS CONST -- SEE https://github.com/dart-lang/sdk/issues/35778
   }
 
   @override
@@ -1155,6 +1201,60 @@ class RestTwitarr implements Twitarr {
     });
   }
 
+  @override
+  Progress<Map<String, ReactionSummary>> reactForumMessage({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+    @required String reaction,
+    @required bool selected,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(messageId != null);
+    assert(reaction != null);
+    assert(selected != null);
+    return Progress<Map<String, ReactionSummary>>((ProgressController<Map<String, ReactionSummary>> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          selected ? 'POST' : 'DELETE',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}/react/${Uri.encodeComponent(reaction)}?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 400, 403, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+      return _parseReactions(data.reactions as Json);
+    });
+  }
+
+  @override
+  Progress<Map<String, Set<UserSummary>>> getForumMessageReactions({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(messageId != null);
+    return Progress<Map<String, Set<UserSummary>>>((ProgressController<Map<String, Set<UserSummary>>> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'GET',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}/react?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+      return _parseReactionsList(data.reactions as Json);
+    });
+  }
+
   static Set<ForumSummary> _parseForumList(String rawData) {
     final dynamic data = Json.parse(rawData);
     final Set<ForumSummary> result = <ForumSummary>{};
@@ -1203,9 +1303,34 @@ class RestTwitarr implements Twitarr {
         photos: (post as Json).hasKey('photos')
           ? (post.photos as Json).asIterable().map<Photo>(_parsePhoto).toList()
           : null,
+        reactions: _parseReactions(post.reactions as Json),
         timestamp: _parseDateTime(post.timestamp as Json),
         read: (post as Json).hasKey('new') ? (post['new'] as Json).toBoolean() : null,
       ));
+    }
+    return result;
+  }
+
+  static Map<String, ReactionSummary> _parseReactions(Json reactions) {
+    return reactions.toMap().map<String, ReactionSummary>((String name, dynamic value) {
+      return MapEntry<String, ReactionSummary>(
+        name,
+        ReactionSummary(
+          count: (value['count'] as double).toInt(),
+          includesCurrentUser: value['me'] as bool,
+        ),
+      );
+    });
+  }
+
+  static Map<String, Set<UserSummary>> _parseReactionsList(Json reactions) {
+    final Map<String, Set<UserSummary>> result = <String, Set<UserSummary>>{};
+    for (dynamic entry in reactions.asIterable()) {
+      final Set<UserSummary> list = result.putIfAbsent(
+        entry.reaction.toString(),
+        () => <UserSummary>{},
+      );
+      list.add(_parseUser(entry.user as Json));
     }
     return result;
   }

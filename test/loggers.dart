@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/server_text.dart';
+import 'package:cruisemonkey/src/models/reactions.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -312,6 +313,26 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<Map<String, ReactionSummary>> reactTweet({
+    @required Credentials credentials,
+    @required String postId,
+    @required String reaction,
+    @required bool selected,
+  }) {
+    log.add('reactTweet');
+    return null;
+  }
+
+  @override
+  Progress<Map<String, Set<UserSummary>>> getTweetReactions({
+    @required Credentials credentials,
+    @required String postId,
+  }) {
+    log.add('getTweetReactions');
+    return null;
+  }
+
+  @override
   Progress<Set<ForumSummary>> getForumThreads({
     Credentials credentials,
   }) {
@@ -357,6 +378,28 @@ class LoggingTwitarr extends Twitarr {
     @required String messageId,
   }) {
     log.add('deleteForumMessage $threadId $messageId');
+    return null;
+  }
+
+  @override
+  Progress<Map<String, ReactionSummary>> reactForumMessage({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+    @required String reaction,
+    @required bool selected,
+  }) {
+    log.add('reactForumMessage');
+    return null;
+  }
+
+  @override
+  Progress<Map<String, Set<UserSummary>>> getForumMessageReactions({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+  }) {
+    log.add('getForumMessageReactions');
     return null;
   }
 

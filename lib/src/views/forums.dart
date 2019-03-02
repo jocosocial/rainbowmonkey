@@ -133,6 +133,14 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         isCurrentUser: isCurrentUser,
                         messages: <String>[ message.text ],
                         photos: message.photos,
+                        likes: message.reactions.likes,
+                        onLike: !isModerating && !message.reactions.currentUserLiked ? () {
+                          ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: true));
+                        } : null,
+                        onUnlike: !isModerating && message.reactions.currentUserLiked ? () {
+                          ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: false));
+                        } : null,
+                        getLikesCallback: () => widget.thread.getReactions(message.id, 'like'),
                         timestamp: message.timestamp,
                         onDelete: isCurrentUser ? () async {
                           final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.delete(message.id));

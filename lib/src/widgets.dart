@@ -501,7 +501,7 @@ class ChatLine extends StatefulWidget {
   final VoidCallback onEdit;
   final VoidCallback onLike;
   final VoidCallback onUnlike;
-  final ProgressCallback<List<User>> getLikesCallback;
+  final ProgressCallback<Set<User>> getLikesCallback;
 
   @override
   State<ChatLine> createState() => _ChatLineState();
@@ -531,7 +531,7 @@ class _ChatLineState extends State<ChatLine> {
   }
 
   void _viewLikes() {
-    final Progress<List<User>> progress = widget.getLikesCallback();
+    final Progress<Set<User>> progress = widget.getLikesCallback();
     Navigator.push(
       context,
       MaterialPageRoute<void>(
@@ -540,17 +540,21 @@ class _ChatLineState extends State<ChatLine> {
             appBar: AppBar(
               title: const Text('Likes'),
             ),
-            body: ProgressBuilder<List<User>>(
+            body: ProgressBuilder<Set<User>>(
               progress: progress,
-              builder: (BuildContext context, List<User> users) {
+              builder: (BuildContext context, Set<User> users) {
+                final List<User> sortedUsers = users.toList()..sort();
                 return ListView.builder(
-                  itemCount: users.length,
+                  itemCount: sortedUsers.length,
                   itemBuilder: (BuildContext context, int index) {
-                    final User user = users[index];
+                    final User user = sortedUsers[index];
                     return ListTile(
                       key: ValueKey<String>(user.username),
                       leading: Cruise.of(context).avatarFor(<User>[user]),
                       title: Text(user.toString()),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/profile', arguments: user);
+                      },
                     );
                   },
                 );
@@ -572,12 +576,12 @@ class _ChatLineState extends State<ChatLine> {
         }));
       }
     }
-    action('DELETE', Icons.delete_forever, widget.onDelete);
-    action('DELETE\n(MODERATOR ACTION)', Icons.delete_forever, widget.onDeleteModerator);
-    action('EDIT', Icons.delete_forever, widget.onEdit);
-    action('VIEW LIKES', Icons.group, widget.getLikesCallback != null && widget.likes > 0 ? _viewLikes : null);
     action('LIKE', Icons.thumb_up, widget.onLike);
     action('UNLIKE', Icons.thumb_down, widget.onUnlike);
+    action('VIEW LIKES', Icons.group, widget.getLikesCallback != null && widget.likes > 0 ? _viewLikes : null);
+    action('EDIT', Icons.delete_forever, widget.onEdit);
+    action('DELETE', Icons.delete_forever, widget.onDelete);
+    action('DELETE\n(MODERATOR ACTION)', Icons.delete_forever, widget.onDeleteModerator);
     final List<Widget> children = <Widget>[
       Text('Posted by: ${widget.user}'),
       Text('Timestamp: ${widget.timestamp}'),
@@ -698,7 +702,7 @@ class _ChatLineState extends State<ChatLine> {
                         const SizedBox(height: 4.0),
                         DefaultTextStyle(
                           style: theme.textTheme.caption.copyWith(color: Colors.grey.shade400),
-                          textAlign: TextAlign.end,
+                          textAlign: TextAlign.start,
                           child: Directionality(
                             textDirection: TextDirection.ltr,
                             child: Text(metadata.join(' • ')),
