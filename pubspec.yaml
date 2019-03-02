@@ -41,4 +41,5 @@ flutter:
    - images/deck_9.png
    - images/deck_10.png
    - resources/JoCoKaraokeSongCatalog.txt
+   - resources/JoCoGamesCatalog.txt
    - images/cruise_monkey.png

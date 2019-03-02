@@ -26,6 +26,7 @@ import 'src/views/code_of_conduct.dart';
 import 'src/views/comms.dart';
 import 'src/views/create_account.dart';
 import 'src/views/deck_plans.dart';
+import 'src/views/games.dart';
 import 'src/views/karaoke.dart';
 import 'src/views/mentions.dart';
 import 'src/views/profile.dart';
@@ -201,6 +202,7 @@ class CruiseMonkeyHome extends StatelessWidget {
     CalendarView(),
     CommsView(),
     DeckPlanView(),
+    GamesView(),
     KaraokeView(),
   ];
 
