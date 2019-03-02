@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../logic/cruise.dart';
 import '../logic/forums.dart';
 import '../logic/mentions.dart';
+import '../logic/photo_manager.dart';
 import '../models/user.dart';
 import '../utils.dart';
 import '../widgets.dart';
@@ -80,7 +81,8 @@ class _MentionsViewState extends State<MentionsView> {
                                   child: ChatLine(
                                     user: item.user,
                                     messages: <String>[ item.text ],
-                                    photos: null,
+                                    photos: item.photo != null ? <Photo>[ item.photo, ] : null,
+                                    likes: item.reactions.likes,
                                     timestamp: item.timestamp,
                                     onPressed: () {
                                       Navigator.push(

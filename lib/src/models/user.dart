@@ -43,7 +43,7 @@ class Credentials {
 }
 
 @immutable
-class User {
+class User implements Comparable<User> {
   const User({
     @required this.username,
     this.displayName,
@@ -86,6 +86,11 @@ class User {
   final Role role;
 
   bool sameAs(User other) => other != null && username == other.username;
+
+  @override
+  int compareTo(User other) {
+    return username.compareTo(other.username);
+  }
 
   bool get isModerator => username == 'moderator';
 

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../logic/photo_manager.dart';
 import '../models/announcements.dart';
 import '../models/calendar.dart';
+import '../models/reactions.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -235,6 +236,18 @@ abstract class Twitarr {
     @required String postId,
   });
 
+  Progress<Map<String, ReactionSummary>> reactTweet({
+    @required Credentials credentials,
+    @required String postId,
+    @required String reaction,
+    @required bool selected,
+  });
+
+  Progress<Map<String, Set<UserSummary>>> getTweetReactions({
+    @required Credentials credentials,
+    @required String postId,
+  });
+
   Progress<Set<ForumSummary>> getForumThreads({
     Credentials credentials,
   });
@@ -260,6 +273,20 @@ abstract class Twitarr {
 
   Progress<bool> deleteForumMessage({
     Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+  });
+
+  Progress<Map<String, ReactionSummary>> reactForumMessage({
+    @required Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+    @required String reaction,
+    @required bool selected,
+  });
+
+  Progress<Map<String, Set<UserSummary>>> getForumMessageReactions({
+    @required Credentials credentials,
     @required String threadId,
     @required String messageId,
   });
@@ -380,7 +407,7 @@ class StreamMessageSummary {
 
   final bool locked;
 
-  final Map<String, Set<UserSummary>> reactions; // String=null is "likes"
+  final Map<String, ReactionSummary> reactions;
 
   final List<String> parents;
 
@@ -427,6 +454,7 @@ class ForumMessageSummary {
     this.photos,
     this.timestamp,
     this.read,
+    this.reactions,
   });
 
   final String id;
@@ -440,6 +468,8 @@ class ForumMessageSummary {
   final DateTime timestamp;
 
   final bool read;
+
+  final Map<String, ReactionSummary> reactions;
 }
 
 class AnnouncementSummary {

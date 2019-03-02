@@ -3,6 +3,7 @@ import 'dart:ui' show hashValues;
 import 'package:flutter/foundation.dart';
 
 import '../basic_types.dart';
+import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../utils.dart';
@@ -182,6 +183,8 @@ class StreamMentionsItem extends MentionsItem {
     String id,
     this.user,
     this.text,
+    this.photo,
+    this.reactions,
     DateTime timestamp,
   }) : super(id, timestamp);
 
@@ -190,9 +193,15 @@ class StreamMentionsItem extends MentionsItem {
     PhotoManager photoManager,
   ) : user = message.user.toUser(photoManager),
       text = message.text,
+      photo = message.photo,
+      reactions = Reactions(message.reactions),
       super(message.id, message.timestamp);
 
   final User user;
 
   final String text;
+
+  final Photo photo;
+
+  final Reactions reactions;
 }

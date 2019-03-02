@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -60,7 +61,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       return true;
     }());
   }
-  
+
   int pageSize = 100;
   static const int kEmergencyPageSizeDelta = 10;
 
@@ -257,9 +258,44 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       if (_postIds.containsKey(postId)) {
         final int postPosition = _postIds[postId];
         assert(_posts[postPosition].id == postId);
-        _posts[postPosition] = _posts[postPosition].asDeleted();
+        _posts[postPosition] = _posts[postPosition].copyWith(isDeleted: true);
+        notifyListeners();
       }
-      notifyListeners();
+    });
+  }
+
+  Progress<void> react(String postId, String reaction, { @required bool selected }) {
+    assert(_credentials != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final Map<String, ReactionSummary> reactions = await completer.chain<Map<String, ReactionSummary>>(
+        _twitarr.reactTweet(
+          credentials: _credentials,
+          postId: postId,
+          reaction: reaction,
+          selected: selected,
+        ),
+      );
+      if (_postIds.containsKey(postId)) {
+        final int postPosition = _postIds[postId];
+        assert(_posts[postPosition].id == postId);
+        _posts[postPosition] = _posts[postPosition].copyWith(reactions: Reactions(reactions));
+        notifyListeners();
+      }
+    });
+  }
+
+  Progress<Set<User>> getReactions(String postId, String reaction) {
+    assert(_credentials != null);
+    return Progress<Set<User>>((ProgressController<Set<User>> completer) async {
+      final Map<String, Set<UserSummary>> reactions = await completer.chain<Map<String, Set<UserSummary>>>(
+        _twitarr.getTweetReactions(
+          credentials: _credentials,
+          postId: postId,
+        ),
+      );
+      if (!reactions.containsKey(reaction))
+        return const <User>{};
+      return reactions[reaction].map<User>((UserSummary user) => user.toUser(photoManager)).toSet();
     });
   }
 
@@ -287,6 +323,7 @@ class StreamPost {
     this.timestamp,
     this.boundaryToken,
     this.locked,
+    this.reactions,
     this.parents,
     this.children,
     this.isDeleted,
@@ -300,11 +337,23 @@ class StreamPost {
        timestamp = summary.timestamp,
        boundaryToken = summary.boundaryToken,
        locked = summary.locked,
+       reactions = Reactions(summary.reactions),
        parents = summary.parents,
        children = summary.children?.map<StreamPost>((StreamMessageSummary summary) => StreamPost.from(summary, photoManager))?.toList(),
        isDeleted = false;
 
-  const StreamPost.sentinel() : id = null, user = null, text = null, photo = null, timestamp = null, boundaryToken = null, locked = null, parents = null, children = null, isDeleted = false;
+  const StreamPost.sentinel(
+  ) : id = null,
+      user = null,
+      text = null,
+      photo = null,
+      timestamp = null,
+      boundaryToken = null,
+      locked = null,
+      reactions = null,
+      parents = null,
+      children = null,
+      isDeleted = false;
 
   final String id;
 
@@ -320,7 +369,7 @@ class StreamPost {
 
   final bool locked;
 
-  // TODO(ianh): reactions
+  final Reactions reactions;
 
   final List<String> parents;
 
@@ -328,18 +377,31 @@ class StreamPost {
 
   final bool isDeleted;
 
-  StreamPost asDeleted() {
+  StreamPost copyWith({
+    String id,
+    User user,
+    String text,
+    Photo photo,
+    DateTime timestamp,
+    int boundaryToken,
+    bool locked,
+    Reactions reactions,
+    List<String> parents,
+    List<StreamPost> children,
+    bool isDeleted,
+  }) {
     return StreamPost(
-      id: id,
-      user: user,
-      text: text,
-      photo: photo,
-      timestamp: timestamp,
-      boundaryToken: boundaryToken,
-      locked: locked,
-      parents: parents,
-      children: children,
-      isDeleted: true,
+      id: id ?? this.id,
+      user: user ?? this.user,
+      text: text ?? this.text,
+      photo: photo ?? this.photo,
+      timestamp: timestamp ?? this.timestamp,
+      boundaryToken: boundaryToken ?? this.boundaryToken,
+      locked: locked ?? this.locked,
+      reactions: reactions ?? this.reactions,
+      parents: parents ?? this.parents,
+      children: children ?? this.children,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 import '../basic_types.dart';
+import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -268,11 +269,48 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
       if (threadDeleted) {
         _parent.reload();
       } else {
+        // TODO(ianh): actually go and delete the relevant message
         reload();
         _timer.interested();
         _parent._childUpdated(this);
       }
       return threadDeleted;
+    });
+  }
+
+  Progress<void> react(String messageId, String reaction, { @required bool selected }) {
+    assert(_credentials != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<Map<String, ReactionSummary>>(
+        _twitarr.reactForumMessage(
+          credentials: _credentials,
+          threadId: id,
+          messageId: messageId,
+          reaction: reaction,
+          selected: selected,
+        ),
+      );
+      // TODO(ianh): actually go and update the relevant message
+      // (reactForumMessage returns the new reactions)
+      reload();
+      _timer.interested();
+      _parent._childUpdated(this);
+    });
+  }
+
+  Progress<Set<User>> getReactions(String messageId, String reaction) {
+    assert(_credentials != null);
+    return Progress<Set<User>>((ProgressController<Set<User>> completer) async {
+      final Map<String, Set<UserSummary>> reactions = await completer.chain<Map<String, Set<UserSummary>>>(
+        _twitarr.getForumMessageReactions(
+          credentials: _credentials,
+          threadId: id,
+          messageId: messageId,
+        ),
+      );
+      if (!reactions.containsKey(reaction))
+        return const <User>{};
+      return reactions[reaction].map<User>((UserSummary user) => user.toUser(_photoManager)).toSet();
     });
   }
 
@@ -311,6 +349,7 @@ class ForumMessage {
     this.photos,
     this.timestamp,
     this.read,
+    this.reactions,
   });
 
   ForumMessage.from(
@@ -321,7 +360,8 @@ class ForumMessage {
       text = message.text,
       photos = message.photos,
       timestamp = message.timestamp,
-      read = message.read;
+      read = message.read,
+      reactions = Reactions(message.reactions);
 
   final String id;
 
@@ -334,4 +374,26 @@ class ForumMessage {
   final DateTime timestamp;
 
   final bool read; // this can be null
+
+  final Reactions reactions;
+
+  ForumMessage copyWith({
+    String id,
+    User user,
+    String text,
+    List<Photo> photos,
+    DateTime timestamp,
+    bool read,
+    Reactions reactions,
+  }) {
+    return ForumMessage(
+      id: id ?? this.id,
+      user: user ?? this.user,
+      text: text ?? this.text,
+      photos: photos ?? this.photos,
+      timestamp: timestamp ?? this.timestamp,
+      read: read ?? this.read,
+      reactions: reactions ?? this.reactions,
+    );
+  }
 }

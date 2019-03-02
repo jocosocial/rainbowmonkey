@@ -69,7 +69,8 @@ class _GamesViewState extends State<GamesView> {
     final List<String> lines = data.split('\n');
     final List<Game> games = <Game>[];
     for (String line in lines) {
-      games.add(Game(line));
+      if (line.isNotEmpty)
+        games.add(Game(line));
     }
     games.sort();
     return games;

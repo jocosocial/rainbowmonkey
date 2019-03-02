@@ -237,6 +237,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                         effectiveCurrentUser: currentUser?.effectiveUser,
                         stream: _stream,
                         canModerate: canModerate,
+                        isModerating: isModerating,
                       );
                     },
                     onDidFinishLayout: () {
@@ -279,6 +280,7 @@ class Entry extends StatelessWidget {
     @required this.animation,
     @required this.effectiveCurrentUser,
     @required this.stream,
+    @required this.isModerating,
     @required this.canModerate,
   }) : assert(post == null || animation != null),
        assert(stream != null),
@@ -294,6 +296,8 @@ class Entry extends StatelessWidget {
   final TweetStream stream;
 
   final bool canModerate;
+
+  final bool isModerating;
 
   @override
   Widget build(BuildContext context) {
@@ -312,6 +316,14 @@ class Entry extends StatelessWidget {
         isCurrentUser: isCurrentUser,
         messages: <String>[ post.text ],
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
+        likes: post.reactions.likes,
+        onLike: !isModerating && !post.reactions.currentUserLiked ? () {
+          ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: true));
+        } : null,
+        onUnlike: !isModerating && post.reactions.currentUserLiked ? () {
+          ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: false));
+        } : null,
+        getLikesCallback: () => stream.getReactions(post.id, 'like'),
         timestamp: post.timestamp,
         onPressed: () {
           Navigator.push(
@@ -479,10 +491,11 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                             return NestedEntry(
                               details: _flatList[index],
                               canModerate: canModerate,
+                              isModerating: isModerating,
                               effectiveCurrentUser: currentUser.effectiveUser,
                               stream: _stream,
-                              onDeleted: () {
-                                if (index == _flatList.length - 1) {
+                              onChanged: (bool deleted) {
+                                if (deleted && index == _flatList.length - 1) {
                                   Navigator.pop(context);
                                 } else {
                                   _reload();
@@ -584,7 +597,8 @@ class NestedEntry extends StatelessWidget {
     @required this.effectiveCurrentUser,
     @required this.stream,
     @required this.canModerate,
-    @required this.onDeleted,
+    @required this.isModerating,
+    @required this.onChanged,
   }) : assert(details != null),
        super(key: key);
 
@@ -596,7 +610,9 @@ class NestedEntry extends StatelessWidget {
 
   final bool canModerate;
 
-  final VoidCallback onDeleted;
+  final bool isModerating;
+
+  final ValueSetter<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -613,16 +629,28 @@ class NestedEntry extends StatelessWidget {
         isCurrentUser: false, // because otherwise the nesting becomes meaningless
         messages: <String>[ details.post.text ],
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
+        likes: details.post.reactions.likes,
+        onLike: !isModerating && !details.post.reactions.currentUserLiked ? () {
+          ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: true));
+          if (onChanged != null)
+            onChanged(false);
+        } : null,
+        onUnlike: !isModerating && details.post.reactions.currentUserLiked ? () {
+          ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: false));
+          if (onChanged != null)
+            onChanged(false);
+        } : null,
+        getLikesCallback: () => stream.getReactions(details.post.id, 'like'),
         timestamp: details.post.timestamp,
         onDelete: isCurrentUser && (!details.post.locked || canModerate) ? () async {
           await ProgressDialog.show<void>(context, stream.delete(details.post.id));
-          if (onDeleted != null)
-            onDeleted();
+          if (onChanged != null)
+            onChanged(true);
         } : null,
         onDeleteModerator: !isCurrentUser && canModerate ? () async {
           await ProgressDialog.show<void>(context, stream.delete(details.post.id));
-          if (onDeleted != null)
-            onDeleted();
+          if (onChanged != null)
+            onChanged(true);
         } : null,
         onPressed: details.depth == 0 ? null : () {
           Navigator.pushReplacement(
