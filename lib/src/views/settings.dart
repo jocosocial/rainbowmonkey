@@ -166,10 +166,6 @@ class _SettingsState extends State<Settings> {
             children.addAll(<Widget>[
               const Divider(),
               ListTile(
-                title: Text('Time dilation for animations', style: theme.textTheme.body2.copyWith(color: theme.primaryColor)),
-              ),
-              const Divider(),
-              ListTile(
                 title: Text('Network quality test controls', style: theme.textTheme.body2.copyWith(color: theme.primaryColor)),
               ),
               ListTile(
