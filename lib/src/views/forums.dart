@@ -133,6 +133,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         isCurrentUser: isCurrentUser,
                         messages: <String>[ message.text ],
                         photos: message.photos,
+                        id: message.id,
                         likes: message.reactions.likes,
                         onLike: !isModerating && !message.reactions.currentUserLiked ? () {
                           ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: true));

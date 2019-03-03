@@ -108,7 +108,7 @@ abstract class Twitarr {
 
   void enable();
   void disable();
-  
+
   double get debugLatency;
   set debugLatency(double value);
 
