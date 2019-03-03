@@ -38,6 +38,12 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
   final Set<_PendingSend> _pending = <_PendingSend>{};
 
   @override
+  void initState() {
+    super.initState();
+    widget.thread.addListener(_update);
+  }
+
+  @override
   void didUpdateWidget(SeamailThreadView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.thread != oldWidget.thread) {

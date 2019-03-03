@@ -591,15 +591,21 @@ class _ChatLineState extends State<ChatLine> {
     final List<Widget> children = <Widget>[
       Text('Posted by: ${widget.user}'),
       Text('Timestamp: ${widget.timestamp}'),
-      const Divider(),
-      Wrap(
-        alignment: WrapAlignment.spaceEvenly,
-        spacing: 8.0,
-        crossAxisAlignment: WrapCrossAlignment.start,
-        runSpacing: 8.0,
-        children: actions,
-      ),
     ];
+    if (actions.isNotEmpty) {
+      children.addAll(<Widget>[
+        const Divider(),
+        Wrap(
+          alignment: WrapAlignment.spaceEvenly,
+          spacing: 8.0,
+          crossAxisAlignment: WrapCrossAlignment.start,
+          runSpacing: 8.0,
+          children: actions,
+        ),
+      ]);
+    } else {
+      children.add(const SizedBox(height: 12.0));
+    }
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) => Dialog(
