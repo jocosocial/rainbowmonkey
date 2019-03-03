@@ -479,6 +479,9 @@ class ChatLine extends StatefulWidget {
     @required this.timestamp,
     this.likes = 0,
     this.onPressed,
+    this.onReply,
+    this.onLock,
+    this.onUnlock,
     this.onDelete,
     this.onDeleteModerator,
     this.onEdit,
@@ -507,6 +510,9 @@ class ChatLine extends StatefulWidget {
   final VoidCallback onEdit;
   final VoidCallback onLike;
   final VoidCallback onUnlike;
+  final VoidCallback onLock;
+  final VoidCallback onUnlock;
+  final VoidCallback onReply;
   final ProgressCallback<Set<User>> getLikesCallback;
 
   @override
@@ -585,7 +591,10 @@ class _ChatLineState extends State<ChatLine> {
     action('LIKE', Icons.thumb_up, widget.onLike);
     action('UNLIKE', Icons.thumb_down, widget.onUnlike);
     action('VIEW LIKES', Icons.group, widget.getLikesCallback != null && widget.likes > 0 ? _viewLikes : null);
+    action('REPLY', Icons.reply, widget.onReply);
     action('EDIT', Icons.delete_forever, widget.onEdit);
+    action('LOCK', Icons.lock_outline, widget.onLock);
+    action('UNLOCK', Icons.lock_open, widget.onUnlock);
     action('DELETE', Icons.delete_forever, widget.onDelete);
     action('DELETE\n(MODERATOR ACTION)', Icons.delete_forever, widget.onDeleteModerator);
     final List<Widget> children = <Widget>[
@@ -1532,9 +1541,11 @@ class ModeratorBuilder extends StatelessWidget {
   const ModeratorBuilder({
     Key key,
     this.builder,
+    this.includeBorder = true,
   }) : super(key: key);
 
   final ModeratorBuilderCallback builder;
+  final bool includeBorder;
 
   @override
   Widget build(BuildContext context) {
@@ -1558,18 +1569,60 @@ class ModeratorBuilder extends StatelessWidget {
           }
         }
         final bool isModerating = canModerate && user.credentials.asMod;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.fastOutSlowIn,
-          decoration: BoxDecoration(
-            border: Border.all(
-              width: isModerating ? 12.0 : 0,
-              color: Theme.of(context).accentColor,
-            ),
-          ),
-          child: builder(context, user, canModerate, isModerating),
-        );
+        Widget result = builder(context, user, canModerate, isModerating);
+        if (includeBorder) {
+          result = ModeratorBorder(
+            isModerating: isModerating,
+            child: result,
+          );
+        }
+        return result;
       },
     );
   }
+}
+
+class ModeratorBorder extends StatelessWidget {
+  const ModeratorBorder({
+    Key key,
+    this.isModerating,
+    this.child,
+  }) : super(key: key);
+
+  final bool isModerating;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.fastOutSlowIn,
+      decoration: BoxDecoration(
+        border: Border.all(
+          width: isModerating ? 12.0 : 0,
+          color: Theme.of(context).accentColor,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+Future<bool> confirmDialog(BuildContext context, String message, { String yes = 'YES', String no = 'NO', }) async {
+  return await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) => AlertDialog(
+      title: Text(message),
+      actions: <Widget>[
+        FlatButton(
+          onPressed: () { Navigator.of(context).pop(true); },
+          child: Text(yes),
+        ),
+        FlatButton(
+          onPressed: () { Navigator.of(context).pop(false); },
+          child: Text(no),
+        ),
+      ],
+    ),
+  ) == true;
 }

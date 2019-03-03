@@ -93,24 +93,7 @@ class _CreateAccountState extends State<CreateAccount> {
             /* need to recheck whether the submit button should be enabled */
           });
         },
-        onWillPop: () async {
-          return await showDialog<bool>(
-            context: context,
-            builder: (BuildContext context) => AlertDialog(
-              title: const Text('Cancel account creation?'),
-              actions: <Widget>[
-                FlatButton(
-                  onPressed: () { Navigator.of(context).pop(false); },
-                  child: const Text('NO'),
-                ),
-                FlatButton(
-                  onPressed: () { Navigator.of(context).pop(true); },
-                  child: const Text('YES'),
-                ),
-              ],
-            ),
-          ) == true;
-        },
+        onWillPop: () => confirmDialog(context, 'Cancel account creation?'),
         child: CustomScrollView(
           slivers: <Widget>[
             SliverPadding(

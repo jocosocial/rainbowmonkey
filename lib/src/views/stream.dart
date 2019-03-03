@@ -319,27 +319,27 @@ class Entry extends StatelessWidget {
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         id: post.id,
         likes: post.reactions.likes,
-        onLike: !isModerating && !post.reactions.currentUserLiked ? () {
+        onLike: !isModerating && !post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: true));
         } : null,
-        onUnlike: !isModerating && post.reactions.currentUserLiked ? () {
+        onUnlike: !isModerating && post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: false));
         } : null,
         getLikesCallback: () => stream.getReactions(post.id, 'like'),
         timestamp: post.timestamp,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (BuildContext context) => TweetThreadView(threadId: post.id),
-            ),
-          );
-        },
-        onDelete: isCurrentUser && (!post.locked || canModerate) ? () {
+        onReply: () => TweetThreadView.open(context, post.id),
+        onPressed: () => TweetThreadView.open(context, post.id),
+        onDelete: isCurrentUser && (!post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.delete(post.id));
         } : null,
         onDeleteModerator: !isCurrentUser && canModerate ? () {
           ProgressDialog.show<void>(context, stream.delete(post.id));
+        } : null,
+        onLock: canModerate && !post.isLocked ? () {
+          ProgressDialog.show<void>(context, stream.lock(post.id, locked: true));
+        } : null,
+        onUnlock: canModerate && post.isLocked ? () {
+          ProgressDialog.show<void>(context, stream.lock(post.id, locked: false));
         } : null,
       ),
     );
@@ -353,6 +353,15 @@ class TweetThreadView extends StatefulWidget {
   }) : super(key: key);
 
   final String threadId;
+
+  static Future<void> open(BuildContext context, String threadId, { bool replace = false }) {
+    final Route<void> route = MaterialPageRoute<void>(
+      builder: (BuildContext context) => TweetThreadView(threadId: threadId),
+    );
+    if (replace)
+      return Navigator.push(context, route);
+    return Navigator.pushReplacement(context, route);
+  }
 
   @override
   State<TweetThreadView> createState() => _TweetThreadViewState();
@@ -457,7 +466,7 @@ class _TweetThreadViewState extends State<TweetThreadView> {
             builder: (BuildContext context, StreamPost post) {
               _flatList ??= _flatten(post); // this list is "in reverse", index 0 is the newest
               final bool loggedIn = Cruise.of(context).isLoggedIn;
-              final bool canPostInPrinciple = loggedIn && (post.locked ? currentUser.canPostWhenLocked : currentUser.canPost);
+              final bool canPostInPrinciple = loggedIn && (post.isLocked ? currentUser.canPostWhenLocked : currentUser.canPost);
               final bool canPost = canPostInPrinciple && _textController.text.trim().isNotEmpty;
               return SafeArea(
                 child: Column(
@@ -546,7 +555,7 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                               contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
                               counter: const SizedBox.shrink(),
                               hintText: !loggedIn ? 'Log in to send messages'
-                                      : post.locked ? 'Thread locked'
+                                      : post.isLocked ? 'Thread locked'
                                       : _photo != null ? 'Image caption${ isModerating ? " (as moderator)" : ""}'
                                       : 'Message${ isModerating ? " (as moderator)" : ""}',
                                       // TODO(ianh): locked
@@ -634,19 +643,19 @@ class NestedEntry extends StatelessWidget {
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
         id: details.post.id,
         likes: details.post.reactions.likes,
-        onLike: !isModerating && !details.post.reactions.currentUserLiked ? () {
+        onLike: !isModerating && !details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: true));
           if (onChanged != null)
             onChanged(false);
         } : null,
-        onUnlike: !isModerating && details.post.reactions.currentUserLiked ? () {
+        onUnlike: !isModerating && details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: false));
           if (onChanged != null)
             onChanged(false);
         } : null,
         getLikesCallback: () => stream.getReactions(details.post.id, 'like'),
         timestamp: details.post.timestamp,
-        onDelete: isCurrentUser && (!details.post.locked || canModerate) ? () async {
+        onDelete: isCurrentUser && (!details.post.isLocked || canModerate) ? () async {
           await ProgressDialog.show<void>(context, stream.delete(details.post.id));
           if (onChanged != null)
             onChanged(true);
@@ -656,14 +665,18 @@ class NestedEntry extends StatelessWidget {
           if (onChanged != null)
             onChanged(true);
         } : null,
-        onPressed: details.depth == 0 ? null : () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute<void>(
-              builder: (BuildContext context) => TweetThreadView(threadId: details.post.id),
-            ),
-          );
-        },
+        onReply: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id, replace: true),
+        onPressed: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id, replace: true),
+        onLock: canModerate && !details.post.isLocked ? () {
+          ProgressDialog.show<void>(context, stream.lock(details.post.id, locked: true));
+          if (onChanged != null)
+            onChanged(false);
+        } : null,
+        onUnlock: canModerate && details.post.isLocked ? () {
+          ProgressDialog.show<void>(context, stream.lock(details.post.id, locked: false));
+          if (onChanged != null)
+            onChanged(false);
+        } : null,
       ),
     );
   }

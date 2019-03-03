@@ -175,10 +175,10 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   String get subject => _subject ?? '';
   String _subject;
 
-  bool get sticky => _sticky ?? false;
+  bool get isSticky => _sticky ?? false;
   bool _sticky;
 
-  bool get locked => _locked ?? false;
+  bool get isLocked => _locked ?? false;
   bool _locked;
 
   bool get hasUnread => unreadCount > 0;
@@ -256,9 +256,56 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     });
   }
 
-  Progress<bool> delete(String messageId) {
+  Progress<void> sticky({ @required bool sticky }) {
     assert(_credentials != null);
-    return Progress<bool>((ProgressController<void> completer) async {
+    assert(sticky != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.stickyForumThread(
+          credentials: _credentials,
+          threadId: id,
+          sticky: sticky,
+        ),
+      );
+      reload();
+      _timer.interested();
+      _parent._childUpdated(this);
+    });
+  }
+
+  Progress<void> lock({ @required bool locked }) {
+    assert(_credentials != null);
+    assert(locked != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.lockForumThread(
+          credentials: _credentials,
+          threadId: id,
+          locked: locked,
+        ),
+      );
+      reload();
+      _timer.interested();
+      _parent._childUpdated(this);
+    });
+  }
+
+  Progress<void> delete() {
+    assert(_credentials != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.deleteForumThread(
+          credentials: _credentials,
+          threadId: id,
+        ),
+      );
+      _parent.reload();
+    });
+  }
+
+  Progress<bool> deleteMessage(String messageId) {
+    assert(_credentials != null);
+    return Progress<bool>((ProgressController<bool> completer) async {
       final bool threadDeleted = await completer.chain<bool>(
         _twitarr.deleteForumMessage(
           credentials: _credentials,

@@ -236,6 +236,12 @@ abstract class Twitarr {
     @required Uint8List photo,
   });
 
+  Progress<void> lockTweet({
+    Credentials credentials,
+    @required String postId,
+    @required bool locked,
+  });
+
   Progress<void> deleteTweet({
     @required Credentials credentials,
     @required String postId,
@@ -267,6 +273,23 @@ abstract class Twitarr {
     @required String subject,
     @required String text,
     @required List<Uint8List> photos,
+  });
+
+  Progress<void> stickyForumThread({
+    Credentials credentials,
+    @required String threadId,
+    @required bool sticky,
+  });
+
+  Progress<void> lockForumThread({
+    Credentials credentials,
+    @required String threadId,
+    @required bool locked,
+  });
+
+  Progress<void> deleteForumThread({
+    Credentials credentials,
+    @required String threadId,
   });
 
   Progress<void> postForumMessage({

@@ -417,24 +417,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
               /* need to recheck whether the submit button should be enabled */
             });
           },
-          onWillPop: () async {
-            return await showDialog<bool>(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                title: const Text('Abandon creating this conversation?'),
-                actions: <Widget>[
-                  FlatButton(
-                    onPressed: () { Navigator.of(context).pop(true); },
-                    child: const Text('YES'),
-                  ),
-                  FlatButton(
-                    onPressed: () { Navigator.of(context).pop(false); },
-                    child: const Text('NO'),
-                  ),
-                ],
-              ),
-            ) == true;
-          },
+          onWillPop: () => confirmDialog(context, 'Abandon creating this conversation?'),
           child: CustomScrollView(
             slivers: <Widget>[
               SliverPadding(

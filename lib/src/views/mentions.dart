@@ -110,7 +110,7 @@ class _MentionsViewState extends State<MentionsView> {
                                 final String lastMessage = 'Most recent from ${item.lastMessageUser}';
                                 return ListTile(
                                   leading: Tooltip(
-                                    message: item.sticky ? 'Sticky forum' : 'Forum',
+                                    message: item.isSticky ? 'Sticky forum' : 'Forum',
                                     child: const CircleAvatar(child: Icon(Icons.forum)),
                                   ),
                                   title: Row(

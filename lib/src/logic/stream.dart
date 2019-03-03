@@ -264,6 +264,20 @@ class TweetStream extends ChangeNotifier with BusyMixin {
     });
   }
 
+  Progress<void> lock(String postId, { @required bool locked }) {
+    assert(_credentials != null);
+    assert(locked != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.lockTweet(
+          credentials: _credentials,
+          postId: postId,
+          locked: locked,
+        ),
+      );
+    });
+  }
+
   Progress<void> react(String postId, String reaction, { @required bool selected }) {
     assert(_credentials != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -322,7 +336,7 @@ class StreamPost {
     this.photo,
     this.timestamp,
     this.boundaryToken,
-    this.locked,
+    this.isLocked,
     this.reactions,
     this.parents,
     this.children,
@@ -336,7 +350,7 @@ class StreamPost {
        photo = summary.photo,
        timestamp = summary.timestamp,
        boundaryToken = summary.boundaryToken,
-       locked = summary.locked,
+       isLocked = summary.locked,
        reactions = Reactions(summary.reactions),
        parents = summary.parents,
        children = summary.children?.map<StreamPost>((StreamMessageSummary summary) => StreamPost.from(summary, photoManager))?.toList(),
@@ -349,7 +363,7 @@ class StreamPost {
       photo = null,
       timestamp = null,
       boundaryToken = null,
-      locked = null,
+      isLocked = null,
       reactions = null,
       parents = null,
       children = null,
@@ -367,7 +381,7 @@ class StreamPost {
 
   final int boundaryToken;
 
-  final bool locked;
+  final bool isLocked;
 
   final Reactions reactions;
 
@@ -384,7 +398,7 @@ class StreamPost {
     Photo photo,
     DateTime timestamp,
     int boundaryToken,
-    bool locked,
+    bool isLocked,
     Reactions reactions,
     List<String> parents,
     List<StreamPost> children,
@@ -397,7 +411,7 @@ class StreamPost {
       photo: photo ?? this.photo,
       timestamp: timestamp ?? this.timestamp,
       boundaryToken: boundaryToken ?? this.boundaryToken,
-      locked: locked ?? this.locked,
+      isLocked: isLocked ?? this.isLocked,
       reactions: reactions ?? this.reactions,
       parents: parents ?? this.parents,
       children: children ?? this.children,

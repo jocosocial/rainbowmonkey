@@ -926,6 +926,32 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<void> lockTweet({
+    Credentials credentials,
+    @required String postId,
+    @required bool locked,
+  }) {
+    assert(credentials.key != null);
+    assert(postId != null);
+    assert(locked != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}/locked/$locked?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 401, 404],
+        ),
+      );
+      if (rawData.isEmpty)
+        return;
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
   Progress<void> deleteTweet({
     Credentials credentials,
     @required String postId,
@@ -1146,6 +1172,74 @@ class RestTwitarr implements Twitarr {
         steps: (photos != null ? photos.length : 0) + 1,
       );
       return _parseForumThread(rawData);
+    });
+  }
+
+  @override
+  Progress<void> stickyForumThread({
+    Credentials credentials,
+    @required String threadId,
+    @required bool sticky,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/forum/${Uri.encodeComponent(threadId)}/sticky/$sticky?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 401, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
+  Progress<void> lockForumThread({
+    Credentials credentials,
+    @required String threadId,
+    @required bool locked,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/forum/${Uri.encodeComponent(threadId)}/locked/$locked?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 401, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
+  Progress<void> deleteForumThread({
+    Credentials credentials,
+    @required String threadId,
+  }) {
+    assert(credentials.key != null);
+    assert(threadId != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'DELETE',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 401, 404],
+        ),
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
     });
   }
 
@@ -1600,13 +1694,11 @@ class RestTwitarr implements Twitarr {
       await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
       if (!expectedStatusCodes.contains(response.statusCode)) {
         assert(() {
-          if (_debugVerbose) {
-            response.transform(utf8.decoder).join().then((String result) {
-              debugPrint('<<< (!!) ${response.statusCode} from $path:');
-              for (int index = 0; index < result.length; index += 128)
-                debugPrint(' 0x${index.toRadixString(16).padLeft(4, "0")}: ${result.substring(index, math.min(index + 100, result.length))}');
-            });
-          }
+          response.transform(utf8.decoder).join().then((String result) {
+            debugPrint('<<< (!!) ${response.statusCode} from $path:');
+            for (int index = 0; index < result.length; index += 128)
+              debugPrint(' 0x${index.toRadixString(16).padLeft(4, "0")}: ${result.substring(index, math.min(index + 100, result.length)).replaceAll("\n", "␊")}');
+          });
           return true;
         }());
         throw HttpServerError(response.statusCode, response.reasonPhrase, url);
