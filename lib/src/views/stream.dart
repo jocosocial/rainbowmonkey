@@ -319,10 +319,10 @@ class Entry extends StatelessWidget {
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         id: post.id,
         likes: post.reactions.likes,
-        onLike: !isModerating && !post.reactions.currentUserLiked ? () {
+        onLike: !isModerating && !post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: true));
         } : null,
-        onUnlike: !isModerating && post.reactions.currentUserLiked ? () {
+        onUnlike: !isModerating && post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: false));
         } : null,
         getLikesCallback: () => stream.getReactions(post.id, 'like'),
@@ -643,12 +643,12 @@ class NestedEntry extends StatelessWidget {
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
         id: details.post.id,
         likes: details.post.reactions.likes,
-        onLike: !isModerating && !details.post.reactions.currentUserLiked ? () {
+        onLike: !isModerating && !details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: true));
           if (onChanged != null)
             onChanged(false);
         } : null,
-        onUnlike: !isModerating && details.post.reactions.currentUserLiked ? () {
+        onUnlike: !isModerating && details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: false));
           if (onChanged != null)
             onChanged(false);
