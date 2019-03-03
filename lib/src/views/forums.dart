@@ -90,10 +90,11 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
   Widget build(BuildContext context) {
     final List<ForumMessage> messages = widget.thread.toList().reversed.toList() ?? const <ForumMessage>[];
     final bool loggedIn = Cruise.of(context).isLoggedIn;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.thread.subject),
-        actions: <Widget>[
+    return ModeratorBuilder(
+      builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
+        final bool canPostInPrinciple = loggedIn && (widget.thread.isLocked ? currentUser.canPostWhenLocked : currentUser.canPost);
+        final bool canPost = canPostInPrinciple && _textController.text.trim().isNotEmpty;
+        final List<Widget> actions = <Widget>[
           ValueListenableBuilder<bool>(
             valueListenable: widget.thread.active,
             builder: (BuildContext context, bool active, Widget child) {
@@ -104,138 +105,192 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
               );
             },
           ),
-        ],
-      ),
-      body: ModeratorBuilder(
-        builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
-          final bool canPostInPrinciple = loggedIn && (widget.thread.locked ? currentUser.canPostWhenLocked : currentUser.canPost);
-          final bool canPost = canPostInPrinciple && _textController.text.trim().isNotEmpty;
-          return Column(
-            children: <Widget>[
-              Expanded(
-                child: BusyIndicator(
-                  busy: widget.thread.busy,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    reverse: true,
-                    itemBuilder: (BuildContext context, int index) {
-                      // the very first item is the subject.
-                      if (index == messages.length) {
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 56.0),
-                          child: Text(widget.thread.subject, textAlign: TextAlign.center, style: Theme.of(context).textTheme.title),
-                        );
-                      }
-                      final ForumMessage message = messages[index];
-                      final bool isCurrentUser = message.user.sameAs(currentUser?.effectiveUser);
-                      return ChatLine(
-                        user: message.user,
-                        isCurrentUser: isCurrentUser,
-                        messages: <String>[ message.text ],
-                        photos: message.photos,
-                        id: message.id,
-                        likes: message.reactions.likes,
-                        onLike: !isModerating && !message.reactions.currentUserLiked ? () {
-                          ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: true));
-                        } : null,
-                        onUnlike: !isModerating && message.reactions.currentUserLiked ? () {
-                          ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: false));
-                        } : null,
-                        getLikesCallback: () => widget.thread.getReactions(message.id, 'like'),
-                        timestamp: message.timestamp,
-                        onDelete: isCurrentUser ? () async {
-                          final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.delete(message.id));
-                          if (threadDeleted)
-                            Navigator.pop(context);
-                        } : null,
-                        onDeleteModerator: !isCurrentUser && canModerate ? () async {
-                          final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.delete(message.id));
-                          if (threadDeleted)
-                            Navigator.pop(context);
-                        } : null,
-                      );
-                    },
-                    itemCount: messages.length + 1,
-                  ),
+        ];
+        final List<PopupMenuEntry<VoidCallback>> menuItems = <PopupMenuEntry<VoidCallback>>[];
+        switch (currentUser.role) {
+          case Role.admin:
+          case Role.tho:
+            menuItems.add(
+              CheckedPopupMenuItem<VoidCallback>(
+                child: const Text('Sticky'),
+                checked: widget.thread.isSticky,
+                value: () { widget.thread.sticky(sticky: !widget.thread.isSticky); },
+              ),
+            );
+            continue moderator;
+          moderator:
+          case Role.moderator:
+            menuItems.addAll(<PopupMenuEntry<VoidCallback>>[
+              CheckedPopupMenuItem<VoidCallback>(
+                child: const Text('Lock'),
+                checked: widget.thread.isLocked,
+                value: () { widget.thread.lock(locked: !widget.thread.isLocked); },
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem<VoidCallback>(
+                child: const ListTile(
+                  leading: Icon(Icons.delete_forever),
+                  title: Text('Delete Forum'),
                 ),
+                value: () async {
+                  if (await confirmDialog(context, 'Delete "${widget.thread.subject}" forum?', yes: 'DELETE')) {
+                    widget.thread.delete();
+                    Navigator.pop(context);
+                  }
+                },
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: _pending.map((_PendingSend entry) {
-                  return ProgressChatLine(
-                    key: ObjectKey(entry),
-                    progress: entry.progress,
-                    text: entry.text,
-                    photos: entry.photos,
-                    onRetry: () {
-                      setState(() {
-                        _pending.remove(entry);
-                        _submitMessage(entry.text, photos: entry.photos);
-                      });
-                    },
-                    onRemove: () {
-                      setState(() {
-                        _pending.remove(entry);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const Divider(height: 0.0),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      onChanged: (String value) {
-                        setState(() {
-                          // changed state is in _textController
-                          assert(_textController.text == value);
-                        });
+            ]);
+            continue user;
+          user:
+          case Role.user:
+          case Role.muted:
+          case Role.banned:
+          case Role.none:
+            break;
+        }
+        if (menuItems.isNotEmpty) {
+          actions.add(PopupMenuButton<VoidCallback>(
+            onSelected: (VoidCallback callback) {
+              callback();
+            },
+            itemBuilder: (BuildContext context) => menuItems,
+            icon: const Icon(Icons.more_vert),
+          ));
+        }
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.thread.subject),
+            actions: actions,
+          ),
+          body: ModeratorBorder(
+            isModerating: isModerating,
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: BusyIndicator(
+                    busy: widget.thread.busy,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      reverse: true,
+                      itemBuilder: (BuildContext context, int index) {
+                        // the very first item is the subject.
+                        if (index == messages.length) {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 56.0),
+                            child: Text(widget.thread.subject, textAlign: TextAlign.center, style: Theme.of(context).textTheme.title),
+                          );
+                        }
+                        final ForumMessage message = messages[index];
+                        final bool isCurrentUser = message.user.sameAs(currentUser?.effectiveUser);
+                        return ChatLine(
+                          user: message.user,
+                          isCurrentUser: isCurrentUser,
+                          messages: <String>[ message.text ],
+                          photos: message.photos,
+                          id: message.id,
+                          likes: message.reactions.likes,
+                          onLike: !isModerating && !message.reactions.currentUserLiked ? () {
+                            ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: true));
+                          } : null,
+                          onUnlike: !isModerating && message.reactions.currentUserLiked ? () {
+                            ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: false));
+                          } : null,
+                          getLikesCallback: () => widget.thread.getReactions(message.id, 'like'),
+                          timestamp: message.timestamp,
+                          onDelete: isCurrentUser ? () async {
+                            final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.deleteMessage(message.id));
+                            if (threadDeleted)
+                              Navigator.pop(context);
+                          } : null,
+                          onDeleteModerator: !isCurrentUser && canModerate ? () async {
+                            final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.deleteMessage(message.id));
+                            if (threadDeleted)
+                              Navigator.pop(context);
+                          } : null,
+                        );
                       },
-                      onSubmitted: canPost ? (String value) {
-                        assert(_textController.text == value);
-                        if (_textController.text.trim().isNotEmpty)
-                          _submitCurrentMessage();
-                      } : null,
-                      textInputAction: TextInputAction.newline,
-                      maxLength: 10000,
-                      maxLines: null,
-                      textCapitalization: TextCapitalization.sentences,
-                      enabled: canPostInPrinciple,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                        counter: const SizedBox.shrink(),
-                        hintText: !loggedIn ? 'Log in to send messages'
-                                : widget.thread.locked ? 'Forum locked'
-                                : _photos.isEmpty ? 'Message${ isModerating ? " (as moderator)" : ""}'
-                                : _photos.length == 1 ? 'Image caption${ isModerating ? " (as moderator)" : ""}'
-                                : 'Image captions${ isModerating ? " (as moderator)" : ""}',
-                      ),
+                      itemCount: messages.length + 1,
                     ),
                   ),
-                  AttachImageButton(
-                    images: _photos,
-                    enabled: canPostInPrinciple,
-                    onUpdate: (List<Uint8List> newPhotos) {
-                      setState(() {
-                        _photos = newPhotos;
-                      });
-                    },
-                    allowMultiple: true,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    tooltip: 'Send message${ isModerating ? " (as moderator)" : ""}',
-                    onPressed: canPost ? _submitCurrentMessage : null,
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _pending.map((_PendingSend entry) {
+                    return ProgressChatLine(
+                      key: ObjectKey(entry),
+                      progress: entry.progress,
+                      text: entry.text,
+                      photos: entry.photos,
+                      onRetry: () {
+                        setState(() {
+                          _pending.remove(entry);
+                          _submitMessage(entry.text, photos: entry.photos);
+                        });
+                      },
+                      onRemove: () {
+                        setState(() {
+                          _pending.remove(entry);
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const Divider(height: 0.0),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        onChanged: (String value) {
+                          setState(() {
+                            // changed state is in _textController
+                            assert(_textController.text == value);
+                          });
+                        },
+                        onSubmitted: canPost ? (String value) {
+                          assert(_textController.text == value);
+                          if (_textController.text.trim().isNotEmpty)
+                            _submitCurrentMessage();
+                        } : null,
+                        textInputAction: TextInputAction.newline,
+                        maxLength: 10000,
+                        maxLines: null,
+                        textCapitalization: TextCapitalization.sentences,
+                        enabled: canPostInPrinciple,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
+                          counter: const SizedBox.shrink(),
+                          hintText: !loggedIn ? 'Log in to send messages'
+                                  : widget.thread.isLocked ? 'Forum locked'
+                                  : _photos.isEmpty ? 'Message${ isModerating ? " (as moderator)" : ""}'
+                                  : _photos.length == 1 ? 'Image caption${ isModerating ? " (as moderator)" : ""}'
+                                  : 'Image captions${ isModerating ? " (as moderator)" : ""}',
+                        ),
+                      ),
+                    ),
+                    AttachImageButton(
+                      images: _photos,
+                      enabled: canPostInPrinciple,
+                      onUpdate: (List<Uint8List> newPhotos) {
+                        setState(() {
+                          _photos = newPhotos;
+                        });
+                      },
+                      allowMultiple: true,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.send),
+                      tooltip: 'Send message${ isModerating ? " (as moderator)" : ""}',
+                      onPressed: canPost ? _submitCurrentMessage : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -302,24 +357,7 @@ class _StartForumViewState extends State<StartForumView> {
                 /* need to recheck whether the submit button should be enabled */
               });
             },
-            onWillPop: () async {
-              return await showDialog<bool>(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  title: const Text('Abandon creating this forum?'),
-                  actions: <Widget>[
-                    FlatButton(
-                      onPressed: () { Navigator.of(context).pop(true); },
-                      child: const Text('YES'),
-                    ),
-                    FlatButton(
-                      onPressed: () { Navigator.of(context).pop(false); },
-                      child: const Text('NO'),
-                    ),
-                  ],
-                ),
-              ) == true;
-            },
+            onWillPop: () => confirmDialog(context, 'Abandon creating this forum?'),
             child: Column(
               children: <Widget>[
                 Padding(

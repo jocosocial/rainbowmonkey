@@ -48,7 +48,7 @@ void main() {
       <String>[
         'LoggingDataStore.restoreSettings',
         '--- select new configuration',
-        'LoggingTwitarr(1).dispose',
+        'LoggingTwitarr(1).dispose()',
         'model changed',
         '--- idling, expect settings restore to change the model',
         'LoggingDataStore.restoreCredentials',
@@ -73,7 +73,7 @@ void main() {
         'LoggingTwitarr(2).getAuthenticatedUser Credentials(aaa)',
         'user updated',
         '--- end',
-        'LoggingTwitarr(2).dispose',
+        'LoggingTwitarr(2).dispose()',
       ],
     );
   });
@@ -108,7 +108,7 @@ void main() {
         'LoggingTwitarr(1).getSectionStatus()',
         '--- waiting one hour',
         '--- end',
-        'LoggingTwitarr(1).dispose'
+        'LoggingTwitarr(1).dispose()'
       ],
     );
   });
@@ -176,7 +176,7 @@ void main() {
         'getSeamailThreads for Credentials(user2) from null',
         '--- waiting 1 minute',
         '--- ending',
-        'LoggingTwitarr(0).dispose'
+        'LoggingTwitarr(0).dispose()'
       ],
     );
     expect(identical(seamail0, seamail1), isFalse);
@@ -205,7 +205,7 @@ void main() {
       <String>[
         'LoggingDataStore.restoreSettings',
         '--- idling (isLoggedIn = false)',
-        'LoggingTwitarr(0).dispose',
+        'LoggingTwitarr(0).dispose()',
         'model changed (isLoggedIn = false)',
         'LoggingDataStore.restoreCredentials',
         'LoggingTwitarr(1).login aaa / aaaaaa',
@@ -216,7 +216,7 @@ void main() {
         'LoggingTwitarr(1).getSectionStatus()',
         '--- waiting one hour',
         '--- end',
-        'LoggingTwitarr(1).dispose'
+        'LoggingTwitarr(1).dispose()'
       ],
     );
   });

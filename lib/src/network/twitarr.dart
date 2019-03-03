@@ -269,6 +269,23 @@ abstract class Twitarr {
     @required List<Uint8List> photos,
   });
 
+  Progress<void> stickyForumThread({
+    Credentials credentials,
+    @required String threadId,
+    @required bool sticky,
+  });
+
+  Progress<void> lockForumThread({
+    Credentials credentials,
+    @required String threadId,
+    @required bool locked,
+  });
+
+  Progress<void> deleteForumThread({
+    Credentials credentials,
+    @required String threadId,
+  });
+
   Progress<void> postForumMessage({
     Credentials credentials,
     @required String threadId,

@@ -1532,9 +1532,11 @@ class ModeratorBuilder extends StatelessWidget {
   const ModeratorBuilder({
     Key key,
     this.builder,
+    this.includeBorder = true,
   }) : super(key: key);
 
   final ModeratorBuilderCallback builder;
+  final bool includeBorder;
 
   @override
   Widget build(BuildContext context) {
@@ -1558,18 +1560,60 @@ class ModeratorBuilder extends StatelessWidget {
           }
         }
         final bool isModerating = canModerate && user.credentials.asMod;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.fastOutSlowIn,
-          decoration: BoxDecoration(
-            border: Border.all(
-              width: isModerating ? 12.0 : 0,
-              color: Theme.of(context).accentColor,
-            ),
-          ),
-          child: builder(context, user, canModerate, isModerating),
-        );
+        Widget result = builder(context, user, canModerate, isModerating);
+        if (includeBorder) {
+          result = ModeratorBorder(
+            isModerating: isModerating,
+            child: result,
+          );
+        }
+        return result;
       },
     );
   }
+}
+
+class ModeratorBorder extends StatelessWidget {
+  const ModeratorBorder({
+    Key key,
+    this.isModerating,
+    this.child,
+  }) : super(key: key);
+
+  final bool isModerating;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.fastOutSlowIn,
+      decoration: BoxDecoration(
+        border: Border.all(
+          width: isModerating ? 12.0 : 0,
+          color: Theme.of(context).accentColor,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+Future<bool> confirmDialog(BuildContext context, String message, { String yes = 'YES', String no = 'NO', }) async {
+  return await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) => AlertDialog(
+      title: Text(message),
+      actions: <Widget>[
+        FlatButton(
+          onPressed: () { Navigator.of(context).pop(true); },
+          child: Text(yes),
+        ),
+        FlatButton(
+          onPressed: () { Navigator.of(context).pop(false); },
+          child: Text(no),
+        ),
+      ],
+    ),
+  ) == true;
 }

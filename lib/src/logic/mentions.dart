@@ -154,8 +154,8 @@ class ForumMentionsItem extends MentionsItem {
   const ForumMentionsItem({
     String id,
     this.subject,
-    this.sticky,
-    this.locked,
+    this.isSticky,
+    this.isLocked,
     this.totalCount,
     this.lastMessageUser,
     DateTime lastMessageTimestamp,
@@ -165,15 +165,15 @@ class ForumMentionsItem extends MentionsItem {
     ForumSummary thread,
     PhotoManager photoManager,
   ) : subject = thread.subject,
-      sticky = thread.sticky,
-      locked = thread.locked,
+      isSticky = thread.sticky,
+      isLocked = thread.locked,
       totalCount = thread.totalCount,
       lastMessageUser = thread.lastMessageUser.toUser(photoManager),
       super(thread.id, thread.lastMessageTimestamp);
 
   final String subject;
-  final bool sticky;
-  final bool locked;
+  final bool isSticky;
+  final bool isLocked;
   final int totalCount;
   final User lastMessageUser;
 }

@@ -178,10 +178,10 @@ class CommsView extends StatelessWidget implements View {
               final List<ForumThread> forumThreads = forums.toList()
                 ..sort(
                   (ForumThread a, ForumThread b) {
-                    if (a.sticky != b.sticky) {
-                      if (a.sticky)
+                    if (a.isSticky != b.isSticky) {
+                      if (a.isSticky)
                         return -1;
-                      assert(b.sticky);
+                      assert(b.isSticky);
                       return 1;
                     }
                     if (b.lastMessageTimestamp != a.lastMessageTimestamp)
@@ -365,9 +365,9 @@ class CommsView extends StatelessWidget implements View {
                         final String lastMessage = 'Most recent from ${forum.lastMessageUser}';
                         return ListTile(
                           leading: Tooltip(
-                            message: forum.sticky ? 'Sticky forum' : 'Forum',
+                            message: forum.isSticky ? 'Sticky forum' : 'Forum',
                             child: Badge(
-                              child: CircleAvatar(child: Icon(forum.sticky ? Icons.feedback : Icons.forum)),
+                              child: CircleAvatar(child: Icon(forum.isSticky ? Icons.feedback : Icons.forum)),
                               alignment: const AlignmentDirectional(1.1, 1.1),
                               enabled: forum.hasUnread,
                             ),
