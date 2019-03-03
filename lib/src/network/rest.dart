@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -353,6 +354,21 @@ class RestTwitarr implements Twitarr {
           _requestUtf8('GET', 'api/v2/announcements?${body.toUrlEncoded()}'),
         ),
       );
+    });
+  }
+
+  @override
+  Progress<Map<String, bool>> getSectionStatus() {
+    return Progress<Map<String, bool>>((ProgressController<Map<String, bool>> completer) async {
+      final String rawData = await completer.chain<String>(_requestUtf8('GET', 'api/v2/admin/sections'));
+      if (rawData.isEmpty)
+        return const <String, bool>{};
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+      final Map<String, bool> result = <String, bool>{};
+      for (dynamic section in (data.sections as Json).asIterable())
+        result[section.name.toString()] = (section.enabled as Json).toBoolean();
+      return result;
     });
   }
 
@@ -1516,6 +1532,23 @@ class RestTwitarr implements Twitarr {
 
   final math.Random _random = math.Random();
 
+  bool _enabled = true;
+  Completer<void> _enabledCompleter = Completer<void>()..complete();
+
+  @override
+  void enable() {
+    _enabled = true;
+    if (!_enabledCompleter.isCompleted)
+      _enabledCompleter.complete();
+  }
+
+  @override
+  void disable() {
+    _enabled = false;
+    if (_enabledCompleter.isCompleted)
+      _enabledCompleter = Completer<void>();
+  }
+
   Future<HttpClientResponse> _requestInternal<T>(
     ProgressController<T> completer,
     String method,
@@ -1540,6 +1573,15 @@ class RestTwitarr implements Twitarr {
       return true;
     }());
     try {
+      if (!_enabled) {
+        assert(!_enabledCompleter.isCompleted);
+        assert(() {
+          if (_debugVerbose)
+            debugPrint('    (network disabled, waiting...)');
+          return true;
+        }());
+        await _enabledCompleter.future;
+      }
       if (_random.nextDouble() > debugReliability)
         throw const LocalError('Fake network failure');
       final HttpClientRequest request = await _client.openUrl(method, url);

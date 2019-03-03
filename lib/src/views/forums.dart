@@ -197,8 +197,10 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         if (_textController.text.trim().isNotEmpty)
                           _submitCurrentMessage();
                       } : null,
-                      textInputAction: TextInputAction.send,
+                      textInputAction: TextInputAction.newline,
                       maxLength: 10000,
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
                       enabled: canPostInPrinciple,
                       decoration: InputDecoration(
                         border: InputBorder.none,
@@ -349,7 +351,7 @@ class _StartForumViewState extends State<StartForumView> {
                         if (_valid)
                           _send();
                       },
-                      textInputAction: TextInputAction.send,
+                      textInputAction: TextInputAction.newline,
                       textCapitalization: TextCapitalization.sentences,
                       maxLength: 10000,
                       maxLines: null,

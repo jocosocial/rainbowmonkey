@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/cruise.dart';
@@ -34,51 +33,14 @@ class MessageBubble {
   final List<SeamailMessage> messages = <SeamailMessage>[];
 }
 
-class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindingObserver {
+class _SeamailThreadViewState extends State<SeamailThreadView> {
   final TextEditingController _textController = TextEditingController();
   final Set<_PendingSend> _pending = <_PendingSend>{};
 
   @override
-  void initState() {
-    super.initState();
-    didChangeAppLifecycleState(SchedulerBinding.instance.lifecycleState);
-  }
-
-  bool _listening = false;
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    bool _newState;
-    switch (state) {
-      case AppLifecycleState.inactive:
-        _newState = true;
-        break;
-      case AppLifecycleState.paused:
-        _newState = false;
-        break;
-      case AppLifecycleState.resumed:
-        _newState = true;
-        break;
-      case AppLifecycleState.suspending:
-        _newState = false;
-        break;
-      default:
-        _newState = true; // app probably just started
-    }
-    if (_newState != _listening) {
-      if (_newState) {
-        widget.thread.addListener(_update); // this will mark the thread as read when we update
-      } else {
-        widget.thread.removeListener(_update);
-      }
-      _listening = _newState;
-    }
-  }
-
-  @override
   void didUpdateWidget(SeamailThreadView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.thread != oldWidget.thread && _listening) {
+    if (widget.thread != oldWidget.thread) {
       widget.thread.removeListener(_update);
       widget.thread.addListener(_update);
     }
@@ -86,8 +48,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
 
   @override
   void dispose() {
-    if (_listening)
-      widget.thread.removeListener(_update);
+    widget.thread.removeListener(_update);
     super.dispose();
   }
 
@@ -302,6 +263,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> with WidgetsBindi
                     child: TextField(
                       controller: _textController,
                       maxLength: 10000,
+                      textCapitalization: TextCapitalization.sentences,
                       onChanged: (String value) {
                         setState(() {
                           // changed state is in _textController
@@ -477,6 +439,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                     child: TextFormField(
                       controller: _subject,
                       maxLength: 200,
+                      textCapitalization: TextCapitalization.sentences,
                       focusNode: _subjectFocus,
                       autofocus: true,
                       onFieldSubmitted: (String value) {
@@ -498,6 +461,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                       child: TextFormField(
                         controller: _text,
                         maxLength: 10000,
+                        textCapitalization: TextCapitalization.sentences,
                         focusNode: _firstMessageFocus,
                         onFieldSubmitted: (String value) {
                           FocusScope.of(context).requestFocus(_usernameFocus);

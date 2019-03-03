@@ -70,9 +70,9 @@ class DiskDataStore extends DataStore {
         return null;
       return Credentials(
         username: results['username'].toString(),
-        password: results['password'].toString(), // Passwords may be numbers and dynamic may retrieve them as such.
-        key: results['key'].toString(),
-        loginTimestamp: DateTime.fromMillisecondsSinceEpoch(results['loginTimestamp'] as int),
+        password: (results['password'] ?? '').toString(), // Passwords may be numbers and dynamic may retrieve them as such.
+        key: results['key'] as String,
+        loginTimestamp: results['loginTimestamp'] != null ? DateTime.fromMillisecondsSinceEpoch(results['loginTimestamp'] as int) : null,
       );
     });
   }

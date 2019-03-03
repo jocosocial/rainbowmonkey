@@ -67,18 +67,21 @@ Future<void> main() async {
       'LoggingDataStore.saveCredentials Credentials(aaa)',
       'LoggingTwitarr(25).getCalendar(Credentials(aaa))',
       'LoggingTwitarr(25).getAnnouncements()',
+      'LoggingTwitarr(25).getSectionStatus()',
       '--',
       'LoggingTwitarr(25).dispose',
       'LoggingDataStore.saveCredentials null',
       'LoggingDataStore.saveSetting Setting.server auto:',
       'LoggingTwitarr(5).getCalendar(null)',
       'LoggingTwitarr(5).getAnnouncements()',
+      'LoggingTwitarr(5).getSectionStatus()',
       '--',
       '--',
       'LoggingTwitarr(5).dispose',
       'LoggingDataStore.saveSetting Setting.server rest:http://invalid',
       'LoggingTwitarr(19).getCalendar(null)',
       'LoggingTwitarr(19).getAnnouncements()',
+      'LoggingTwitarr(19).getSectionStatus()',
       '--'
     ]);
   });

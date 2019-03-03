@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/cruise.dart';
+import '../models/server_status.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -53,16 +54,17 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
+    final ContinuousProgress<AuthenticatedUser> userProgress = Cruise.of(context).user;
+    final ContinuousProgress<ServerStatus> serverStatusProgress = Cruise.of(context).serverStatus;
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.user}'),
       ),
-      body: ValueListenableBuilder<ProgressValue<AuthenticatedUser>>(
-        valueListenable: Cruise.of(context).user.best,
-        builder: (BuildContext context, ProgressValue<AuthenticatedUser> user, Widget child) {
-          User currentUser;
-          if (user is SuccessfulProgress<AuthenticatedUser>)
-            currentUser = user.value;
+      body: AnimatedBuilder(
+        animation: Listenable.merge(<Listenable>[userProgress.best, serverStatusProgress.best]),
+        builder: (BuildContext context, Widget child) {
+          final User currentUser = userProgress.currentValue;
+          final ServerStatus status = serverStatusProgress.currentValue ?? const ServerStatus();
           return ProgressBuilder<User>(
             progress: _user,
             onRetry: () {
@@ -144,7 +146,7 @@ class _ProfileState extends State<Profile> {
                   icon: const Icon(Icons.edit),
                   label: const Text('EDIT PROFILE'),
                 ));
-              } else if (currentUser != null) {
+              } else if (currentUser != null && status.seamailEnabled) {
                 children.add(const SizedBox(height: 24.0));
                 children.add(LabeledIconButton(
                   onPressed: () async {

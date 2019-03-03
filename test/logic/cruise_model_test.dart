@@ -54,6 +54,7 @@ void main() {
         'LoggingDataStore.restoreCredentials',
         'LoggingTwitarr(2).getCalendar(null)',
         'LoggingTwitarr(2).getAnnouncements()',
+        'LoggingTwitarr(2).getSectionStatus()',
         '--- waiting ten minutes',
         '--- login',
         'LoggingTwitarr(2).login aaa / bbb',
@@ -104,6 +105,7 @@ void main() {
         'model changed (isLoggedIn = true)',
         'LoggingTwitarr(1).getCalendar(Credentials(aaa))',
         'LoggingTwitarr(1).getAnnouncements()',
+        'LoggingTwitarr(1).getSectionStatus()',
         '--- waiting one hour',
         '--- end',
         'LoggingTwitarr(1).dispose'
@@ -152,6 +154,7 @@ void main() {
         'LoggingDataStore.restoreCredentials',
         'LoggingTwitarr(0).getCalendar(null)',
         'LoggingTwitarr(0).getAnnouncements()',
+        'LoggingTwitarr(0).getSectionStatus()',
         '--- waiting 1 minute',
         '--- logging in 1',
         'LoggingTwitarr(0).login user1 / password1',
@@ -210,6 +213,7 @@ void main() {
         'model changed (isLoggedIn = true)',
         'LoggingTwitarr(1).getCalendar(Credentials(aaa))',
         'LoggingTwitarr(1).getAnnouncements()',
+        'LoggingTwitarr(1).getSectionStatus()',
         '--- waiting one hour',
         '--- end',
         'LoggingTwitarr(1).dispose'

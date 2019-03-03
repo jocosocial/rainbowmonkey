@@ -27,7 +27,7 @@ Future<void> runBackground(DataStore store) async {
 int backgroundPollingPeriodMinutes = 1;
 
 Future<void> rescheduleBackground(DataStore store) async {
-  backgroundPollingPeriodMinutes = (await store.restoreSetting(Setting.notificationCheckPeriod).asFuture() as int).clamp(1, 60).toInt();
+  backgroundPollingPeriodMinutes = (await store.restoreSetting(Setting.notificationCheckPeriod).asFuture() as int ?? 1).clamp(1, 60).toInt();
   if (!await AndroidAlarmManager.periodic(
     Duration(minutes: backgroundPollingPeriodMinutes),
     0, // id

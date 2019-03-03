@@ -90,7 +90,7 @@ class VariableTimer {
 
   final AsyncCallback callback;
 
-  static const double multiplier = 1.5;
+  static const double multiplier = 1.75;
 
   double _backoffMultiplier = 1;
   Timer _timer;

@@ -7,7 +7,9 @@ import '../logic/cruise.dart';
 import '../logic/forums.dart';
 import '../logic/mentions.dart';
 import '../logic/photo_manager.dart';
+import '../models/server_status.dart';
 import '../models/user.dart';
+import '../progress.dart';
 import '../utils.dart';
 import '../widgets.dart';
 import 'forums.dart';
@@ -30,11 +32,13 @@ class _MentionsViewState extends State<MentionsView> {
     final DateTime now = Now.of(context);
     final CruiseModel cruise = Cruise.of(context);
     final Mentions mentions = cruise.mentions;
+    final ContinuousProgress<ServerStatus> serverStatusProgress = cruise.serverStatus;
     return AnimatedBuilder(
-      animation: mentions,
+      animation: Listenable.merge(<Listenable>[mentions, serverStatusProgress.best]),
       builder: (BuildContext context, Widget child) {
         final List<MentionsItem> items = mentions.items.toList().reversed.toList();
         final bool hasMentions = items.isNotEmpty;
+        final ServerStatus status = serverStatusProgress.currentValue ?? const ServerStatus();
         return ValueListenableBuilder<bool>(
           valueListenable: mentions.busy,
           builder: (BuildContext context, bool busy, Widget child) {
@@ -76,6 +80,8 @@ class _MentionsViewState extends State<MentionsView> {
                               }
                               final MentionsItem item = items[index];
                               if (item is StreamMentionsItem) {
+                                if (!status.streamEnabled)
+                                  return const SizedBox.shrink();
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 12.0),
                                   child: ChatLine(
@@ -96,6 +102,8 @@ class _MentionsViewState extends State<MentionsView> {
                                 );
                               }
                               if (item is ForumMentionsItem) {
+                                if (!status.forumsEnabled)
+                                  return const SizedBox.shrink();
                                 final ForumThread thread = cruise.forums.getThreadById(item.id);
                                 final String availability = thread == null ? ' (Forum unavailable...)' : '';
                                 final String lastMessage = 'Most recent from ${item.lastMessageUser}';

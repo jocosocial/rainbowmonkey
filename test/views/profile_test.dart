@@ -60,6 +60,7 @@ Future<void> main() async {
       'LoggingDataStore.saveCredentials Credentials(username)',
       'LoggingTwitarr(0).getCalendar(Credentials(username))',
       'LoggingTwitarr(0).getAnnouncements()',
+      'LoggingTwitarr(0).getSectionStatus()',
       'fetchProfilePicture',
       'overridden',
       'updateProfile null/null/null/null/Hello/null',

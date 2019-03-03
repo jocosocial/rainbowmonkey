@@ -137,10 +137,12 @@ class _CreateAccountState extends State<CreateAccount> {
                             labelText: 'User name',
                           ),
                           validator: (String name) {
-                            if (!AuthenticatedUser.isValidUsername(name))
-                              return 'User names must be alphabetic and between three and forty characters long.';
-                            if (!AuthenticatedUser.isValidDisplayName(name))
-                              return 'User names are also used as display names.';
+                            if (name.isNotEmpty) {
+                              if (!AuthenticatedUser.isValidUsername(name))
+                                return 'User names must be alphabetic and between three and forty characters long.';
+                              if (!AuthenticatedUser.isValidDisplayName(name))
+                                return 'User names are also used as display names.';
+                            }
                             return _latestServerResponse.fields[_AccountCreationField.username];
                           },
                         ),
@@ -163,8 +165,10 @@ class _CreateAccountState extends State<CreateAccount> {
                             labelText: 'Password',
                           ),
                           validator: (String password) {
-                            if (!AuthenticatedUser.isValidPassword(password))
-                              return 'Passwords must be at least six characters long.';
+                            if (password.isNotEmpty) {
+                              if (!AuthenticatedUser.isValidPassword(password))
+                                return 'Passwords must be at least six characters long.';
+                            }
                             return _latestServerResponse.fields[_AccountCreationField.password];
                           },
                         ),
@@ -188,6 +192,8 @@ class _CreateAccountState extends State<CreateAccount> {
                             helperText: 'To make sure you know it.',
                           ),
                           validator: (String password) {
+                            if (password.isEmpty)
+                              return null;
                             if (password != _password1.text)
                               return 'Passwords don\'t match.';
                           },
@@ -210,8 +216,10 @@ class _CreateAccountState extends State<CreateAccount> {
                             helperText: 'Provided to you by e-mail before the cruise.',
                           ),
                           validator: (String registrationCode) {
-                            if (!AuthenticatedUser.isValidRegistrationCode(registrationCode))
-                              return 'Ask the JoCo Cruise Info Desk for advice.';
+                            if (registrationCode.isNotEmpty) {
+                              if (!AuthenticatedUser.isValidRegistrationCode(registrationCode))
+                                return 'Ask the JoCo Cruise Info Desk for advice.';
+                            }
                             return _latestServerResponse.fields[_AccountCreationField.registrationCode];
                           },
                         ),
@@ -236,8 +244,10 @@ class _CreateAccountState extends State<CreateAccount> {
                             helperText: 'Defaults to the username if not specified.',
                           ),
                           validator: (String displayName) {
-                            if (_displayName.text != '' && !AuthenticatedUser.isValidDisplayName(displayName))
-                              return 'Display name is not valid.';
+                            if (displayName.isNotEmpty) {
+                              if (_displayName.text != '' && !AuthenticatedUser.isValidDisplayName(displayName))
+                                return 'Display name is not valid.';
+                            }
                             return _latestServerResponse.fields[_AccountCreationField.displayName];
                           },
                         ),
