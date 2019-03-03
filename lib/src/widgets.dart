@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4;
+import 'package:photo_view/photo_view.dart';
 
 import 'logic/cruise.dart';
 import 'logic/photo_manager.dart';
@@ -1425,7 +1426,9 @@ class PhotoImage extends StatelessWidget {
                                 });
                               },
                               child: SafeArea(
-                                child: Center(
+                                child: PhotoView.customChild(
+                                  enableRotation: true,
+                                  childSize: photo.size,
                                   child: Hero(
                                     tag: photo.id,
                                     child: FadeInImage(
