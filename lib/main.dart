@@ -22,7 +22,6 @@ import 'src/logic/store.dart';
 import 'src/models/server_status.dart';
 import 'src/models/user.dart';
 import 'src/network/rest.dart';
-import 'src/progress.dart';
 import 'src/views/calendar.dart';
 import 'src/views/code_of_conduct.dart';
 import 'src/views/comms.dart';
@@ -217,11 +216,8 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ContinuousProgress<ServerStatus> serverStatus = Cruise.of(context).serverStatus;
-    return AnimatedBuilder(
-      animation: serverStatus,
-      builder: (BuildContext context, Widget child) {
-        final ServerStatus status = serverStatus.currentValue ?? const ServerStatus();
+    return ServerStatusBuilder(
+      builder: (BuildContext context, ServerStatus status, Widget child) {
         final List<View> pages = allPages.where((View view) => view.isEnabled(status)).toList();
         return MaterialApp(
           title: 'Rainbow Monkey',

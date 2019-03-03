@@ -41,6 +41,8 @@ class ServerStatus {
     this.deckPlansEnabled = true,
     this.gamesEnabled = true,
     this.karaokeEnabled = true,
+    this.registrationEnabled = true,
+    this.userProfileEnabled = true,
   });
 
   final List<Announcement> announcements;
@@ -58,4 +60,8 @@ class ServerStatus {
   final bool gamesEnabled;
 
   final bool karaokeEnabled;
+
+  final bool registrationEnabled;
+
+  final bool userProfileEnabled;
 }

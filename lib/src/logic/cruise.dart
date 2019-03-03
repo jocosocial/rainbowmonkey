@@ -418,6 +418,8 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       deckPlansEnabled: sections['deck_plans'] ?? true,
       gamesEnabled: sections['games'] ?? true,
       karaokeEnabled: sections['karaoke'] ?? true,
+      registrationEnabled: sections['registration'] ?? true,
+      userProfileEnabled: sections['user_profile'] ?? true,
     );
   }
 

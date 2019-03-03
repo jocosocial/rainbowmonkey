@@ -59,8 +59,8 @@ class HttpServerError implements Exception, UserFriendlyError {
       case 500:
       case 501:
       case 502:
-      case 503:
       case 504: return 'Server is having problems (it said "$reasonPhrase"). Try again later.';
+      case 503: return 'This feature has been disabled on the server.';
       case 401:
       case 403: return 'There was an authentication problem (server said "$reasonPhrase"). Try logging in again.';
       case 400:
