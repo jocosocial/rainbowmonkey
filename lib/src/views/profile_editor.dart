@@ -79,7 +79,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
                       ProfileField(
                         title: 'Pronouns',
                         focusNode: _pronounsFocus,
-                        nextNode: _emailFocus,
+                        nextNode: _roomNumberFocus,
                         textCapitalization: TextCapitalization.sentences,
                         maxLength: 100,
                         value: user.pronouns,
@@ -107,7 +107,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
                       ProfileField(
                         title: 'Home location',
                         focusNode: _homeLocationFocus,
-                        nextNode: _displayNameFocus,
+                        nextNode: _emailFocus,
                         textCapitalization: TextCapitalization.words,
                         maxLength: 100,
                         value: user.homeLocation,
@@ -120,7 +120,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
                       ProfileField(
                         title: 'E-mail address',
                         focusNode: _emailFocus,
-                        nextNode: _roomNumberFocus,
+                        nextNode: _displayNameFocus,
                         keyboardType: TextInputType.emailAddress,
                         value: user.email,
                         onUpdate: (String value) {

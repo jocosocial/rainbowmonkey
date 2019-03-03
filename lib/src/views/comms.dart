@@ -247,7 +247,7 @@ class CommsView extends StatelessWidget implements View {
                                   thread.subject,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
                                 ),
                               ),
                               Text(
@@ -341,7 +341,7 @@ class CommsView extends StatelessWidget implements View {
                               forum.subject,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: forum.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
                             ),
                           ),
                           Text(

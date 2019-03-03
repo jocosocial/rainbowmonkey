@@ -289,7 +289,7 @@ class _UserViewState extends State<UserView> {
             idleChild: const SizedBox.shrink(),
             builder: (BuildContext context, List<Announcement> announcements) {
               if (announcements.isEmpty)
-                  return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
+                return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
               return Padding(
                 padding: const EdgeInsets.fromLTRB(8.0, 12.0, 8.0, 8.0),
                 child: ListBody(

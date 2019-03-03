@@ -163,6 +163,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                               child: TextField(
                                 controller: _textController,
                                 maxLength: 2000,
+                                textCapitalization: TextCapitalization.sentences,
                                 onChanged: (String value) {
                                   setState(() {
                                     // changed state is in _textController
@@ -526,6 +527,7 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                           child: TextField(
                             controller: _textController,
                             maxLength: 2000,
+                            textCapitalization: TextCapitalization.sentences,
                             onChanged: (String value) {
                               setState(() {
                                 // changed state is in _textController

@@ -114,7 +114,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     return store.saveSetting(Setting.server, '$twitarrConfiguration');
   }
 
-  // TODO(ianh): save this in the store
   double get debugLatency => _debugLatency;
   double _debugLatency = 0.0;
   set debugLatency(double value) {
@@ -124,7 +123,6 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     notifyListeners();
   }
 
-  // TODO(ianh): save this in the store
   double get debugReliability => _debugReliability;
   double _debugReliability = 1.0;
   set debugReliability(double value) {
@@ -372,7 +370,10 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 
   Future<List<Announcement>> _updateAnnouncements(ProgressController<List<Announcement>> completer) async {
     final List<AnnouncementSummary> summary = await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements());
-    return summary.map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this)).toList();
+    return summary
+             .map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this))
+             .toList()
+             ..sort();
   }
 
   Progress<ServerText> fetchServerText(String filename) {

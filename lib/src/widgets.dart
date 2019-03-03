@@ -974,10 +974,8 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
       final User user = sortedUsers.single;
       final String name = user.displayName ?? user.username;
       List<String> names = name.split(RegExp(r'[^A-Z]+')).where((String value) => value.isNotEmpty).toList();
-      if (names.length == 1)
+      if (names.isEmpty)
         names = name.split(' ');
-      if (names.length < 2)
-        names = name.split('');
       bool pressed = false;
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
@@ -1005,7 +1003,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
               child: ClipOval(
                 child: Center(
                   child: Text(
-                    names.take(2).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
+                    names.take(math.min(2, names.length)).map<String>((String value) => String.fromCharCode(value.runes.first)).join(''),
                     style: textStyle,
                     textScaleFactor: 1.0,
                   ),
