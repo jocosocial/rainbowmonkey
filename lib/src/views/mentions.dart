@@ -88,6 +88,7 @@ class _MentionsViewState extends State<MentionsView> {
                                     user: item.user,
                                     messages: <String>[ item.text ],
                                     photos: item.photo != null ? <Photo>[ item.photo, ] : null,
+                                    id: item.id,
                                     likes: item.reactions.likes,
                                     timestamp: item.timestamp,
                                     onPressed: () {

@@ -317,6 +317,7 @@ class Entry extends StatelessWidget {
         isCurrentUser: isCurrentUser,
         messages: <String>[ post.text ],
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
+        id: post.id,
         likes: post.reactions.likes,
         onLike: !isModerating && !post.reactions.currentUserLiked ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: true));
@@ -631,6 +632,7 @@ class NestedEntry extends StatelessWidget {
         isCurrentUser: false, // because otherwise the nesting becomes meaningless
         messages: <String>[ details.post.text ],
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
+        id: details.post.id,
         likes: details.post.reactions.likes,
         onLike: !isModerating && !details.post.reactions.currentUserLiked ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: true));

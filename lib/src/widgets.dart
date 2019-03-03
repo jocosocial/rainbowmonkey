@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4;
+import 'package:photo_view/photo_view.dart';
 
 import 'logic/cruise.dart';
 import 'logic/photo_manager.dart';
@@ -474,6 +475,7 @@ class ChatLine extends StatefulWidget {
     this.isCurrentUser = false,
     @required this.messages,
     this.photos,
+    this.id,
     @required this.timestamp,
     this.likes = 0,
     this.onPressed,
@@ -489,12 +491,14 @@ class ChatLine extends StatefulWidget {
        assert(timestamp != null),
        assert(likes != null),
        assert(likes >= 0),
+       assert(photos == null || id != null),
        super(key: key);
 
   final User user;
   final bool isCurrentUser;
   final List<String> messages;
   final List<Photo> photos;
+  final String id;
   final DateTime timestamp;
   final int likes;
   final VoidCallback onPressed;
@@ -587,15 +591,21 @@ class _ChatLineState extends State<ChatLine> {
     final List<Widget> children = <Widget>[
       Text('Posted by: ${widget.user}'),
       Text('Timestamp: ${widget.timestamp}'),
-      const Divider(),
-      Wrap(
-        alignment: WrapAlignment.spaceEvenly,
-        spacing: 8.0,
-        crossAxisAlignment: WrapCrossAlignment.start,
-        runSpacing: 8.0,
-        children: actions,
-      ),
     ];
+    if (actions.isNotEmpty) {
+      children.addAll(<Widget>[
+        const Divider(),
+        Wrap(
+          alignment: WrapAlignment.spaceEvenly,
+          spacing: 8.0,
+          crossAxisAlignment: WrapCrossAlignment.start,
+          runSpacing: 8.0,
+          children: actions,
+        ),
+      ]);
+    } else {
+      children.add(const SizedBox(height: 12.0));
+    }
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) => Dialog(
@@ -626,7 +636,7 @@ class _ChatLineState extends State<ChatLine> {
       lines.add(Text(message));
     if (widget.photos != null) {
       for (Photo photo in widget.photos) {
-        lines.add(PhotoImage(photo: photo));
+        lines.add(PhotoImage(tag: '${widget.id}:${photo.id}', photo: photo));
       }
     }
     final TextDirection direction = widget.isCurrentUser ? TextDirection.rtl : TextDirection.ltr;
@@ -1382,9 +1392,11 @@ class PhotoImage extends StatelessWidget {
   const PhotoImage({
     Key key,
     @required this.photo,
+    @required this.tag,
   }) : super(key: key);
 
   final Photo photo;
+  final String tag;
 
   @override
   Widget build(BuildContext context) {
@@ -1425,13 +1437,25 @@ class PhotoImage extends StatelessWidget {
                                 });
                               },
                               child: SafeArea(
-                                child: Center(
-                                  child: Hero(
-                                    tag: photo.id,
-                                    child: FadeInImage(
-                                      placeholder: thumbnail,
-                                      image: cruise.imageFor(photo),
-                                    ),
+                                child: PhotoView(
+                                  imageProvider: cruise.imageFor(photo),
+                                  initialScale: PhotoViewComputedScale.contained,
+                                  minScale: PhotoViewComputedScale.contained,
+                                  heroTag: tag,
+                                  loadingChild: Stack(
+                                    children: <Widget>[
+                                      Center(
+                                        child: Hero(
+                                          tag: tag,
+                                          child: Image(image: thumbnail),
+                                        ),
+                                      ),
+                                      const PositionedDirectional(
+                                        top: 12.0,
+                                        end: 12.0,
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -1460,7 +1484,7 @@ class PhotoImage extends StatelessWidget {
               ));
             },
             child: Hero(
-              tag: photo.id,
+              tag: tag,
               child: Image(image: thumbnail, height: maxHeight),
             ),
           ),

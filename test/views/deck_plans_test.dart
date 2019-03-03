@@ -31,11 +31,13 @@ void main() {
       ),
     );
 
+    final Finder elevatorFinder = find.byWidgetPredicate((Widget widget) => widget is CustomPaint && widget.painter is Elevator);
+    
     expect(find.byIcon(Icons.directions_boat), findsOneWidget);
     await tester.tap(find.byIcon(Icons.directions_boat));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
-    final double height = tester.getRect(find.byType(DeckPlanView)).height / 10.0;
+    final double height = tester.getRect(elevatorFinder).height / 10.0;
 
     expectOpacities(tester, <double>[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
