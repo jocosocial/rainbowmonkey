@@ -926,6 +926,32 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<void> lockTweet({
+    Credentials credentials,
+    @required String postId,
+    @required bool locked,
+  }) {
+    assert(credentials.key != null);
+    assert(postId != null);
+    assert(locked != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}/locked/$locked?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 401, 404],
+        ),
+      );
+      if (rawData.isEmpty)
+        return;
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
   Progress<void> deleteTweet({
     Credentials credentials,
     @required String postId,
