@@ -106,7 +106,7 @@ abstract class TwitarrConfiguration {
 abstract class Twitarr {
   const Twitarr();
 
-  void enable();
+  void enable(ServerStatus status);
   void disable();
 
   double get debugLatency;

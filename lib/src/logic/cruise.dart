@@ -115,7 +115,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     if (newState != _onscreen) {
       _onscreen = newState;
       if (_onscreen) {
-        _twitarr.enable();
+        _twitarr.enable(serverStatus.currentValue ?? const ServerStatus());
       } else {
         _twitarr.disable();
       }
@@ -205,18 +205,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     });
   }
 
-  Seamail get seamail => _seamail;
-  Seamail _seamail;
-
-  Mentions get mentions => _mentions;
-  Mentions _mentions;
-
-  Forums get forums => _forums;
-  Forums _forums;
-
-  TweetStream get tweetStream => _tweetStream;
-  TweetStream _tweetStream;
-
   Progress<String> createAccount({
     @required String username,
     @required String password,
@@ -236,6 +224,8 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       return _currentCredentials.username;
     });
   }
+
+  bool _asMod = false;
 
   Credentials _lastAttemptedCredentials;
 
@@ -274,6 +264,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
   }
 
   void logout() {
+    _asMod = false;
     // no need to do anything to _user, the following call resets it:
     _updateCredentials(null);
   }
@@ -282,7 +273,8 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     assert(enabled != null);
     AuthenticatedUser user = _user.currentValue;
     assert(user != null);
-    user = user.copyWith(credentials: user.credentials.copyWith(asMod: enabled));
+    _asMod = enabled;
+    user = user.copyWith(credentials: user.credentials.copyWith(asMod: _asMod));
     _user.addProgress(Progress<AuthenticatedUser>.completed(user));
     _updateCredentials(user);
   }
@@ -335,6 +327,78 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     }
   }
 
+  ContinuousProgress<AuthenticatedUser> get user => _user;
+  PeriodicProgress<AuthenticatedUser> _user;
+
+  bool get isLoggedIn => _currentCredentials != null;
+  Future<void> get loggedIn => _loggedIn.future;
+  Completer<void> _loggedIn = Completer<void>();
+
+  Future<AuthenticatedUser> _updateUser(ProgressController<AuthenticatedUser> completer) async {
+    await _restoredSettings;
+    AuthenticatedUser result;
+    if (_currentCredentials?.key != null) {
+      result = await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
+      if (_asMod)
+        result = result.copyWith(credentials: result.credentials.copyWith(asMod: true));
+      final ServerStatus status = serverStatus.currentValue;
+      if (status != null && result.role != status.userRole) {
+        final ServerStatus newStatus = status.copyWith(userRole: result.role);
+        _serverStatus.addProgress(Progress<ServerStatus>.completed(newStatus));
+        if (_onscreen)
+          _twitarr.enable(newStatus);
+      }
+    }
+    return result;
+  }
+
+  Progress<User> fetchProfile(String username) {
+    return _twitarr.getUser(_currentCredentials, username, this);
+  }
+
+  ContinuousProgress<ServerStatus> get serverStatus => _serverStatus;
+  PeriodicProgress<ServerStatus> _serverStatus;
+
+  Future<ServerStatus> _updateServerStatus(ProgressController<ServerStatus> completer) async {
+    final List<Announcement> announcements = (await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements()))
+      .map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this))
+      .toList()
+      ..sort();
+    final Map<String, bool> sections = await completer.chain<Map<String, bool>>(_twitarr.getSectionStatus());
+    final ServerStatus result = ServerStatus(
+      announcements: announcements,
+      userRole: user.currentValue?.role ?? Role.none,
+      forumsEnabled: sections['forums'] ?? true,
+      streamEnabled: sections['stream'] ?? true,
+      seamailEnabled: sections['seamail'] ?? true,
+      calendarEnabled: sections['calendar'] ?? true,
+      deckPlansEnabled: sections['deck_plans'] ?? true,
+      gamesEnabled: sections['games'] ?? true,
+      karaokeEnabled: sections['karaoke'] ?? true,
+      registrationEnabled: sections['registration'] ?? true,
+      userProfileEnabled: sections['user_profile'] ?? true,
+    );
+    if (_onscreen)
+      _twitarr.enable(result);
+    return result;
+  }
+
+  Progress<ServerText> fetchServerText(String filename) {
+    return _twitarr.fetchServerText(filename);
+  }
+
+  Seamail get seamail => _seamail;
+  Seamail _seamail;
+
+  Mentions get mentions => _mentions;
+  Mentions _mentions;
+
+  Forums get forums => _forums;
+  Forums _forums;
+
+  TweetStream get tweetStream => _tweetStream;
+  TweetStream _tweetStream;
+
   Forums _createForums() {
     return Forums(
       _twitarr,
@@ -361,24 +425,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     }
   }
 
-  ContinuousProgress<AuthenticatedUser> get user => _user;
-  PeriodicProgress<AuthenticatedUser> _user;
-
-  bool get isLoggedIn => _currentCredentials != null;
-  Future<void> get loggedIn => _loggedIn.future;
-  Completer<void> _loggedIn = Completer<void>();
-
-  Future<AuthenticatedUser> _updateUser(ProgressController<AuthenticatedUser> completer) async {
-    await _restoredSettings;
-    if (_currentCredentials?.key != null)
-      return await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
-    return null;
-  }
-
-  Progress<User> fetchProfile(String username) {
-    return _twitarr.getUser(_currentCredentials, username, this);
-  }
-
   ContinuousProgress<Calendar> get calendar => _calendar;
   PeriodicProgress<Calendar> _calendar;
 
@@ -398,33 +444,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
         onError('$error');
       }
     });
-  }
-
-  ContinuousProgress<ServerStatus> get serverStatus => _serverStatus;
-  PeriodicProgress<ServerStatus> _serverStatus;
-
-  Future<ServerStatus> _updateServerStatus(ProgressController<ServerStatus> completer) async {
-    final List<Announcement> announcements = (await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements()))
-      .map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this))
-      .toList()
-      ..sort();
-    final Map<String, bool> sections = await completer.chain<Map<String, bool>>(_twitarr.getSectionStatus());
-    return ServerStatus(
-      announcements: announcements,
-      forumsEnabled: sections['forums'] ?? true,
-      streamEnabled: sections['stream'] ?? true,
-      seamailEnabled: sections['seamail'] ?? true,
-      calendarEnabled: sections['calendar'] ?? true,
-      deckPlansEnabled: sections['deck_plans'] ?? true,
-      gamesEnabled: sections['games'] ?? true,
-      karaokeEnabled: sections['karaoke'] ?? true,
-      registrationEnabled: sections['registration'] ?? true,
-      userProfileEnabled: sections['user_profile'] ?? true,
-    );
-  }
-
-  Progress<ServerText> fetchServerText(String filename) {
-    return _twitarr.fetchServerText(filename);
   }
 
   Map<String, DateTime> _photoUpdates = <String, DateTime>{};

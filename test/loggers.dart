@@ -52,12 +52,6 @@ class LoggingTwitarr extends Twitarr {
   String overrideHomeLocation;
 
   @override
-  void enable() { }
-
-  @override
-  void disable() { }
-
-  @override
   double debugLatency = 0.0;
 
   @override

@@ -91,6 +91,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
     final List<ForumMessage> messages = widget.thread.toList().reversed.toList() ?? const <ForumMessage>[];
     final bool loggedIn = Cruise.of(context).isLoggedIn;
     return ModeratorBuilder(
+      includeBorder: false,
       builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
         final bool canPostInPrinciple = loggedIn && (widget.thread.isLocked ? currentUser.canPostWhenLocked : currentUser.canPost);
         final bool canPost = canPostInPrinciple && _textController.text.trim().isNotEmpty;

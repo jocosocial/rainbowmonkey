@@ -109,6 +109,12 @@ abstract class Progress<T> implements ValueListenable<ProgressValue<T>> {
     return controller.progress;
   }
 
+  factory Progress.failed(Exception error, [ StackTrace stackTrace ]) {
+    final ProgressController<T> controller = ProgressController<T>();
+    controller.completeError(error, stackTrace);
+    return controller.progress;
+  }
+
   const factory Progress.idle() = _IdleProgress;
 
   static Progress<T> convert<F, T>(Progress<F> progress, Converter<F, T> converter) {

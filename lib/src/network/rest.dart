@@ -11,6 +11,7 @@ import '../json.dart';
 import '../logic/photo_manager.dart';
 import '../models/calendar.dart';
 import '../models/reactions.dart';
+import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -128,6 +129,8 @@ class RestTwitarr implements Twitarr {
     @required String registrationCode,
     String displayName,
   }) {
+    if (_enabled?.registrationEnabled == false)
+      return Progress<AuthenticatedUser>.failed(const LocalError('Account creation has been disabled on the server.'));
     assert(username != null);
     assert(password != null);
     assert(registrationCode != null);
@@ -291,6 +294,8 @@ class RestTwitarr implements Twitarr {
   Progress<Calendar> getCalendar({
     Credentials credentials,
   }) {
+    if (_enabled?.calendarEnabled == false)
+      return Progress<Calendar>.completed(Calendar(events: const <Event>[]));
     final FormData body = FormData()
       ..add('app', 'plain');
     if (credentials != null) {
@@ -313,6 +318,8 @@ class RestTwitarr implements Twitarr {
     @required String eventId,
     @required bool favorite,
   }) {
+    if (_enabled?.calendarEnabled == false)
+      return Progress<void>.failed(const LocalError('The calendar has been disabled on the server.'));
     final FormData body = FormData()
       ..add('key', credentials.key)
       ..add('app', 'plain');
@@ -443,6 +450,8 @@ class RestTwitarr implements Twitarr {
     String homeLocation,
     String roomNumber,
   }) {
+    if (_enabled?.userProfileEnabled == false)
+      return Progress<void>.failed(const LocalError('User profiles have been disabled on the server.'));
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key);
@@ -478,6 +487,8 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     @required Uint8List bytes,
   }) {
+    if (_enabled?.userProfileEnabled == false)
+      return Progress<void>.failed(const LocalError('User profiles have been disabled on the server.'));
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
@@ -498,6 +509,8 @@ class RestTwitarr implements Twitarr {
   Progress<void> resetAvatar({
     @required Credentials credentials,
   }) {
+    if (_enabled?.userProfileEnabled == false)
+      return Progress<void>.failed(const LocalError('User profiles have been disabled on the server.'));
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key);
@@ -587,6 +600,8 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     int freshnessToken,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailSummary>.completed(SeamailSummary(threads: <SeamailThreadSummary>{}, freshnessToken: freshnessToken));
     assert(credentials.key != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
@@ -616,6 +631,8 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     int freshnessToken,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailSummary>.completed(SeamailSummary(threads: <SeamailThreadSummary>{}, freshnessToken: freshnessToken));
     assert(credentials.key != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
@@ -645,6 +662,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     bool markRead = true,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailThreadSummary>.failed(const LocalError('Seamail has been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(markRead != null);
@@ -677,6 +696,8 @@ class RestTwitarr implements Twitarr {
     @required String subject,
     @required String text,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailThreadSummary>.failed(const LocalError('Seamail has been disabled on the server.'));
     assert(credentials.key != null);
     assert(users != null);
     assert(users.isNotEmpty);
@@ -718,6 +739,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required String text,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailMessageSummary>.failed(const LocalError('Seamail has been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(threadId.isNotEmpty);
@@ -828,6 +851,8 @@ class RestTwitarr implements Twitarr {
     int boundaryToken,
     int limit = 100,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.completed(StreamSliceSummary(direction: direction, posts: const <StreamMessageSummary>[], boundaryToken: boundaryToken));
     assert(credentials == null || credentials.key != null);
     assert(direction != null);
     assert(limit != null);
@@ -867,6 +892,8 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     String threadId,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamMessageSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials == null || credentials.key != null);
     return Progress<StreamMessageSummary>((ProgressController<StreamMessageSummary> completer) async {
       final FormData body = FormData()
@@ -894,6 +921,8 @@ class RestTwitarr implements Twitarr {
     String parentId,
     Uint8List photo,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(text != null);
     assert(text.isNotEmpty);
@@ -931,6 +960,8 @@ class RestTwitarr implements Twitarr {
     @required String postId,
     @required bool locked,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(postId != null);
     assert(locked != null);
@@ -956,6 +987,8 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     @required String postId,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(postId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -982,6 +1015,8 @@ class RestTwitarr implements Twitarr {
     @required String reaction,
     @required bool selected,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<Map<String, ReactionSummary>>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(postId != null);
     assert(reaction != null);
@@ -1007,6 +1042,8 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     @required String postId,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<Map<String, Set<UserSummary>>>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(postId != null);
     return Progress<Map<String, Set<UserSummary>>>((ProgressController<Map<String, Set<UserSummary>>> completer) async {
@@ -1091,6 +1128,8 @@ class RestTwitarr implements Twitarr {
   Progress<Set<ForumSummary>> getForumThreads({
     Credentials credentials,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<Set<ForumSummary>>.completed(const <ForumSummary>{});
     assert(credentials == null || credentials.key != null);
     return Progress<Set<ForumSummary>>((ProgressController<Set<ForumSummary>> completer) async {
       final FormData body = FormData()
@@ -1114,6 +1153,8 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     @required String threadId,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<ForumSummary>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials == null || credentials.key != null);
     assert(threadId != null);
     return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
@@ -1140,6 +1181,8 @@ class RestTwitarr implements Twitarr {
     @required String text,
     @required List<Uint8List> photos,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<ForumSummary>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(subject != null);
     assert(text != null);
@@ -1181,6 +1224,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required bool sticky,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -1204,6 +1249,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required bool locked,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -1226,6 +1273,8 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     @required String threadId,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -1250,6 +1299,8 @@ class RestTwitarr implements Twitarr {
     @required String text,
     @required List<Uint8List> photos,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(text != null);
@@ -1292,6 +1343,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required String messageId,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<bool>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(messageId != null);
@@ -1319,6 +1372,8 @@ class RestTwitarr implements Twitarr {
     @required String reaction,
     @required bool selected,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<Map<String, ReactionSummary>>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(messageId != null);
@@ -1346,6 +1401,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required String messageId,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<Map<String, Set<UserSummary>>>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(messageId != null);
@@ -1626,19 +1683,20 @@ class RestTwitarr implements Twitarr {
 
   final math.Random _random = math.Random();
 
-  bool _enabled = true;
+  ServerStatus _enabled = const ServerStatus();
   Completer<void> _enabledCompleter = Completer<void>()..complete();
 
   @override
-  void enable() {
-    _enabled = true;
+  void enable(ServerStatus status) {
+    assert(status != null);
+    _enabled = status;
     if (!_enabledCompleter.isCompleted)
       _enabledCompleter.complete();
   }
 
   @override
   void disable() {
-    _enabled = false;
+    _enabled = null;
     if (_enabledCompleter.isCompleted)
       _enabledCompleter = Completer<void>();
   }
@@ -1667,7 +1725,7 @@ class RestTwitarr implements Twitarr {
       return true;
     }());
     try {
-      if (!_enabled) {
+      if (_enabled == null) {
         assert(!_enabledCompleter.isCompleted);
         assert(() {
           if (_debugVerbose)

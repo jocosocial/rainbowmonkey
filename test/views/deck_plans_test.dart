@@ -32,7 +32,7 @@ void main() {
     );
 
     final Finder elevatorFinder = find.byWidgetPredicate((Widget widget) => widget is CustomPaint && widget.painter is Elevator);
-    
+
     expect(find.byIcon(Icons.directions_boat), findsOneWidget);
     await tester.tap(find.byIcon(Icons.directions_boat));
     await tester.pump();
