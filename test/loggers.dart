@@ -52,6 +52,12 @@ class LoggingTwitarr extends Twitarr {
   String overrideHomeLocation;
 
   @override
+  void enable() { }
+
+  @override
+  void disable() { }
+
+  @override
   double debugLatency = 0.0;
 
   @override
@@ -147,6 +153,12 @@ class LoggingTwitarr extends Twitarr {
   Progress<List<AnnouncementSummary>> getAnnouncements() {
     log.add('LoggingTwitarr(${_configuration.id}).getAnnouncements()');
     return Progress<List<AnnouncementSummary>>.completed(const <AnnouncementSummary>[]);
+  }
+
+  @override
+  Progress<Map<String, bool>> getSectionStatus() {
+    log.add('LoggingTwitarr(${_configuration.id}).getSectionStatus()');
+    return Progress<Map<String, bool>>.completed(const <String, bool>{});
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/server_status.dart';
 import '../progress.dart';
 import '../widgets.dart';
 
@@ -11,6 +12,9 @@ class GamesView extends StatefulWidget implements View {
   const GamesView({
     Key key,
   }) : super(key: key);
+
+  @override
+  bool isEnabled(ServerStatus status) => status.gamesEnabled;
 
   @override
   Widget buildTabIcon(BuildContext context) => const Icon(Icons.toys);

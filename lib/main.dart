@@ -19,8 +19,10 @@ import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
 import 'src/logic/store.dart';
+import 'src/models/server_status.dart';
 import 'src/models/user.dart';
 import 'src/network/rest.dart';
+import 'src/progress.dart';
 import 'src/views/calendar.dart';
 import 'src/views/code_of_conduct.dart';
 import 'src/views/comms.dart';
@@ -197,7 +199,7 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   final DataStore store;
 
-  static const List<View> pages = <View>[
+  static const List<View> allPages = <View>[
     UserView(),
     CalendarView(),
     CommsView(),
@@ -215,101 +217,109 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Rainbow Monkey',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: Colors.blue[900],
-        accentColor: Colors.greenAccent,
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-        ),
-      ),
-      home: DefaultTabController(
-        length: pages.length,
-        child: Builder(
-          builder: (BuildContext context) {
-            final TabController tabController = DefaultTabController.of(context);
-            final ThemeData theme = Theme.of(context);
-            return AnimatedBuilder(
-              animation: tabController,
-              builder: (BuildContext context, Widget child) {
-                final Widget fab = pages[tabController.index].buildFab(context);
-                return Scaffold(
-                  key: scaffoldKey,
-                  floatingActionButton: fab == null ? null : KeyedSubtree(
-                    key: ObjectKey(pages[tabController.index]),
-                    child: fab,
-                  ),
-                  floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-                  resizeToAvoidBottomInset: false,
-                  body: AnnotatedRegion<SystemUiOverlayStyle>(
-                    value: SystemUiOverlayStyle.dark,
-                    child: LayoutBuilder(
-                      builder: (BuildContext context, BoxConstraints constraints) {
-                        const double bottomPadding = 50.0;
-                        final double height = constraints.maxHeight + bottomPadding;
-                        final MediaQueryData metrics = MediaQuery.of(context);
-                        return OverflowBox(
-                          minWidth: constraints.maxWidth,
-                          maxWidth: constraints.maxWidth,
-                          minHeight: height,
-                          maxHeight: height,
-                          alignment: Alignment.topCenter,
-                          child: MediaQuery(
-                            data: metrics.copyWith(padding: metrics.padding.copyWith(bottom: bottomPadding)),
-                            child: TabBarView(
-                              children: pages,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  bottomNavigationBar: BottomAppBar(
-                    color: theme.primaryColor,
-                    shape: const WaveShape(),
-                    elevation: 4.0, // TODO(ianh): figure out why this has no effect
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 20.0),
-                      child: Center(
-                        heightFactor: 1.0,
+    final ContinuousProgress<ServerStatus> serverStatus = Cruise.of(context).serverStatus;
+    return AnimatedBuilder(
+      animation: serverStatus,
+      builder: (BuildContext context, Widget child) {
+        final ServerStatus status = serverStatus.currentValue ?? const ServerStatus();
+        final List<View> pages = allPages.where((View view) => view.isEnabled(status)).toList();
+        return MaterialApp(
+          title: 'Rainbow Monkey',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            primaryColor: Colors.blue[900],
+            accentColor: Colors.greenAccent,
+            inputDecorationTheme: const InputDecorationTheme(
+              border: OutlineInputBorder(),
+            ),
+          ),
+          home: DefaultTabController(
+            length: pages.length,
+            child: Builder(
+              builder: (BuildContext context) {
+                final TabController tabController = DefaultTabController.of(context);
+                final ThemeData theme = Theme.of(context);
+                return AnimatedBuilder(
+                  animation: tabController,
+                  builder: (BuildContext context, Widget child) {
+                    final Widget fab = pages[tabController.index].buildFab(context);
+                    return Scaffold(
+                      key: scaffoldKey,
+                      floatingActionButton: fab == null ? null : KeyedSubtree(
+                        key: ObjectKey(pages[tabController.index]),
+                        child: fab,
+                      ),
+                      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+                      resizeToAvoidBottomInset: false,
+                      body: AnnotatedRegion<SystemUiOverlayStyle>(
+                        value: SystemUiOverlayStyle.dark,
                         child: LayoutBuilder(
                           builder: (BuildContext context, BoxConstraints constraints) {
-                            if (constraints.maxWidth == 0)
-                              return const SizedBox.shrink();
-                            return TabBar(
-                              isScrollable: true,
-                              indicator: BoxDecoration(
-                                color: const Color(0x10FFFFFF),
-                                border: Border(
-                                  top: BorderSide(
-                                    color: theme.accentColor,
-                                    width: 10.0,
-                                  ),
+                            const double bottomPadding = 50.0;
+                            final double height = constraints.maxHeight + bottomPadding;
+                            final MediaQueryData metrics = MediaQuery.of(context);
+                            return OverflowBox(
+                              minWidth: constraints.maxWidth,
+                              maxWidth: constraints.maxWidth,
+                              minHeight: height,
+                              maxHeight: height,
+                              alignment: Alignment.topCenter,
+                              child: MediaQuery(
+                                data: metrics.copyWith(padding: metrics.padding.copyWith(bottom: bottomPadding)),
+                                child: TabBarView(
+                                  children: pages,
                                 ),
                               ),
-                              tabs: pages.map<Widget>((View page) => buildTab(context, page, iconPadding: const EdgeInsets.only(top: 8.0))).toList(),
                             );
                           },
                         ),
                       ),
-                    ),
-                  ),
+                      bottomNavigationBar: BottomAppBar(
+                        color: theme.primaryColor,
+                        shape: const WaveShape(),
+                        elevation: 4.0, // TODO(ianh): figure out why this has no effect
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 20.0),
+                          child: Center(
+                            heightFactor: 1.0,
+                            child: LayoutBuilder(
+                              builder: (BuildContext context, BoxConstraints constraints) {
+                                if (constraints.maxWidth == 0)
+                                  return const SizedBox.shrink();
+                                return TabBar(
+                                  isScrollable: true,
+                                  indicator: BoxDecoration(
+                                    color: const Color(0x10FFFFFF),
+                                    border: Border(
+                                      top: BorderSide(
+                                        color: theme.accentColor,
+                                        width: 10.0,
+                                      ),
+                                    ),
+                                  ),
+                                  tabs: pages.map<Widget>((View page) => buildTab(context, page, iconPadding: const EdgeInsets.only(top: 8.0))).toList(),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
-            );
+            ),
+          ),
+          routes: <String, WidgetBuilder>{
+            '/profile-editor': (BuildContext context) => const ProfileEditor(),
+            '/create-account': (BuildContext context) => const CreateAccount(),
+            '/settings': (BuildContext context) => Settings(store: store),
+            '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
+            '/twitarr': (BuildContext context) => const TweetStreamView(),
+            '/mentions': (BuildContext context) => const MentionsView(),
+            '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
           },
-        ),
-      ),
-      routes: <String, WidgetBuilder>{
-        '/profile-editor': (BuildContext context) => const ProfileEditor(),
-        '/create-account': (BuildContext context) => const CreateAccount(),
-        '/settings': (BuildContext context) => Settings(store: store),
-        '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
-        '/twitarr': (BuildContext context) => const TweetStreamView(),
-        '/mentions': (BuildContext context) => const MentionsView(),
-        '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
+        );
       },
     );
   }

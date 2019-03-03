@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/calendar.dart';
+import '../models/server_status.dart';
 import '../widgets.dart';
 
 final ValueNotifier<bool> _filter = ValueNotifier<bool>(false);
@@ -10,6 +11,9 @@ class CalendarView extends StatefulWidget implements View {
   const CalendarView({
     Key key,
   }) : super(key: key);
+
+  @override
+  bool isEnabled(ServerStatus status) => status.calendarEnabled;
 
   @override
   Widget buildTabIcon(BuildContext context) => const Icon(Icons.event);

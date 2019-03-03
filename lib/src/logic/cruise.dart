@@ -10,8 +10,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:meta/meta.dart';
 
 import '../basic_types.dart';
-import '../models/announcements.dart';
 import '../models/calendar.dart';
+import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
 import '../network/rest.dart' show AutoTwitarrConfiguration;
@@ -30,7 +30,7 @@ import 'stream.dart';
 
 typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store, { bool forced });
 
-class CruiseModel extends ChangeNotifier implements PhotoManager {
+class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements PhotoManager {
   CruiseModel({
     @required TwitarrConfiguration initialTwitarrConfiguration,
     @required this.store,
@@ -41,9 +41,11 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
        assert(store != null),
        assert(steadyPollInterval != null),
        assert(onError != null) {
+    WidgetsBinding.instance.addObserver(this);
+    didChangeAppLifecycleState(SchedulerBinding.instance.lifecycleState);
     _user = PeriodicProgress<AuthenticatedUser>(steadyPollInterval, _updateUser);
     _calendar = PeriodicProgress<Calendar>(steadyPollInterval, _updateCalendar);
-    _announcements = PeriodicProgress<List<Announcement>>(steadyPollInterval, _updateAnnouncements);
+    _serverStatus = PeriodicProgress<ServerStatus>(steadyPollInterval, _updateServerStatus);
     _busy(() {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
       _seamail = Seamail.empty();
@@ -71,7 +73,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     if (_busyCounter == 0) {
       _user.pause();
       _calendar.pause();
-      _announcements.pause();
+      _serverStatus.pause();
       _preBusyCredentials = _currentCredentials;
     }
     _busyCounter += 1;
@@ -82,9 +84,40 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       if (_busyCounter == 0) {
         _user.resume();
         _calendar.resume();
-        _announcements.resume();
+        _serverStatus.resume();
         if (_preBusyCredentials != null && _preBusyCredentials != _currentCredentials)
           await Notifications.instance.then<void>((Notifications notifications) => notifications.cancelAll());
+      }
+    }
+  }
+
+  bool _onscreen = true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    bool newState;
+    switch (state) {
+      case AppLifecycleState.inactive:
+        newState = true;
+        break;
+      case AppLifecycleState.paused:
+        newState = false;
+        break;
+      case AppLifecycleState.resumed:
+        newState = true;
+        break;
+      case AppLifecycleState.suspending:
+        newState = false;
+        break;
+      default:
+        newState = true; // app probably just started
+    }
+    if (newState != _onscreen) {
+      _onscreen = newState;
+      if (_onscreen) {
+        _twitarr.enable();
+      } else {
+        _twitarr.disable();
       }
     }
   }
@@ -101,11 +134,13 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
       _twitarr = newConfiguration.createTwitarr();
       _twitarr.debugLatency = _debugLatency;
       _twitarr.debugReliability = _debugReliability;
+      if (!_onscreen)
+        _twitarr.disable();
       _calendar.reset();
-      _announcements.reset();
+      _serverStatus.reset();
       logout(); // may also reset the calendar
       _calendar.triggerUnscheduledUpdate();
-      _announcements.triggerUnscheduledUpdate();
+      _serverStatus.triggerUnscheduledUpdate();
       notifyListeners();
     });
   }
@@ -365,15 +400,25 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     });
   }
 
-  ContinuousProgress<List<Announcement>> get announcements => _announcements;
-  PeriodicProgress<List<Announcement>> _announcements;
+  ContinuousProgress<ServerStatus> get serverStatus => _serverStatus;
+  PeriodicProgress<ServerStatus> _serverStatus;
 
-  Future<List<Announcement>> _updateAnnouncements(ProgressController<List<Announcement>> completer) async {
-    final List<AnnouncementSummary> summary = await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements());
-    return summary
-             .map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this))
-             .toList()
-             ..sort();
+  Future<ServerStatus> _updateServerStatus(ProgressController<ServerStatus> completer) async {
+    final List<Announcement> announcements = (await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements()))
+      .map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this))
+      .toList()
+      ..sort();
+    final Map<String, bool> sections = await completer.chain<Map<String, bool>>(_twitarr.getSectionStatus());
+    return ServerStatus(
+      announcements: announcements,
+      forumsEnabled: sections['forums'] ?? true,
+      streamEnabled: sections['stream'] ?? true,
+      seamailEnabled: sections['seamail'] ?? true,
+      calendarEnabled: sections['calendar'] ?? true,
+      deckPlansEnabled: sections['deck_plans'] ?? true,
+      gamesEnabled: sections['games'] ?? true,
+      karaokeEnabled: sections['karaoke'] ?? true,
+    );
   }
 
   Progress<ServerText> fetchServerText(String filename) {
@@ -516,7 +561,7 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
 
   void forceUpdate() {
     _calendar.triggerUnscheduledUpdate();
-    _announcements.triggerUnscheduledUpdate();
+    _serverStatus.triggerUnscheduledUpdate();
   }
 
   @override
@@ -524,8 +569,9 @@ class CruiseModel extends ChangeNotifier implements PhotoManager {
     _alive = false;
     _user.dispose();
     _calendar.dispose();
-    _announcements.dispose();
+    _serverStatus.dispose();
     _twitarr.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 }

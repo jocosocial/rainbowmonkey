@@ -9,6 +9,7 @@ import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 import 'logic/cruise.dart';
 import 'logic/photo_manager.dart';
+import 'models/server_status.dart';
 import 'models/server_text.dart';
 import 'models/user.dart';
 import 'progress.dart';
@@ -399,6 +400,7 @@ class Badge extends StatelessWidget {
 }
 
 abstract class View implements Widget {
+  bool isEnabled(ServerStatus status);
   Widget buildTabIcon(BuildContext context);
   Widget buildTabLabel(BuildContext context);
   Widget buildFab(BuildContext context);

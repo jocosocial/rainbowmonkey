@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../graphics.dart';
-import '../models/announcements.dart';
+import '../models/server_status.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -13,6 +13,9 @@ class UserView extends StatefulWidget implements View {
   const UserView({
     Key key,
   }) : super(key: key);
+
+  @override
+  bool isEnabled(ServerStatus status) => true;
 
   @override
   Widget buildTabIcon(BuildContext context) {
@@ -282,12 +285,13 @@ class _UserViewState extends State<UserView> {
             ),
           ),
           const Divider(),
-          ContinuousProgressBuilder<List<Announcement>>(
-            progress: Cruise.of(context).announcements,
+          ContinuousProgressBuilder<ServerStatus>(
+            progress: Cruise.of(context).serverStatus,
             onRetry: () { Cruise.of(context).forceUpdate(); },
             nullChild: const SizedBox.shrink(),
             idleChild: const SizedBox.shrink(),
-            builder: (BuildContext context, List<Announcement> announcements) {
+            builder: (BuildContext context, ServerStatus status) {
+              final List<Announcement> announcements = status.announcements;
               if (announcements.isEmpty)
                 return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
               return Padding(

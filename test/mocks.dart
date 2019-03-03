@@ -10,8 +10,8 @@ import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/logic/stream.dart';
-import 'package:cruisemonkey/src/models/announcements.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/models/server_status.dart';
 import 'package:cruisemonkey/src/models/server_text.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
@@ -118,10 +118,10 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   TestCruiseModel({
     MutableContinuousProgress<AuthenticatedUser> user,
     MutableContinuousProgress<Calendar> calendar,
-    MutableContinuousProgress<List<Announcement>> announcements,
+    MutableContinuousProgress<ServerStatus> serverStatus,
   }) : user = user ?? MutableContinuousProgress<AuthenticatedUser>(),
        calendar = calendar ?? MutableContinuousProgress<Calendar>(),
-       announcements = announcements ?? MutableContinuousProgress<List<Announcement>>() {
+       serverStatus = serverStatus ?? MutableContinuousProgress<ServerStatus>() {
     _seamail = Seamail.empty();
     _mentions = Mentions.empty();
     _forums = Forums.empty();
@@ -230,7 +230,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   }) => null;
 
   @override
-  final MutableContinuousProgress<List<Announcement>> announcements;
+  final MutableContinuousProgress<ServerStatus> serverStatus;
 
   @override
   Progress<ServerText> fetchServerText(String filename) {
@@ -263,6 +263,7 @@ class TestCruiseModel extends ChangeNotifier implements CruiseModel {
   Widget avatarFor(Iterable<User> users, { double size: 40.0, int seed = 0, bool enabled = true }) => null;
 
   @override
+
   ImageProvider imageFor(Photo photo, { bool thumbnail = false }) => null;
 
   @override

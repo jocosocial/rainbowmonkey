@@ -3,12 +3,16 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../models/server_status.dart';
 import '../widgets.dart';
 
 class DeckPlanView extends StatefulWidget implements View {
   const DeckPlanView({
     Key key,
   }) : super(key: key);
+
+  @override
+  bool isEnabled(ServerStatus status) => status.deckPlansEnabled;
 
   @override
   Widget buildTabIcon(BuildContext context) => const Icon(Icons.directions_boat);

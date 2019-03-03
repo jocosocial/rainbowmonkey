@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 
 import '../logic/photo_manager.dart';
-import '../models/announcements.dart';
 import '../models/calendar.dart';
 import '../models/reactions.dart';
+import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -106,6 +106,9 @@ abstract class TwitarrConfiguration {
 abstract class Twitarr {
   const Twitarr();
 
+  void enable();
+  void disable();
+  
   double get debugLatency;
   set debugLatency(double value);
 
@@ -144,6 +147,8 @@ abstract class Twitarr {
   });
 
   Progress<List<AnnouncementSummary>> getAnnouncements();
+
+  Progress<Map<String, bool>> getSectionStatus();
 
   Progress<ServerText> fetchServerText(String filename);
 
