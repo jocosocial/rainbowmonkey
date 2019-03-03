@@ -327,14 +327,8 @@ class Entry extends StatelessWidget {
         } : null,
         getLikesCallback: () => stream.getReactions(post.id, 'like'),
         timestamp: post.timestamp,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (BuildContext context) => TweetThreadView(threadId: post.id),
-            ),
-          );
-        },
+        onReply: () => TweetThreadView.open(context, post.id),
+        onPressed: () => TweetThreadView.open(context, post.id),
         onDelete: isCurrentUser && (!post.locked || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.delete(post.id));
         } : null,
@@ -354,6 +348,15 @@ class TweetThreadView extends StatefulWidget {
 
   final String threadId;
 
+  static Future<void> open(BuildContext context, String threadId) {
+    return Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => TweetThreadView(threadId: threadId),
+      ),
+    );
+  }
+  
   @override
   State<TweetThreadView> createState() => _TweetThreadViewState();
 }
@@ -656,14 +659,8 @@ class NestedEntry extends StatelessWidget {
           if (onChanged != null)
             onChanged(true);
         } : null,
-        onPressed: details.depth == 0 ? null : () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute<void>(
-              builder: (BuildContext context) => TweetThreadView(threadId: details.post.id),
-            ),
-          );
-        },
+        onReply: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id),
+        onPressed: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id),
       ),
     );
   }
