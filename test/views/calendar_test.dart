@@ -4,11 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/views/calendar.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
+import '../loggers.dart';
 import '../mocks.dart';
 
 Future<void> useModel(WidgetTester tester, CruiseModel model) {
@@ -25,7 +27,24 @@ Future<void> useModel(WidgetTester tester, CruiseModel model) {
   );
 }
 
+final DataStore store = TrivialDataStore(<String>[]);
+
+class TestCruiseModel extends CruiseModel {
+  TestCruiseModel({
+    MutableContinuousProgress<Calendar> calendar,
+  }) : calendar = calendar ?? MutableContinuousProgress<Calendar>(),
+       super(
+         initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
+         onError: (String message) { },
+         store: store,
+       );
+
+  @override
+  final MutableContinuousProgress<Calendar> calendar;
+}
+
 void main() {
+  LoggingTwitarrConfiguration.register(<String>[]);
   testWidgets('Calendar', (WidgetTester tester) async {
     final TestCruiseModel model1 = TestCruiseModel();
 
