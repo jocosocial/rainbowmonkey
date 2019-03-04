@@ -109,46 +109,48 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
           ),
         ];
         final List<PopupMenuEntry<VoidCallback>> menuItems = <PopupMenuEntry<VoidCallback>>[];
-        switch (currentUser.role) {
-          case Role.admin:
-          case Role.tho:
-            menuItems.add(
-              CheckedPopupMenuItem<VoidCallback>(
-                child: const Text('Sticky'),
-                checked: widget.thread.isSticky,
-                value: () { widget.thread.sticky(sticky: !widget.thread.isSticky); },
-              ),
-            );
-            continue moderator;
-          moderator:
-          case Role.moderator:
-            menuItems.addAll(<PopupMenuEntry<VoidCallback>>[
-              CheckedPopupMenuItem<VoidCallback>(
-                child: const Text('Lock'),
-                checked: widget.thread.isLocked,
-                value: () { widget.thread.lock(locked: !widget.thread.isLocked); },
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem<VoidCallback>(
-                child: const ListTile(
-                  leading: Icon(Icons.delete_forever),
-                  title: Text('Delete Forum'),
+        if (currentUser != null) {
+          switch (currentUser.role) {
+            case Role.admin:
+            case Role.tho:
+              menuItems.add(
+                CheckedPopupMenuItem<VoidCallback>(
+                  child: const Text('Sticky'),
+                  checked: widget.thread.isSticky,
+                  value: () { widget.thread.sticky(sticky: !widget.thread.isSticky); },
                 ),
-                value: () async {
-                  if (await confirmDialog(context, 'Delete "${widget.thread.subject}" forum?', yes: 'DELETE')) {
-                    widget.thread.delete();
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-            ]);
-            continue user;
-          user:
-          case Role.user:
-          case Role.muted:
-          case Role.banned:
-          case Role.none:
-            break;
+              );
+              continue moderator;
+            moderator:
+            case Role.moderator:
+              menuItems.addAll(<PopupMenuEntry<VoidCallback>>[
+                CheckedPopupMenuItem<VoidCallback>(
+                  child: const Text('Lock'),
+                  checked: widget.thread.isLocked,
+                  value: () { widget.thread.lock(locked: !widget.thread.isLocked); },
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem<VoidCallback>(
+                  child: const ListTile(
+                    leading: Icon(Icons.delete_forever),
+                    title: Text('Delete Forum'),
+                  ),
+                  value: () async {
+                    if (await confirmDialog(context, 'Delete "${widget.thread.subject}" forum?', yes: 'DELETE')) {
+                      widget.thread.delete();
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ]);
+              continue user;
+            user:
+            case Role.user:
+            case Role.muted:
+            case Role.banned:
+            case Role.none:
+              break;
+          }
         }
         if (menuItems.isNotEmpty) {
           actions.add(PopupMenuButton<VoidCallback>(
@@ -191,20 +193,20 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                           photos: message.photos,
                           id: message.id,
                           likes: message.reactions.likes,
-                          onLike: !isModerating && !message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate) ? () {
+                          onLike: currentUser != null && (!isModerating && !message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate)) ? () {
                             ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: true));
                           } : null,
-                          onUnlike: !isModerating && message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate) ? () {
+                          onUnlike: currentUser != null && (!isModerating && message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate)) ? () {
                             ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: false));
                           } : null,
                           getLikesCallback: () => widget.thread.getReactions(message.id, 'like'),
                           timestamp: message.timestamp,
-                          onDelete: (isCurrentUser && !widget.thread.isLocked) || canModerate ? () async {
+                          onDelete: currentUser != null && ((isCurrentUser && !widget.thread.isLocked) || canModerate) ? () async {
                             final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.deleteMessage(message.id));
                             if (threadDeleted)
                               Navigator.pop(context);
                           } : null,
-                          onEdit: (isCurrentUser && (!widget.thread.isLocked || canModerate)) || currentUser.canAlwaysEdit ? () {
+                          onEdit: currentUser != null && ((isCurrentUser && (!widget.thread.isLocked || canModerate)) || currentUser.canAlwaysEdit) ? () {
                             EditForumPostView.open(context, widget.thread, message);
                           } : null,
                         );

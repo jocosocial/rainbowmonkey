@@ -125,7 +125,7 @@ class AttachImageDialog extends StatelessWidget {
     if (oldImages != null) {
       for (int index = 0; index < oldImages.length; index += 1) {
         imageList.add(_SelectedImage(
-          child: Image(image: Cruise.of(context).imageFor(oldImages[index])),
+          child: Image(image: Cruise.of(context).imageFor(oldImages[index], thumbnail: true)),
           onRemove: () {
             onUpdateOldImages(oldImages.toList()..removeAt(index));
           },

@@ -203,7 +203,6 @@ abstract class Twitarr {
   });
 
   Progress<Map<String, Set<UserSummary>>> getTweetReactions({
-    @required Credentials credentials,
     @required String postId,
   });
 
@@ -271,7 +270,6 @@ abstract class Twitarr {
   });
 
   Progress<Map<String, Set<UserSummary>>> getForumMessageReactions({
-    @required Credentials credentials,
     @required String threadId,
     @required String messageId,
   });

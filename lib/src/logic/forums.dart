@@ -367,11 +367,9 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   }
 
   Progress<Set<User>> getReactions(String messageId, String reaction) {
-    assert(_credentials != null);
     return Progress<Set<User>>((ProgressController<Set<User>> completer) async {
       final Map<String, Set<UserSummary>> reactions = await completer.chain<Map<String, Set<UserSummary>>>(
         _twitarr.getForumMessageReactions(
-          credentials: _credentials,
           threadId: id,
           messageId: messageId,
         ),

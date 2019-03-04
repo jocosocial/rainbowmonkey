@@ -336,11 +336,9 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   }
 
   Progress<Set<User>> getReactions(String postId, String reaction) {
-    assert(_credentials != null);
     return Progress<Set<User>>((ProgressController<Set<User>> completer) async {
       final Map<String, Set<UserSummary>> reactions = await completer.chain<Map<String, Set<UserSummary>>>(
         _twitarr.getTweetReactions(
-          credentials: _credentials,
           postId: postId,
         ),
       );

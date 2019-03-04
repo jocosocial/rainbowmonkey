@@ -1104,20 +1104,16 @@ class RestTwitarr implements Twitarr {
 
   @override
   Progress<Map<String, Set<UserSummary>>> getTweetReactions({
-    @required Credentials credentials,
     @required String postId,
   }) {
     if (_enabled?.streamEnabled == false)
       return Progress<Map<String, Set<UserSummary>>>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
-    assert(credentials.key != null);
     assert(postId != null);
     return Progress<Map<String, Set<UserSummary>>>((ProgressController<Map<String, Set<UserSummary>>> completer) async {
-      final FormData body = FormData()
-        ..add('key', credentials.key);
       final String rawData = await completer.chain<String>(
         _requestUtf8(
           'GET',
-          'api/v2/tweet/${Uri.encodeComponent(postId)}/react?${body.toUrlEncoded()}',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}/react',
           expectedStatusCodes: <int>[200, 404],
         ),
       );
@@ -1511,22 +1507,18 @@ class RestTwitarr implements Twitarr {
 
   @override
   Progress<Map<String, Set<UserSummary>>> getForumMessageReactions({
-    @required Credentials credentials,
     @required String threadId,
     @required String messageId,
   }) {
     if (_enabled?.forumsEnabled == false)
       return Progress<Map<String, Set<UserSummary>>>.failed(const LocalError('Forums have been disabled on the server.'));
-    assert(credentials.key != null);
     assert(threadId != null);
     assert(messageId != null);
     return Progress<Map<String, Set<UserSummary>>>((ProgressController<Map<String, Set<UserSummary>>> completer) async {
-      final FormData body = FormData()
-        ..add('key', credentials.key);
       final String rawData = await completer.chain<String>(
         _requestUtf8(
           'GET',
-          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}/react?${body.toUrlEncoded()}',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}/react',
           expectedStatusCodes: <int>[200, 404],
         ),
       );

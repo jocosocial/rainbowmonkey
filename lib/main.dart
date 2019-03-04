@@ -230,6 +230,12 @@ class CruiseMonkeyHome extends StatelessWidget {
             inputDecorationTheme: const InputDecorationTheme(
               border: OutlineInputBorder(),
             ),
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: <TargetPlatform, PageTransitionsBuilder>{
+                TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+                TargetPlatform.iOS:CupertinoPageTransitionsBuilder(),
+              },
+            ),
           ),
           home: DefaultTabController(
             key: ValueKey<int>(pages.length),

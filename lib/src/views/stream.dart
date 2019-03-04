@@ -239,7 +239,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                         stream: _stream,
                         canModerate: canModerate,
                         isModerating: isModerating,
-                        canAlwaysEdit: currentUser.canAlwaysEdit,
+                        canAlwaysEdit: currentUser != null && currentUser.canAlwaysEdit,
                       );
                     },
                     onDidFinishLayout: () {
@@ -326,26 +326,26 @@ class Entry extends StatelessWidget {
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         id: post.id,
         likes: post.reactions.likes,
-        onLike: !isModerating && !post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
+        onLike: effectiveCurrentUser != null && (!isModerating && !post.reactions.currentUserLiked && (!post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: true));
         } : null,
-        onUnlike: !isModerating && post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
+        onUnlike: effectiveCurrentUser != null && (!isModerating && post.reactions.currentUserLiked && (!post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: false));
         } : null,
         getLikesCallback: () => stream.getReactions(post.id, 'like'),
         timestamp: post.timestamp,
-        onReply: () => TweetThreadView.open(context, post.id),
+        onReply: effectiveCurrentUser != null ? () => TweetThreadView.open(context, post.id, reply: true) : null,
         onPressed: () => TweetThreadView.open(context, post.id),
-        onDelete: (isCurrentUser && !post.isLocked) || canModerate ? () {
+        onDelete: effectiveCurrentUser != null && ((isCurrentUser && !post.isLocked) || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.delete(post.id));
         } : null,
-        onLock: canModerate && !post.isLocked ? () {
+        onLock: effectiveCurrentUser != null && (canModerate && !post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(post.id, locked: true));
         } : null,
-        onUnlock: canModerate && post.isLocked ? () {
+        onUnlock: effectiveCurrentUser != null && (canModerate && post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(post.id, locked: false));
         } : null,
-        onEdit: (isCurrentUser && (!post.isLocked || canModerate)) || canAlwaysEdit ? () {
+        onEdit: effectiveCurrentUser != null && ((isCurrentUser && (!post.isLocked || canModerate)) || canAlwaysEdit) ? () {
           EditTweetView.open(context, stream, post);
         } : null,
       ),
@@ -357,13 +357,17 @@ class TweetThreadView extends StatefulWidget {
   const TweetThreadView({
     Key key,
     this.threadId,
-  }) : super(key: key);
+    this.reply = false,
+  }) : assert(reply != null),
+       super(key: key);
 
   final String threadId;
 
-  static Future<void> open(BuildContext context, String threadId, { bool replace = false }) {
+  final bool reply;
+
+  static Future<void> open(BuildContext context, String threadId, { bool replace = false, bool reply = false }) {
     final Route<void> route = MaterialPageRoute<void>(
-      builder: (BuildContext context) => TweetThreadView(threadId: threadId),
+      builder: (BuildContext context) => TweetThreadView(threadId: threadId, reply: reply),
     );
     if (replace)
       return Navigator.pushReplacement(context, route);
@@ -378,6 +382,7 @@ class _TweetThreadViewState extends State<TweetThreadView> {
   TweetStream _stream;
   Progress<StreamPost> _thread;
   List<FlatStreamPost> _flatList;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
@@ -471,6 +476,11 @@ class _TweetThreadViewState extends State<TweetThreadView> {
           return ProgressBuilder<StreamPost>(
             progress: _thread,
             builder: (BuildContext context, StreamPost post) {
+              if (!_initialized) {
+                _initialized = true;
+                if (widget.reply)
+                  _textController.text = '@${post.user.username} ${_textController.text}';
+              }
               _flatList ??= _flatten(post); // this list is "in reverse", index 0 is the newest
               final bool loggedIn = Cruise.of(context).isLoggedIn;
               final bool canPostInPrinciple = loggedIn && (post.isLocked ? currentUser.canPostWhenLocked : currentUser.canPost);
@@ -510,8 +520,8 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                               details: _flatList[index],
                               canModerate: canModerate,
                               isModerating: isModerating,
-                              canAlwaysEdit: currentUser.canAlwaysEdit,
-                              effectiveCurrentUser: currentUser.effectiveUser,
+                              canAlwaysEdit: currentUser != null && currentUser.canAlwaysEdit,
+                              effectiveCurrentUser: currentUser?.effectiveUser,
                               stream: _stream,
                               onChanged: (bool deleted) {
                                 if (deleted && index == _flatList.length - 1) {
@@ -657,36 +667,36 @@ class NestedEntry extends StatelessWidget {
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
         id: details.post.id,
         likes: details.post.reactions.likes,
-        onLike: !isModerating && !details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
+        onLike: effectiveCurrentUser != null && (!isModerating && !details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: true));
           if (onChanged != null)
             onChanged(false);
         } : null,
-        onUnlike: !isModerating && details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
+        onUnlike: effectiveCurrentUser != null && (!isModerating && details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: false));
           if (onChanged != null)
             onChanged(false);
         } : null,
         getLikesCallback: () => stream.getReactions(details.post.id, 'like'),
         timestamp: details.post.timestamp,
-        onDelete: (isCurrentUser && !details.post.isLocked) || canModerate ? () async {
+        onDelete: effectiveCurrentUser != null && ((isCurrentUser && !details.post.isLocked) || canModerate) ? () async {
           await ProgressDialog.show<void>(context, stream.delete(details.post.id));
           if (onChanged != null)
             onChanged(true);
         } : null,
-        onReply: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id, replace: true),
-        onPressed: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id, replace: true),
-        onLock: canModerate && !details.post.isLocked ? () {
+        onReply: effectiveCurrentUser != null && (details.depth > 0) ? () => TweetThreadView.open(context, details.post.id, replace: true, reply: true) : null,
+        onPressed: details.depth > 0 ? () => TweetThreadView.open(context, details.post.id, replace: true) : null,
+        onLock: effectiveCurrentUser != null && (canModerate && !details.post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(details.post.id, locked: true));
           if (onChanged != null)
             onChanged(false);
         } : null,
-        onUnlock: canModerate && details.post.isLocked ? () {
+        onUnlock: effectiveCurrentUser != null && (canModerate && details.post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(details.post.id, locked: false));
           if (onChanged != null)
             onChanged(false);
         } : null,
-        onEdit: (isCurrentUser && (!details.post.isLocked || canModerate)) || canAlwaysEdit ? () {
+        onEdit: effectiveCurrentUser != null && ((isCurrentUser && (!details.post.isLocked || canModerate)) || canAlwaysEdit) ? () {
           EditTweetView.open(context, stream, details.post);
         } : null,
       ),
@@ -788,7 +798,7 @@ class _EditTweetViewState extends State<EditTweetView> {
                         if (_valid)
                           _commit();
                       },
-                      textInputAction: TextInputAction.newline,
+                      textInputAction: TextInputAction.send,
                       textCapitalization: TextCapitalization.sentences,
                       maxLength: 10000,
                       maxLines: null,
