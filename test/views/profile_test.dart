@@ -39,10 +39,12 @@ Future<void> main() async {
         ),
       ),
     );
+    log.add('--');
     expect(find.text('Display name'), findsOneWidget);
     expect(find.text('Home location'), findsNothing);
     await tester.drag(find.byType(CustomScrollView), const Offset(0.0, -1000.0));
     await tester.pumpAndSettle();
+    log.add('--');
     expect(find.text('Home location'), findsOneWidget);
     expect(find.text('Hello'), findsNothing);
     expect(find.text('override location set'), findsNothing);
@@ -63,6 +65,12 @@ Future<void> main() async {
       'LoggingTwitarr(0).getAnnouncements()',
       'LoggingTwitarr(0).getSectionStatus()',
       'fetchProfilePicture',
+      '--',
+      'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)',
+      // this is where the ui subscribes to everything:
+      'LoggingTwitarr(0).getAnnouncements()',
+      'LoggingTwitarr(0).getSectionStatus()',
+      '--',
       'overridden',
       'updateProfile null/null/null/null/Hello/null',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)'

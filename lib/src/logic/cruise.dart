@@ -97,7 +97,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     if (error is FeatureDisabledError)
       _serverStatus.triggerUnscheduledUpdate();
   }
-  
+
   bool _onscreen = true;
 
   @override
@@ -330,7 +330,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     final ServerStatus status = serverStatus.currentValue;
     if (status != null && newRole != status.userRole) {
       final ServerStatus newStatus = status.copyWith(userRole: newRole);
-      print('got new status $newRole');
       _serverStatus.addProgress(Progress<ServerStatus>.completed(newStatus));
       if (_onscreen)
         _twitarr.enable(newStatus);
