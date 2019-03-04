@@ -9,8 +9,8 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:meta/meta.dart';
 
-import '../basic_types.dart';
 import '../models/calendar.dart';
+import '../models/errors.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
@@ -91,6 +91,13 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     }
   }
 
+  void _handleError(UserFriendlyError error) {
+    if (onError != null)
+      onError(error);
+    if (error is FeatureDisabledError)
+      _serverStatus.triggerUnscheduledUpdate();
+  }
+  
   bool _onscreen = true;
 
   @override
@@ -250,7 +257,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       } on InvalidUsernameOrPasswordError {
         rethrow;
       } on UserFriendlyError catch (error) {
-        onError('$error');
+        _handleError(error);
       }
     });
   }
@@ -300,7 +307,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           _twitarr,
           _currentCredentials,
           this,
-          onError: onError,
+          onError: _handleError,
           onCheckForMessages: () {
             if (onCheckForMessages != null)
               onCheckForMessages(_currentCredentials, _twitarr, store, forced: true);
@@ -311,13 +318,22 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           _twitarr,
           _currentCredentials,
           this,
-          onError: onError,
+          onError: _handleError,
         );
         _forums = _createForums();
         _tweetStream = _createTweetStream();
         if (!_loggedIn.isCompleted)
           _loggedIn.complete();
       }
+    }
+    final Role newRole = user != null ? user.role : Role.none;
+    final ServerStatus status = serverStatus.currentValue;
+    if (status != null && newRole != status.userRole) {
+      final ServerStatus newStatus = status.copyWith(userRole: newRole);
+      print('got new status $newRole');
+      _serverStatus.addProgress(Progress<ServerStatus>.completed(newStatus));
+      if (_onscreen)
+        _twitarr.enable(newStatus);
     }
     if (_currentCredentials != oldCredentials)
       _calendar.triggerUnscheduledUpdate();
@@ -341,13 +357,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       result = await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
       if (_asMod)
         result = result.copyWith(credentials: result.credentials.copyWith(asMod: true));
-      final ServerStatus status = serverStatus.currentValue;
-      if (status != null && result.role != status.userRole) {
-        final ServerStatus newStatus = status.copyWith(userRole: result.role);
-        _serverStatus.addProgress(Progress<ServerStatus>.completed(newStatus));
-        if (_onscreen)
-          _twitarr.enable(newStatus);
-      }
     }
     return result;
   }
@@ -404,7 +413,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       _twitarr,
       _currentCredentials,
       photoManager: this,
-      onError: onError,
+      onError: _handleError,
     );
   }
 
@@ -413,7 +422,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       _twitarr,
       _currentCredentials,
       photoManager: this,
-      onError: (dynamic error, StackTrace stack) => onError('$error'),
+      onError: _handleError,
     );
   }
 
@@ -441,7 +450,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
         await completer.chain(_twitarr.setEventFavorite(credentials: _currentCredentials, eventId: eventId, favorite: favorite), steps: 2);
         await completer.chain(_calendar.triggerUnscheduledUpdate(), steps: 2);
       } on UserFriendlyError catch (error) {
-        onError('$error');
+        _handleError(error);
       }
     });
   }
@@ -507,12 +516,12 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     final math.Random random = math.Random(seed);
     final List<User> sortedUsers = users.toList()..shuffle(random);
     final List<Color> colors = sortedUsers.map<Color>((User user) => Color((user.username.hashCode | 0xFF111111) & 0xFF7F7F7F)).toList();
-    final List<ImageProvider> images = sortedUsers.map<ImageProvider>((User user) => AvatarImage(user.username, this, _twitarr, onError: onError)).toList();
+    final List<ImageProvider> images = sortedUsers.map<ImageProvider>((User user) => AvatarImage(user.username, this, _twitarr, onError: _handleError)).toList();
     return createAvatarWidgetsFor(sortedUsers, colors, images, size: size, enabled: enabled);
   }
 
   ImageProvider imageFor(Photo photo, { bool thumbnail = false }) {
-    return TwitarrImage(photo, this, _twitarr, onError: onError, thumbnail: thumbnail);
+    return TwitarrImage(photo, this, _twitarr, onError: _handleError, thumbnail: thumbnail);
   }
 
   Progress<void> updateProfile({
@@ -674,7 +683,7 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
       } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
         // it's ok to catch all errors here, as we're just rerouting them, not swallowing them
         if (error is UserFriendlyError && onError != null) {
-          onError('$error');
+          onError(error);
         } else {
           reportError(exception: error, stack: stack);
         }
@@ -774,7 +783,7 @@ class TwitarrImageStreamCompleter extends ImageStreamCompleter {
     } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
       // it's ok to catch all errors here, as we're just rerouting them, not swallowing them
       if (error is UserFriendlyError && onError != null) {
-        onError('$error');
+        onError(error);
       } else {
         reportError(exception: error, stack: stack);
       }

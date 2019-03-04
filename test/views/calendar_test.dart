@@ -6,6 +6,7 @@ import 'package:cruisemonkey/main.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/views/calendar.dart';
 import 'package:cruisemonkey/src/widgets.dart';
@@ -35,7 +36,7 @@ class TestCruiseModel extends CruiseModel {
   }) : calendar = calendar ?? MutableContinuousProgress<Calendar>(),
        super(
          initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
-         onError: (String message) { },
+         onError: (UserFriendlyError message) { },
          store: store,
        );
 

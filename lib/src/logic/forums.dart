@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
-import '../basic_types.dart';
+import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
@@ -83,7 +83,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
         _threads.remove(thread.id);
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
-      _reportError(error);
+      onError(error);
     } finally {
       _updating = false;
       endBusy();
@@ -118,10 +118,6 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
 
   void _childUpdated(ForumThread thread) {
     notifyListeners();
-  }
-
-  void _reportError(UserFriendlyError error) {
-    onError(error.toString());
   }
 
   @override
@@ -214,7 +210,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
       ).asFuture());
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
-      _parent._reportError(error);
+      _parent.onError(error);
     } finally {
       _updating = false;
       endBusy();

@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cruisemonkey/src/basic_types.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
+import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/rest.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
@@ -27,7 +27,7 @@ Future<void> main() async {
     final CruiseModel model = _TestCruiseModel(
       initialTwitarrConfiguration: const RestTwitarrConfiguration(baseUrl: 'https://example.com/'),
       store: store,
-      onError: (String error) { throw Exception(error); },
+      onError: (UserFriendlyError error) { throw Exception(error); },
       log: log,
     );
     await tester.pumpWidget(

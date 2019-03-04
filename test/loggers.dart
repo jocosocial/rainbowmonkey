@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/models/server_status.dart';
 import 'package:cruisemonkey/src/models/server_text.dart';
 import 'package:cruisemonkey/src/models/reactions.dart';
 import 'package:cruisemonkey/src/models/user.dart';
@@ -64,6 +65,12 @@ class LoggingTwitarr extends Twitarr {
   String get photoCacheKey => '$runtimeType';
 
   int _stamp = 0;
+
+  @override
+  void enable(ServerStatus status) { }
+
+  @override
+  void disable() { }
 
   @override
   Progress<AuthenticatedUser> createAccount({

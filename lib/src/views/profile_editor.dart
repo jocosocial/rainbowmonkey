@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/errors.dart';
 import '../models/user.dart';
-import '../network/twitarr.dart';
 
 import '../progress.dart';
 import '../widgets.dart';

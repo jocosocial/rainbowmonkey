@@ -5,6 +5,7 @@ import '../logic/cruise.dart';
 import '../logic/seamail.dart';
 import '../models/user.dart';
 import '../progress.dart';
+import '../utils.dart';
 import '../widgets.dart';
 
 class SeamailThreadView extends StatefulWidget {
@@ -241,7 +242,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                       key: ObjectKey(entry),
                       leading: const Icon(Icons.error, size: 40.0, color: Colors.red),
                       title: Text(entry.text),
-                      subtitle: Text('Failed: ${entry.error}. Tap to retry.'),
+                      subtitle: Text('Failed: ${punctuate("${entry.error}")} Tap to retry.'),
                       onTap: () {
                         _pending.remove(entry);
                         _submitMessage(entry.text);

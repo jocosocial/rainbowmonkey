@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import '../json.dart';
 import '../logic/photo_manager.dart';
 import '../models/calendar.dart';
+import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
@@ -306,7 +307,11 @@ class RestTwitarr implements Twitarr {
       return await compute<String, Calendar>(
         _parseCalendar,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/event?${body.toUrlEncoded()}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/event?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
     });
@@ -358,7 +363,11 @@ class RestTwitarr implements Twitarr {
       return await compute<String, List<AnnouncementSummary>>(
         _parseAnnouncements,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/announcements?${body.toUrlEncoded()}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/announcements?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
     });
@@ -404,7 +413,11 @@ class RestTwitarr implements Twitarr {
       final ServerText result = await compute<String, ServerText>(
         _parseServerText,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/text/${Uri.encodeComponent(filename)}?${body.toUrlEncoded()}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/text/${Uri.encodeComponent(filename)}?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
       _serverTextCache[filename] = result;
@@ -577,7 +590,11 @@ class RestTwitarr implements Twitarr {
       final List<User> result = await compute<String, List<User>>(
         _parseUserList,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/user/ac/${Uri.encodeComponent(searchTerm)}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/user/ac/${Uri.encodeComponent(searchTerm)}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
       return result;
@@ -881,6 +898,7 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/stream?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -1142,6 +1160,7 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/forums?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -1168,6 +1187,7 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -1759,6 +1779,8 @@ class RestTwitarr implements Twitarr {
           });
           return true;
         }());
+        if (response.statusCode == 503)
+          throw const FeatureDisabledError();
         throw HttpServerError(response.statusCode, response.reasonPhrase, url);
       }
       if (response.contentLength > 0)

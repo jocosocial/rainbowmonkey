@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
@@ -28,7 +29,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   final Twitarr _twitarr;
   final Credentials _credentials;
   final PhotoManager photoManager;
-  final StreamErrorCallback onError;
+  final ErrorCallback onError;
   final Duration maxUpdatePeriod;
 
   final List<StreamPost> _posts = <StreamPost>[];
@@ -115,9 +116,9 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       } while (trying);
       if (didSomething)
         notifyListeners();
-    } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
+    } on UserFriendlyError catch (error) {
       if (onError != null) {
-        onError(error, stack);
+        onError(error);
       } else {
         rethrow;
       }
@@ -180,9 +181,9 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       } while (trying);
       if (didSomething)
         notifyListeners();
-    } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
+    } on UserFriendlyError catch (error) {
       if (onError != null) {
-        onError(error, stack);
+        onError(error);
       } else {
         rethrow;
       }

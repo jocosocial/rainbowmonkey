@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
+import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -27,7 +28,7 @@ Future<void> main() async {
         },
       ),
       store: TrivialDataStore(log),
-      onError: (String error) { log.add('error: $error'); },
+      onError: (UserFriendlyError error) { log.add('error: $error'); },
     );
     await model.login(username: 'username', password: 'password').asFuture();
     await tester.pumpWidget(

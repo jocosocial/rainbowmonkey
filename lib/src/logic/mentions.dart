@@ -2,7 +2,7 @@ import 'dart:ui' show hashValues;
 
 import 'package:flutter/foundation.dart';
 
-import '../basic_types.dart';
+import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
@@ -73,17 +73,13 @@ class Mentions extends ChangeNotifier with BusyMixin {
       newMentions = listEquals<MentionsItem>(oldList, _currentMentions);
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
-      _reportError(error);
+      onError(error);
     } finally {
       _updating = false;
       endBusy();
     }
     if (newMentions)
       notifyListeners();
-  }
-
-  void _reportError(UserFriendlyError error) {
-    onError(error.toString());
   }
 
   Future<void> clear() async {

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../models/errors.dart';
 import '../models/user.dart';
-import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
 
@@ -336,9 +336,10 @@ class _AccountCreationStatus extends StatelessWidget {
               messages.add('$message.');
             }
           }
-        } else {
-          if (error != null && error.toString().isNotEmpty)
-            messages.add('An unexpected error occurred:\n$error');
+        } else if (error is UserFriendlyError) {
+          messages.add('$error');
+        } else if (error != null && error.toString().isNotEmpty) {
+          messages.add('An unexpected error occurred:\n$error');
         }
         if (messages.isEmpty)
           messages.add('The server unfortunately did not send back a reason why the account creation failed.');

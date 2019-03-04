@@ -299,3 +299,9 @@ String prettyDuration(Duration duration, { bool short = false }) {
     return '1 week ago';
   return '${weeks.round()} weeks ago';
 }
+
+String punctuate(String message) {
+  if (message.endsWith('.') || message.endsWith('!') || message.endsWith('?'))
+    return message;
+  return '$message.';
+}

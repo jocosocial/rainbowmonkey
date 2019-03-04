@@ -367,6 +367,20 @@ class MutableContinuousProgress<T> extends ContinuousProgress<T> with ChangeNoti
   void _handleDone() {
     addProgress(const Progress<Null>.idle());
   }
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!hasListeners)
+      _handleAdd();
+    super.addListener(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    if (!hasListeners)
+      _handleRemove();
+  }
 }
 
 class PeriodicProgress<T> extends MutableContinuousProgress<T> {

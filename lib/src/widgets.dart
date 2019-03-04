@@ -783,7 +783,7 @@ class ProgressChatLine extends StatelessWidget {
         } else if (value is FailedProgress) {
           leading = const Icon(Icons.error, size: 40.0, color: Colors.red);
           trailing = onRemove != null ? IconButton(icon: const Icon(Icons.clear), tooltip: 'Abandon message', onPressed: onRemove) : null;
-          subtitle = onRetry != null ? Text('Failed: ${value.error}. Tap to retry.') : Text('Failed: ${value.error}');
+          subtitle = onRetry != null ? Text('Failed: ${punctuate("${value.error}")} Tap to retry.') : Text('Failed: ${punctuate("${value.error}")}');
           onTap = onRetry;
         } else if (value is SuccessfulProgress<void>) {
           leading = const Icon(Icons.error, size: 40.0, color: Colors.yellow);

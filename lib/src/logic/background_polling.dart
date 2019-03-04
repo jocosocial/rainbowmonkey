@@ -5,6 +5,7 @@ import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../models/errors.dart';
 import '../models/user.dart';
 import '../network/rest.dart';
 import '../network/twitarr.dart';
