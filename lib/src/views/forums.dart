@@ -199,17 +199,12 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                           } : null,
                           getLikesCallback: () => widget.thread.getReactions(message.id, 'like'),
                           timestamp: message.timestamp,
-                          onDelete: isCurrentUser && (!widget.thread.isLocked || canModerate) ? () async {
+                          onDelete: (isCurrentUser && !widget.thread.isLocked) || canModerate ? () async {
                             final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.deleteMessage(message.id));
                             if (threadDeleted)
                               Navigator.pop(context);
                           } : null,
-                          onDeleteModerator: !isCurrentUser && canModerate ? () async {
-                            final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.deleteMessage(message.id));
-                            if (threadDeleted)
-                              Navigator.pop(context);
-                          } : null,
-                          onEdit: isCurrentUser && !widget.thread.isLocked ? () {
+                          onEdit: (isCurrentUser && (!widget.thread.isLocked || canModerate)) || currentUser.canAlwaysEdit ? () {
                             EditForumPostView.open(context, widget.thread, message);
                           } : null,
                         );
@@ -449,7 +444,7 @@ class EditForumPostView extends StatefulWidget {
       ),
     );
   }
-  
+
   @override
   _EditForumPostViewState createState() => _EditForumPostViewState();
 }
@@ -467,7 +462,7 @@ class _EditForumPostViewState extends State<EditForumPostView> {
     _text.text = widget.message.text;
     _keptPhotos = widget.message.photos;
   }
-  
+
   void _commit() async {
     final Progress<void> progress = widget.thread.edit(
       messageId: widget.message.id,
@@ -542,7 +537,6 @@ class _EditForumPostViewState extends State<EditForumPostView> {
                           _keptPhotos = newKeptPhotos;
                         });
                       },
-                      tagId: widget.thread.id,
                       images: _newPhotos,
                       onUpdate: (List<Uint8List> newPhotos) {
                         setState(() {

@@ -94,22 +94,18 @@ class AttachImageDialog extends StatelessWidget {
     Key key,
     this.oldImages,
     this.onUpdateOldImages,
-    this.tagId,
     @required List<Uint8List> images,
     @required this.onUpdate,
     @required this.allowMultiple,
   }) : assert(onUpdate != null),
        assert(allowMultiple != null),
        assert(oldImages == null || onUpdateOldImages != null),
-       assert(oldImages == null || tagId != null),
        images = images == null ? const <Uint8List>[] : images,
        super(key: key);
 
   final List<Photo> oldImages;
 
   final ValueSetter<List<Photo>> onUpdateOldImages;
-
-  final String tagId;
 
   final List<Uint8List> images;
 
@@ -129,7 +125,7 @@ class AttachImageDialog extends StatelessWidget {
     if (oldImages != null) {
       for (int index = 0; index < oldImages.length; index += 1) {
         imageList.add(_SelectedImage(
-          child: PhotoImage(tag: '$tagId:${oldImages[index].id}', photo: oldImages[index]),
+          child: Image(image: Cruise.of(context).imageFor(oldImages[index])),
           onRemove: () {
             onUpdateOldImages(oldImages.toList()..removeAt(index));
           },
@@ -144,7 +140,7 @@ class AttachImageDialog extends StatelessWidget {
         },
       ));
     }
-    final bool canAdd = allowMultiple || images.isEmpty;
+    final bool canAdd = allowMultiple || (images.isEmpty && oldImages.isEmpty);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[

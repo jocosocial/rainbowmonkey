@@ -965,7 +965,7 @@ class RestTwitarr implements Twitarr {
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
         ),
-        steps: 2
+        steps: photo != null ? 2 : 1
       );
       final dynamic data = Json.parse(result);
       _checkStatusIsOk(data);
@@ -995,6 +995,53 @@ class RestTwitarr implements Twitarr {
       );
       if (rawData.isEmpty)
         return;
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
+  Progress<void> editTweet({
+    Credentials credentials,
+    @required String postId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
+    assert(credentials.key != null);
+    assert(postId != null);
+    assert(text != null);
+    assert((keptPhotos != null ? keptPhotos.length : 0) + (newPhotos != null ? newPhotos.length : 0) <= 1);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      final Map<String, dynamic> details = <String, dynamic>{
+        'text': text,
+      };
+      if (credentials.asMod)
+        details['as_mod'] = true;
+      final List<String> photoIds = (keptPhotos ?? const <String>[]).toList();
+      if (newPhotos != null) {
+        for (Uint8List photo in newPhotos)
+          photoIds.add(await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: newPhotos.length + 1));
+      }
+      if (photoIds.isNotEmpty)
+        details['photo'] = photoIds.single;
+      final String jsonBody = json.encode(details);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+          expectedStatusCodes: <int>[200, 400, 403, 404],
+        ),
+        steps: (newPhotos != null ? newPhotos.length : 0) + 1,
+      );
       final dynamic data = Json.parse(rawData);
       _checkStatusIsOk(data);
     });
@@ -1395,7 +1442,7 @@ class RestTwitarr implements Twitarr {
           'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}?${body.toUrlEncoded()}',
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
-          expectedStatusCodes: <int>[200, 401, 404],
+          expectedStatusCodes: <int>[200, 400, 401, 403, 404],
         ),
         steps: (newPhotos != null ? newPhotos.length : 0) + 1,
       );

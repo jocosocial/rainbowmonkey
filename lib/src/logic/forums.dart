@@ -236,7 +236,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
 
   Progress<void> send(String text, { @required List<Uint8List> photos }) {
     if (_credentials == null)
-      throw const LocalError('Cannot create a thread when not logged in.');
+      throw const LocalError('Cannot post to a thread when not logged in.');
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain<void>(
         _twitarr.postForumMessage(
@@ -259,7 +259,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     @required List<Uint8List> newPhotos,
   }) {
     if (_credentials == null)
-      throw const LocalError('Cannot create a thread when not logged in.');
+      throw const LocalError('Cannot edit a message when not logged in.');
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain<void>(
         _twitarr.editForumMessage(

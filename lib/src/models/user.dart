@@ -128,6 +128,22 @@ class User implements Comparable<User> {
     return null;
   }
 
+  bool get canAlwaysEdit {
+    assert(role != null);
+    switch (role) {
+      case Role.admin:
+      case Role.tho:
+        return true;
+      case Role.moderator:
+      case Role.user:
+      case Role.muted:
+      case Role.banned:
+      case Role.none:
+        return false;
+    }
+    return null;
+  }
+
   @override
   String toString() {
     if (displayName == username || displayName == '')

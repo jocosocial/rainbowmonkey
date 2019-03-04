@@ -239,6 +239,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                         stream: _stream,
                         canModerate: canModerate,
                         isModerating: isModerating,
+                        canAlwaysEdit: currentUser.canAlwaysEdit,
                       );
                     },
                     onDidFinishLayout: () {
@@ -283,9 +284,12 @@ class Entry extends StatelessWidget {
     @required this.stream,
     @required this.isModerating,
     @required this.canModerate,
+    @required this.canAlwaysEdit,
   }) : assert(post == null || animation != null),
        assert(stream != null),
+       assert(isModerating != null),
        assert(canModerate != null),
+       assert(canAlwaysEdit != null),
        super(key: key);
 
   final StreamPost post;
@@ -300,6 +304,8 @@ class Entry extends StatelessWidget {
 
   final bool isModerating;
 
+  final bool canAlwaysEdit;
+
   @override
   Widget build(BuildContext context) {
     if (post == null) {
@@ -309,6 +315,7 @@ class Entry extends StatelessWidget {
       );
     }
     final bool isCurrentUser = post.user.sameAs(effectiveCurrentUser);
+
     return SizeTransition(
       sizeFactor: animation,
       axisAlignment: -1.0,
@@ -329,10 +336,7 @@ class Entry extends StatelessWidget {
         timestamp: post.timestamp,
         onReply: () => TweetThreadView.open(context, post.id),
         onPressed: () => TweetThreadView.open(context, post.id),
-        onDelete: isCurrentUser && (!post.isLocked || canModerate) ? () {
-          ProgressDialog.show<void>(context, stream.delete(post.id));
-        } : null,
-        onDeleteModerator: !isCurrentUser && canModerate ? () {
+        onDelete: (isCurrentUser && !post.isLocked) || canModerate ? () {
           ProgressDialog.show<void>(context, stream.delete(post.id));
         } : null,
         onLock: canModerate && !post.isLocked ? () {
@@ -340,6 +344,9 @@ class Entry extends StatelessWidget {
         } : null,
         onUnlock: canModerate && post.isLocked ? () {
           ProgressDialog.show<void>(context, stream.lock(post.id, locked: false));
+        } : null,
+        onEdit: (isCurrentUser && (!post.isLocked || canModerate)) || canAlwaysEdit ? () {
+          EditTweetView.open(context, stream, post);
         } : null,
       ),
     );
@@ -359,8 +366,8 @@ class TweetThreadView extends StatefulWidget {
       builder: (BuildContext context) => TweetThreadView(threadId: threadId),
     );
     if (replace)
-      return Navigator.push(context, route);
-    return Navigator.pushReplacement(context, route);
+      return Navigator.pushReplacement(context, route);
+    return Navigator.push(context, route);
   }
 
   @override
@@ -503,6 +510,7 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                               details: _flatList[index],
                               canModerate: canModerate,
                               isModerating: isModerating,
+                              canAlwaysEdit: currentUser.canAlwaysEdit,
                               effectiveCurrentUser: currentUser.effectiveUser,
                               stream: _stream,
                               onChanged: (bool deleted) {
@@ -610,8 +618,12 @@ class NestedEntry extends StatelessWidget {
     @required this.stream,
     @required this.canModerate,
     @required this.isModerating,
+    @required this.canAlwaysEdit,
     @required this.onChanged,
   }) : assert(details != null),
+       assert(canModerate != null),
+       assert(isModerating != null),
+       assert(canAlwaysEdit != null),
        super(key: key);
 
   final FlatStreamPost details;
@@ -623,6 +635,8 @@ class NestedEntry extends StatelessWidget {
   final bool canModerate;
 
   final bool isModerating;
+
+  final bool canAlwaysEdit;
 
   final ValueSetter<bool> onChanged;
 
@@ -655,12 +669,7 @@ class NestedEntry extends StatelessWidget {
         } : null,
         getLikesCallback: () => stream.getReactions(details.post.id, 'like'),
         timestamp: details.post.timestamp,
-        onDelete: isCurrentUser && (!details.post.isLocked || canModerate) ? () async {
-          await ProgressDialog.show<void>(context, stream.delete(details.post.id));
-          if (onChanged != null)
-            onChanged(true);
-        } : null,
-        onDeleteModerator: !isCurrentUser && canModerate ? () async {
+        onDelete: (isCurrentUser && !details.post.isLocked) || canModerate ? () async {
           await ProgressDialog.show<void>(context, stream.delete(details.post.id));
           if (onChanged != null)
             onChanged(true);
@@ -677,6 +686,142 @@ class NestedEntry extends StatelessWidget {
           if (onChanged != null)
             onChanged(false);
         } : null,
+        onEdit: (isCurrentUser && (!details.post.isLocked || canModerate)) || canAlwaysEdit ? () {
+          EditTweetView.open(context, stream, details.post);
+        } : null,
+      ),
+    );
+  }
+}
+
+class EditTweetView extends StatefulWidget {
+  const EditTweetView({
+    Key key,
+    this.stream,
+    this.post,
+  }) : super(key: key);
+
+  final TweetStream stream;
+  final StreamPost post;
+
+  static Future<void> open(BuildContext context, TweetStream stream, StreamPost post) {
+    return Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => EditTweetView(
+          stream: stream,
+          post: post,
+        ),
+      ),
+    );
+  }
+
+  @override
+  _EditTweetViewState createState() => _EditTweetViewState();
+}
+
+class _EditTweetViewState extends State<EditTweetView> {
+  final TextEditingController _text = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  List<Photo> _keptPhotos = <Photo>[];
+  List<Uint8List> _newPhotos = <Uint8List>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _text.text = widget.post.text;
+    _keptPhotos = widget.post.photo != null ? <Photo>[widget.post.photo] : const <Photo>[];
+  }
+
+  void _commit() async {
+    final Progress<void> progress = widget.stream.edit(
+      postId: widget.post.id,
+      text: _text.text,
+      keptPhotos: _keptPhotos,
+      newPhotos: _newPhotos,
+    );
+    await ProgressDialog.show<void>(context, progress);
+    if (progress.value is SuccessfulProgress<void> && mounted)
+      Navigator.pop(context);
+  }
+
+  bool get _valid => _text.text.trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit'),
+      ),
+      floatingActionButton: _valid
+        ? FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: _commit,
+          )
+        : FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: null,
+            backgroundColor: Colors.grey.shade200,
+            foregroundColor: Colors.grey.shade400,
+          ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      body: ModeratorBuilder(
+        builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
+          return Form(
+            key: _formKey,
+            onChanged: () {
+              setState(() {
+                /* need to recheck whether the submit button should be enabled */
+              });
+            },
+            onWillPop: () => confirmDialog(context, 'Abandon editing this post?'),
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                  child: Align(
+                    alignment: AlignmentDirectional.topStart,
+                    child: TextFormField(
+                      controller: _text,
+                      onFieldSubmitted: (String value) {
+                        if (_valid)
+                          _commit();
+                      },
+                      textInputAction: TextInputAction.newline,
+                      textCapitalization: TextCapitalization.sentences,
+                      maxLength: 10000,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        labelText: 'Post text',
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                    child: AttachImageDialog(
+                      oldImages: _keptPhotos,
+                      onUpdateOldImages: (List<Photo> newKeptPhotos) {
+                        setState(() {
+                          _keptPhotos = newKeptPhotos;
+                        });
+                      },
+                      images: _newPhotos,
+                      onUpdate: (List<Uint8List> newPhotos) {
+                        setState(() {
+                          _newPhotos = newPhotos;
+                        });
+                      },
+                      allowMultiple: false,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

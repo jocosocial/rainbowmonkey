@@ -182,6 +182,14 @@ abstract class Twitarr {
     @required bool locked,
   });
 
+  Progress<void> editTweet({
+    Credentials credentials,
+    @required String postId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  });
+
   Progress<void> deleteTweet({
     @required Credentials credentials,
     @required String postId,

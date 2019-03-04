@@ -212,6 +212,13 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   ValueListenable<bool> get active => _timer.active;
 
   void reload() {
+    _posts.clear();
+    _postIds.clear();
+    _started = false;
+    _seekingBackwards = false;
+    _seekingForwards = false;
+    _reachedTheEnd = false;
+    notifyListeners();
     _timer.reload();
   }
 
@@ -247,6 +254,29 @@ class TweetStream extends ChangeNotifier with BusyMixin {
     });
   }
 
+  Progress<void> edit({
+    @required String postId,
+    @required String text,
+    @required List<Photo> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.editTweet(
+          credentials: _credentials,
+          postId: postId,
+          text: text,
+          keptPhotos: keptPhotos.map<String>((Photo photo) => photo.id).toList(),
+          newPhotos: newPhotos,
+        ),
+      );
+      // We get back to the post, so we could just update it inline, but...
+      // it's not clear what the server promises to return on this endpoint,
+      // so let's use the usual one.
+      reload();
+    });
+  }
+
   Progress<void> delete(String postId) {
     assert(_credentials != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -276,6 +306,12 @@ class TweetStream extends ChangeNotifier with BusyMixin {
           locked: locked,
         ),
       );
+      if (_postIds.containsKey(postId)) {
+        final int postPosition = _postIds[postId];
+        assert(_posts[postPosition].id == postId);
+        _posts[postPosition] = _posts[postPosition].copyWith(isLocked: locked);
+        notifyListeners();
+      }
     });
   }
 

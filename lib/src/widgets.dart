@@ -483,7 +483,6 @@ class ChatLine extends StatefulWidget {
     this.onLock,
     this.onUnlock,
     this.onDelete,
-    this.onDeleteModerator,
     this.onEdit,
     this.onLike,
     this.onUnlike,
@@ -506,7 +505,6 @@ class ChatLine extends StatefulWidget {
   final int likes;
   final VoidCallback onPressed;
   final VoidCallback onDelete;
-  final VoidCallback onDeleteModerator;
   final VoidCallback onEdit;
   final VoidCallback onLike;
   final VoidCallback onUnlike;
@@ -600,7 +598,6 @@ class _ChatLineState extends State<ChatLine> {
     action('LOCK', Icons.lock_outline, widget.onLock);
     action('UNLOCK', Icons.lock_open, widget.onUnlock);
     action('DELETE', Icons.delete_forever, widget.onDelete);
-    action('DELETE\n(MODERATOR ACTION)', Icons.delete_forever, widget.onDeleteModerator);
     final List<Widget> children = <Widget>[
       Text('Posted by: ${widget.user}'),
       Text('Timestamp: ${widget.timestamp}'),
