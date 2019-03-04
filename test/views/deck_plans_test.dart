@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/main.dart';
+import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/views/deck_plans.dart';
 import 'package:cruisemonkey/src/widgets.dart';
@@ -19,7 +20,7 @@ void main() {
     final CruiseModel model = CruiseModel(
       initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
       store: TrivialDataStore(log),
-      onError: (String message) { log.add('error: $message'); },
+      onError: (UserFriendlyError error) { log.add('error: $error!'); },
     );
     await tester.pumpWidget(
       Now.fixed(
@@ -32,7 +33,7 @@ void main() {
     );
 
     final Finder elevatorFinder = find.byWidgetPredicate((Widget widget) => widget is CustomPaint && widget.painter is Elevator);
-    
+
     expect(find.byIcon(Icons.directions_boat), findsOneWidget);
     await tester.tap(find.byIcon(Icons.directions_boat));
     await tester.pump();

@@ -2,7 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 
-import '../basic_types.dart';
+import '../models/errors.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -111,7 +111,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
       _freshnessToken = summary.freshnessToken;
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
-      _reportError(error);
+      onError(error);
     } finally {
       _updating = false;
       endBusy();
@@ -146,10 +146,6 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
 
   void _childUpdated(SeamailThread thread) {
     notifyListeners();
-  }
-
-  void _reportError(UserFriendlyError error) {
-    onError(error.toString());
   }
 
   VariableTimer _timer;
@@ -259,7 +255,7 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
         onThreadRead(id);
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
-      _parent._reportError(error);
+      _parent.onError(error);
     } finally {
       _updating = false;
       endBusy();

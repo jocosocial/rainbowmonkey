@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/errors.dart';
 import '../models/user.dart';
-import '../network/twitarr.dart';
 
 import '../progress.dart';
 import '../widgets.dart';
@@ -36,6 +36,104 @@ class _ProfileEditorState extends State<ProfileEditor> {
         animation: userSource,
         builder: (BuildContext context, Widget child) {
           final AuthenticatedUser user = userSource.currentValue;
+          final List<Widget> children = <Widget>[
+            AvatarEditor(user: user),
+            ProfileField(
+              title: 'Display name',
+              autofocus: true,
+              focusNode: _displayNameFocus,
+              nextNode: _realNameFocus,
+              textCapitalization: TextCapitalization.words,
+              maxLength: 40,
+              value: user.displayName,
+              onUpdate: (String value) {
+                if (!AuthenticatedUser.isValidDisplayName(value))
+                  throw const LocalError('Your display name must be at least three characters long but shorter than 40 characters, and may only consist of letters and some minimal punctuation.');
+                return Cruise.of(context).updateProfile(
+                  displayName: value,
+                );
+              },
+            ),
+            ProfileField(
+              title: 'Real name',
+              focusNode: _realNameFocus,
+              nextNode: _pronounsFocus,
+              textCapitalization: TextCapitalization.words,
+              maxLength: 100,
+              value: user.realName,
+              onUpdate: (String value) {
+                return Cruise.of(context).updateProfile(
+                  realName: value,
+                );
+              },
+            ),
+            ProfileField(
+              title: 'Pronouns',
+              focusNode: _pronounsFocus,
+              nextNode: _roomNumberFocus,
+              textCapitalization: TextCapitalization.sentences,
+              maxLength: 100,
+              value: user.pronouns,
+              onUpdate: (String value) {
+                return Cruise.of(context).updateProfile(
+                  pronouns: value,
+                );
+              },
+            ),
+            ProfileField(
+              title: 'Room number',
+              focusNode: _roomNumberFocus,
+              nextNode: _homeLocationFocus,
+              keyboardType: TextInputType.number,
+              maxLength: 5,
+              value: user.roomNumber,
+              onUpdate: (String value) {
+                if (!AuthenticatedUser.isValidRoomNumber(value))
+                  throw const LocalError('Room number must be between 1000 and 99999 and must be numeric.');
+                return Cruise.of(context).updateProfile(
+                  roomNumber: value,
+                );
+              },
+            ),
+            ProfileField(
+              title: 'Home location',
+              focusNode: _homeLocationFocus,
+              nextNode: _emailFocus,
+              textCapitalization: TextCapitalization.words,
+              maxLength: 100,
+              value: user.homeLocation,
+              onUpdate: (String value) {
+                return Cruise.of(context).updateProfile(
+                  homeLocation: value,
+                );
+              },
+            ),
+            ProfileField(
+              title: 'E-mail address',
+              focusNode: _emailFocus,
+              nextNode: _displayNameFocus,
+              keyboardType: TextInputType.emailAddress,
+              value: user.email,
+              onUpdate: (String value) {
+                if (!AuthenticatedUser.isValidEmail(value))
+                  throw const LocalError('E-mail is not valid.');
+                return Cruise.of(context).updateProfile(
+                  email: value,
+                );
+              },
+            ),
+            const SizedBox(height: 24.0),
+            LabeledIconButton(
+              onPressed: () {
+                showDialog<void>(
+                  context: context,
+                  builder: (BuildContext context) => ChangePasswordDialog(password: user.credentials.password),
+                );
+              },
+              icon: const Icon(Icons.vpn_key),
+              label: const Text('CHANGE PASSWORD'),
+            ),
+          ];
           return CustomScrollView(
             slivers: <Widget>[
               SliverAppBar(
@@ -45,93 +143,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
                 padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 26.0),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate(
-                    <Widget>[
-                      AvatarEditor(user: user),
-                      ProfileField(
-                        title: 'Display name',
-                        autofocus: true,
-                        focusNode: _displayNameFocus,
-                        nextNode: _realNameFocus,
-                        textCapitalization: TextCapitalization.words,
-                        maxLength: 40,
-                        value: user.displayName,
-                        onUpdate: (String value) {
-                          if (!AuthenticatedUser.isValidDisplayName(value))
-                            throw const LocalError('Your display name must be at least three characters long but shorter than 40 characters, and may only consist of letters and some minimal punctuation.');
-                          return Cruise.of(context).updateProfile(
-                            displayName: value,
-                          );
-                        },
-                      ),
-                      ProfileField(
-                        title: 'Real name',
-                        focusNode: _realNameFocus,
-                        nextNode: _pronounsFocus,
-                        textCapitalization: TextCapitalization.words,
-                        maxLength: 100,
-                        value: user.realName,
-                        onUpdate: (String value) {
-                          return Cruise.of(context).updateProfile(
-                            realName: value,
-                          );
-                        },
-                      ),
-                      ProfileField(
-                        title: 'Pronouns',
-                        focusNode: _pronounsFocus,
-                        nextNode: _roomNumberFocus,
-                        textCapitalization: TextCapitalization.sentences,
-                        maxLength: 100,
-                        value: user.pronouns,
-                        onUpdate: (String value) {
-                          return Cruise.of(context).updateProfile(
-                            pronouns: value,
-                          );
-                        },
-                      ),
-                      ProfileField(
-                        title: 'Room number',
-                        focusNode: _roomNumberFocus,
-                        nextNode: _homeLocationFocus,
-                        keyboardType: TextInputType.number,
-                        maxLength: 5,
-                        value: user.roomNumber,
-                        onUpdate: (String value) {
-                          if (!AuthenticatedUser.isValidRoomNumber(value))
-                            throw const LocalError('Room number must be between 1000 and 99999 and must be numeric.');
-                          return Cruise.of(context).updateProfile(
-                            roomNumber: value,
-                          );
-                        },
-                      ),
-                      ProfileField(
-                        title: 'Home location',
-                        focusNode: _homeLocationFocus,
-                        nextNode: _emailFocus,
-                        textCapitalization: TextCapitalization.words,
-                        maxLength: 100,
-                        value: user.homeLocation,
-                        onUpdate: (String value) {
-                          return Cruise.of(context).updateProfile(
-                            homeLocation: value,
-                          );
-                        },
-                      ),
-                      ProfileField(
-                        title: 'E-mail address',
-                        focusNode: _emailFocus,
-                        nextNode: _displayNameFocus,
-                        keyboardType: TextInputType.emailAddress,
-                        value: user.email,
-                        onUpdate: (String value) {
-                          if (!AuthenticatedUser.isValidEmail(value))
-                            throw const LocalError('E-mail is not valid.');
-                          return Cruise.of(context).updateProfile(
-                            email: value,
-                          );
-                        },
-                      ),
-                    ],
+                    children,
                   ),
                 ),
               ),
@@ -397,6 +409,151 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
           ),
         ],
       ),
+    );
+  }
+}
+
+class ChangePasswordDialog extends StatefulWidget {
+  const ChangePasswordDialog({
+    Key key,
+    @required this.password,
+  }) : super(key: key);
+
+  final String password;
+
+  @override
+  _ChangePasswordDialogState createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
+  final TextEditingController _passwordOld = TextEditingController();
+  final TextEditingController _passwordNew1 = TextEditingController();
+  final TextEditingController _passwordNew2 = TextEditingController();
+
+  final FocusNode _passwordOldFocus = FocusNode();
+  final FocusNode _passwordNew1Focus = FocusNode();
+  final FocusNode _passwordNew2Focus = FocusNode();
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  bool get _valid {
+    return (_passwordOld.text == widget.password) &&
+           AuthenticatedUser.isValidPassword(_passwordNew1.text) &&
+           (_passwordNew1.text == _passwordNew2.text);
+  }
+
+  void _submit() async {
+    await ProgressDialog.show<void>(context, Cruise.of(context).changePassword(_passwordNew1.text));
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> children = <Widget>[
+      SizedBox(
+        height: 96.0,
+        child: TextFormField(
+          controller: _passwordOld,
+          focusNode: _passwordOldFocus,
+          autofocus: true,
+          onFieldSubmitted: (String value) {
+            FocusScope.of(context).requestFocus(_passwordNew1Focus);
+          },
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Old password',
+            errorMaxLines: null,
+          ),
+          obscureText: true,
+          validator: (String password) {
+            if (password.isNotEmpty) {
+              if (password != widget.password)
+                return 'Old password incorrect.';
+            }
+          },
+        ),
+      ),
+      SizedBox(
+        height: 96.0,
+        child: TextFormField(
+          controller: _passwordNew1,
+          focusNode: _passwordNew1Focus,
+          autofocus: true,
+          onFieldSubmitted: (String value) {
+            FocusScope.of(context).requestFocus(_passwordNew2Focus);
+          },
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'New password',
+            errorMaxLines: null,
+          ),
+          obscureText: true,
+          validator: (String password) {
+            if (password.isNotEmpty) {
+              if (!AuthenticatedUser.isValidPassword(password))
+                return 'New password must be at least six characters long.';
+            }
+          },
+        ),
+      ),
+      SizedBox(
+        height: 96.0,
+        child: TextFormField(
+          controller: _passwordNew2,
+          focusNode: _passwordNew2Focus,
+          autofocus: true,
+          onFieldSubmitted: (String value) {
+            if (_valid)
+              _submit();
+          },
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            labelText: 'Confirm new password',
+            errorMaxLines: null,
+          ),
+          obscureText: true,
+          validator: (String password) {
+            if (password.isNotEmpty) {
+              if (password != _passwordNew1.text)
+                return 'Passwords don\'t match.';
+            }
+          },
+        ),
+      ),
+    ];
+
+    return AlertDialog(
+      title: const Text('Change Password'),
+      contentPadding: const EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 0.0),
+      content: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            top: Divider.createBorderSide(context),
+            bottom: Divider.createBorderSide(context),
+          ),
+        ),
+        child: Form(
+          key: _formKey,
+          autovalidate: true,
+          onChanged: () {
+            setState(() {
+              /* need to recheck whether the submit button should be enabled */
+            });
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 8.0),
+            child: ListBody(
+              children: children,
+            ),
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        FlatButton(
+          onPressed: _valid ? _submit : null,
+          child: const Text('CHANGE PASSWORD'),
+        ),
+      ],
     );
   }
 }

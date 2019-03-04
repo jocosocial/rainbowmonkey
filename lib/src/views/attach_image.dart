@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../logic/photo_manager.dart';
 import '../widgets.dart';
 
 class AttachImageButton extends StatelessWidget {
@@ -91,13 +92,20 @@ class AttachImageButton extends StatelessWidget {
 class AttachImageDialog extends StatelessWidget {
   const AttachImageDialog({
     Key key,
+    this.oldImages,
+    this.onUpdateOldImages,
     @required List<Uint8List> images,
     @required this.onUpdate,
     @required this.allowMultiple,
   }) : assert(onUpdate != null),
        assert(allowMultiple != null),
+       assert(oldImages == null || onUpdateOldImages != null),
        images = images == null ? const <Uint8List>[] : images,
        super(key: key);
+
+  final List<Photo> oldImages;
+
+  final ValueSetter<List<Photo>> onUpdateOldImages;
 
   final List<Uint8List> images;
 
@@ -114,15 +122,25 @@ class AttachImageDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Widget> imageList = <Widget>[];
+    if (oldImages != null) {
+      for (int index = 0; index < oldImages.length; index += 1) {
+        imageList.add(_SelectedImage(
+          child: Image(image: Cruise.of(context).imageFor(oldImages[index], thumbnail: true)),
+          onRemove: () {
+            onUpdateOldImages(oldImages.toList()..removeAt(index));
+          },
+        ));
+      }
+    }
     for (int index = 0; index < images.length; index += 1) {
       imageList.add(_SelectedImage(
-        data: images[index],
+        child: Image.memory(images[index]),
         onRemove: () {
           onUpdate(images.toList()..removeAt(index));
         },
       ));
     }
-    final bool canAdd = allowMultiple || images.isEmpty;
+    final bool canAdd = allowMultiple || (images.isEmpty && oldImages.isEmpty);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -175,9 +193,9 @@ class AttachImageDialog extends StatelessWidget {
 }
 
 class _SelectedImage extends StatelessWidget {
-  const _SelectedImage({ Key key, this.data, this.onRemove }) : super(key: key);
+  const _SelectedImage({ Key key, this.child, this.onRemove }) : super(key: key);
 
-  final Uint8List data;
+  final Widget child;
 
   final VoidCallback onRemove;
 
@@ -187,7 +205,7 @@ class _SelectedImage extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: Stack(
         children: <Widget>[
-          Image.memory(data),
+          child,
           Align(
             alignment: AlignmentDirectional.topEnd,
             child: Container(

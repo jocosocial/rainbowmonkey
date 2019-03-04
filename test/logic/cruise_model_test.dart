@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
+import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 
 import '../loggers.dart';
@@ -19,7 +20,7 @@ void main() {
     final CruiseModel model = CruiseModel(
       initialTwitarrConfiguration: config1,
       store: TrivialDataStore(log),
-      onError: (String error) { log.add('error: $error'); },
+      onError: (UserFriendlyError error) { log.add('error: $error'); },
     );
     model.addListener(() { log.add('model changed'); });
     expect(model.twitarrConfiguration, config1);
@@ -85,7 +86,7 @@ void main() {
     final CruiseModel model = CruiseModel(
       initialTwitarrConfiguration: const LoggingTwitarrConfiguration(1),
       store: store,
-      onError: (String error) { log.add('error: $error'); },
+      onError: (UserFriendlyError error) { log.add('error: $error'); },
     );
     model.addListener(() { log.add('model changed (isLoggedIn = ${model.isLoggedIn})'); });
     log.add('--- idling (isLoggedIn = ${model.isLoggedIn})');
@@ -119,7 +120,7 @@ void main() {
     final CruiseModel model = CruiseModel(
       initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
       store: store,
-      onError: (String error) { log.add('error: $error'); },
+      onError: (UserFriendlyError error) { log.add('error: $error'); },
     );
     model.addListener(() { log.add('model changed (isLoggedIn = ${model.isLoggedIn})'); });
     log.add('--- idling');
@@ -191,7 +192,7 @@ void main() {
     final CruiseModel model = CruiseModel(
       initialTwitarrConfiguration: const LoggingTwitarrConfiguration(0),
       store: store,
-      onError: (String error) { log.add('error: $error'); },
+      onError: (UserFriendlyError error) { log.add('error: $error'); },
     );
     model.addListener(() { log.add('model changed (isLoggedIn = ${model.isLoggedIn})'); });
     log.add('--- idling (isLoggedIn = ${model.isLoggedIn})');

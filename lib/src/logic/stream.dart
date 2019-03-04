@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
@@ -28,7 +29,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   final Twitarr _twitarr;
   final Credentials _credentials;
   final PhotoManager photoManager;
-  final StreamErrorCallback onError;
+  final ErrorCallback onError;
   final Duration maxUpdatePeriod;
 
   final List<StreamPost> _posts = <StreamPost>[];
@@ -115,9 +116,9 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       } while (trying);
       if (didSomething)
         notifyListeners();
-    } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
+    } on UserFriendlyError catch (error) {
       if (onError != null) {
-        onError(error, stack);
+        onError(error);
       } else {
         rethrow;
       }
@@ -180,9 +181,9 @@ class TweetStream extends ChangeNotifier with BusyMixin {
       } while (trying);
       if (didSomething)
         notifyListeners();
-    } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
+    } on UserFriendlyError catch (error) {
       if (onError != null) {
-        onError(error, stack);
+        onError(error);
       } else {
         rethrow;
       }
@@ -211,6 +212,13 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   ValueListenable<bool> get active => _timer.active;
 
   void reload() {
+    _posts.clear();
+    _postIds.clear();
+    _started = false;
+    _seekingBackwards = false;
+    _seekingForwards = false;
+    _reachedTheEnd = false;
+    notifyListeners();
     _timer.reload();
   }
 
@@ -246,6 +254,29 @@ class TweetStream extends ChangeNotifier with BusyMixin {
     });
   }
 
+  Progress<void> edit({
+    @required String postId,
+    @required String text,
+    @required List<Photo> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.editTweet(
+          credentials: _credentials,
+          postId: postId,
+          text: text,
+          keptPhotos: keptPhotos.map<String>((Photo photo) => photo.id).toList(),
+          newPhotos: newPhotos,
+        ),
+      );
+      // We get back to the post, so we could just update it inline, but...
+      // it's not clear what the server promises to return on this endpoint,
+      // so let's use the usual one.
+      reload();
+    });
+  }
+
   Progress<void> delete(String postId) {
     assert(_credentials != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -275,6 +306,12 @@ class TweetStream extends ChangeNotifier with BusyMixin {
           locked: locked,
         ),
       );
+      if (_postIds.containsKey(postId)) {
+        final int postPosition = _postIds[postId];
+        assert(_posts[postPosition].id == postId);
+        _posts[postPosition] = _posts[postPosition].copyWith(isLocked: locked);
+        notifyListeners();
+      }
     });
   }
 
@@ -299,11 +336,9 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   }
 
   Progress<Set<User>> getReactions(String postId, String reaction) {
-    assert(_credentials != null);
     return Progress<Set<User>>((ProgressController<Set<User>> completer) async {
       final Map<String, Set<UserSummary>> reactions = await completer.chain<Map<String, Set<UserSummary>>>(
         _twitarr.getTweetReactions(
-          credentials: _credentials,
           postId: postId,
         ),
       );

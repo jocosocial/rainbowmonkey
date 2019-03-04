@@ -16,15 +16,186 @@ class LoginDialog extends StatefulWidget {
 class _LoginDialogState extends State<LoginDialog> {
   final TextEditingController _username = TextEditingController();
   final TextEditingController _password = TextEditingController();
+  final TextEditingController _password1 = TextEditingController();
+  final TextEditingController _password2 = TextEditingController();
+  final TextEditingController _registrationCode = TextEditingController();
+
+  final FocusNode _usernameFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+  final FocusNode _password1Focus = FocusNode();
+  final FocusNode _password2Focus = FocusNode();
+  final FocusNode _registrationCodeFocus = FocusNode();
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool get _valid {
+    if (_forgot) {
+      return AuthenticatedUser.isValidUsername(_username.text) &&
+             AuthenticatedUser.isValidPassword(_password1.text) &&
+             (_password1.text == _password2.text) &&
+             AuthenticatedUser.isValidRegistrationCode(_registrationCode.text);
+    }
     return AuthenticatedUser.isValidUsername(_username.text) &&
            AuthenticatedUser.isValidPassword(_password.text);
   }
 
+  void _submit() {
+    assert(_valid);
+    if (_forgot) {
+      Cruise.of(context).resetPassword(
+        username: _username.text,
+        registrationCode: _registrationCode.text,
+        password: _password1.text,
+      );
+      Navigator.pop(context);
+    } else {
+      Cruise.of(context).login(
+        username: _username.text,
+        password: _password.text,
+      );
+      Navigator.pop(context);
+    }
+  }
+
+  bool _forgot = false;
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> children = <Widget>[
+      SizedBox(
+        height: 96.0,
+        child: Align(
+          alignment: AlignmentDirectional.topStart,
+          child: TextFormField(
+            controller: _username,
+            focusNode: _usernameFocus,
+            autofocus: true,
+            onFieldSubmitted: (String value) {
+              FocusScope.of(context).requestFocus(_forgot ? _registrationCodeFocus : _passwordFocus);
+            },
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'User name',
+              errorMaxLines: null,
+            ),
+            validator: (String name) {
+              if (name.isNotEmpty) {
+                if (!AuthenticatedUser.isValidUsername(name))
+                  return 'User names must be alphabetic and between three and forty characters long.';
+              }
+            },
+          ),
+        ),
+      ),
+    ];
+    if (_forgot) {
+      children.addAll(<Widget>[
+        SizedBox(
+          height: 96.0,
+          child: Align(
+            alignment: AlignmentDirectional.topStart,
+            child: TextFormField(
+              controller: _registrationCode,
+              focusNode: _registrationCodeFocus,
+              onFieldSubmitted: (String value) {
+                FocusScope.of(context).requestFocus(_password1Focus);
+              },
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Registration code',
+                helperText: 'Provided to you by e-mail before the cruise.',
+                errorMaxLines: null,
+              ),
+              validator: (String registrationCode) {
+                if (registrationCode.isNotEmpty) {
+                  if (!AuthenticatedUser.isValidRegistrationCode(registrationCode))
+                    return 'Ask the JoCo Cruise Info Desk for advice.';
+                }
+              },
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 96.0,
+          child: Align(
+            alignment: AlignmentDirectional.topStart,
+            child: TextFormField(
+              controller: _password1,
+              focusNode: _password1Focus,
+              onFieldSubmitted: (String value) {
+                FocusScope.of(context).requestFocus(_password2Focus);
+              },
+              textInputAction: TextInputAction.next,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'New password',
+                errorMaxLines: null,
+              ),
+              validator: (String password) {
+                if (password.isNotEmpty) {
+                  if (!AuthenticatedUser.isValidPassword(password))
+                    return 'Passwords must be at least six characters long.';
+                }
+              },
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 96.0,
+          child: Align(
+            alignment: AlignmentDirectional.topStart,
+            child: TextFormField(
+              controller: _password2,
+              focusNode: _password2Focus,
+              onFieldSubmitted: (String value) {
+                if (_valid)
+                  _submit();
+              },
+              textInputAction: TextInputAction.done,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Confirm new password',
+                errorMaxLines: null,
+              ),
+              validator: (String password) {
+                if (password.isEmpty)
+                  return null;
+                if (password != _password1.text) {
+                  return 'Passwords don\'t match.';
+                }
+              },
+            ),
+          ),
+        ),
+      ]);
+    } else {
+      children.add(SizedBox(
+        height: 96.0,
+        child: Align(
+          alignment: AlignmentDirectional.topStart,
+          child: TextFormField(
+            controller: _password,
+            focusNode: _passwordFocus,
+            onFieldSubmitted: (String value) {
+              if (_valid)
+                _submit();
+            },
+            textInputAction: TextInputAction.done,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Password',
+              errorMaxLines: null,
+            ),
+            validator: (String password) {
+              if (password.isNotEmpty) {
+                if (!AuthenticatedUser.isValidPassword(password))
+                  return 'Passwords must be at least six characters long.';
+              }
+            },
+          ),
+        ),
+      ));
+    }
     return AlertDialog(
       title: const Text('Login'),
       contentPadding: const EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 0.0),
@@ -46,55 +217,23 @@ class _LoginDialogState extends State<LoginDialog> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 8.0),
             child: ListBody(
-              children: <Widget>[
-                SizedBox(
-                  height: 96.0,
-                  child: Align(
-                    alignment: AlignmentDirectional.topStart,
-                    child: TextFormField(
-                      controller: _username,
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        labelText: 'User name',
-                      ),
-                      validator: (String name) {
-                        if (!AuthenticatedUser.isValidUsername(name))
-                          return 'User names are be alphabetic and at least three characters long.';
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 96.0,
-                  child: Align(
-                    alignment: AlignmentDirectional.topStart,
-                    child: TextFormField(
-                      controller: _password,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                      ),
-                      validator: (String password) {
-                        if (!AuthenticatedUser.isValidPassword(password, allowShort: true))
-                          return 'Passwords are at least six characters long.';
-                      },
-                    ),
-                  ),
-                ),
-              ],
+              children: children,
             ),
           ),
         ),
       ),
       actions: <Widget>[
         FlatButton(
-          onPressed: _valid ? () {
-            Cruise.of(context).login(
-              username: _username.text,
-              password: _password.text,
-            );
-            Navigator.pop(context);
-          } : null,
+          onPressed: () {
+            setState(() {
+              _forgot = !_forgot;
+            });
+            FocusScope.of(context).requestFocus(_usernameFocus);
+          },
+          child: _forgot ? const Text('USE PASSWORD INSTEAD') : const Text('USE REGISTRATION CODE INSTEAD'),
+        ),
+        FlatButton(
+          onPressed: _valid ? _submit : null,
           child: const Text('LOGIN'),
         ),
       ],

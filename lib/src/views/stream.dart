@@ -239,6 +239,7 @@ class _TweetStreamViewState extends State<TweetStreamView> with TickerProviderSt
                         stream: _stream,
                         canModerate: canModerate,
                         isModerating: isModerating,
+                        canAlwaysEdit: currentUser != null && currentUser.canAlwaysEdit,
                       );
                     },
                     onDidFinishLayout: () {
@@ -283,9 +284,12 @@ class Entry extends StatelessWidget {
     @required this.stream,
     @required this.isModerating,
     @required this.canModerate,
+    @required this.canAlwaysEdit,
   }) : assert(post == null || animation != null),
        assert(stream != null),
+       assert(isModerating != null),
        assert(canModerate != null),
+       assert(canAlwaysEdit != null),
        super(key: key);
 
   final StreamPost post;
@@ -300,6 +304,8 @@ class Entry extends StatelessWidget {
 
   final bool isModerating;
 
+  final bool canAlwaysEdit;
+
   @override
   Widget build(BuildContext context) {
     if (post == null) {
@@ -309,6 +315,7 @@ class Entry extends StatelessWidget {
       );
     }
     final bool isCurrentUser = post.user.sameAs(effectiveCurrentUser);
+
     return SizeTransition(
       sizeFactor: animation,
       axisAlignment: -1.0,
@@ -319,27 +326,27 @@ class Entry extends StatelessWidget {
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         id: post.id,
         likes: post.reactions.likes,
-        onLike: !isModerating && !post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
+        onLike: effectiveCurrentUser != null && (!isModerating && !post.reactions.currentUserLiked && (!post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: true));
         } : null,
-        onUnlike: !isModerating && post.reactions.currentUserLiked && (!post.isLocked || canModerate) ? () {
+        onUnlike: effectiveCurrentUser != null && (!isModerating && post.reactions.currentUserLiked && (!post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: false));
         } : null,
         getLikesCallback: () => stream.getReactions(post.id, 'like'),
         timestamp: post.timestamp,
-        onReply: () => TweetThreadView.open(context, post.id),
+        onReply: effectiveCurrentUser != null ? () => TweetThreadView.open(context, post.id, reply: true) : null,
         onPressed: () => TweetThreadView.open(context, post.id),
-        onDelete: isCurrentUser && (!post.isLocked || canModerate) ? () {
+        onDelete: effectiveCurrentUser != null && ((isCurrentUser && !post.isLocked) || canModerate) ? () {
           ProgressDialog.show<void>(context, stream.delete(post.id));
         } : null,
-        onDeleteModerator: !isCurrentUser && canModerate ? () {
-          ProgressDialog.show<void>(context, stream.delete(post.id));
-        } : null,
-        onLock: canModerate && !post.isLocked ? () {
+        onLock: effectiveCurrentUser != null && (canModerate && !post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(post.id, locked: true));
         } : null,
-        onUnlock: canModerate && post.isLocked ? () {
+        onUnlock: effectiveCurrentUser != null && (canModerate && post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(post.id, locked: false));
+        } : null,
+        onEdit: effectiveCurrentUser != null && ((isCurrentUser && (!post.isLocked || canModerate)) || canAlwaysEdit) ? () {
+          EditTweetView.open(context, stream, post);
         } : null,
       ),
     );
@@ -350,17 +357,21 @@ class TweetThreadView extends StatefulWidget {
   const TweetThreadView({
     Key key,
     this.threadId,
-  }) : super(key: key);
+    this.reply = false,
+  }) : assert(reply != null),
+       super(key: key);
 
   final String threadId;
 
-  static Future<void> open(BuildContext context, String threadId, { bool replace = false }) {
+  final bool reply;
+
+  static Future<void> open(BuildContext context, String threadId, { bool replace = false, bool reply = false }) {
     final Route<void> route = MaterialPageRoute<void>(
-      builder: (BuildContext context) => TweetThreadView(threadId: threadId),
+      builder: (BuildContext context) => TweetThreadView(threadId: threadId, reply: reply),
     );
     if (replace)
-      return Navigator.push(context, route);
-    return Navigator.pushReplacement(context, route);
+      return Navigator.pushReplacement(context, route);
+    return Navigator.push(context, route);
   }
 
   @override
@@ -371,6 +382,7 @@ class _TweetThreadViewState extends State<TweetThreadView> {
   TweetStream _stream;
   Progress<StreamPost> _thread;
   List<FlatStreamPost> _flatList;
+  bool _initialized = false;
 
   @override
   void didChangeDependencies() {
@@ -464,6 +476,11 @@ class _TweetThreadViewState extends State<TweetThreadView> {
           return ProgressBuilder<StreamPost>(
             progress: _thread,
             builder: (BuildContext context, StreamPost post) {
+              if (!_initialized) {
+                _initialized = true;
+                if (widget.reply)
+                  _textController.text = '@${post.user.username} ${_textController.text}';
+              }
               _flatList ??= _flatten(post); // this list is "in reverse", index 0 is the newest
               final bool loggedIn = Cruise.of(context).isLoggedIn;
               final bool canPostInPrinciple = loggedIn && (post.isLocked ? currentUser.canPostWhenLocked : currentUser.canPost);
@@ -503,7 +520,8 @@ class _TweetThreadViewState extends State<TweetThreadView> {
                               details: _flatList[index],
                               canModerate: canModerate,
                               isModerating: isModerating,
-                              effectiveCurrentUser: currentUser.effectiveUser,
+                              canAlwaysEdit: currentUser != null && currentUser.canAlwaysEdit,
+                              effectiveCurrentUser: currentUser?.effectiveUser,
                               stream: _stream,
                               onChanged: (bool deleted) {
                                 if (deleted && index == _flatList.length - 1) {
@@ -610,8 +628,12 @@ class NestedEntry extends StatelessWidget {
     @required this.stream,
     @required this.canModerate,
     @required this.isModerating,
+    @required this.canAlwaysEdit,
     @required this.onChanged,
   }) : assert(details != null),
+       assert(canModerate != null),
+       assert(isModerating != null),
+       assert(canAlwaysEdit != null),
        super(key: key);
 
   final FlatStreamPost details;
@@ -623,6 +645,8 @@ class NestedEntry extends StatelessWidget {
   final bool canModerate;
 
   final bool isModerating;
+
+  final bool canAlwaysEdit;
 
   final ValueSetter<bool> onChanged;
 
@@ -643,40 +667,171 @@ class NestedEntry extends StatelessWidget {
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
         id: details.post.id,
         likes: details.post.reactions.likes,
-        onLike: !isModerating && !details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
+        onLike: effectiveCurrentUser != null && (!isModerating && !details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: true));
           if (onChanged != null)
             onChanged(false);
         } : null,
-        onUnlike: !isModerating && details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate) ? () {
+        onUnlike: effectiveCurrentUser != null && (!isModerating && details.post.reactions.currentUserLiked && (!details.post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(details.post.id, 'like', selected: false));
           if (onChanged != null)
             onChanged(false);
         } : null,
         getLikesCallback: () => stream.getReactions(details.post.id, 'like'),
         timestamp: details.post.timestamp,
-        onDelete: isCurrentUser && (!details.post.isLocked || canModerate) ? () async {
+        onDelete: effectiveCurrentUser != null && ((isCurrentUser && !details.post.isLocked) || canModerate) ? () async {
           await ProgressDialog.show<void>(context, stream.delete(details.post.id));
           if (onChanged != null)
             onChanged(true);
         } : null,
-        onDeleteModerator: !isCurrentUser && canModerate ? () async {
-          await ProgressDialog.show<void>(context, stream.delete(details.post.id));
-          if (onChanged != null)
-            onChanged(true);
-        } : null,
-        onReply: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id, replace: true),
-        onPressed: details.depth == 0 ? null : () => TweetThreadView.open(context, details.post.id, replace: true),
-        onLock: canModerate && !details.post.isLocked ? () {
+        onReply: effectiveCurrentUser != null && (details.depth > 0) ? () => TweetThreadView.open(context, details.post.id, replace: true, reply: true) : null,
+        onPressed: details.depth > 0 ? () => TweetThreadView.open(context, details.post.id, replace: true) : null,
+        onLock: effectiveCurrentUser != null && (canModerate && !details.post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(details.post.id, locked: true));
           if (onChanged != null)
             onChanged(false);
         } : null,
-        onUnlock: canModerate && details.post.isLocked ? () {
+        onUnlock: effectiveCurrentUser != null && (canModerate && details.post.isLocked) ? () {
           ProgressDialog.show<void>(context, stream.lock(details.post.id, locked: false));
           if (onChanged != null)
             onChanged(false);
         } : null,
+        onEdit: effectiveCurrentUser != null && ((isCurrentUser && (!details.post.isLocked || canModerate)) || canAlwaysEdit) ? () {
+          EditTweetView.open(context, stream, details.post);
+        } : null,
+      ),
+    );
+  }
+}
+
+class EditTweetView extends StatefulWidget {
+  const EditTweetView({
+    Key key,
+    this.stream,
+    this.post,
+  }) : super(key: key);
+
+  final TweetStream stream;
+  final StreamPost post;
+
+  static Future<void> open(BuildContext context, TweetStream stream, StreamPost post) {
+    return Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => EditTweetView(
+          stream: stream,
+          post: post,
+        ),
+      ),
+    );
+  }
+
+  @override
+  _EditTweetViewState createState() => _EditTweetViewState();
+}
+
+class _EditTweetViewState extends State<EditTweetView> {
+  final TextEditingController _text = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  List<Photo> _keptPhotos = <Photo>[];
+  List<Uint8List> _newPhotos = <Uint8List>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _text.text = widget.post.text;
+    _keptPhotos = widget.post.photo != null ? <Photo>[widget.post.photo] : const <Photo>[];
+  }
+
+  void _commit() async {
+    final Progress<void> progress = widget.stream.edit(
+      postId: widget.post.id,
+      text: _text.text,
+      keptPhotos: _keptPhotos,
+      newPhotos: _newPhotos,
+    );
+    await ProgressDialog.show<void>(context, progress);
+    if (progress.value is SuccessfulProgress<void> && mounted)
+      Navigator.pop(context);
+  }
+
+  bool get _valid => _text.text.trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit'),
+      ),
+      floatingActionButton: _valid
+        ? FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: _commit,
+          )
+        : FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: null,
+            backgroundColor: Colors.grey.shade200,
+            foregroundColor: Colors.grey.shade400,
+          ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      body: ModeratorBuilder(
+        builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
+          return Form(
+            key: _formKey,
+            onChanged: () {
+              setState(() {
+                /* need to recheck whether the submit button should be enabled */
+              });
+            },
+            onWillPop: () => confirmDialog(context, 'Abandon editing this post?'),
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                  child: Align(
+                    alignment: AlignmentDirectional.topStart,
+                    child: TextFormField(
+                      controller: _text,
+                      onFieldSubmitted: (String value) {
+                        if (_valid)
+                          _commit();
+                      },
+                      textInputAction: TextInputAction.send,
+                      textCapitalization: TextCapitalization.sentences,
+                      maxLength: 10000,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        labelText: 'Post text',
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                    child: AttachImageDialog(
+                      oldImages: _keptPhotos,
+                      onUpdateOldImages: (List<Photo> newKeptPhotos) {
+                        setState(() {
+                          _keptPhotos = newKeptPhotos;
+                        });
+                      },
+                      images: _newPhotos,
+                      onUpdate: (List<Uint8List> newPhotos) {
+                        setState(() {
+                          _newPhotos = newPhotos;
+                        });
+                      },
+                      allowMultiple: false,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

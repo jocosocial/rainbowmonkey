@@ -19,10 +19,10 @@ import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
 import 'src/logic/store.dart';
+import 'src/models/errors.dart';
 import 'src/models/server_status.dart';
 import 'src/models/user.dart';
 import 'src/network/rest.dart';
-import 'src/progress.dart';
 import 'src/views/calendar.dart';
 import 'src/views/code_of_conduct.dart';
 import 'src/views/comms.dart';
@@ -91,7 +91,8 @@ void showThread(String threadId) async {
   CommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
 }
 
-void _handleError(String message) {
+void _handleError(UserFriendlyError error) {
+  final String message = '$error';
   final AnimationController controller = AnimationController(
     duration: const Duration(seconds: 4),
     vsync: const PermanentTickerProvider(),
@@ -217,11 +218,8 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ContinuousProgress<ServerStatus> serverStatus = Cruise.of(context).serverStatus;
-    return AnimatedBuilder(
-      animation: serverStatus,
-      builder: (BuildContext context, Widget child) {
-        final ServerStatus status = serverStatus.currentValue ?? const ServerStatus();
+    return ServerStatusBuilder(
+      builder: (BuildContext context, ServerStatus status, Widget child) {
         final List<View> pages = allPages.where((View view) => view.isEnabled(status)).toList();
         return MaterialApp(
           title: 'Rainbow Monkey',
@@ -232,8 +230,15 @@ class CruiseMonkeyHome extends StatelessWidget {
             inputDecorationTheme: const InputDecorationTheme(
               border: OutlineInputBorder(),
             ),
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: <TargetPlatform, PageTransitionsBuilder>{
+                TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+                TargetPlatform.iOS:CupertinoPageTransitionsBuilder(),
+              },
+            ),
           ),
           home: DefaultTabController(
+            key: ValueKey<int>(pages.length),
             length: pages.length,
             child: Builder(
               builder: (BuildContext context) {
@@ -267,6 +272,7 @@ class CruiseMonkeyHome extends StatelessWidget {
                               child: MediaQuery(
                                 data: metrics.copyWith(padding: metrics.padding.copyWith(bottom: bottomPadding)),
                                 child: TabBarView(
+                                  key: ValueKey<int>(pages.length),
                                   children: pages,
                                 ),
                               ),
@@ -287,6 +293,7 @@ class CruiseMonkeyHome extends StatelessWidget {
                                 if (constraints.maxWidth == 0)
                                   return const SizedBox.shrink();
                                 return TabBar(
+                                  key: ValueKey<int>(pages.length),
                                   isScrollable: true,
                                   indicator: BoxDecoration(
                                     color: const Color(0x10FFFFFF),

@@ -483,7 +483,6 @@ class ChatLine extends StatefulWidget {
     this.onLock,
     this.onUnlock,
     this.onDelete,
-    this.onDeleteModerator,
     this.onEdit,
     this.onLike,
     this.onUnlike,
@@ -506,7 +505,6 @@ class ChatLine extends StatefulWidget {
   final int likes;
   final VoidCallback onPressed;
   final VoidCallback onDelete;
-  final VoidCallback onDeleteModerator;
   final VoidCallback onEdit;
   final VoidCallback onLike;
   final VoidCallback onUnlike;
@@ -555,17 +553,21 @@ class _ChatLineState extends State<ChatLine> {
             body: ProgressBuilder<Set<User>>(
               progress: progress,
               builder: (BuildContext context, Set<User> users) {
-                final List<User> sortedUsers = users.toList()..sort();
-                return ListView.builder(
-                  itemCount: sortedUsers.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final User user = sortedUsers[index];
-                    return ListTile(
-                      key: ValueKey<String>(user.username),
-                      leading: Cruise.of(context).avatarFor(<User>[user]),
-                      title: Text(user.toString()),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/profile', arguments: user);
+                return ServerStatusBuilder(
+                  builder: (BuildContext context, ServerStatus status, Widget child) {
+                    final List<User> sortedUsers = users.toList()..sort();
+                    return ListView.builder(
+                      itemCount: sortedUsers.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final User user = sortedUsers[index];
+                        return ListTile(
+                          key: ValueKey<String>(user.username),
+                          leading: Cruise.of(context).avatarFor(<User>[user]),
+                          title: Text(user.toString()),
+                          onTap: status.userProfileEnabled ? () {
+                            Navigator.pushNamed(context, '/profile', arguments: user);
+                          } : null,
+                        );
                       },
                     );
                   },
@@ -592,11 +594,10 @@ class _ChatLineState extends State<ChatLine> {
     action('UNLIKE', Icons.thumb_down, widget.onUnlike);
     action('VIEW LIKES', Icons.group, widget.getLikesCallback != null && widget.likes > 0 ? _viewLikes : null);
     action('REPLY', Icons.reply, widget.onReply);
-    action('EDIT', Icons.delete_forever, widget.onEdit);
+    action('EDIT', Icons.edit, widget.onEdit);
     action('LOCK', Icons.lock_outline, widget.onLock);
     action('UNLOCK', Icons.lock_open, widget.onUnlock);
     action('DELETE', Icons.delete_forever, widget.onDelete);
-    action('DELETE\n(MODERATOR ACTION)', Icons.delete_forever, widget.onDeleteModerator);
     final List<Widget> children = <Widget>[
       Text('Posted by: ${widget.user}'),
       Text('Timestamp: ${widget.timestamp}'),
@@ -779,7 +780,7 @@ class ProgressChatLine extends StatelessWidget {
         } else if (value is FailedProgress) {
           leading = const Icon(Icons.error, size: 40.0, color: Colors.red);
           trailing = onRemove != null ? IconButton(icon: const Icon(Icons.clear), tooltip: 'Abandon message', onPressed: onRemove) : null;
-          subtitle = onRetry != null ? Text('Failed: ${value.error}. Tap to retry.') : Text('Failed: ${value.error}');
+          subtitle = onRetry != null ? Text('Failed: ${punctuate("${value.error}")} Tap to retry.') : Text('Failed: ${punctuate("${value.error}")}');
           onTap = onRetry;
         } else if (value is SuccessfulProgress<void>) {
           leading = const Icon(Icons.error, size: 40.0, color: Colors.yellow);
@@ -1043,20 +1044,26 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
           );
           if (!enabled)
             return avatar;
-          return GestureDetector(
-            onTapDown: (TapDownDetails details) {
-              setState(() { pressed = true; });
+          return ServerStatusBuilder(
+            builder: (BuildContext context, ServerStatus status, Widget child) {
+              if (!status.userProfileEnabled)
+                return avatar;
+              return GestureDetector(
+                onTapDown: (TapDownDetails details) {
+                  setState(() { pressed = true; });
+                },
+                onTapUp: (TapUpDetails details) {
+                  setState(() { pressed = false; });
+                },
+                onTapCancel: () {
+                  setState(() { pressed = false; });
+                },
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile', arguments: sortedUsers.single);
+                },
+                child: avatar,
+              );
             },
-            onTapUp: (TapUpDetails details) {
-              setState(() { pressed = false; });
-            },
-            onTapCancel: () {
-              setState(() { pressed = false; });
-            },
-            onTap: () {
-              Navigator.pushNamed(context, '/profile', arguments: sortedUsers.single);
-            },
-            child: avatar,
           );
         },
       );
@@ -1625,4 +1632,30 @@ Future<bool> confirmDialog(BuildContext context, String message, { String yes = 
       ],
     ),
   ) == true;
+}
+
+typedef ServerStatusBuilderCallback = Widget Function(BuildContext context, ServerStatus status, Widget child);
+
+class ServerStatusBuilder extends StatelessWidget {
+  const ServerStatusBuilder({
+    Key key,
+    this.builder,
+    this.child,
+  }) : super(key: key);
+
+  final ServerStatusBuilderCallback builder;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final ContinuousProgress<ServerStatus> serverStatus = Cruise.of(context).serverStatus;
+    return AnimatedBuilder(
+      animation: serverStatus,
+      child: child,
+      builder: (BuildContext context, Widget child) {
+        final ServerStatus status = serverStatus.currentValue ?? const ServerStatus();
+        return builder(context, status, child);
+      },
+    );
+  }
 }

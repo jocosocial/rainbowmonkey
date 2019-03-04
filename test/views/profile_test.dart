@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
+import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
@@ -27,7 +28,7 @@ Future<void> main() async {
         },
       ),
       store: TrivialDataStore(log),
-      onError: (String error) { log.add('error: $error'); },
+      onError: (UserFriendlyError error) { log.add('error: $error'); },
     );
     await model.login(username: 'username', password: 'password').asFuture();
     await tester.pumpWidget(
@@ -38,14 +39,16 @@ Future<void> main() async {
         ),
       ),
     );
+    log.add('--');
     expect(find.text('Display name'), findsOneWidget);
     expect(find.text('Home location'), findsNothing);
     await tester.drag(find.byType(CustomScrollView), const Offset(0.0, -1000.0));
     await tester.pumpAndSettle();
+    log.add('--');
     expect(find.text('Home location'), findsOneWidget);
     expect(find.text('Hello'), findsNothing);
     expect(find.text('override location set'), findsNothing);
-    await tester.enterText(find.byType(TextField).at(4), 'Hello');
+    await tester.enterText(find.byType(TextField).at(3), 'Hello');
     twitarr.overrideHomeLocation = 'override location set';
     log.add('overridden');
     expect(find.text('Home location'), findsOneWidget);
@@ -62,6 +65,12 @@ Future<void> main() async {
       'LoggingTwitarr(0).getAnnouncements()',
       'LoggingTwitarr(0).getSectionStatus()',
       'fetchProfilePicture',
+      '--',
+      'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)',
+      // this is where the ui subscribes to everything:
+      'LoggingTwitarr(0).getAnnouncements()',
+      'LoggingTwitarr(0).getSectionStatus()',
+      '--',
       'overridden',
       'updateProfile null/null/null/null/Hello/null',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)'

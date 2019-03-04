@@ -109,6 +109,12 @@ abstract class Progress<T> implements ValueListenable<ProgressValue<T>> {
     return controller.progress;
   }
 
+  factory Progress.failed(Exception error, [ StackTrace stackTrace ]) {
+    final ProgressController<T> controller = ProgressController<T>();
+    controller.completeError(error, stackTrace);
+    return controller.progress;
+  }
+
   const factory Progress.idle() = _IdleProgress;
 
   static Progress<T> convert<F, T>(Progress<F> progress, Converter<F, T> converter) {
@@ -360,6 +366,20 @@ class MutableContinuousProgress<T> extends ContinuousProgress<T> with ChangeNoti
   @mustCallSuper
   void _handleDone() {
     addProgress(const Progress<Null>.idle());
+  }
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (!hasListeners)
+      _handleAdd();
+    super.addListener(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    super.removeListener(listener);
+    if (!hasListeners)
+      _handleRemove();
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/forums.dart';
+import '../logic/photo_manager.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -91,6 +92,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
     final List<ForumMessage> messages = widget.thread.toList().reversed.toList() ?? const <ForumMessage>[];
     final bool loggedIn = Cruise.of(context).isLoggedIn;
     return ModeratorBuilder(
+      includeBorder: false,
       builder: (BuildContext context, AuthenticatedUser currentUser, bool canModerate, bool isModerating) {
         final bool canPostInPrinciple = loggedIn && (widget.thread.isLocked ? currentUser.canPostWhenLocked : currentUser.canPost);
         final bool canPost = canPostInPrinciple && _textController.text.trim().isNotEmpty;
@@ -107,46 +109,48 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
           ),
         ];
         final List<PopupMenuEntry<VoidCallback>> menuItems = <PopupMenuEntry<VoidCallback>>[];
-        switch (currentUser.role) {
-          case Role.admin:
-          case Role.tho:
-            menuItems.add(
-              CheckedPopupMenuItem<VoidCallback>(
-                child: const Text('Sticky'),
-                checked: widget.thread.isSticky,
-                value: () { widget.thread.sticky(sticky: !widget.thread.isSticky); },
-              ),
-            );
-            continue moderator;
-          moderator:
-          case Role.moderator:
-            menuItems.addAll(<PopupMenuEntry<VoidCallback>>[
-              CheckedPopupMenuItem<VoidCallback>(
-                child: const Text('Lock'),
-                checked: widget.thread.isLocked,
-                value: () { widget.thread.lock(locked: !widget.thread.isLocked); },
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem<VoidCallback>(
-                child: const ListTile(
-                  leading: Icon(Icons.delete_forever),
-                  title: Text('Delete Forum'),
+        if (currentUser != null) {
+          switch (currentUser.role) {
+            case Role.admin:
+            case Role.tho:
+              menuItems.add(
+                CheckedPopupMenuItem<VoidCallback>(
+                  child: const Text('Sticky'),
+                  checked: widget.thread.isSticky,
+                  value: () { widget.thread.sticky(sticky: !widget.thread.isSticky); },
                 ),
-                value: () async {
-                  if (await confirmDialog(context, 'Delete "${widget.thread.subject}" forum?', yes: 'DELETE')) {
-                    widget.thread.delete();
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-            ]);
-            continue user;
-          user:
-          case Role.user:
-          case Role.muted:
-          case Role.banned:
-          case Role.none:
-            break;
+              );
+              continue moderator;
+            moderator:
+            case Role.moderator:
+              menuItems.addAll(<PopupMenuEntry<VoidCallback>>[
+                CheckedPopupMenuItem<VoidCallback>(
+                  child: const Text('Lock'),
+                  checked: widget.thread.isLocked,
+                  value: () { widget.thread.lock(locked: !widget.thread.isLocked); },
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem<VoidCallback>(
+                  child: const ListTile(
+                    leading: Icon(Icons.delete_forever),
+                    title: Text('Delete Forum'),
+                  ),
+                  value: () async {
+                    if (await confirmDialog(context, 'Delete "${widget.thread.subject}" forum?', yes: 'DELETE')) {
+                      widget.thread.delete();
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ]);
+              continue user;
+            user:
+            case Role.user:
+            case Role.muted:
+            case Role.banned:
+            case Role.none:
+              break;
+          }
         }
         if (menuItems.isNotEmpty) {
           actions.add(PopupMenuButton<VoidCallback>(
@@ -189,23 +193,21 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                           photos: message.photos,
                           id: message.id,
                           likes: message.reactions.likes,
-                          onLike: !isModerating && !message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate) ? () {
+                          onLike: currentUser != null && (!isModerating && !message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate)) ? () {
                             ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: true));
                           } : null,
-                          onUnlike: !isModerating && message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate) ? () {
+                          onUnlike: currentUser != null && (!isModerating && message.reactions.currentUserLiked && (!widget.thread.isLocked || canModerate)) ? () {
                             ProgressDialog.show<void>(context, widget.thread.react(message.id, 'like', selected: false));
                           } : null,
                           getLikesCallback: () => widget.thread.getReactions(message.id, 'like'),
                           timestamp: message.timestamp,
-                          onDelete: isCurrentUser && (!widget.thread.isLocked || canModerate) ? () async {
+                          onDelete: currentUser != null && ((isCurrentUser && !widget.thread.isLocked) || canModerate) ? () async {
                             final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.deleteMessage(message.id));
                             if (threadDeleted)
                               Navigator.pop(context);
                           } : null,
-                          onDeleteModerator: !isCurrentUser && canModerate ? () async {
-                            final bool threadDeleted = await ProgressDialog.show<bool>(context, widget.thread.deleteMessage(message.id));
-                            if (threadDeleted)
-                              Navigator.pop(context);
+                          onEdit: currentUser != null && ((isCurrentUser && (!widget.thread.isLocked || canModerate)) || currentUser.canAlwaysEdit) ? () {
+                            EditForumPostView.open(context, widget.thread, message);
                           } : null,
                         );
                       },
@@ -408,6 +410,139 @@ class _StartForumViewState extends State<StartForumView> {
                       onUpdate: (List<Uint8List> newImages) {
                         setState(() {
                           _photos = newImages;
+                        });
+                      },
+                      allowMultiple: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class EditForumPostView extends StatefulWidget {
+  const EditForumPostView({
+    Key key,
+    this.thread,
+    this.message,
+  }) : super(key: key);
+
+  final ForumThread thread;
+  final ForumMessage message;
+
+  static Future<void> open(BuildContext context, ForumThread thread, ForumMessage message) {
+    return Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => EditForumPostView(
+          thread: thread,
+          message: message,
+        ),
+      ),
+    );
+  }
+
+  @override
+  _EditForumPostViewState createState() => _EditForumPostViewState();
+}
+
+class _EditForumPostViewState extends State<EditForumPostView> {
+  final TextEditingController _text = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  List<Photo> _keptPhotos = <Photo>[];
+  List<Uint8List> _newPhotos = <Uint8List>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _text.text = widget.message.text;
+    _keptPhotos = widget.message.photos;
+  }
+
+  void _commit() async {
+    final Progress<void> progress = widget.thread.edit(
+      messageId: widget.message.id,
+      text: _text.text,
+      keptPhotos: _keptPhotos,
+      newPhotos: _newPhotos,
+    );
+    await ProgressDialog.show<void>(context, progress);
+    if (progress.value is SuccessfulProgress<void> && mounted)
+      Navigator.pop(context);
+  }
+
+  bool get _valid => _text.text.trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit'),
+      ),
+      floatingActionButton: _valid
+        ? FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: _commit,
+          )
+        : FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: null,
+            backgroundColor: Colors.grey.shade200,
+            foregroundColor: Colors.grey.shade400,
+          ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      body: ModeratorBuilder(
+        builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
+          return Form(
+            key: _formKey,
+            onChanged: () {
+              setState(() {
+                /* need to recheck whether the submit button should be enabled */
+              });
+            },
+            onWillPop: () => confirmDialog(context, 'Abandon editing this post?'),
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                  child: Align(
+                    alignment: AlignmentDirectional.topStart,
+                    child: TextFormField(
+                      controller: _text,
+                      onFieldSubmitted: (String value) {
+                        if (_valid)
+                          _commit();
+                      },
+                      textInputAction: TextInputAction.newline,
+                      textCapitalization: TextCapitalization.sentences,
+                      maxLength: 10000,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        labelText: 'Post text',
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                    child: AttachImageDialog(
+                      oldImages: _keptPhotos,
+                      onUpdateOldImages: (List<Photo> newKeptPhotos) {
+                        setState(() {
+                          _keptPhotos = newKeptPhotos;
+                        });
+                      },
+                      images: _newPhotos,
+                      onUpdate: (List<Uint8List> newPhotos) {
+                        setState(() {
+                          _newPhotos = newPhotos;
                         });
                       },
                       allowMultiple: true,

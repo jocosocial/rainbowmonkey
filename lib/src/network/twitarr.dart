@@ -10,66 +10,6 @@ import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
 
-abstract class UserFriendlyError { }
-
-class LocalError implements Exception, UserFriendlyError {
-  const LocalError(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
-}
-
-class ServerError implements Exception, UserFriendlyError {
-  const ServerError(this.messages);
-
-  final List<String> messages;
-
-  @override
-  String toString() => messages.join('\n');
-}
-
-class InvalidUsernameOrPasswordError implements Exception, UserFriendlyError {
-  const InvalidUsernameOrPasswordError();
-
-  @override
-  String toString() => 'Server did not recognize the username or password.';
-}
-
-class FieldErrors implements Exception {
-  const FieldErrors(this.fields);
-
-  final Map<String, List<String>> fields;
-
-  @override
-  String toString() => 'Account creation failed:\n$fields';
-}
-
-class HttpServerError implements Exception, UserFriendlyError {
-  const HttpServerError(this.statusCode, this.reasonPhrase, this.url);
-
-  final int statusCode;
-  final String reasonPhrase;
-  final Uri url;
-
-  @override
-  String toString() {
-    switch (statusCode) {
-      case 500:
-      case 501:
-      case 502:
-      case 503:
-      case 504: return 'Server is having problems (it said "$reasonPhrase"). Try again later.';
-      case 401:
-      case 403: return 'There was an authentication problem (server said "$reasonPhrase"). Try logging in again.';
-      case 400:
-      case 405: return 'There is probably a bug (server said "$reasonPhrase"). Try again, maybe?';
-      default: return 'There was an unexpected error. The server said "$reasonPhrase".';
-    }
-  }
-}
-
 typedef TwitarrConfigurationFactory = TwitarrConfiguration Function(String settings);
 
 @immutable
@@ -106,7 +46,7 @@ abstract class TwitarrConfiguration {
 abstract class Twitarr {
   const Twitarr();
 
-  void enable();
+  void enable(ServerStatus status);
   void disable();
 
   double get debugLatency;
@@ -129,6 +69,19 @@ abstract class Twitarr {
   Progress<AuthenticatedUser> login({
     @required String username,
     @required String password,
+    @required PhotoManager photoManager,
+  });
+
+  Progress<AuthenticatedUser> resetPassword({
+    @required String username,
+    @required String registrationCode,
+    @required String password,
+    @required PhotoManager photoManager,
+  });
+
+  Progress<AuthenticatedUser> changePassword({
+    @required Credentials credentials,
+    @required String newPassword,
     @required PhotoManager photoManager,
   });
 
@@ -242,6 +195,14 @@ abstract class Twitarr {
     @required bool locked,
   });
 
+  Progress<void> editTweet({
+    Credentials credentials,
+    @required String postId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  });
+
   Progress<void> deleteTweet({
     @required Credentials credentials,
     @required String postId,
@@ -255,7 +216,6 @@ abstract class Twitarr {
   });
 
   Progress<Map<String, Set<UserSummary>>> getTweetReactions({
-    @required Credentials credentials,
     @required String postId,
   });
 
@@ -299,6 +259,15 @@ abstract class Twitarr {
     @required List<Uint8List> photos,
   });
 
+  Progress<void> editForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  });
+
   Progress<bool> deleteForumMessage({
     Credentials credentials,
     @required String threadId,
@@ -314,7 +283,6 @@ abstract class Twitarr {
   });
 
   Progress<Map<String, Set<UserSummary>>> getForumMessageReactions({
-    @required Credentials credentials,
     @required String threadId,
     @required String messageId,
   });

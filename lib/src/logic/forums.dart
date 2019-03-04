@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
-import '../basic_types.dart';
+import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
@@ -83,7 +83,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
         _threads.remove(thread.id);
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
-      _reportError(error);
+      onError(error);
     } finally {
       _updating = false;
       endBusy();
@@ -118,10 +118,6 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
 
   void _childUpdated(ForumThread thread) {
     notifyListeners();
-  }
-
-  void _reportError(UserFriendlyError error) {
-    onError(error.toString());
   }
 
   @override
@@ -214,7 +210,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
       ).asFuture());
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
-      _parent._reportError(error);
+      _parent.onError(error);
     } finally {
       _updating = false;
       endBusy();
@@ -240,7 +236,7 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
 
   Progress<void> send(String text, { @required List<Uint8List> photos }) {
     if (_credentials == null)
-      throw const LocalError('Cannot create a thread when not logged in.');
+      throw const LocalError('Cannot post to a thread when not logged in.');
     return Progress<void>((ProgressController<void> completer) async {
       await completer.chain<void>(
         _twitarr.postForumMessage(
@@ -251,6 +247,31 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
         ),
       );
       await update();
+      _timer.interested();
+      _parent._childUpdated(this);
+    });
+  }
+
+  Progress<void> edit({
+    @required String messageId,
+    @required String text,
+    @required List<Photo> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    if (_credentials == null)
+      throw const LocalError('Cannot edit a message when not logged in.');
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.editForumMessage(
+          credentials: _credentials,
+          threadId: id,
+          messageId: messageId,
+          text: text,
+          keptPhotos: keptPhotos.map<String>((Photo photo) => photo.id).toList(),
+          newPhotos: newPhotos,
+        ),
+      );
+      reload();
       _timer.interested();
       _parent._childUpdated(this);
     });
@@ -346,11 +367,9 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
   }
 
   Progress<Set<User>> getReactions(String messageId, String reaction) {
-    assert(_credentials != null);
     return Progress<Set<User>>((ProgressController<Set<User>> completer) async {
       final Map<String, Set<UserSummary>> reactions = await completer.chain<Map<String, Set<UserSummary>>>(
         _twitarr.getForumMessageReactions(
-          credentials: _credentials,
           threadId: id,
           messageId: messageId,
         ),

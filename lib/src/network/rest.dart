@@ -10,7 +10,9 @@ import 'package:flutter/foundation.dart';
 import '../json.dart';
 import '../logic/photo_manager.dart';
 import '../models/calendar.dart';
+import '../models/errors.dart';
 import '../models/reactions.dart';
+import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -128,6 +130,8 @@ class RestTwitarr implements Twitarr {
     @required String registrationCode,
     String displayName,
   }) {
+    if (_enabled?.registrationEnabled == false)
+      return Progress<AuthenticatedUser>.failed(const LocalError('Account creation has been disabled on the server.'));
     assert(username != null);
     assert(password != null);
     assert(registrationCode != null);
@@ -154,15 +158,7 @@ class RestTwitarr implements Twitarr {
         )
       );
       final dynamic data = Json.parse(result);
-      final Json errors = data.errors as Json;
-      if (errors.valueType != Null) {
-        if (errors.isMap) {
-          throw FieldErrors(errors.toMap().map<String, List<String>>(
-            (String field, dynamic value) => MapEntry<String, List<String>>(field, (value as List<dynamic>).cast<String>())
-          ));
-        }
-        throw ServerError(errors.toList().cast<String>().where((String value) => value != null && value.isNotEmpty).toList());
-      }
+      _checkStatusIsOk(data);
       final String key = data.key.toString();
       return _createAuthenticatedUser(
         data.user,
@@ -206,6 +202,110 @@ class RestTwitarr implements Twitarr {
         Credentials(
           username: username,
           password: password,
+          key: key,
+          loginTimestamp: DateTime.now(),
+        ),
+        photoManager,
+      ));
+    });
+  }
+
+  @override
+  Progress<AuthenticatedUser> resetPassword({
+    @required String username,
+    @required String registrationCode,
+    @required String password,
+    @required PhotoManager photoManager,
+  }) {
+    assert(username != null);
+    assert(registrationCode != null);
+    assert(password != null);
+    assert(AuthenticatedUser.isValidUsername(username));
+    assert(AuthenticatedUser.isValidRegistrationCode(registrationCode));
+    assert(AuthenticatedUser.isValidPassword(password));
+    return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
+      final String jsonBody = json.encode(<String, dynamic>{
+        'username': username,
+        'registration_code': registrationCode,
+        'password': password,
+      });
+      final String resetRawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/user/reset_password',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        ),
+        steps: 3,
+      );
+      final dynamic resetData = Json.parse(resetRawData);
+      try {
+        _checkStatusIsOk(resetData);
+      } on FieldErrors catch (error) {
+        if (error.fields['username']?.contains('Username and registration code combination not found.') == true)
+          throw const InvalidUserAndRegistrationCodeError();
+        rethrow;
+      }
+      final FormData body = FormData()
+        ..add('username', username)
+        ..add('password', password);
+      final String loginRawData = await completer.chain<String>(
+        _requestUtf8(
+          'GET',
+          'api/v2/user/auth?${body.toUrlEncoded()}',
+        ),
+        steps: 3,
+      );
+      final dynamic loginData = Json.parse(loginRawData);
+      _checkStatusIsOk(loginData);
+      final String key = loginData.key.toString();
+      return completer.chain<AuthenticatedUser>(getAuthenticatedUser(
+        Credentials(
+          username: username,
+          password: password,
+          key: key,
+          loginTimestamp: DateTime.now(),
+        ),
+        photoManager,
+      ));
+    });
+  }
+
+  @override
+  Progress<AuthenticatedUser> changePassword({
+    @required Credentials credentials,
+    @required String newPassword,
+    @required PhotoManager photoManager,
+  }) {
+    assert(credentials != null);
+    assert(newPassword != null);
+    assert(AuthenticatedUser.isValidPassword(newPassword));
+    return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String jsonBody = json.encode(<String, dynamic>{
+        'current_password': credentials.password,
+        'new_password': newPassword,
+      });
+      final String result = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/user/change_password?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        ),
+        steps: 2,
+      );
+      final dynamic data = Json.parse(result);
+      if (data.status == 'error' && data.error == 'Invalid username or password.') {
+        throw const InvalidUsernameOrPasswordError();
+      }
+      _checkStatusIsOk(data);
+      final String key = data.key.toString();
+      return completer.chain<AuthenticatedUser>(getAuthenticatedUser(
+        Credentials(
+          username: credentials.username,
+          password: newPassword,
           key: key,
           loginTimestamp: DateTime.now(),
         ),
@@ -291,6 +391,8 @@ class RestTwitarr implements Twitarr {
   Progress<Calendar> getCalendar({
     Credentials credentials,
   }) {
+    if (_enabled?.calendarEnabled == false)
+      return Progress<Calendar>.completed(Calendar(events: const <Event>[]));
     final FormData body = FormData()
       ..add('app', 'plain');
     if (credentials != null) {
@@ -301,7 +403,11 @@ class RestTwitarr implements Twitarr {
       return await compute<String, Calendar>(
         _parseCalendar,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/event?${body.toUrlEncoded()}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/event?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
     });
@@ -313,6 +419,8 @@ class RestTwitarr implements Twitarr {
     @required String eventId,
     @required bool favorite,
   }) {
+    if (_enabled?.calendarEnabled == false)
+      return Progress<void>.failed(const LocalError('The calendar has been disabled on the server.'));
     final FormData body = FormData()
       ..add('key', credentials.key)
       ..add('app', 'plain');
@@ -351,7 +459,11 @@ class RestTwitarr implements Twitarr {
       return await compute<String, List<AnnouncementSummary>>(
         _parseAnnouncements,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/announcements?${body.toUrlEncoded()}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/announcements?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
     });
@@ -397,7 +509,11 @@ class RestTwitarr implements Twitarr {
       final ServerText result = await compute<String, ServerText>(
         _parseServerText,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/text/${Uri.encodeComponent(filename)}?${body.toUrlEncoded()}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/text/${Uri.encodeComponent(filename)}?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
       _serverTextCache[filename] = result;
@@ -443,6 +559,8 @@ class RestTwitarr implements Twitarr {
     String homeLocation,
     String roomNumber,
   }) {
+    if (_enabled?.userProfileEnabled == false)
+      return Progress<void>.failed(const LocalError('User profiles have been disabled on the server.'));
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key);
@@ -478,6 +596,8 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     @required Uint8List bytes,
   }) {
+    if (_enabled?.userProfileEnabled == false)
+      return Progress<void>.failed(const LocalError('User profiles have been disabled on the server.'));
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
@@ -498,6 +618,8 @@ class RestTwitarr implements Twitarr {
   Progress<void> resetAvatar({
     @required Credentials credentials,
   }) {
+    if (_enabled?.userProfileEnabled == false)
+      return Progress<void>.failed(const LocalError('User profiles have been disabled on the server.'));
     assert(credentials != null);
     final FormData body = FormData()
       ..add('key', credentials.key);
@@ -564,7 +686,11 @@ class RestTwitarr implements Twitarr {
       final List<User> result = await compute<String, List<User>>(
         _parseUserList,
         await completer.chain<String>(
-          _requestUtf8('GET', 'api/v2/user/ac/${Uri.encodeComponent(searchTerm)}'),
+          _requestUtf8(
+            'GET',
+            'api/v2/user/ac/${Uri.encodeComponent(searchTerm)}',
+            expectedStatusCodes: <int>[200],
+          ),
         ),
       );
       return result;
@@ -587,6 +713,8 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     int freshnessToken,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailSummary>.completed(SeamailSummary(threads: <SeamailThreadSummary>{}, freshnessToken: freshnessToken));
     assert(credentials.key != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
@@ -616,6 +744,8 @@ class RestTwitarr implements Twitarr {
     @required Credentials credentials,
     int freshnessToken,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailSummary>.completed(SeamailSummary(threads: <SeamailThreadSummary>{}, freshnessToken: freshnessToken));
     assert(credentials.key != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
@@ -645,6 +775,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     bool markRead = true,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailThreadSummary>.failed(const LocalError('Seamail has been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(markRead != null);
@@ -677,6 +809,8 @@ class RestTwitarr implements Twitarr {
     @required String subject,
     @required String text,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailThreadSummary>.failed(const LocalError('Seamail has been disabled on the server.'));
     assert(credentials.key != null);
     assert(users != null);
     assert(users.isNotEmpty);
@@ -718,6 +852,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required String text,
   }) {
+    if (_enabled?.seamailEnabled == false)
+      return Progress<SeamailMessageSummary>.failed(const LocalError('Seamail has been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(threadId.isNotEmpty);
@@ -769,7 +905,7 @@ class RestTwitarr implements Twitarr {
   static SeamailThreadSummary _parseSeamailThreadCreationResult(String rawData) {
     final dynamic data = Json.parse(rawData);
     if (data.status.toString() == 'error')
-      throw ServerError((data.errors as Json).toList().cast<String>());
+      throw ServerError((data.errors as Json).toList().cast<String>().toList());
     return _parseSeamailThread(data.seamail);
   }
 
@@ -777,7 +913,7 @@ class RestTwitarr implements Twitarr {
     final dynamic data = Json.parse(rawData);
     if (data.status.toString() == 'error') {
       if ((data as Json).hasKey('errors'))
-        throw ServerError((data.errors as Json).toList().cast<String>());
+        throw ServerError((data.errors as Json).toList().cast<String>().toList());
       throw ServerError(<String>[data.error.toString()]);
     }
     return _parseSeamailMessage(data.seamail_message);
@@ -828,6 +964,8 @@ class RestTwitarr implements Twitarr {
     int boundaryToken,
     int limit = 100,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.completed(StreamSliceSummary(direction: direction, posts: const <StreamMessageSummary>[], boundaryToken: boundaryToken));
     assert(credentials == null || credentials.key != null);
     assert(direction != null);
     assert(limit != null);
@@ -856,6 +994,7 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/stream?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -867,6 +1006,8 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     String threadId,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamMessageSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials == null || credentials.key != null);
     return Progress<StreamMessageSummary>((ProgressController<StreamMessageSummary> completer) async {
       final FormData body = FormData()
@@ -894,6 +1035,8 @@ class RestTwitarr implements Twitarr {
     String parentId,
     Uint8List photo,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(text != null);
     assert(text.isNotEmpty);
@@ -918,7 +1061,7 @@ class RestTwitarr implements Twitarr {
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
         ),
-        steps: 2
+        steps: photo != null ? 2 : 1
       );
       final dynamic data = Json.parse(result);
       _checkStatusIsOk(data);
@@ -931,6 +1074,8 @@ class RestTwitarr implements Twitarr {
     @required String postId,
     @required bool locked,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(postId != null);
     assert(locked != null);
@@ -952,10 +1097,59 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<void> editTweet({
+    Credentials credentials,
+    @required String postId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
+    assert(credentials.key != null);
+    assert(postId != null);
+    assert(text != null);
+    assert((keptPhotos != null ? keptPhotos.length : 0) + (newPhotos != null ? newPhotos.length : 0) <= 1);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      final Map<String, dynamic> details = <String, dynamic>{
+        'text': text,
+      };
+      if (credentials.asMod)
+        details['as_mod'] = true;
+      final List<String> photoIds = (keptPhotos ?? const <String>[]).toList();
+      if (newPhotos != null) {
+        for (Uint8List photo in newPhotos)
+          photoIds.add(await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: newPhotos.length + 1));
+      }
+      if (photoIds.isNotEmpty)
+        details['photo'] = photoIds.single;
+      final String jsonBody = json.encode(details);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+          expectedStatusCodes: <int>[200, 400, 403, 404],
+        ),
+        steps: (newPhotos != null ? newPhotos.length : 0) + 1,
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
   Progress<void> deleteTweet({
     Credentials credentials,
     @required String postId,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<StreamSliceSummary>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(postId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -982,6 +1176,8 @@ class RestTwitarr implements Twitarr {
     @required String reaction,
     @required bool selected,
   }) {
+    if (_enabled?.streamEnabled == false)
+      return Progress<Map<String, ReactionSummary>>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(credentials.key != null);
     assert(postId != null);
     assert(reaction != null);
@@ -1004,18 +1200,16 @@ class RestTwitarr implements Twitarr {
 
   @override
   Progress<Map<String, Set<UserSummary>>> getTweetReactions({
-    @required Credentials credentials,
     @required String postId,
   }) {
-    assert(credentials.key != null);
+    if (_enabled?.streamEnabled == false)
+      return Progress<Map<String, Set<UserSummary>>>.failed(const LocalError('The Twitarr stream has been disabled on the server.'));
     assert(postId != null);
     return Progress<Map<String, Set<UserSummary>>>((ProgressController<Map<String, Set<UserSummary>>> completer) async {
-      final FormData body = FormData()
-        ..add('key', credentials.key);
       final String rawData = await completer.chain<String>(
         _requestUtf8(
           'GET',
-          'api/v2/tweet/${Uri.encodeComponent(postId)}/react?${body.toUrlEncoded()}',
+          'api/v2/tweet/${Uri.encodeComponent(postId)}/react',
           expectedStatusCodes: <int>[200, 404],
         ),
       );
@@ -1091,6 +1285,8 @@ class RestTwitarr implements Twitarr {
   Progress<Set<ForumSummary>> getForumThreads({
     Credentials credentials,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<Set<ForumSummary>>.completed(const <ForumSummary>{});
     assert(credentials == null || credentials.key != null);
     return Progress<Set<ForumSummary>>((ProgressController<Set<ForumSummary>> completer) async {
       final FormData body = FormData()
@@ -1103,6 +1299,7 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/forums?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -1114,6 +1311,8 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     @required String threadId,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<ForumSummary>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials == null || credentials.key != null);
     assert(threadId != null);
     return Progress<ForumSummary>((ProgressController<ForumSummary> completer) async {
@@ -1127,6 +1326,7 @@ class RestTwitarr implements Twitarr {
           _requestUtf8(
             'GET',
             'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
           ),
         ),
       );
@@ -1140,6 +1340,8 @@ class RestTwitarr implements Twitarr {
     @required String text,
     @required List<Uint8List> photos,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<ForumSummary>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(subject != null);
     assert(text != null);
@@ -1181,6 +1383,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required bool sticky,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -1204,6 +1408,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required bool locked,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -1226,6 +1432,8 @@ class RestTwitarr implements Twitarr {
     Credentials credentials,
     @required String threadId,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     return Progress<void>((ProgressController<void> completer) async {
@@ -1250,6 +1458,8 @@ class RestTwitarr implements Twitarr {
     @required String text,
     @required List<Uint8List> photos,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(text != null);
@@ -1271,18 +1481,65 @@ class RestTwitarr implements Twitarr {
         details['photos'] = photoIds;
       }
       final String jsonBody = json.encode(details);
-      await completer.chain<String>(
+      final String rawData = await completer.chain<String>(
         _requestUtf8(
           'POST',
           'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
-          expectedStatusCodes: <int>[200],
+          expectedStatusCodes: <int>[200, 404, 403],
         ),
         steps: (photos != null ? photos.length : 0) + 1,
       );
-      // We ignore the return value. It's the forum post, but what are you going to do with it?
-      // You don't know where it belongs in the forum...
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
+  Progress<void> editForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(text != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      final Map<String, dynamic> details = <String, dynamic>{
+        'text': text,
+      };
+      if (credentials.asMod)
+        details['as_mod'] = true;
+      final List<String> photoIds = (keptPhotos ?? const <String>[]).toList();
+      if (newPhotos != null) {
+        for (Uint8List photo in newPhotos)
+          photoIds.add(await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: newPhotos.length + 1));
+      }
+      if (photoIds.isNotEmpty)
+        details['photos'] = photoIds;
+      final String jsonBody = json.encode(details);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+          expectedStatusCodes: <int>[200, 400, 401, 403, 404],
+        ),
+        steps: (newPhotos != null ? newPhotos.length : 0) + 1,
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
     });
   }
 
@@ -1292,6 +1549,8 @@ class RestTwitarr implements Twitarr {
     @required String threadId,
     @required String messageId,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<bool>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(messageId != null);
@@ -1319,6 +1578,8 @@ class RestTwitarr implements Twitarr {
     @required String reaction,
     @required bool selected,
   }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<Map<String, ReactionSummary>>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(credentials.key != null);
     assert(threadId != null);
     assert(messageId != null);
@@ -1342,20 +1603,18 @@ class RestTwitarr implements Twitarr {
 
   @override
   Progress<Map<String, Set<UserSummary>>> getForumMessageReactions({
-    @required Credentials credentials,
     @required String threadId,
     @required String messageId,
   }) {
-    assert(credentials.key != null);
+    if (_enabled?.forumsEnabled == false)
+      return Progress<Map<String, Set<UserSummary>>>.failed(const LocalError('Forums have been disabled on the server.'));
     assert(threadId != null);
     assert(messageId != null);
     return Progress<Map<String, Set<UserSummary>>>((ProgressController<Map<String, Set<UserSummary>>> completer) async {
-      final FormData body = FormData()
-        ..add('key', credentials.key);
       final String rawData = await completer.chain<String>(
         _requestUtf8(
           'GET',
-          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}/react?${body.toUrlEncoded()}',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}/react',
           expectedStatusCodes: <int>[200, 404],
         ),
       );
@@ -1626,19 +1885,20 @@ class RestTwitarr implements Twitarr {
 
   final math.Random _random = math.Random();
 
-  bool _enabled = true;
+  ServerStatus _enabled = const ServerStatus();
   Completer<void> _enabledCompleter = Completer<void>()..complete();
 
   @override
-  void enable() {
-    _enabled = true;
+  void enable(ServerStatus status) {
+    assert(status != null);
+    _enabled = status;
     if (!_enabledCompleter.isCompleted)
       _enabledCompleter.complete();
   }
 
   @override
   void disable() {
-    _enabled = false;
+    _enabled = null;
     if (_enabledCompleter.isCompleted)
       _enabledCompleter = Completer<void>();
   }
@@ -1667,7 +1927,7 @@ class RestTwitarr implements Twitarr {
       return true;
     }());
     try {
-      if (!_enabled) {
+      if (_enabled == null) {
         assert(!_enabledCompleter.isCompleted);
         assert(() {
           if (_debugVerbose)
@@ -1701,6 +1961,8 @@ class RestTwitarr implements Twitarr {
           });
           return true;
         }());
+        if (response.statusCode == 503)
+          throw const FeatureDisabledError();
         throw HttpServerError(response.statusCode, response.reasonPhrase, url);
       }
       if (response.contentLength > 0)
@@ -1721,8 +1983,15 @@ class RestTwitarr implements Twitarr {
 
   static void _checkStatusIsOk(dynamic data) {
     if (data.status.toString() == 'error') {
-      if ((data as Json).hasKey('errors'))
-        throw ServerError((data.errors as Json).toList().cast<String>());
+      final Json errors = data.errors as Json;
+      if (errors.valueType != Null) {
+        if (errors.isMap) {
+          throw FieldErrors(errors.toMap().map<String, List<String>>(
+            (String field, dynamic value) => MapEntry<String, List<String>>(field, (value as List<dynamic>).cast<String>().toList())
+          ));
+        }
+        throw ServerError(errors.toList().cast<String>().where((String value) => value != null && value.isNotEmpty).toList());
+      }
       throw ServerError(<String>[data.error.toString()]);
     }
     if (data.status != 'ok')

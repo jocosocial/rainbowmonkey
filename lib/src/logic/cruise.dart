@@ -9,8 +9,8 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:meta/meta.dart';
 
-import '../basic_types.dart';
 import '../models/calendar.dart';
+import '../models/errors.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
@@ -91,6 +91,13 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     }
   }
 
+  void _handleError(UserFriendlyError error) {
+    if (onError != null)
+      onError(error);
+    if (error is FeatureDisabledError)
+      _serverStatus.triggerUnscheduledUpdate();
+  }
+
   bool _onscreen = true;
 
   @override
@@ -115,7 +122,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     if (newState != _onscreen) {
       _onscreen = newState;
       if (_onscreen) {
-        _twitarr.enable();
+        _twitarr.enable(serverStatus.currentValue ?? const ServerStatus());
       } else {
         _twitarr.disable();
       }
@@ -205,18 +212,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     });
   }
 
-  Seamail get seamail => _seamail;
-  Seamail _seamail;
-
-  Mentions get mentions => _mentions;
-  Mentions _mentions;
-
-  Forums get forums => _forums;
-  Forums _forums;
-
-  TweetStream get tweetStream => _tweetStream;
-  TweetStream _tweetStream;
-
   Progress<String> createAccount({
     @required String username,
     @required String password,
@@ -236,6 +231,8 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       return _currentCredentials.username;
     });
   }
+
+  bool _asMod = false;
 
   Credentials _lastAttemptedCredentials;
 
@@ -260,7 +257,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       } on InvalidUsernameOrPasswordError {
         rethrow;
       } on UserFriendlyError catch (error) {
-        onError('$error');
+        _handleError(error);
       }
     });
   }
@@ -273,7 +270,58 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     );
   }
 
+  Progress<void> resetPassword({
+    @required String username,
+    @required String registrationCode,
+    @required String password,
+  }) {
+    _lastAttemptedCredentials = Credentials(
+      username: username,
+      password: password,
+    );
+    return Progress<void>((ProgressController<void> controller) async {
+      logout();
+      try {
+        final Progress<AuthenticatedUser> userProgress = _twitarr.resetPassword(
+          username: username,
+          registrationCode: registrationCode,
+          password: password,
+          photoManager: this,
+        );
+        _user.addProgress(userProgress);
+        _updateCredentials(await controller.chain<AuthenticatedUser>(userProgress));
+      } on InvalidUsernameOrPasswordError {
+        rethrow;
+      } on UserFriendlyError catch (error) {
+        _handleError(error);
+      }
+    });
+  }
+
+  Progress<void> changePassword(String newPassword) {
+    return Progress<void>((ProgressController<void> controller) async {
+      try {
+        final Progress<AuthenticatedUser> userProgress = _twitarr.changePassword(
+          credentials: _currentCredentials,
+          newPassword: newPassword,
+          photoManager: this,
+        );
+        _user.addProgress(userProgress);
+        _updateCredentials(await controller.chain<AuthenticatedUser>(userProgress));
+        _lastAttemptedCredentials = Credentials(
+          username: _currentCredentials.username,
+          password: newPassword,
+        );
+      } on InvalidUsernameOrPasswordError {
+        rethrow;
+      } on UserFriendlyError catch (error) {
+        _handleError(error);
+      }
+    });
+  }
+
   void logout() {
+    _asMod = false;
     // no need to do anything to _user, the following call resets it:
     _updateCredentials(null);
   }
@@ -282,7 +330,8 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     assert(enabled != null);
     AuthenticatedUser user = _user.currentValue;
     assert(user != null);
-    user = user.copyWith(credentials: user.credentials.copyWith(asMod: enabled));
+    _asMod = enabled;
+    user = user.copyWith(credentials: user.credentials.copyWith(asMod: _asMod));
     _user.addProgress(Progress<AuthenticatedUser>.completed(user));
     _updateCredentials(user);
   }
@@ -308,7 +357,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           _twitarr,
           _currentCredentials,
           this,
-          onError: onError,
+          onError: _handleError,
           onCheckForMessages: () {
             if (onCheckForMessages != null)
               onCheckForMessages(_currentCredentials, _twitarr, store, forced: true);
@@ -319,7 +368,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           _twitarr,
           _currentCredentials,
           this,
-          onError: onError,
+          onError: _handleError,
         );
         _forums = _createForums();
         _tweetStream = _createTweetStream();
@@ -327,37 +376,19 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           _loggedIn.complete();
       }
     }
+    final Role newRole = user != null ? user.role : Role.none;
+    final ServerStatus status = serverStatus.currentValue;
+    if (status != null && newRole != status.userRole) {
+      final ServerStatus newStatus = status.copyWith(userRole: newRole);
+      _serverStatus.addProgress(Progress<ServerStatus>.completed(newStatus));
+      if (_onscreen)
+        _twitarr.enable(newStatus);
+    }
     if (_currentCredentials != oldCredentials)
       _calendar.triggerUnscheduledUpdate();
     if (_currentCredentials != oldCredentials) {
       store.saveCredentials(_currentCredentials);
       notifyListeners();
-    }
-  }
-
-  Forums _createForums() {
-    return Forums(
-      _twitarr,
-      _currentCredentials,
-      photoManager: this,
-      onError: onError,
-    );
-  }
-
-  TweetStream _createTweetStream() {
-    return TweetStream(
-      _twitarr,
-      _currentCredentials,
-      photoManager: this,
-      onError: (dynamic error, StackTrace stack) => onError('$error'),
-    );
-  }
-
-  void _handleThreadRead(String threadId) async {
-    final Notifications notifications = await Notifications.instance;
-    for (String messageId in await store.getNotifications(threadId)) {
-      await notifications.messageRead(threadId, messageId);
-      await store.removeNotification(threadId, messageId);
     }
   }
 
@@ -370,13 +401,86 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
 
   Future<AuthenticatedUser> _updateUser(ProgressController<AuthenticatedUser> completer) async {
     await _restoredSettings;
-    if (_currentCredentials?.key != null)
-      return await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
-    return null;
+    AuthenticatedUser result;
+    if (_currentCredentials?.key != null) {
+      result = await completer.chain<AuthenticatedUser>(_twitarr.getAuthenticatedUser(_currentCredentials, this));
+      if (_asMod)
+        result = result.copyWith(credentials: result.credentials.copyWith(asMod: true));
+    }
+    return result;
   }
 
   Progress<User> fetchProfile(String username) {
     return _twitarr.getUser(_currentCredentials, username, this);
+  }
+
+  ContinuousProgress<ServerStatus> get serverStatus => _serverStatus;
+  PeriodicProgress<ServerStatus> _serverStatus;
+
+  Future<ServerStatus> _updateServerStatus(ProgressController<ServerStatus> completer) async {
+    final List<Announcement> announcements = (await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements()))
+      .map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this))
+      .toList()
+      ..sort();
+    final Map<String, bool> sections = await completer.chain<Map<String, bool>>(_twitarr.getSectionStatus());
+    final ServerStatus result = ServerStatus(
+      announcements: announcements,
+      userRole: user.currentValue?.role ?? Role.none,
+      forumsEnabled: sections['forums'] ?? true,
+      streamEnabled: sections['stream'] ?? true,
+      seamailEnabled: sections['seamail'] ?? true,
+      calendarEnabled: sections['calendar'] ?? true,
+      deckPlansEnabled: sections['deck_plans'] ?? true,
+      gamesEnabled: sections['games'] ?? true,
+      karaokeEnabled: sections['karaoke'] ?? true,
+      registrationEnabled: sections['registration'] ?? true,
+      userProfileEnabled: sections['user_profile'] ?? true,
+    );
+    if (_onscreen)
+      _twitarr.enable(result);
+    return result;
+  }
+
+  Progress<ServerText> fetchServerText(String filename) {
+    return _twitarr.fetchServerText(filename);
+  }
+
+  Seamail get seamail => _seamail;
+  Seamail _seamail;
+
+  Mentions get mentions => _mentions;
+  Mentions _mentions;
+
+  Forums get forums => _forums;
+  Forums _forums;
+
+  TweetStream get tweetStream => _tweetStream;
+  TweetStream _tweetStream;
+
+  Forums _createForums() {
+    return Forums(
+      _twitarr,
+      _currentCredentials,
+      photoManager: this,
+      onError: _handleError,
+    );
+  }
+
+  TweetStream _createTweetStream() {
+    return TweetStream(
+      _twitarr,
+      _currentCredentials,
+      photoManager: this,
+      onError: _handleError,
+    );
+  }
+
+  void _handleThreadRead(String threadId) async {
+    final Notifications notifications = await Notifications.instance;
+    for (String messageId in await store.getNotifications(threadId)) {
+      await notifications.messageRead(threadId, messageId);
+      await store.removeNotification(threadId, messageId);
+    }
   }
 
   ContinuousProgress<Calendar> get calendar => _calendar;
@@ -395,34 +499,9 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
         await completer.chain(_twitarr.setEventFavorite(credentials: _currentCredentials, eventId: eventId, favorite: favorite), steps: 2);
         await completer.chain(_calendar.triggerUnscheduledUpdate(), steps: 2);
       } on UserFriendlyError catch (error) {
-        onError('$error');
+        _handleError(error);
       }
     });
-  }
-
-  ContinuousProgress<ServerStatus> get serverStatus => _serverStatus;
-  PeriodicProgress<ServerStatus> _serverStatus;
-
-  Future<ServerStatus> _updateServerStatus(ProgressController<ServerStatus> completer) async {
-    final List<Announcement> announcements = (await completer.chain<List<AnnouncementSummary>>(_twitarr.getAnnouncements()))
-      .map<Announcement>((AnnouncementSummary summary) => summary.toAnnouncement(this))
-      .toList()
-      ..sort();
-    final Map<String, bool> sections = await completer.chain<Map<String, bool>>(_twitarr.getSectionStatus());
-    return ServerStatus(
-      announcements: announcements,
-      forumsEnabled: sections['forums'] ?? true,
-      streamEnabled: sections['stream'] ?? true,
-      seamailEnabled: sections['seamail'] ?? true,
-      calendarEnabled: sections['calendar'] ?? true,
-      deckPlansEnabled: sections['deck_plans'] ?? true,
-      gamesEnabled: sections['games'] ?? true,
-      karaokeEnabled: sections['karaoke'] ?? true,
-    );
-  }
-
-  Progress<ServerText> fetchServerText(String filename) {
-    return _twitarr.fetchServerText(filename);
   }
 
   Map<String, DateTime> _photoUpdates = <String, DateTime>{};
@@ -486,12 +565,12 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     final math.Random random = math.Random(seed);
     final List<User> sortedUsers = users.toList()..shuffle(random);
     final List<Color> colors = sortedUsers.map<Color>((User user) => Color((user.username.hashCode | 0xFF111111) & 0xFF7F7F7F)).toList();
-    final List<ImageProvider> images = sortedUsers.map<ImageProvider>((User user) => AvatarImage(user.username, this, _twitarr, onError: onError)).toList();
+    final List<ImageProvider> images = sortedUsers.map<ImageProvider>((User user) => AvatarImage(user.username, this, _twitarr, onError: _handleError)).toList();
     return createAvatarWidgetsFor(sortedUsers, colors, images, size: size, enabled: enabled);
   }
 
   ImageProvider imageFor(Photo photo, { bool thumbnail = false }) {
-    return TwitarrImage(photo, this, _twitarr, onError: onError, thumbnail: thumbnail);
+    return TwitarrImage(photo, this, _twitarr, onError: _handleError, thumbnail: thumbnail);
   }
 
   Progress<void> updateProfile({
@@ -530,13 +609,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       }
       await _resetUserPhoto(_currentCredentials.username);
     });
-  }
-
-  Progress<void> updatePassword({
-    @required String oldPassword,
-    @required String newPassword,
-  }) {
-    return null; // TODO(ianh): update password and update credentials
   }
 
   Progress<List<User>> getUserList(String searchTerm) {
@@ -653,7 +725,7 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
       } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
         // it's ok to catch all errors here, as we're just rerouting them, not swallowing them
         if (error is UserFriendlyError && onError != null) {
-          onError('$error');
+          onError(error);
         } else {
           reportError(exception: error, stack: stack);
         }
@@ -753,7 +825,7 @@ class TwitarrImageStreamCompleter extends ImageStreamCompleter {
     } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
       // it's ok to catch all errors here, as we're just rerouting them, not swallowing them
       if (error is UserFriendlyError && onError != null) {
-        onError('$error');
+        onError(error);
       } else {
         reportError(exception: error, stack: stack);
       }
