@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/forums.dart';
+import '../logic/photo_manager.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -208,6 +209,9 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                             if (threadDeleted)
                               Navigator.pop(context);
                           } : null,
+                          onEdit: isCurrentUser && !widget.thread.isLocked ? () {
+                            EditForumPostView.open(context, widget.thread, message);
+                          } : null,
                         );
                       },
                       itemCount: messages.length + 1,
@@ -409,6 +413,140 @@ class _StartForumViewState extends State<StartForumView> {
                       onUpdate: (List<Uint8List> newImages) {
                         setState(() {
                           _photos = newImages;
+                        });
+                      },
+                      allowMultiple: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class EditForumPostView extends StatefulWidget {
+  const EditForumPostView({
+    Key key,
+    this.thread,
+    this.message,
+  }) : super(key: key);
+
+  final ForumThread thread;
+  final ForumMessage message;
+
+  static Future<void> open(BuildContext context, ForumThread thread, ForumMessage message) {
+    return Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => EditForumPostView(
+          thread: thread,
+          message: message,
+        ),
+      ),
+    );
+  }
+  
+  @override
+  _EditForumPostViewState createState() => _EditForumPostViewState();
+}
+
+class _EditForumPostViewState extends State<EditForumPostView> {
+  final TextEditingController _text = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  List<Photo> _keptPhotos = <Photo>[];
+  List<Uint8List> _newPhotos = <Uint8List>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _text.text = widget.message.text;
+    _keptPhotos = widget.message.photos;
+  }
+  
+  void _commit() async {
+    final Progress<void> progress = widget.thread.edit(
+      messageId: widget.message.id,
+      text: _text.text,
+      keptPhotos: _keptPhotos,
+      newPhotos: _newPhotos,
+    );
+    await ProgressDialog.show<void>(context, progress);
+    if (progress.value is SuccessfulProgress<void> && mounted)
+      Navigator.pop(context);
+  }
+
+  bool get _valid => _text.text.trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit'),
+      ),
+      floatingActionButton: _valid
+        ? FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: _commit,
+          )
+        : FloatingActionButton(
+            child: const Icon(Icons.send),
+            onPressed: null,
+            backgroundColor: Colors.grey.shade200,
+            foregroundColor: Colors.grey.shade400,
+          ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      body: ModeratorBuilder(
+        builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
+          return Form(
+            key: _formKey,
+            onChanged: () {
+              setState(() {
+                /* need to recheck whether the submit button should be enabled */
+              });
+            },
+            onWillPop: () => confirmDialog(context, 'Abandon editing this post?'),
+            child: Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                  child: Align(
+                    alignment: AlignmentDirectional.topStart,
+                    child: TextFormField(
+                      controller: _text,
+                      onFieldSubmitted: (String value) {
+                        if (_valid)
+                          _commit();
+                      },
+                      textInputAction: TextInputAction.newline,
+                      textCapitalization: TextCapitalization.sentences,
+                      maxLength: 10000,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        labelText: 'Post text',
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                    child: AttachImageDialog(
+                      oldImages: _keptPhotos,
+                      onUpdateOldImages: (List<Photo> newKeptPhotos) {
+                        setState(() {
+                          _keptPhotos = newKeptPhotos;
+                        });
+                      },
+                      tagId: widget.thread.id,
+                      images: _newPhotos,
+                      onUpdate: (List<Uint8List> newPhotos) {
+                        setState(() {
+                          _newPhotos = newPhotos;
                         });
                       },
                       allowMultiple: true,

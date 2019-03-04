@@ -239,6 +239,15 @@ abstract class Twitarr {
     @required List<Uint8List> photos,
   });
 
+  Progress<void> editForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  });
+
   Progress<bool> deleteForumMessage({
     Credentials credentials,
     @required String threadId,

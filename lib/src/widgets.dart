@@ -596,7 +596,7 @@ class _ChatLineState extends State<ChatLine> {
     action('UNLIKE', Icons.thumb_down, widget.onUnlike);
     action('VIEW LIKES', Icons.group, widget.getLikesCallback != null && widget.likes > 0 ? _viewLikes : null);
     action('REPLY', Icons.reply, widget.onReply);
-    action('EDIT', Icons.delete_forever, widget.onEdit);
+    action('EDIT', Icons.edit, widget.onEdit);
     action('LOCK', Icons.lock_outline, widget.onLock);
     action('UNLOCK', Icons.lock_open, widget.onUnlock);
     action('DELETE', Icons.delete_forever, widget.onDelete);

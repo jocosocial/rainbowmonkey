@@ -252,6 +252,31 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     });
   }
 
+  Progress<void> edit({
+    @required String messageId,
+    @required String text,
+    @required List<Photo> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    if (_credentials == null)
+      throw const LocalError('Cannot create a thread when not logged in.');
+    return Progress<void>((ProgressController<void> completer) async {
+      await completer.chain<void>(
+        _twitarr.editForumMessage(
+          credentials: _credentials,
+          threadId: id,
+          messageId: messageId,
+          text: text,
+          keptPhotos: keptPhotos.map<String>((Photo photo) => photo.id).toList(),
+          newPhotos: newPhotos,
+        ),
+      );
+      reload();
+      _timer.interested();
+      _parent._childUpdated(this);
+    });
+  }
+
   Progress<void> sticky({ @required bool sticky }) {
     assert(_credentials != null);
     assert(sticky != null);

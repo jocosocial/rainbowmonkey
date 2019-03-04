@@ -1342,18 +1342,65 @@ class RestTwitarr implements Twitarr {
         details['photos'] = photoIds;
       }
       final String jsonBody = json.encode(details);
-      await completer.chain<String>(
+      final String rawData = await completer.chain<String>(
         _requestUtf8(
           'POST',
           'api/v2/forums/${Uri.encodeComponent(threadId)}?${body.toUrlEncoded()}',
           body: utf8.encode(jsonBody),
           contentType: ContentType('application', 'json', charset: 'utf-8'),
-          expectedStatusCodes: <int>[200],
+          expectedStatusCodes: <int>[200, 404, 403],
         ),
         steps: (photos != null ? photos.length : 0) + 1,
       );
-      // We ignore the return value. It's the forum post, but what are you going to do with it?
-      // You don't know where it belongs in the forum...
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+    });
+  }
+
+  @override
+  Progress<void> editForumMessage({
+    Credentials credentials,
+    @required String threadId,
+    @required String messageId,
+    @required String text,
+    @required List<String> keptPhotos,
+    @required List<Uint8List> newPhotos,
+  }) {
+    if (_enabled?.forumsEnabled == false)
+      return Progress<void>.failed(const LocalError('Forums have been disabled on the server.'));
+    assert(credentials.key != null);
+    assert(threadId != null);
+    assert(text != null);
+    return Progress<void>((ProgressController<void> completer) async {
+      final FormData body = FormData()
+        ..add('app', 'plain');
+      if (credentials != null)
+        body.add('key', credentials.key);
+      final Map<String, dynamic> details = <String, dynamic>{
+        'text': text,
+      };
+      if (credentials.asMod)
+        details['as_mod'] = true;
+      final List<String> photoIds = (keptPhotos ?? const <String>[]).toList();
+      if (newPhotos != null) {
+        for (Uint8List photo in newPhotos)
+          photoIds.add(await completer.chain<String>(uploadImage(credentials: credentials, bytes: photo), steps: newPhotos.length + 1));
+      }
+      if (photoIds.isNotEmpty)
+        details['photos'] = photoIds;
+      final String jsonBody = json.encode(details);
+      final String rawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/forums/${Uri.encodeComponent(threadId)}/${Uri.encodeComponent(messageId)}?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+          expectedStatusCodes: <int>[200, 401, 404],
+        ),
+        steps: (newPhotos != null ? newPhotos.length : 0) + 1,
+      );
+      final dynamic data = Json.parse(rawData);
+      _checkStatusIsOk(data);
     });
   }
 
