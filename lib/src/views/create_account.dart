@@ -118,6 +118,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           maxLength: 40,
                           decoration: const InputDecoration(
                             labelText: 'User name',
+                            errorMaxLines: null,
                           ),
                           validator: (String name) {
                             if (name.isNotEmpty) {
@@ -146,6 +147,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           maxLength: 100,
                           decoration: const InputDecoration(
                             labelText: 'Password',
+                            errorMaxLines: null,
                           ),
                           validator: (String password) {
                             if (password.isNotEmpty) {
@@ -173,6 +175,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           decoration: const InputDecoration(
                             labelText: 'Confirm password',
                             helperText: 'To make sure you know it.',
+                            errorMaxLines: null,
                           ),
                           validator: (String password) {
                             if (password.isEmpty)
@@ -197,6 +200,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           decoration: const InputDecoration(
                             labelText: 'Registration code',
                             helperText: 'Provided to you by e-mail before the cruise.',
+                            errorMaxLines: null,
                           ),
                           validator: (String registrationCode) {
                             if (registrationCode.isNotEmpty) {
@@ -220,11 +224,12 @@ class _CreateAccountState extends State<CreateAccount> {
                               _createAccount();
                           },
                           textCapitalization: TextCapitalization.words,
-                          textInputAction: TextInputAction.next,
+                          textInputAction: TextInputAction.done,
                           maxLength: 40,
                           decoration: const InputDecoration(
                             labelText: 'Display name (optional)',
                             helperText: 'Defaults to the username if not specified.',
+                            errorMaxLines: null,
                           ),
                           validator: (String displayName) {
                             if (displayName.isNotEmpty) {

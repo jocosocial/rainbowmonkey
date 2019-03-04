@@ -72,6 +72,19 @@ abstract class Twitarr {
     @required PhotoManager photoManager,
   });
 
+  Progress<AuthenticatedUser> resetPassword({
+    @required String username,
+    @required String registrationCode,
+    @required String password,
+    @required PhotoManager photoManager,
+  });
+
+  Progress<AuthenticatedUser> changePassword({
+    @required Credentials credentials,
+    @required String newPassword,
+    @required PhotoManager photoManager,
+  });
+
   Progress<AuthenticatedUser> getAuthenticatedUser(Credentials credentials, PhotoManager photoManager);
 
   Progress<User> getUser(Credentials credentials, String username, PhotoManager photoManager);

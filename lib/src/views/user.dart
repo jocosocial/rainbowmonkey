@@ -270,11 +270,14 @@ class _UserViewState extends State<UserView> {
                         ),
                       ),
                       Positioned.fill(
-                        child: AnimatedSwitcher(
-                          duration: animationDuration,
-                          switchInCurve: animationCurve,
-                          switchOutCurve: animationCurve,
-                          child: header,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: AnimatedSwitcher(
+                            duration: animationDuration,
+                            switchInCurve: animationCurve,
+                            switchOutCurve: animationCurve,
+                            child: header,
+                          ),
                         ),
                       ),
                     ],

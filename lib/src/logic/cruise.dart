@@ -270,6 +270,56 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     );
   }
 
+  Progress<void> resetPassword({
+    @required String username,
+    @required String registrationCode,
+    @required String password,
+  }) {
+    _lastAttemptedCredentials = Credentials(
+      username: username,
+      password: password,
+    );
+    return Progress<void>((ProgressController<void> controller) async {
+      logout();
+      try {
+        final Progress<AuthenticatedUser> userProgress = _twitarr.resetPassword(
+          username: username,
+          registrationCode: registrationCode,
+          password: password,
+          photoManager: this,
+        );
+        _user.addProgress(userProgress);
+        _updateCredentials(await controller.chain<AuthenticatedUser>(userProgress));
+      } on InvalidUsernameOrPasswordError {
+        rethrow;
+      } on UserFriendlyError catch (error) {
+        _handleError(error);
+      }
+    });
+  }
+
+  Progress<void> changePassword(String newPassword) {
+    return Progress<void>((ProgressController<void> controller) async {
+      try {
+        final Progress<AuthenticatedUser> userProgress = _twitarr.changePassword(
+          credentials: _currentCredentials,
+          newPassword: newPassword,
+          photoManager: this,
+        );
+        _user.addProgress(userProgress);
+        _updateCredentials(await controller.chain<AuthenticatedUser>(userProgress));
+        _lastAttemptedCredentials = Credentials(
+          username: _currentCredentials.username,
+          password: newPassword,
+        );
+      } on InvalidUsernameOrPasswordError {
+        rethrow;
+      } on UserFriendlyError catch (error) {
+        _handleError(error);
+      }
+    });
+  }
+
   void logout() {
     _asMod = false;
     // no need to do anything to _user, the following call resets it:
@@ -559,13 +609,6 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       }
       await _resetUserPhoto(_currentCredentials.username);
     });
-  }
-
-  Progress<void> updatePassword({
-    @required String oldPassword,
-    @required String newPassword,
-  }) {
-    return null; // TODO(ianh): update password and update credentials
   }
 
   Progress<List<User>> getUserList(String searchTerm) {

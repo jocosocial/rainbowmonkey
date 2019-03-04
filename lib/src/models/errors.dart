@@ -12,7 +12,7 @@ class LocalError implements Exception, UserFriendlyError {
 }
 
 class ServerError implements Exception, UserFriendlyError {
-  const ServerError(this.messages);
+  const ServerError(this.messages) : assert(messages != null);
 
   final List<String> messages;
 
@@ -25,6 +25,13 @@ class InvalidUsernameOrPasswordError implements Exception, UserFriendlyError {
 
   @override
   String toString() => 'Server did not recognize the username or password.';
+}
+
+class InvalidUserAndRegistrationCodeError implements Exception, UserFriendlyError {
+  const InvalidUserAndRegistrationCodeError();
+
+  @override
+  String toString() => 'Either that account does not exist or that is the wrong registration code.';
 }
 
 class FeatureDisabledError implements Exception, UserFriendlyError {

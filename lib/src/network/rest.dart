@@ -158,15 +158,7 @@ class RestTwitarr implements Twitarr {
         )
       );
       final dynamic data = Json.parse(result);
-      final Json errors = data.errors as Json;
-      if (errors.valueType != Null) {
-        if (errors.isMap) {
-          throw FieldErrors(errors.toMap().map<String, List<String>>(
-            (String field, dynamic value) => MapEntry<String, List<String>>(field, (value as List<dynamic>).cast<String>())
-          ));
-        }
-        throw ServerError(errors.toList().cast<String>().where((String value) => value != null && value.isNotEmpty).toList());
-      }
+      _checkStatusIsOk(data);
       final String key = data.key.toString();
       return _createAuthenticatedUser(
         data.user,
@@ -210,6 +202,110 @@ class RestTwitarr implements Twitarr {
         Credentials(
           username: username,
           password: password,
+          key: key,
+          loginTimestamp: DateTime.now(),
+        ),
+        photoManager,
+      ));
+    });
+  }
+
+  @override
+  Progress<AuthenticatedUser> resetPassword({
+    @required String username,
+    @required String registrationCode,
+    @required String password,
+    @required PhotoManager photoManager,
+  }) {
+    assert(username != null);
+    assert(registrationCode != null);
+    assert(password != null);
+    assert(AuthenticatedUser.isValidUsername(username));
+    assert(AuthenticatedUser.isValidRegistrationCode(registrationCode));
+    assert(AuthenticatedUser.isValidPassword(password));
+    return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
+      final String jsonBody = json.encode(<String, dynamic>{
+        'username': username,
+        'registration_code': registrationCode,
+        'password': password,
+      });
+      final String resetRawData = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/user/reset_password',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        ),
+        steps: 3,
+      );
+      final dynamic resetData = Json.parse(resetRawData);
+      try {
+        _checkStatusIsOk(resetData);
+      } on FieldErrors catch (error) {
+        if (error.fields['username']?.contains('Username and registration code combination not found.') == true)
+          throw const InvalidUserAndRegistrationCodeError();
+        rethrow;
+      }
+      final FormData body = FormData()
+        ..add('username', username)
+        ..add('password', password);
+      final String loginRawData = await completer.chain<String>(
+        _requestUtf8(
+          'GET',
+          'api/v2/user/auth?${body.toUrlEncoded()}',
+        ),
+        steps: 3,
+      );
+      final dynamic loginData = Json.parse(loginRawData);
+      _checkStatusIsOk(loginData);
+      final String key = loginData.key.toString();
+      return completer.chain<AuthenticatedUser>(getAuthenticatedUser(
+        Credentials(
+          username: username,
+          password: password,
+          key: key,
+          loginTimestamp: DateTime.now(),
+        ),
+        photoManager,
+      ));
+    });
+  }
+
+  @override
+  Progress<AuthenticatedUser> changePassword({
+    @required Credentials credentials,
+    @required String newPassword,
+    @required PhotoManager photoManager,
+  }) {
+    assert(credentials != null);
+    assert(newPassword != null);
+    assert(AuthenticatedUser.isValidPassword(newPassword));
+    return Progress<AuthenticatedUser>((ProgressController<AuthenticatedUser> completer) async {
+      final FormData body = FormData()
+        ..add('key', credentials.key);
+      final String jsonBody = json.encode(<String, dynamic>{
+        'current_password': credentials.password,
+        'new_password': newPassword,
+      });
+      final String result = await completer.chain<String>(
+        _requestUtf8(
+          'POST',
+          'api/v2/user/change_password?${body.toUrlEncoded()}',
+          body: utf8.encode(jsonBody),
+          contentType: ContentType('application', 'json', charset: 'utf-8'),
+        ),
+        steps: 2,
+      );
+      final dynamic data = Json.parse(result);
+      if (data.status == 'error' && data.error == 'Invalid username or password.') {
+        throw const InvalidUsernameOrPasswordError();
+      }
+      _checkStatusIsOk(data);
+      final String key = data.key.toString();
+      return completer.chain<AuthenticatedUser>(getAuthenticatedUser(
+        Credentials(
+          username: credentials.username,
+          password: newPassword,
           key: key,
           loginTimestamp: DateTime.now(),
         ),
@@ -809,7 +905,7 @@ class RestTwitarr implements Twitarr {
   static SeamailThreadSummary _parseSeamailThreadCreationResult(String rawData) {
     final dynamic data = Json.parse(rawData);
     if (data.status.toString() == 'error')
-      throw ServerError((data.errors as Json).toList().cast<String>());
+      throw ServerError((data.errors as Json).toList().cast<String>().toList());
     return _parseSeamailThread(data.seamail);
   }
 
@@ -817,7 +913,7 @@ class RestTwitarr implements Twitarr {
     final dynamic data = Json.parse(rawData);
     if (data.status.toString() == 'error') {
       if ((data as Json).hasKey('errors'))
-        throw ServerError((data.errors as Json).toList().cast<String>());
+        throw ServerError((data.errors as Json).toList().cast<String>().toList());
       throw ServerError(<String>[data.error.toString()]);
     }
     return _parseSeamailMessage(data.seamail_message);
@@ -1887,8 +1983,15 @@ class RestTwitarr implements Twitarr {
 
   static void _checkStatusIsOk(dynamic data) {
     if (data.status.toString() == 'error') {
-      if ((data as Json).hasKey('errors'))
-        throw ServerError((data.errors as Json).toList().cast<String>());
+      final Json errors = data.errors as Json;
+      if (errors.valueType != Null) {
+        if (errors.isMap) {
+          throw FieldErrors(errors.toMap().map<String, List<String>>(
+            (String field, dynamic value) => MapEntry<String, List<String>>(field, (value as List<dynamic>).cast<String>().toList())
+          ));
+        }
+        throw ServerError(errors.toList().cast<String>().where((String value) => value != null && value.isNotEmpty).toList());
+      }
       throw ServerError(<String>[data.error.toString()]);
     }
     if (data.status != 'ok')
