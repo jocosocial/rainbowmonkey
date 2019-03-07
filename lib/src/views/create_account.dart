@@ -124,8 +124,7 @@ class _CreateAccountState extends State<CreateAccount> {
                             if (name.isNotEmpty) {
                               if (!AuthenticatedUser.isValidUsername(name))
                                 return 'User names must be alphabetic and between three and forty characters long.';
-                              if (!AuthenticatedUser.isValidDisplayName(name))
-                                return 'User names are also used as display names.';
+                              assert(AuthenticatedUser.isValidDisplayName(name), 'User names are also used as display names.');
                             }
                             return _latestServerResponse.fields[_AccountCreationField.username];
                           },

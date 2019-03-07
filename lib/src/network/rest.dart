@@ -749,6 +749,7 @@ class RestTwitarr implements Twitarr {
     assert(credentials.key != null);
     final FormData body = FormData()
       ..add('key', credentials.key)
+      ..add('app', 'plain')
       ..add('unread', 'true');
     if (credentials.asMod)
       body.add('as_mod', 'true');
@@ -1936,8 +1937,11 @@ class RestTwitarr implements Twitarr {
         }());
         await _enabledCompleter.future;
       }
-      if (_random.nextDouble() > debugReliability)
-        throw const LocalError('Fake network failure');
+      assert(() {
+        if (_random.nextDouble() > debugReliability)
+          throw const LocalError('Fake network failure');
+        return true;
+      }());
       final HttpClientRequest request = await _client.openUrl(method, url);
       if (contentType != null)
         request.headers.contentType = contentType;
@@ -1951,7 +1955,13 @@ class RestTwitarr implements Twitarr {
           bodyParts.forEach(request.add);
       }
       final HttpClientResponse response = await request.close();
-      await Future<void>.delayed(Duration(milliseconds: debugLatency.round()));
+      Duration delay;
+      assert(() {
+        delay = Duration(milliseconds: debugLatency.round());
+        return true;
+      }());
+      if (delay != null)
+        await Future<void>.delayed(delay);
       if (!expectedStatusCodes.contains(response.statusCode)) {
         assert(() {
           response.transform(utf8.decoder).join().then((String result) {

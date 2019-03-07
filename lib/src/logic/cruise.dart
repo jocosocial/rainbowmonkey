@@ -139,8 +139,11 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
         _twitarr.dispose();
       }
       _twitarr = newConfiguration.createTwitarr();
-      _twitarr.debugLatency = _debugLatency;
-      _twitarr.debugReliability = _debugReliability;
+      assert(() {
+        _twitarr.debugLatency = _debugLatency;
+        _twitarr.debugReliability = _debugReliability;
+        return true;
+      }());
       if (!_onscreen)
         _twitarr.disable();
       _calendar.reset();
@@ -169,7 +172,10 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
   double _debugReliability = 1.0;
   set debugReliability(double value) {
     _debugReliability = value;
-    _twitarr.debugReliability = value;
+    assert(() {
+      _twitarr.debugReliability = value;
+      return true;
+    }());
     store.saveSetting(Setting.debugNetworkReliability, value);
     notifyListeners();
   }
@@ -187,10 +193,13 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       try {
         final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
         if (settings != null) {
-          if (settings.containsKey(Setting.debugNetworkLatency))
-            debugLatency = settings[Setting.debugNetworkLatency] as double;
-          if (settings.containsKey(Setting.debugNetworkReliability))
-            debugReliability = settings[Setting.debugNetworkReliability] as double;
+          assert(() {
+            if (settings.containsKey(Setting.debugNetworkLatency))
+              debugLatency = settings[Setting.debugNetworkLatency] as double;
+            if (settings.containsKey(Setting.debugNetworkReliability))
+              debugReliability = settings[Setting.debugNetworkReliability] as double;
+            return true;
+          }());
           if (settings.containsKey(Setting.server))
             selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, const AutoTwitarrConfiguration()));
           if (settings.containsKey(Setting.debugTimeDilation)) {
