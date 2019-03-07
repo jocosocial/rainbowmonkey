@@ -75,10 +75,13 @@ Future<void> _periodicCallback() async {
       final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
       final String server = settings[Setting.server] as String;
       final Twitarr twitarr = TwitarrConfiguration.from(server, const AutoTwitarrConfiguration()).createTwitarr();
-      if (settings.containsKey(Setting.debugNetworkLatency))
-        twitarr.debugLatency = settings[Setting.debugNetworkLatency] as double;
-      if (settings.containsKey(Setting.debugNetworkReliability))
-        twitarr.debugReliability = settings[Setting.debugNetworkReliability] as double;
+      assert(() {
+        if (settings.containsKey(Setting.debugNetworkLatency))
+          twitarr.debugLatency = settings[Setting.debugNetworkLatency] as double;
+        if (settings.containsKey(Setting.debugNetworkReliability))
+          twitarr.debugReliability = settings[Setting.debugNetworkReliability] as double;
+        return true;
+      }());
       final Credentials credentials = await store.restoreCredentials().asFuture();
       await checkForMessages(credentials, twitarr, store);
     } on DatabaseException catch (error) {

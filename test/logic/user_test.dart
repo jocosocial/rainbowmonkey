@@ -45,7 +45,7 @@ void main() {
     expect(AuthenticatedUser.isValidUsername('foo'), isTrue);
     expect(AuthenticatedUser.isValidUsername(' foo'), isFalse);
     expect(AuthenticatedUser.isValidUsername('foo '), isFalse);
-    expect(AuthenticatedUser.isValidUsername('f&o-o'), isTrue);
+    expect(AuthenticatedUser.isValidUsername('f&o-o'), isFalse);
     expect(AuthenticatedUser.isValidUsername('f+o=o'), isFalse);
   });
   testWidgets('AuthenticatedUser.isValidPassword', (WidgetTester tester) async {

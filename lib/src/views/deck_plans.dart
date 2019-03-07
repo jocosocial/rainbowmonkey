@@ -1,7 +1,6 @@
-import 'dart:math' as math;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
 
 import '../models/server_status.dart';
 import '../widgets.dart';
@@ -31,7 +30,7 @@ class DeckPlanView extends StatefulWidget implements View {
 
 class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderStateMixin {
   static const int kMinDeck = 1;
-  static const int kMaxDeck = 10;
+  static const int kMaxDeck = 11;
 
   AnimationController _currentLevel;
   List<Widget> _decks, _buttons;
@@ -89,38 +88,27 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
     );
   }
 
-  double _scale = 2.0;
-  double _dynamicScale = 1.0;
-
   @override
   Widget build(BuildContext context) {
     return Row(
       children: <Widget>[
         Expanded(
-          child: GestureDetector(
-            onScaleUpdate: (ScaleUpdateDetails details) {
-              setState(() { _dynamicScale = details.scale; });
-            },
-            onScaleEnd: (ScaleEndDetails details) {
-              setState(() { _scale = math.max(1.0, _scale * _dynamicScale); _dynamicScale = 1.0; });
-            },
+          child: ClipRect(
             child: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
-                return SingleChildScrollView(
-                  child: SafeArea(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: 0.0,
-                        maxWidth: constraints.maxWidth,
-                        minHeight: constraints.maxHeight,
-                        maxHeight: constraints.maxHeight * math.max(1.0, _scale * _dynamicScale),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: _decks,
-                      ),
-                    ),
+                final EdgeInsets padding = MediaQuery.of(context).padding;
+                return PhotoView.customChild(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: _decks,
                   ),
+                  backgroundDecoration: BoxDecoration(
+                    color: Theme.of(context).canvasColor,
+                  ),
+                  childSize: padding.deflateSize(constraints.biggest),
+                  customSize: padding.deflateSize(constraints.biggest),
+                  initialScale: PhotoViewComputedScale.contained,
+                  minScale: PhotoViewComputedScale.contained,
                 );
               },
             ),

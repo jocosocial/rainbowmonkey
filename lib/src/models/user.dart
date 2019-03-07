@@ -209,7 +209,7 @@ class AuthenticatedUser extends User {
   static bool isValidUsername(String username) {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L10
     assert(username != null);
-    return username.contains(RegExp(r'^[\w&-]{3,40}$'));
+    return username.contains(RegExp(r'^[\w]{3,40}$'));
   }
 
   static bool isValidPassword(String password, { bool allowShort = false }) {

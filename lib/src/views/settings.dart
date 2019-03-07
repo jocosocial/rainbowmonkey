@@ -113,6 +113,30 @@ class _SettingsState extends State<Settings> {
               onChanged: busy ? null : _apply,
             ),
             RadioListTile<TwitarrConfiguration>(
+              title: const Text('http://joco.hollandamerica.com/'),
+              groupValue: cruise.twitarrConfiguration,
+              value: const RestTwitarrConfiguration(baseUrl: 'http://joco.hollandamerica.com/'),
+              onChanged: busy ? null : _apply,
+            ),
+            RadioListTile<TwitarrConfiguration>(
+              title: const Text('http://jococruise.hollandamerica.com/'),
+              groupValue: cruise.twitarrConfiguration,
+              value: const RestTwitarrConfiguration(baseUrl: 'http://jococruise.hollandamerica.com/'),
+              onChanged: busy ? null : _apply,
+            ),
+            RadioListTile<TwitarrConfiguration>(
+              title: const Text('http://10.26.129.55/'),
+              groupValue: cruise.twitarrConfiguration,
+              value: const RestTwitarrConfiguration(baseUrl: 'http://10.26.129.55/'),
+              onChanged: busy ? null : _apply,
+            ),
+            RadioListTile<TwitarrConfiguration>(
+              title: const Text('http://10.26.129.56/'),
+              groupValue: cruise.twitarrConfiguration,
+              value: const RestTwitarrConfiguration(baseUrl: 'http://10.26.129.56/'),
+              onChanged: busy ? null : _apply,
+            ),
+            RadioListTile<TwitarrConfiguration>(
               title: TextField(
                 controller: _server,
                 focusNode: _serverFocus,
@@ -129,7 +153,7 @@ class _SettingsState extends State<Settings> {
                 decoration: InputDecoration(
                   labelText: 'Custom server URL',
                   hintText: 'http://twitarr.example.com:3000/',
-                  errorText: currentConfiguration is AutoTwitarrConfiguration || _isValid(_server.text) ? null : 'URL is not valid',
+                  errorText: _server.text.isEmpty || _isValid(_server.text) ? null : 'URL is not valid',
                 ),
               ),
               groupValue: currentConfiguration,
