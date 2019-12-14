@@ -13,6 +13,8 @@ import 'disk_store.dart';
 import 'notifications.dart';
 import 'store.dart';
 
+const bool pollingDisabled = true;
+
 Future<void> runBackground(DataStore store) async {
   if (!await AndroidAlarmManager.initialize()) {
     FlutterError.reportError(FlutterErrorDetails(
@@ -20,6 +22,10 @@ Future<void> runBackground(DataStore store) async {
       library: 'CruiseMonkey',
       context: 'during startup',
     ));
+    return;
+  }
+  if (pollingDisabled) {
+    await AndroidAlarmManager.cancel(0);
     return;
   }
   await rescheduleBackground(store);
@@ -48,6 +54,10 @@ Future<void> rescheduleBackground(DataStore store) async {
 bool _initialized = false;
 
 Future<void> _periodicCallback() async {
+  if (pollingDisabled) {
+    await AndroidAlarmManager.cancel(0);
+    return;
+  }
   if (!_initialized) {
     AutoTwitarrConfiguration.register();
     RestTwitarrConfiguration.register();

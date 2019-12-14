@@ -167,7 +167,9 @@ class _SettingsState extends State<Settings> {
               const SizedBox(height: 24.0),
               ListTile(
                 leading: const Icon(Icons.notifications),
-                title: Text('Time between checks for new messages when logged in: $_setBackgroundPollingPeriod minute$s'),
+                title: pollingDisabled ?
+                  const Text('Background polling is disabled.') :
+                  Text('Time between checks for new messages when logged in: $_setBackgroundPollingPeriod minute$s'),
               ),
               Padding(
                 padding: sliderPadding,
@@ -176,7 +178,7 @@ class _SettingsState extends State<Settings> {
                   min: 1.0,
                   max: 60.0,
                   divisions: 59,
-                  onChanged: (double value) {
+                  onChanged: pollingDisabled ? null : (double value) {
                     setState(() {
                       _setBackgroundPollingPeriod = value.round();
                     });
