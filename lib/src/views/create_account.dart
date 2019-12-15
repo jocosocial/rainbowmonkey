@@ -181,6 +181,7 @@ class _CreateAccountState extends State<CreateAccount> {
                               return null;
                             if (password != _password1.text)
                               return 'Passwords don\'t match.';
+                            return null;
                           },
                         ),
                       ),

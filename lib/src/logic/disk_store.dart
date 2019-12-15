@@ -218,7 +218,7 @@ class DiskDataStore extends DataStore {
     final String key = _encodePhotoKey(serverKey, cacheName, photoId);
     final File cache = File(await _keyToPath(key));
     try {
-      bytes = await cache.readAsBytes() as Uint8List;
+      bytes = await cache.readAsBytes();
     } on FileSystemException {
       bytes = await callback();
       try {

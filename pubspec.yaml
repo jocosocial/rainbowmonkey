@@ -12,6 +12,7 @@ dependencies:
   sqflite: any
   url_launcher: any
   photo_view: any
+  pedantic: any
 
 dev_dependencies:
   flutter_test:

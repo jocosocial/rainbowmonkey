@@ -83,6 +83,7 @@ class _LoginDialogState extends State<LoginDialog> {
                 if (!AuthenticatedUser.isValidUsername(name))
                   return 'User names must be alphabetic and between three and forty characters long.';
               }
+              return null;
             },
           ),
         ),
@@ -111,6 +112,7 @@ class _LoginDialogState extends State<LoginDialog> {
                   if (!AuthenticatedUser.isValidRegistrationCode(registrationCode))
                     return 'Ask the JoCo Cruise Info Desk for advice.';
                 }
+                return null;
               },
             ),
           ),
@@ -136,6 +138,7 @@ class _LoginDialogState extends State<LoginDialog> {
                   if (!AuthenticatedUser.isValidPassword(password))
                     return 'Passwords must be at least six characters long.';
                 }
+                return null;
               },
             ),
           ),
@@ -163,6 +166,7 @@ class _LoginDialogState extends State<LoginDialog> {
                 if (password != _password1.text) {
                   return 'Passwords don\'t match.';
                 }
+                return null;
               },
             ),
           ),
@@ -191,6 +195,7 @@ class _LoginDialogState extends State<LoginDialog> {
                 if (!AuthenticatedUser.isValidPassword(password))
                   return 'Passwords must be at least six characters long.';
               }
+              return null;
             },
           ),
         ),

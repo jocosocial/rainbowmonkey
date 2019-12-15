@@ -588,6 +588,7 @@ class RestTwitarr implements Twitarr {
       final String result = await completer.chain<String>(_requestUtf8('POST', 'api/v2/user/profile?${body.toUrlEncoded()}'));
       final dynamic data = Json.parse(result);
       _checkStatusIsOk(data);
+      return null;
     });
   }
 

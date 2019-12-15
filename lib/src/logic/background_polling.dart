@@ -20,7 +20,7 @@ Future<void> runBackground(DataStore store) async {
     FlutterError.reportError(FlutterErrorDetails(
       exception: Exception('Android Alarm Manager failed to start up.'),
       library: 'CruiseMonkey',
-      context: 'during startup',
+      context: ErrorDescription('during startup'),
     ));
     return;
   }
@@ -45,7 +45,7 @@ Future<void> rescheduleBackground(DataStore store) async {
     FlutterError.reportError(FlutterErrorDetails(
       exception: Exception('Android Alarm Manager failed to schedule periodic background task.'),
       library: 'CruiseMonkey',
-      context: 'when scheduling background task',
+      context: ErrorDescription('when scheduling background task'),
     ));
     return;
   }

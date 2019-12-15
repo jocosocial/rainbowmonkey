@@ -24,7 +24,7 @@ class Cruise extends InheritedNotifier<CruiseModel> {
   }) : super(key: key, child: child, notifier: cruiseModel);
 
   static CruiseModel of(BuildContext context) {
-    final Cruise widget = context.inheritFromWidgetOfExactType(Cruise) as Cruise;
+    final Cruise widget = context.dependOnInheritedWidgetOfExactType<Cruise>();
     return widget?.notifier;
   }
 }
@@ -429,7 +429,7 @@ class Now extends InheritedNotifier<ValueNotifier<DateTime>> {
   );
 
   static DateTime of(BuildContext context) {
-    final Now now = context.inheritFromWidgetOfExactType(Now) as Now;
+    final Now now = context.dependOnInheritedWidgetOfExactType<Now>();
     assert(now != null);
     return now.notifier.value;
   }
@@ -1457,7 +1457,7 @@ class PhotoImage extends StatelessWidget {
                                   imageProvider: cruise.imageFor(photo),
                                   initialScale: PhotoViewComputedScale.contained,
                                   minScale: PhotoViewComputedScale.contained,
-                                  heroTag: tag,
+                                  heroAttributes: PhotoViewHeroAttributes(tag: tag),
                                   loadingChild: Stack(
                                     children: <Widget>[
                                       Center(
@@ -1510,12 +1510,12 @@ class PhotoImage extends StatelessWidget {
   }
 }
 
-final Path _topSemicircle = Path()..arcTo(Rect.fromLTWH(0.0, 0.0, 1.0, 2.0), 0, -math.pi, true);
-final Path _bottomSemicircle = Path()..arcTo(Rect.fromLTWH(0.0, -1.0, 1.0, 2.0), 0, math.pi, true);
-final Path _topLeftQuarter = Path()..arcTo(Rect.fromLTWH(0.0, 0.0, 2.0, 2.0), -math.pi, math.pi/2.0, true)..lineTo(1.0, 1.0);
-final Path _topRightQuarter = Path()..arcTo(Rect.fromLTWH(-1.0, 0.0, 2.0, 2.0), -math.pi/2.0, math.pi/2.0, true)..lineTo(0.0, 1.0);
-final Path _bottomLeftQuarter = Path()..arcTo(Rect.fromLTWH(0.0, -1.0, 2.0, 2.0), math.pi/2.0, math.pi/2.0, true)..lineTo(1.0, 0.0);
-final Path _bottomRightQuarter = Path()..arcTo(Rect.fromLTWH(-1.0, -1.0, 2.0, 2.0), 0, math.pi/2.0, true)..lineTo(0.0, 0.0);
+final Path _topSemicircle = Path()..arcTo(const Rect.fromLTWH(0.0, 0.0, 1.0, 2.0), 0, -math.pi, true);
+final Path _bottomSemicircle = Path()..arcTo(const Rect.fromLTWH(0.0, -1.0, 1.0, 2.0), 0, math.pi, true);
+final Path _topLeftQuarter = Path()..arcTo(const Rect.fromLTWH(0.0, 0.0, 2.0, 2.0), -math.pi, math.pi/2.0, true)..lineTo(1.0, 1.0);
+final Path _topRightQuarter = Path()..arcTo(const Rect.fromLTWH(-1.0, 0.0, 2.0, 2.0), -math.pi/2.0, math.pi/2.0, true)..lineTo(0.0, 1.0);
+final Path _bottomLeftQuarter = Path()..arcTo(const Rect.fromLTWH(0.0, -1.0, 2.0, 2.0), math.pi/2.0, math.pi/2.0, true)..lineTo(1.0, 0.0);
+final Path _bottomRightQuarter = Path()..arcTo(const Rect.fromLTWH(-1.0, -1.0, 2.0, 2.0), 0, math.pi/2.0, true)..lineTo(0.0, 0.0);
 
 class PathBorder extends ShapeBorder {
   const PathBorder(this.path);

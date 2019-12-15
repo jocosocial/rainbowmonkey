@@ -39,6 +39,7 @@ Future<void> main() async {
         ),
       ),
     );
+    expect(tester.takeException(), isNotNull); // because in tests, our profile image is bogus
     log.add('--');
     expect(find.text('Display name'), findsOneWidget);
     expect(find.text('Home location'), findsNothing);
