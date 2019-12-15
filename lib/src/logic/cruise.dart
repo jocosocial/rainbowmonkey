@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:meta/meta.dart';
+import 'package:pedantic/pedantic.dart' show unawaited;
 
 import '../models/calendar.dart';
 import '../models/errors.dart';
@@ -46,14 +47,14 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     _user = PeriodicProgress<AuthenticatedUser>(steadyPollInterval, _updateUser);
     _calendar = PeriodicProgress<Calendar>(steadyPollInterval, _updateCalendar);
     _serverStatus = PeriodicProgress<ServerStatus>(steadyPollInterval, _updateServerStatus);
-    _busy(() {
+    _busy(() async {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
       _seamail = Seamail.empty();
       _mentions = Mentions.empty();
       _forums = _createForums();
       _tweetStream = _createTweetStream();
       _restoreSettings(); // async
-      _restorePhotos(); // async
+      unawaited(_restorePhotos()); // async
     });
   }
 
@@ -107,13 +108,13 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       case AppLifecycleState.inactive:
         newState = true;
         break;
-      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
         newState = false;
         break;
       case AppLifecycleState.resumed:
         newState = true;
         break;
-      case AppLifecycleState.suspending:
+      case AppLifecycleState.paused:
         newState = false;
         break;
       default:
@@ -132,7 +133,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
   Twitarr _twitarr;
   TwitarrConfiguration get twitarrConfiguration => _twitarr.configuration;
   void selectTwitarrConfiguration(TwitarrConfiguration newConfiguration) {
-    _busy(() {
+    _busy(() async {
       if (_twitarr != null) {
         if (newConfiguration == _twitarr.configuration)
           return;
@@ -674,9 +675,9 @@ class AvatarImage extends ImageProvider<AvatarImage> {
   }
 
   @override
-  ImageStreamCompleter load(AvatarImage key) {
+  ImageStreamCompleter load(AvatarImage key, DecoderCallback decode) {
     assert(key == this);
-    return AvatarImageStreamCompleter(username, photoManager, twitarr, onError: onError);
+    return AvatarImageStreamCompleter(username, photoManager, twitarr, decode, onError: onError);
   }
 
   @override
@@ -701,7 +702,7 @@ class AvatarImage extends ImageProvider<AvatarImage> {
 }
 
 class AvatarImageStreamCompleter extends ImageStreamCompleter {
-  AvatarImageStreamCompleter(this.username, this.photoManager, this.twitarr, { this.onError }) {
+  AvatarImageStreamCompleter(this.username, this.photoManager, this.twitarr, this.decode, { this.onError }) {
     _update();
   }
 
@@ -710,6 +711,8 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
   final PhotoManager photoManager;
 
   final Twitarr twitarr;
+
+  final DecoderCallback decode;
 
   final ErrorCallback onError;
 
@@ -728,7 +731,7 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
           username,
           () => twitarr.fetchProfilePicture(username).asFuture(),
         );
-        final ui.Codec codec = await PaintingBinding.instance.instantiateImageCodec(bytes);
+        final ui.Codec codec = await decode(bytes);
         final ui.FrameInfo frameInfo = await codec.getNextFrame();
         setImage(ImageInfo(image: frameInfo.image));
       } catch (error, stack) { // ignore: avoid_catches_without_on_clauses
@@ -744,14 +747,14 @@ class AvatarImageStreamCompleter extends ImageStreamCompleter {
   }
 
   @override
-  void addListener(ImageListener listener, { ImageErrorListener onError }) {
+  void addListener(ImageStreamListener listener) {
     if (!hasListeners)
       photoManager.addListenerForUserPhoto(username, _update);
-    super.addListener(listener, onError: onError);
+    super.addListener(listener);
   }
 
   @override
-  void removeListener(ImageListener listener) {
+  void removeListener(ImageStreamListener listener) {
     super.removeListener(listener);
     if (!hasListeners)
       photoManager.removeListenerForUserPhoto(username, _update);
@@ -777,9 +780,9 @@ class TwitarrImage extends ImageProvider<TwitarrImage> {
   }
 
   @override
-  ImageStreamCompleter load(TwitarrImage key) {
+  ImageStreamCompleter load(TwitarrImage key, DecoderCallback decode) {
     assert(key == this);
-    return TwitarrImageStreamCompleter(photo.id, photoManager, twitarr, onError: onError, thumbnail: thumbnail);
+    return TwitarrImageStreamCompleter(photo.id, photoManager, twitarr, decode, onError: onError, thumbnail: thumbnail);
   }
 
   @override
@@ -804,7 +807,7 @@ class TwitarrImage extends ImageProvider<TwitarrImage> {
 }
 
 class TwitarrImageStreamCompleter extends ImageStreamCompleter {
-  TwitarrImageStreamCompleter(this.photoId, this.photoManager, this.twitarr, {
+  TwitarrImageStreamCompleter(this.photoId, this.photoManager, this.twitarr, this.decode, {
     this.onError,
     @required this.thumbnail,
   }) : assert(thumbnail != null) {
@@ -817,6 +820,8 @@ class TwitarrImageStreamCompleter extends ImageStreamCompleter {
 
   final Twitarr twitarr;
 
+  final DecoderCallback decode;
+
   final ErrorCallback onError;
 
   final bool thumbnail;
@@ -828,7 +833,7 @@ class TwitarrImageStreamCompleter extends ImageStreamCompleter {
         () => twitarr.fetchImage(photoId, thumbnail: thumbnail).asFuture(),
         thumbnail: thumbnail,
       );
-      final ui.Codec codec = await PaintingBinding.instance.instantiateImageCodec(bytes);
+      final ui.Codec codec = await decode(bytes);
       final ui.FrameInfo frameInfo = await codec.getNextFrame();
       setImage(ImageInfo(image: frameInfo.image));
     } catch (error, stack) { // ignore: avoid_catches_without_on_clauses

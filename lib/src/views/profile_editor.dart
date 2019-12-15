@@ -180,7 +180,7 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
       setState(() { _busy = true; _error = ''; });
       final File file = await ImagePicker.pickImage(source: source);
       if (file != null) {
-        final Uint8List bytes = await file.readAsBytes() as Uint8List;
+        final Uint8List bytes = await file.readAsBytes();
         try {
           await Cruise.of(context).uploadAvatar(image: bytes).asFuture();
         } on UserFriendlyError catch (error) {
@@ -470,6 +470,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               if (password != widget.password)
                 return 'Old password incorrect.';
             }
+            return null;
           },
         ),
       ),
@@ -493,6 +494,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               if (!AuthenticatedUser.isValidPassword(password))
                 return 'New password must be at least six characters long.';
             }
+            return null;
           },
         ),
       ),
@@ -517,6 +519,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               if (password != _passwordNew1.text)
                 return 'Passwords don\'t match.';
             }
+            return null;
           },
         ),
       ),

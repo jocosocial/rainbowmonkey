@@ -14,8 +14,8 @@ class CodeOfConduct extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Code of Conduct'),
       ),
-      body: SingleChildScrollView(
-        child: const ServerTextView('codeofconduct'),
+      body: const SingleChildScrollView(
+        child: ServerTextView('codeofconduct'),
       ),
     );
   }

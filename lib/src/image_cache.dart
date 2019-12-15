@@ -195,7 +195,7 @@ class ImageCache implements original.ImageCache {
     }
     if (maximumSize > 0 && maximumSizeBytes > 0) {
       _pendingImages[key] = _PendingImage(result, listener);
-      result.addListener(listener);
+      result.addListener(ImageStreamListener(listener));
     }
     return result;
   }
@@ -236,6 +236,6 @@ class _PendingImage {
   final ImageListener listener;
 
   void removeListener() {
-    completer.removeListener(listener);
+    completer.removeListener(ImageStreamListener(listener));
   }
 }

@@ -116,7 +116,7 @@ class AttachImageDialog extends StatelessWidget {
   void _addImage(ImageSource source) async {
     final File file = await ImagePicker.pickImage(source: source);
     if (file != null)
-      onUpdate(images.toList()..add(await file.readAsBytes() as Uint8List));
+      onUpdate(images.toList()..add(await file.readAsBytes()));
   }
 
   @override
@@ -209,7 +209,7 @@ class _SelectedImage extends StatelessWidget {
           Align(
             alignment: AlignmentDirectional.topEnd,
             child: Container(
-              decoration: ShapeDecoration(
+              decoration: const ShapeDecoration(
                 shape: RoundedRectangleBorder(),
                 color: Colors.white30,
               ),
