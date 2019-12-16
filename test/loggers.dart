@@ -86,6 +86,7 @@ class LoggingTwitarr extends Twitarr {
       username: username,
       displayName: displayName,
       homeLocation: overrideHomeLocation,
+      role: Role.user,
       credentials: Credentials(
         username: username,
         password: password,
@@ -106,6 +107,7 @@ class LoggingTwitarr extends Twitarr {
       username: username,
       email: '<email for $username>',
       homeLocation: overrideHomeLocation,
+      role: Role.user,
       credentials: Credentials(
         username: username,
         password: password,
@@ -123,6 +125,7 @@ class LoggingTwitarr extends Twitarr {
       email: '<email for ${credentials.username}>',
       homeLocation: overrideHomeLocation,
       credentials: credentials,
+      role: Role.user,
     ));
   }
 
@@ -131,6 +134,7 @@ class LoggingTwitarr extends Twitarr {
     _addLog('LoggingTwitarr(${_configuration.id}).getAuthenticatedUser $username, $credentials');
     return Progress<User>.completed(User(
       username: username,
+      role: Role.user,
     ));
   }
 

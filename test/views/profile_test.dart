@@ -108,6 +108,7 @@ class ProfileTestTwitarr extends LoggingTwitarr {
     super.login(username: username, password: password, photoManager: photoManager);
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
+      role: Role.user,
       credentials: Credentials(
         username: username,
         password: password,

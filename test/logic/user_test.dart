@@ -34,6 +34,7 @@ void main() {
     const AuthenticatedUser a = AuthenticatedUser(
       username: 'u',
       email: 'e',
+      role: Role.user,
     );
     expect(a.username, 'u');
     expect(a.email, 'e');
