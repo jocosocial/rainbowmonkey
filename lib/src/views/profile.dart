@@ -150,7 +150,7 @@ class _ProfileState extends State<Profile> {
                 children.add(const SizedBox(height: 24.0));
                 children.add(LabeledIconButton(
                   onPressed: () async {
-                    await CommsView.createNewSeamail(context, currentUser, others: <User>[user]);
+                    await PrivateCommsView.createNewSeamail(context, currentUser, others: <User>[user]);
                   },
                   icon: const Icon(Icons.mail),
                   label: const Text('START CONVERSATION'),
