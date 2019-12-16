@@ -302,8 +302,8 @@ class _UserViewState extends State<UserView> {
               ContinuousProgressBuilder<ServerStatus>(
                 progress: Cruise.of(context).serverStatus,
                 onRetry: () { Cruise.of(context).forceUpdate(); },
-                nullChild: const SizedBox.shrink(),
-                idleChild: const SizedBox.shrink(),
+                nullChild: const Text('Delight in the cruise!', textAlign: TextAlign.center),
+                idleChild: const Text('Please enjoy the cruise!', textAlign: TextAlign.center),
                 builder: (BuildContext context, ServerStatus status) {
                   final List<Announcement> announcements = status.announcements;
                   if (announcements.isEmpty)
