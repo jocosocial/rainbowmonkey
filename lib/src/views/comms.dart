@@ -8,7 +8,6 @@ import '../logic/cruise.dart';
 import '../logic/forums.dart';
 import '../logic/mentions.dart';
 import '../logic/seamail.dart';
-import '../models/errors.dart';
 import '../models/server_status.dart';
 import '../models/user.dart';
 import '../progress.dart';
@@ -17,15 +16,59 @@ import '../widgets.dart';
 import 'forums.dart';
 import 'seamail.dart';
 
-enum _CreateWhat { seamail, forum }
-
-class CommsView extends StatelessWidget implements View {
+abstract class CommsView extends StatelessWidget implements View {
   const CommsView({
     Key key,
   }) : super(key: key);
 
+  @protected
+  bool canPost(ServerStatus status);
+
+  @protected
+  void startConversation(BuildContext context, AuthenticatedUser user);
+
   @override
-  bool isEnabled(ServerStatus status) => status.seamailEnabled || status.forumsEnabled || status.streamEnabled;
+  Widget buildFab(BuildContext context) {
+    final ContinuousProgress<AuthenticatedUser> userProgress = Cruise.of(context).user;
+    final ContinuousProgress<ServerStatus> serverStatusProgress = Cruise.of(context).serverStatus;
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[userProgress.best, serverStatusProgress.best]),
+      builder: (BuildContext context, Widget child) {
+        const Widget icon = Icon(Icons.add_comment);
+        final AuthenticatedUser user = userProgress.currentValue;
+        final ServerStatus serverStatus = serverStatusProgress.currentValue ?? const ServerStatus();
+        if (user != null && canPost(serverStatus)) {
+          return FloatingActionButton(
+            child: icon,
+            tooltip: 'Start new conversation.',
+            onPressed: () => startConversation(context, user),
+          );
+        }
+        return FloatingActionButton(
+          child: icon,
+          tooltip: 'Start new conversation.',
+          onPressed: null,
+          backgroundColor: Colors.grey.shade200,
+          foregroundColor: Colors.grey.shade400,
+        );
+      },
+    );
+  }
+}
+
+class PrivateCommsView extends CommsView {
+  const PrivateCommsView({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  bool isEnabled(ServerStatus status) => status.seamailEnabled;
+
+  @override
+  bool canPost(ServerStatus status) => status.seamailEnabled;
+
+  @override
+  void startConversation(BuildContext context, AuthenticatedUser user) => createNewSeamail(context, user);
 
   @override
   Widget buildTabIcon(BuildContext context) {
@@ -43,67 +86,7 @@ class CommsView extends StatelessWidget implements View {
   }
 
   @override
-  Widget buildTabLabel(BuildContext context) => const Text('Messages');
-
-  Future<_CreateWhat> _getCreateWhat(BuildContext context, ServerStatus status) async {
-    if (status.forumsEnabled && status.seamailEnabled) {
-      return await showDialog<_CreateWhat>(
-        context: context,
-        builder: (BuildContext context) => SimpleDialog(
-          title: const Text('What would you like to create?'),
-          children: <Widget>[
-            FlatButton(
-              onPressed: () { Navigator.of(context).pop(_CreateWhat.seamail); },
-              child: const Text('PRIVATE SEAMAIL'),
-            ),
-            FlatButton(
-              onPressed: () { Navigator.of(context).pop(_CreateWhat.forum); },
-              child: const Text('PUBLIC FORUM'),
-            ),
-          ],
-        ),
-      );
-    }
-    if (status.seamailEnabled)
-      return _CreateWhat.seamail;
-    if (status.forumsEnabled)
-      return _CreateWhat.forum;
-    assert(false);
-    throw const LocalError('Seamail and forums are currently disabled on the server.');
-  }
-
-  @override
-  Widget buildFab(BuildContext context) {
-    final ContinuousProgress<AuthenticatedUser> userProgress = Cruise.of(context).user;
-    final ContinuousProgress<ServerStatus> serverStatusProgress = Cruise.of(context).serverStatus;
-    return AnimatedBuilder(
-      animation: Listenable.merge(<Listenable>[userProgress.best, serverStatusProgress.best]),
-      builder: (BuildContext context, Widget child) {
-        const Widget icon = Icon(Icons.add_comment);
-        final AuthenticatedUser user = userProgress.currentValue;
-        final ServerStatus serverStatus = serverStatusProgress.currentValue ?? const ServerStatus();
-        if (user != null && (serverStatus.seamailEnabled || serverStatus.forumsEnabled)) {
-          return FloatingActionButton(
-            child: icon,
-            onPressed: () async {
-              switch (await _getCreateWhat(context, serverStatus)) {
-                case _CreateWhat.seamail:
-                  return createNewSeamail(context, user);
-                case _CreateWhat.forum:
-                  return createNewForum(context);
-              }
-            }
-          );
-        }
-        return FloatingActionButton(
-          child: icon,
-          onPressed: null,
-          backgroundColor: Colors.grey.shade200,
-          foregroundColor: Colors.grey.shade400,
-        );
-      },
-    );
-  }
+  Widget buildTabLabel(BuildContext context) => const Text('Seamail');
 
   static Future<void> createNewSeamail(BuildContext context, User currentUser, { List<User> others }) async {
     assert(currentUser != null);
@@ -127,27 +110,6 @@ class CommsView extends StatelessWidget implements View {
     );
   }
 
-  static Future<void> createNewForum(BuildContext context) async {
-    final ForumThread thread = await Navigator.push(
-      context,
-      MaterialPageRoute<ForumThread>(
-        builder: (BuildContext context) => const StartForumView(),
-      ),
-    );
-    if (thread == null)
-      return;
-    showForumThread(context, thread);
-  }
-
-  static void showForumThread(BuildContext context, ForumThread thread) {
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(
-        builder: (BuildContext context) => ForumThreadView(thread: thread),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -155,16 +117,14 @@ class CommsView extends StatelessWidget implements View {
     final TextStyle headerStyle = textTheme.title;
     final CruiseModel cruise = Cruise.of(context);
     final Seamail seamail = cruise.seamail;
-    final Forums forums = cruise.forums;
-    final Mentions mentions = cruise.mentions;
     final ContinuousProgress<ServerStatus> serverStatusProgress = cruise.serverStatus;
     final DateTime now = Now.of(context);
     return ModeratorBuilder(
       builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
         return BusyIndicator(
-          busy: OrListenable(<ValueListenable<bool>>[seamail.busy, forums.busy]),
+          busy: OrListenable(<ValueListenable<bool>>[seamail.busy]),
           child: AnimatedBuilder(
-            animation: Listenable.merge(<Listenable>[seamail, forums, mentions, serverStatusProgress.best]),
+            animation: Listenable.merge(<Listenable>[seamail, serverStatusProgress.best]),
             builder: (BuildContext context, Widget child) {
               final ServerStatus status = serverStatusProgress.currentValue ?? const ServerStatus();
               final List<SeamailThread> seamailThreads = seamail.toList()
@@ -175,53 +135,16 @@ class CommsView extends StatelessWidget implements View {
                     return b.id.compareTo(a.id);
                   }
                 );
-              final List<ForumThread> forumThreads = forums.toList()
-                ..sort(
-                  (ForumThread a, ForumThread b) {
-                    if (a.isSticky != b.isSticky) {
-                      if (a.isSticky)
-                        return -1;
-                      assert(b.isSticky);
-                      return 1;
-                    }
-                    if (b.lastMessageTimestamp != a.lastMessageTimestamp)
-                      return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
-                    return b.id.compareTo(a.id);
-                  }
-                );
               final bool showDividers = theme.platform == TargetPlatform.iOS;
               int itemCount = 0;
-              if (canModerate)
-                itemCount += 1; // masquerade
               if (status.seamailEnabled) {
                 itemCount += 1; // "private" heading
                 itemCount += math.max<int>(seamailThreads.length, 1 /* "no messages" */);
-              }
-              if (status.forumsEnabled || status.streamEnabled) {
-                itemCount += 1; // "public" heading
-                if (!isModerating && cruise.isLoggedIn)
-                  itemCount += 1; // mentions
-                if (status.streamEnabled)
-                  itemCount += 1; // twitarr
-                if (status.forumsEnabled)
-                  itemCount += forums.length;
               }
               return ListView.builder(
                 itemCount: itemCount,
                 itemBuilder: (BuildContext context, int index) {
                   Widget generateTile() {
-                    if (canModerate) {
-                      if (index == 0) {
-                        return SwitchListTile(
-                          title: const Text('Masquerade as @moderator'),
-                          value: isModerating,
-                          onChanged: (bool value) {
-                            cruise.setAsMod(enabled: value);
-                          },
-                        );
-                      }
-                      index -= 1;
-                    }
                     if (status.seamailEnabled) {
                       if (index == 0) {
                         return ListTile(
@@ -309,6 +232,134 @@ class CommsView extends StatelessWidget implements View {
                         }
                         index -= seamailThreads.length;
                       }
+                    }
+                    assert(false);
+                    return null;
+                  }
+                  Widget result = generateTile();
+                  if (showDividers) {
+                    result = DecoratedBox(
+                      position: DecorationPosition.foreground,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: Divider.createBorderSide(context),
+                        ),
+                      ),
+                      child: result,
+                    );
+                  }
+                  return result;
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class PublicCommsView extends CommsView {
+  const PublicCommsView({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  bool isEnabled(ServerStatus status) => status.forumsEnabled || status.streamEnabled;
+
+  @override
+  bool canPost(ServerStatus status) => status.forumsEnabled;
+
+  @override
+  void startConversation(BuildContext context, AuthenticatedUser user) => createNewForum(context);
+
+  @override
+  Widget buildTabIcon(BuildContext context) => const Icon(Icons.forum);
+
+  @override
+  Widget buildTabLabel(BuildContext context) => const Text('Forums');
+
+  static Future<void> createNewForum(BuildContext context) async {
+    final ForumThread thread = await Navigator.push(
+      context,
+      MaterialPageRoute<ForumThread>(
+        builder: (BuildContext context) => const StartForumView(),
+      ),
+    );
+    if (thread == null)
+      return;
+    showForumThread(context, thread);
+  }
+
+  static void showForumThread(BuildContext context, ForumThread thread) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => ForumThreadView(thread: thread),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final TextTheme textTheme = theme.textTheme;
+    final TextStyle headerStyle = textTheme.title;
+    final CruiseModel cruise = Cruise.of(context);
+    final Forums forums = cruise.forums;
+    final Mentions mentions = cruise.mentions;
+    final ContinuousProgress<ServerStatus> serverStatusProgress = cruise.serverStatus;
+    final DateTime now = Now.of(context);
+    return ModeratorBuilder(
+      builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
+        return BusyIndicator(
+          busy: OrListenable(<ValueListenable<bool>>[forums.busy]),
+          child: AnimatedBuilder(
+            animation: Listenable.merge(<Listenable>[forums, mentions, serverStatusProgress.best]),
+            builder: (BuildContext context, Widget child) {
+              final ServerStatus status = serverStatusProgress.currentValue ?? const ServerStatus();
+              final List<ForumThread> forumThreads = forums.toList()
+                ..sort(
+                  (ForumThread a, ForumThread b) {
+                    if (a.isSticky != b.isSticky) {
+                      if (a.isSticky)
+                        return -1;
+                      assert(b.isSticky);
+                      return 1;
+                    }
+                    if (b.lastMessageTimestamp != a.lastMessageTimestamp)
+                      return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
+                    return b.id.compareTo(a.id);
+                  }
+                );
+              final bool showDividers = theme.platform == TargetPlatform.iOS;
+              int itemCount = 0;
+              if (canModerate)
+                itemCount += 1; // masquerade
+              if (status.forumsEnabled || status.streamEnabled) {
+                itemCount += 1; // "public" heading
+                if (!isModerating && cruise.isLoggedIn)
+                  itemCount += 1; // mentions
+                if (status.streamEnabled)
+                  itemCount += 1; // twitarr
+                if (status.forumsEnabled)
+                  itemCount += forums.length;
+              }
+              return ListView.builder(
+                itemCount: itemCount,
+                itemBuilder: (BuildContext context, int index) {
+                  Widget generateTile() {
+                    if (canModerate) {
+                      if (index == 0) {
+                        return SwitchListTile(
+                          title: const Text('Masquerade as @moderator'),
+                          value: isModerating,
+                          onChanged: (bool value) {
+                            cruise.setAsMod(enabled: value);
+                          },
+                        );
+                      }
+                      index -= 1;
                     }
                     if (status.forumsEnabled || status.streamEnabled) {
                       if (index == 0) {

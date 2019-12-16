@@ -88,7 +88,7 @@ void showThread(String threadId) async {
   }());
   await model.loggedIn;
   Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
-  CommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
+  PrivateCommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
 }
 
 void _handleError(UserFriendlyError error) {
@@ -203,7 +203,8 @@ class CruiseMonkeyHome extends StatelessWidget {
   static const List<View> allPages = <View>[
     UserView(),
     CalendarView(),
-    CommsView(),
+    PrivateCommsView(),
+    PublicCommsView(),
     DeckPlanView(),
     GamesView(),
     KaraokeView(),
