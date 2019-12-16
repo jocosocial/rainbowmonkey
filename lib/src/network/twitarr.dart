@@ -518,6 +518,7 @@ class UserSummary {
     return User(
       username: username,
       displayName: displayName,
+      role: Role.none,
     );
   }
 }

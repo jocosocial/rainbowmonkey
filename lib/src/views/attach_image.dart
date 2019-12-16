@@ -140,7 +140,7 @@ class AttachImageDialog extends StatelessWidget {
         },
       ));
     }
-    final bool canAdd = allowMultiple || (images.isEmpty && oldImages.isEmpty);
+    final bool canAdd = allowMultiple || (images.isEmpty && (oldImages == null || oldImages.isEmpty));
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[

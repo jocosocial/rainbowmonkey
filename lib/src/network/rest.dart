@@ -705,6 +705,7 @@ class RestTwitarr implements Twitarr {
       return User(
         username: value.username.toString(),
         displayName: value.display_name.toString(),
+        role: Role.none,
       );
     }).toList();
   }

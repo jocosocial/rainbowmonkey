@@ -52,9 +52,10 @@ class User implements Comparable<User> {
     this.roomNumber,
     this.homeLocation,
     this.email,
-    this.role,
+    @required this.role,
   }) : assert(username != null),
-       assert(username != '');
+       assert(username != ''),
+       assert(role != null);
 
   const User.none(
   ) : username = null,
@@ -188,7 +189,7 @@ class AuthenticatedUser extends User {
     String roomNumber,
     String homeLocation,
     String email,
-    Role role,
+    @required Role role,
     this.credentials,
   }) : super(
     username: username,
