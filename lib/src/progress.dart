@@ -314,7 +314,7 @@ abstract class ContinuousProgress<T> implements Listenable {
   }
 
   Progress<T> get current => _current;
-  Progress<T> _current = const Progress<Null>.idle(); // ignore: prefer_final_fields, https://github.com/dart-lang/sdk/issues/34417
+  Progress<T> _current = const Progress<Null>.idle();
 
   Progress<T> get best => _best;
   _Progress<T> _best;
@@ -399,10 +399,19 @@ class PeriodicProgress<T> extends MutableContinuousProgress<T> {
   int _listenerCount = 0;
   bool _active = false;
 
-  Progress<T> triggerUnscheduledUpdate() => _start();
-
   int _pauseCounter = 0;
   Completer<void> _resumed = Completer<void>()..complete();
+
+  @override
+  void reset() {
+    super.reset();
+    _tryingToStart = null;
+    _active = false;
+    if (_pauseCounter > 0)
+      _resumed = Completer<void>();
+  }
+
+  Progress<T> triggerUnscheduledUpdate() => _start();
 
   void pause() {
     if (_pauseCounter == 0)
