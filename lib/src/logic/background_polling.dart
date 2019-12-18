@@ -13,7 +13,7 @@ import 'disk_store.dart';
 import 'notifications.dart';
 import 'store.dart';
 
-const bool pollingDisabled = true;
+const bool pollingDisabled = false;
 
 Future<void> runBackground(DataStore store) async {
   if (!await AndroidAlarmManager.initialize()) {
