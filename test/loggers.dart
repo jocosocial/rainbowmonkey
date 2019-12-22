@@ -21,7 +21,7 @@ class LoggingTwitarrConfiguration extends TwitarrConfiguration {
   static List<String> _log;
 
   @override
-  Twitarr createTwitarr() => LoggingTwitarr(this, _log);
+  Twitarr createTwitarr() => LoggingTwitarr(this, log);
 
   static void register(List<String> log) {
     assert(_log == null);
@@ -50,7 +50,8 @@ class LoggingTwitarr extends Twitarr {
 
   final List<String> log;
 
-  void _addLog(String message) => log.add(message);
+  @protected
+  void addLog(String message) => log.add(message);
 
   String overrideHomeLocation;
 
@@ -81,7 +82,7 @@ class LoggingTwitarr extends Twitarr {
     @required String registrationCode,
     String displayName,
   }) {
-    _addLog('LoggingTwitarr(${_configuration.id}).createAccount $username / $password / $registrationCode / $displayName');
+    addLog('LoggingTwitarr(${_configuration.id}).createAccount $username / $password / $registrationCode / $displayName');
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
       displayName: displayName,
@@ -102,7 +103,7 @@ class LoggingTwitarr extends Twitarr {
     @required String password,
     @required PhotoManager photoManager,
   }) {
-    _addLog('LoggingTwitarr(${_configuration.id}).login $username / $password');
+    addLog('LoggingTwitarr(${_configuration.id}).login $username / $password');
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: username,
       email: '<email for $username>',
@@ -119,7 +120,7 @@ class LoggingTwitarr extends Twitarr {
 
   @override
   Progress<AuthenticatedUser> getAuthenticatedUser(Credentials credentials, PhotoManager photoManager) {
-    _addLog('LoggingTwitarr(${_configuration.id}).getAuthenticatedUser $credentials');
+    addLog('LoggingTwitarr(${_configuration.id}).getAuthenticatedUser $credentials');
     return Progress<AuthenticatedUser>.completed(AuthenticatedUser(
       username: credentials.username,
       email: '<email for ${credentials.username}>',
@@ -131,7 +132,7 @@ class LoggingTwitarr extends Twitarr {
 
   @override
   Progress<User> getUser(Credentials credentials, String username, PhotoManager photoManager) {
-    _addLog('LoggingTwitarr(${_configuration.id}).getAuthenticatedUser $username, $credentials');
+    addLog('LoggingTwitarr(${_configuration.id}).getAuthenticatedUser $username, $credentials');
     return Progress<User>.completed(User(
       username: username,
       role: Role.user,
@@ -142,7 +143,7 @@ class LoggingTwitarr extends Twitarr {
   Progress<Calendar> getCalendar({
     Credentials credentials,
   }) {
-    _addLog('LoggingTwitarr(${_configuration.id}).getCalendar($credentials)');
+    addLog('LoggingTwitarr(${_configuration.id}).getCalendar($credentials)');
     return const Progress<Calendar>.idle();
   }
 
@@ -152,31 +153,31 @@ class LoggingTwitarr extends Twitarr {
     @required String eventId,
     @required bool favorite,
   }) {
-    _addLog('LoggingTwitarr(${_configuration.id}).setEventFavorite($credentials, $eventId, $favorite)');
+    addLog('LoggingTwitarr(${_configuration.id}).setEventFavorite($credentials, $eventId, $favorite)');
     return const Progress<void>.idle();
   }
 
   @override
   Progress<List<AnnouncementSummary>> getAnnouncements() {
-    _addLog('LoggingTwitarr(${_configuration.id}).getAnnouncements()');
+    addLog('LoggingTwitarr(${_configuration.id}).getAnnouncements()');
     return Progress<List<AnnouncementSummary>>.completed(const <AnnouncementSummary>[]);
   }
 
   @override
   Progress<Map<String, bool>> getSectionStatus() {
-    _addLog('LoggingTwitarr(${_configuration.id}).getSectionStatus()');
+    addLog('LoggingTwitarr(${_configuration.id}).getSectionStatus()');
     return Progress<Map<String, bool>>.completed(const <String, bool>{});
   }
 
   @override
   Progress<ServerText> fetchServerText(String filename) {
-    _addLog('LoggingTwitarr(${_configuration.id}).fetchServerText($filename)');
+    addLog('LoggingTwitarr(${_configuration.id}).fetchServerText($filename)');
     return const Progress<ServerText>.idle();
   }
 
   @override
   Progress<Uint8List> fetchProfilePicture(String username) {
-    _addLog('fetchProfilePicture');
+    addLog('fetchProfilePicture');
     return Progress<Uint8List>.completed(Uint8List.fromList(<int>[0]));
   }
 
@@ -190,7 +191,7 @@ class LoggingTwitarr extends Twitarr {
     String homeLocation,
     String roomNumber,
   }) {
-    _addLog('updateProfile $displayName/$realName/$pronouns/$email/$homeLocation/$roomNumber');
+    addLog('updateProfile $displayName/$realName/$pronouns/$email/$homeLocation/$roomNumber');
     return Progress<void>.completed(null);
   }
 
@@ -199,7 +200,7 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     @required Uint8List bytes,
   }) {
-    _addLog('uploadAvatar ${bytes.length} bytes');
+    addLog('uploadAvatar ${bytes.length} bytes');
     return null;
   }
 
@@ -207,13 +208,13 @@ class LoggingTwitarr extends Twitarr {
   Progress<void> resetAvatar({
     @required Credentials credentials,
   }) {
-    _addLog('resetAvatar');
+    addLog('resetAvatar');
     return null;
   }
 
   @override
   Progress<Uint8List> fetchImage(String photoId, { bool thumbnail = false }) {
-    _addLog('fetchImage $photoId (thumbnail=$thumbnail)');
+    addLog('fetchImage $photoId (thumbnail=$thumbnail)');
     return null;
   }
 
@@ -222,7 +223,7 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     @required Uint8List bytes,
   }) {
-    _addLog('uploadImage');
+    addLog('uploadImage');
     return null;
   }
 
@@ -232,13 +233,13 @@ class LoggingTwitarr extends Twitarr {
     @required String oldPassword,
     @required String newPassword,
   }) {
-    _addLog('updatePassword');
+    addLog('updatePassword');
     return null;
   }
 
   @override
   Progress<List<User>> getUserList(String searchTerm) {
-    _addLog('getUserList');
+    addLog('getUserList');
     return null;
   }
 
@@ -247,7 +248,7 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     int freshnessToken,
   }) {
-    _addLog('getSeamailThreads for $credentials from $freshnessToken');
+    addLog('getSeamailThreads for $credentials from $freshnessToken');
     return const Progress<SeamailSummary>.idle();
   }
 
@@ -256,7 +257,7 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     int freshnessToken,
   }) {
-    _addLog('getUnreadSeamailMessages');
+    addLog('getUnreadSeamailMessages');
     return null;
   }
 
@@ -266,7 +267,7 @@ class LoggingTwitarr extends Twitarr {
     @required String threadId,
     bool markRead = true,
   }) {
-    _addLog('getSeamailMessages');
+    addLog('getSeamailMessages');
     return null;
   }
 
@@ -276,7 +277,7 @@ class LoggingTwitarr extends Twitarr {
     @required String threadId,
     @required String text,
   }) {
-    _addLog('postSeamailMessage');
+    addLog('postSeamailMessage');
     return null;
   }
 
@@ -287,7 +288,7 @@ class LoggingTwitarr extends Twitarr {
     @required String subject,
     @required String text,
   }) {
-    _addLog('createSeamailThread');
+    addLog('createSeamailThread');
     return null;
   }
 
@@ -298,7 +299,7 @@ class LoggingTwitarr extends Twitarr {
     int boundaryToken,
     int limit = 100,
   }) {
-    _addLog('getStream');
+    addLog('getStream');
     return const Progress<StreamSliceSummary>.idle();
   }
 
@@ -307,7 +308,7 @@ class LoggingTwitarr extends Twitarr {
     Credentials credentials,
     String threadId,
   }) {
-    _addLog('getTweet');
+    addLog('getTweet');
     return const Progress<StreamMessageSummary>.idle();
   }
 
@@ -318,7 +319,7 @@ class LoggingTwitarr extends Twitarr {
     String parentId,
     @required Uint8List photo,
   }) {
-    _addLog('postTweet');
+    addLog('postTweet');
     return null;
   }
 
@@ -327,7 +328,7 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     @required String postId,
   }) {
-    _addLog('deleteTweet');
+    addLog('deleteTweet');
     return null;
   }
 
@@ -338,7 +339,7 @@ class LoggingTwitarr extends Twitarr {
     @required String reaction,
     @required bool selected,
   }) {
-    _addLog('reactTweet');
+    addLog('reactTweet');
     return null;
   }
 
@@ -347,16 +348,17 @@ class LoggingTwitarr extends Twitarr {
     @required Credentials credentials,
     @required String postId,
   }) {
-    _addLog('getTweetReactions');
+    addLog('getTweetReactions');
     return null;
   }
 
   @override
-  Progress<Set<ForumSummary>> getForumThreads({
+  Progress<ForumListSummary> getForumThreads({
     Credentials credentials,
+    @required int fetchCount,
   }) {
-    _addLog('getForumThreads');
-    return const Progress<Set<ForumSummary>>.idle();
+    addLog('getForumThreads');
+    return const Progress<ForumListSummary>.idle();
   }
 
   @override
@@ -364,7 +366,7 @@ class LoggingTwitarr extends Twitarr {
     Credentials credentials,
     @required String threadId,
   }) {
-    _addLog('getForumThread $threadId');
+    addLog('getForumThread $threadId');
     return null;
   }
 
@@ -375,7 +377,7 @@ class LoggingTwitarr extends Twitarr {
     @required String text,
     @required List<Uint8List> photos,
   }) {
-    _addLog('createForumThread "$subject" "$text"');
+    addLog('createForumThread "$subject" "$text"');
     return null;
   }
 
@@ -386,7 +388,7 @@ class LoggingTwitarr extends Twitarr {
     @required String text,
     @required List<Uint8List> photos,
   }) {
-    _addLog('postForumMessage $threadId "$text"');
+    addLog('postForumMessage $threadId "$text"');
     return null;
   }
 
@@ -396,7 +398,7 @@ class LoggingTwitarr extends Twitarr {
     @required String threadId,
     @required String messageId,
   }) {
-    _addLog('deleteForumMessage $threadId $messageId');
+    addLog('deleteForumMessage $threadId $messageId');
     return null;
   }
 
@@ -408,7 +410,7 @@ class LoggingTwitarr extends Twitarr {
     @required String reaction,
     @required bool selected,
   }) {
-    _addLog('reactForumMessage');
+    addLog('reactForumMessage');
     return null;
   }
 
@@ -418,7 +420,7 @@ class LoggingTwitarr extends Twitarr {
     @required String threadId,
     @required String messageId,
   }) {
-    _addLog('getForumMessageReactions');
+    addLog('getForumMessageReactions');
     return null;
   }
 
@@ -426,8 +428,8 @@ class LoggingTwitarr extends Twitarr {
   Progress<MentionsSummary> getMentions({
     Credentials credentials,
   }) {
-    _addLog('getMentions');
-    return null;
+    addLog('getMentions');
+    return const Progress<MentionsSummary>.idle();
   }
 
   @override
@@ -435,13 +437,13 @@ class LoggingTwitarr extends Twitarr {
     Credentials credentials,
     int freshnessToken,
   }) {
-    _addLog('clearMentions $freshnessToken');
+    addLog('clearMentions $freshnessToken');
     return null;
   }
 
   @override
   void noSuchMethod(Invocation invocation) {
-    _addLog('$this.${_describeInvocation(invocation)}');
+    addLog('$this.${_describeInvocation(invocation)}');
   }
 
   @override

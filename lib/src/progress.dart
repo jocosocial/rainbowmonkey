@@ -499,6 +499,7 @@ class PeriodicProgress<T> extends MutableContinuousProgress<T> {
   @override
   void dispose() {
     _timer?.cancel();
+    _active = true;
     super.dispose();
   }
 }

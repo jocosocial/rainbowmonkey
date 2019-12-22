@@ -219,8 +219,9 @@ abstract class Twitarr {
     @required String postId,
   });
 
-  Progress<Set<ForumSummary>> getForumThreads({
+  Progress<ForumListSummary> getForumThreads({
     Credentials credentials,
+    @required int fetchCount,
   });
 
   Progress<ForumSummary> getForumThread({
@@ -408,6 +409,17 @@ class StreamMessageSummary {
   final List<String> parents;
 
   final List<StreamMessageSummary> children;
+}
+
+class ForumListSummary {
+  const ForumListSummary({
+    this.forums,
+    this.totalCount,
+  });
+
+  final Set<ForumSummary> forums;
+
+  final int totalCount;
 }
 
 class ForumSummary {

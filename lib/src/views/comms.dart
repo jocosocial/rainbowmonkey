@@ -331,7 +331,8 @@ class PublicCommsView extends CommsView {
                       return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
                     return b.id.compareTo(a.id);
                   }
-                );
+                )
+                ..length = forums.totalCount;
               final bool showDividers = theme.platform == TargetPlatform.iOS;
               int itemCount = 0;
               if (canModerate)
@@ -343,7 +344,7 @@ class PublicCommsView extends CommsView {
                 if (status.streamEnabled)
                   itemCount += 1; // twitarr
                 if (status.forumsEnabled)
-                  itemCount += forums.length;
+                  itemCount += forumThreads.length;
               }
               return ListView.builder(
                 itemCount: itemCount,
@@ -412,40 +413,54 @@ class PublicCommsView extends CommsView {
                         // Forums
                         // TODO(ianh): make these appear less suddenly
                         final ForumThread forum = forumThreads[index];
+                        forums.observing(index);
+                        if (forum == null) {
+                          return const ListTile(
+                            leading: CircleAvatar(child: Icon(Icons.forum)),
+                            title: Text('...'),
+                            subtitle: Text(''),
+                            isThreeLine: true,
+                          );
+                        }
                         final String unread = forum.unreadCount > 0 ? ' (${forum.unreadCount} new)' : '';
                         final String lastMessage = 'Most recent from ${forum.lastMessageUser}';
-                        return ListTile(
-                          leading: Tooltip(
-                            message: forum.isSticky ? 'Sticky forum' : 'Forum',
-                            child: Badge(
-                              child: CircleAvatar(child: Icon(forum.isSticky ? Icons.feedback : Icons.forum)),
-                              alignment: const AlignmentDirectional(1.1, 1.1),
-                              enabled: forum.hasUnread,
+                        return AnimatedOpacity(
+                          opacity: forum.fresh ? 1.0 : 0.5,
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.fastOutSlowIn,
+                          child: ListTile(
+                            leading: Tooltip(
+                              message: forum.isSticky ? 'Sticky forum' : 'Forum',
+                              child: Badge(
+                                child: CircleAvatar(child: Icon(forum.isSticky ? Icons.feedback : Icons.forum)),
+                                alignment: const AlignmentDirectional(1.1, 1.1),
+                                enabled: forum.hasUnread,
+                              ),
                             ),
-                          ),
-                          title: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: Text(
-                                  forum.subject,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: forum.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+                            title: Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Text(
+                                    forum.subject,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: forum.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                ' ${prettyDuration(now.difference(forum.lastMessageTimestamp), short: true)}',
-                                style: textTheme.caption,
-                              ),
-                            ],
+                                Text(
+                                  ' ${prettyDuration(now.difference(forum.lastMessageTimestamp), short: true)}',
+                                  style: textTheme.caption,
+                                ),
+                              ],
+                            ),
+                            subtitle: Text(
+                              '${forum.totalCount} message${forum.totalCount == 1 ? '' : "s"}$unread\n$lastMessage',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            isThreeLine: true,
+                            onTap: () { showForumThread(context, forum); },
                           ),
-                          subtitle: Text(
-                            '${forum.totalCount} message${forum.totalCount == 1 ? '' : "s"}$unread\n$lastMessage',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          isThreeLine: true,
-                          onTap: () { showForumThread(context, forum); },
                         );
                       }
                     }
