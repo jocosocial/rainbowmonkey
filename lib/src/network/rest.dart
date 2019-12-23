@@ -23,6 +23,7 @@ const String _kShipTwitarrUrl = 'http://joco.hollandamerica.com/';
 const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
 
 const bool _debugVerbose = false;
+const int kLineLength = 0x080;
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
@@ -1285,18 +1286,21 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
-  Progress<Set<ForumSummary>> getForumThreads({
+  Progress<ForumListSummary> getForumThreads({
     Credentials credentials,
+    @required int fetchCount,
   }) {
+    assert(fetchCount != null);
     if (_enabled?.forumsEnabled == false)
-      return Progress<Set<ForumSummary>>.completed(const <ForumSummary>{});
+      return Progress<ForumListSummary>.completed(const ForumListSummary(forums: <ForumSummary>{}, totalCount: 0));
     assert(credentials == null || credentials.key != null);
-    return Progress<Set<ForumSummary>>((ProgressController<Set<ForumSummary>> completer) async {
+    return Progress<ForumListSummary>((ProgressController<ForumListSummary> completer) async {
       final FormData body = FormData()
         ..add('app', 'plain');
       if (credentials != null)
         body.add('key', credentials.key);
-      return await compute<String, Set<ForumSummary>>(
+      body.add('limit', fetchCount.toString());
+      return await compute<String, ForumListSummary>(
         _parseForumList,
         await completer.chain<String>(
           _requestUtf8(
@@ -1323,6 +1327,7 @@ class RestTwitarr implements Twitarr {
         ..add('app', 'plain');
       if (credentials != null)
         body.add('key', credentials.key);
+      body.add('limit', '4096'); // one post every 2.5 minutes for 7 days straight
       return await compute<String, ForumSummary>(
         _parseForumThread,
         await completer.chain<String>(
@@ -1627,12 +1632,12 @@ class RestTwitarr implements Twitarr {
     });
   }
 
-  static Set<ForumSummary> _parseForumList(String rawData) {
+  static ForumListSummary _parseForumList(String rawData) {
     final dynamic data = Json.parse(rawData);
-    final Set<ForumSummary> result = <ForumSummary>{};
+    final Set<ForumSummary> forums = <ForumSummary>{};
     for (dynamic forum in (data.forum_threads as Json).asIterable())
-      result.add(_parseForumBody(forum as Json));
-    return result;
+      forums.add(_parseForumBody(forum as Json));
+    return ForumListSummary(forums: forums, totalCount: (data.thread_count as Json).toInt());
   }
 
   static ForumSummary _parseForumBody(dynamic forum) {
@@ -1843,8 +1848,8 @@ class RestTwitarr implements Twitarr {
       assert(() {
         if (_debugVerbose) {
           debugPrint('<<< ${response.statusCode} from $path:');
-          for (int index = 0; index < result.length; index += 128)
-            debugPrint(' 0x${index.toRadixString(16).padLeft(4, "0")}: ${result.substring(index, math.min(index + 100, result.length))}');
+          for (int index = 0; index < result.length; index += kLineLength)
+            debugPrint(' 0x${index.toRadixString(16).padLeft(5, "0")}: ${result.substring(index, math.min(index + kLineLength, result.length))}');
         }
         return true;
       }());
@@ -1968,8 +1973,8 @@ class RestTwitarr implements Twitarr {
         assert(() {
           response.transform(utf8.decoder).join().then((String result) {
             debugPrint('<<< (!!) ${response.statusCode} from $path:');
-            for (int index = 0; index < result.length; index += 128)
-              debugPrint(' 0x${index.toRadixString(16).padLeft(4, "0")}: ${result.substring(index, math.min(index + 100, result.length)).replaceAll("\n", "␊")}');
+            for (int index = 0; index < result.length; index += kLineLength)
+              debugPrint(' 0x${index.toRadixString(16).padLeft(5, "0")}: ${result.substring(index, math.min(index + kLineLength, result.length)).replaceAll("\n", "␊")}');
           });
           return true;
         }());
@@ -1980,6 +1985,8 @@ class RestTwitarr implements Twitarr {
       if (response.contentLength > 0)
         completer.advance(0.0, response.contentLength.toDouble());
       return response;
+    } on HttpException catch (error) {
+      throw ServerError(<String>['The server responded incorrectly (${error.message}).']);
     } on SocketException catch (error) {
       if (error.osError.errorCode == 7)
         throw const ServerError(<String>['The DNS server is down or the Twitarr server is non-existent.']);

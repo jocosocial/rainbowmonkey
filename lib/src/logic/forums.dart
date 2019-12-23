@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -46,6 +47,23 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
 
   final Map<String, ForumThread> _threads = <String, ForumThread>{};
 
+  int get totalCount => _totalCount;
+  int _totalCount = 0;
+
+  static const int _minFetchCount = 50;
+  static const int _fetchMargin = 50;
+  int _fetchCount = _minFetchCount;
+  int _freshCount = 0;
+
+  void observing(int index) {
+    assert(index < _totalCount);
+    if (index >= _fetchCount) {
+      _fetchCount = index + _fetchMargin;
+      if (index >= _freshCount)
+        scheduleMicrotask(reload);
+    }
+  }
+
   VariableTimer _timer;
 
   ValueListenable<bool> get active => _timer.active;
@@ -66,9 +84,14 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
     startBusy();
     _updating = true;
     try {
-      final Set<ForumSummary> newThreads = await _twitarr.getForumThreads(
+      final int currentFetchCount = _fetchCount;
+      final ForumListSummary summary = await _twitarr.getForumThreads(
         credentials: _credentials,
+        fetchCount: _fetchCount,
       ).asFuture();
+      if (currentFetchCount >= _fetchCount)
+        _fetchCount = _minFetchCount;
+      final Set<ForumSummary> newThreads = summary.forums;
       final Set<ForumThread> removedThreads = Set<ForumThread>.from(_threads.values);
       for (ForumSummary threadSummary in newThreads) {
         if (_threads.containsKey(threadSummary.id)) {
@@ -80,7 +103,9 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
         }
       }
       for (ForumThread thread in removedThreads)
-        _threads.remove(thread.id);
+        thread.obsolete();
+      _freshCount = newThreads.length;
+      _totalCount = summary.totalCount;
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
       onError(error);
@@ -219,6 +244,9 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     notifyListeners();
   }
 
+  bool get fresh => _fresh;
+  bool _fresh = true;
+
   @protected
   void updateFrom(ForumSummary thread) {
     _subject = thread.subject;
@@ -231,6 +259,13 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     if (thread.messages != null)
       _messages = thread.messages.map<ForumMessage>((ForumMessageSummary summary) => ForumMessage.from(summary, _photoManager)).toList();
     _parent._childUpdated(this);
+    _fresh = true;
+    notifyListeners();
+  }
+
+  void obsolete() {
+    _parent._childUpdated(this);
+    _fresh = false;
     notifyListeners();
   }
 
