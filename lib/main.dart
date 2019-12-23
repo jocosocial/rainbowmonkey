@@ -200,14 +200,14 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   final DataStore store;
 
-  static const List<View> allPages = <View>[
-    UserView(),
-    CalendarView(),
-    PrivateCommsView(),
-    PublicCommsView(),
-    DeckPlanView(),
-    GamesView(),
-    KaraokeView(),
+  static final List<View> allPages = <View>[
+    UserView(key: PageStorageKey<UniqueObject>(UniqueObject())),
+    CalendarView(key: PageStorageKey<UniqueObject>(UniqueObject())),
+    PrivateCommsView(key: PageStorageKey<UniqueObject>(UniqueObject())),
+    PublicCommsView(key: PageStorageKey<UniqueObject>(UniqueObject())),
+    DeckPlanView(key: PageStorageKey<UniqueObject>(UniqueObject())),
+    gamesView,
+    karaokeView,
   ];
 
   Widget buildTab(BuildContext context, View page, { EdgeInsets iconPadding = EdgeInsets.zero }) {
@@ -272,9 +272,16 @@ class CruiseMonkeyHome extends StatelessWidget {
                               alignment: Alignment.topCenter,
                               child: MediaQuery(
                                 data: metrics.copyWith(padding: metrics.padding.copyWith(bottom: bottomPadding)),
-                                child: TabBarView(
-                                  key: ValueKey<int>(pages.length),
-                                  children: pages,
+                                child: AnimatedBuilder(
+                                  animation: tabController,
+                                  builder: (BuildContext context, Widget child) {
+                                    return AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 200),
+                                      switchInCurve: Curves.fastOutSlowIn,
+                                      switchOutCurve: Curves.fastOutSlowIn,
+                                      child: pages[tabController.index],
+                                    );
+                                  },
                                 ),
                               ),
                             );

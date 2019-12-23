@@ -9,7 +9,7 @@ final ValueNotifier<bool> _filter = ValueNotifier<bool>(false);
 
 class CalendarView extends StatefulWidget implements View {
   const CalendarView({
-    Key key,
+    @required PageStorageKey<UniqueObject> key,
   }) : super(key: key);
 
   @override
