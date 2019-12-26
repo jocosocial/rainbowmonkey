@@ -7,7 +7,7 @@ import '../widgets.dart';
 
 class DeckPlanView extends StatefulWidget implements View {
   const DeckPlanView({
-    Key key,
+    @required PageStorageKey<UniqueObject> key,
   }) : super(key: key);
 
   @override
@@ -36,42 +36,45 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
   List<Widget> _decks, _buttons;
 
   @override
-  void initState() {
-    super.initState();
-    _currentLevel = AnimationController(
-      value: kMinDeck.toDouble(),
-      lowerBound: kMinDeck.toDouble(),
-      upperBound: kMaxDeck.toDouble(),
-      vsync: this,
-    );
-    _decks = List<Widget>.generate(kMaxDeck - kMinDeck + 1,
-      (int index) => Deck(
-        level: index + kMinDeck,
-        opacity: _DeckAnimation(_currentLevel, (index + kMinDeck).toDouble()),
-      ),
-      growable: false,
-    );
-    _buttons = List<Widget>.generate(kMaxDeck - kMinDeck + 1,
-      (int index) => Expanded(
-        child: AspectRatio(
-          aspectRatio: 1.0,
-          child: InkResponse(
-            onTap: () {
-              _goToDeck(index + kMinDeck);
-            },
-            child: FractionallySizedBox(
-              widthFactor: 0.75,
-              heightFactor: 0.75,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Text('${index + kMinDeck}'),
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_currentLevel == null) {
+      final int startingDeck = (PageStorage.of(context).readState(context, identifier: runtimeType) ?? kMinDeck) as int;
+      _currentLevel = AnimationController(
+        value: startingDeck.toDouble(),
+        lowerBound: kMinDeck.toDouble(),
+        upperBound: kMaxDeck.toDouble(),
+        vsync: this,
+      );
+      _decks = List<Widget>.generate(kMaxDeck - kMinDeck + 1,
+        (int index) => Deck(
+          level: index + kMinDeck,
+          opacity: _DeckAnimation(_currentLevel, (index + kMinDeck).toDouble()),
+        ),
+        growable: false,
+      );
+      _buttons = List<Widget>.generate(kMaxDeck - kMinDeck + 1,
+        (int index) => Expanded(
+          child: AspectRatio(
+            aspectRatio: 1.0,
+            child: InkResponse(
+              onTap: () {
+                _goToDeck(index + kMinDeck);
+              },
+              child: FractionallySizedBox(
+                widthFactor: 0.75,
+                heightFactor: 0.75,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: Text('${index + kMinDeck}'),
+                ),
               ),
             ),
           ),
         ),
-      ),
-      growable: false,
-    );
+        growable: false,
+      );
+    }
   }
 
   @override
@@ -86,6 +89,7 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeIn,
     );
+    PageStorage.of(context).writeState(context, target, identifier: runtimeType);
   }
 
   @override
@@ -103,7 +107,7 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
                     children: _decks,
                   ),
                   backgroundDecoration: BoxDecoration(
-                    color: Theme.of(context).canvasColor,
+                    color: Colors.white,
                   ),
                   childSize: padding.deflateSize(constraints.biggest),
                   customSize: padding.deflateSize(constraints.biggest),

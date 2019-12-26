@@ -11,7 +11,7 @@ import 'login.dart';
 
 class UserView extends StatefulWidget implements View {
   const UserView({
-    Key key,
+    @required PageStorageKey<UniqueObject> key,
   }) : super(key: key);
 
   @override

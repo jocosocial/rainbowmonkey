@@ -18,7 +18,7 @@ import 'seamail.dart';
 
 abstract class CommsView extends StatelessWidget implements View {
   const CommsView({
-    Key key,
+    @required PageStorageKey<UniqueObject> key,
   }) : super(key: key);
 
   @protected
@@ -58,7 +58,7 @@ abstract class CommsView extends StatelessWidget implements View {
 
 class PrivateCommsView extends CommsView {
   const PrivateCommsView({
-    Key key,
+    PageStorageKey<UniqueObject> key,
   }) : super(key: key);
 
   @override
@@ -261,7 +261,7 @@ class PrivateCommsView extends CommsView {
 
 class PublicCommsView extends CommsView {
   const PublicCommsView({
-    Key key,
+    PageStorageKey<UniqueObject> key,
   }) : super(key: key);
 
   @override

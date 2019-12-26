@@ -21,7 +21,7 @@ Future<void> useModel(WidgetTester tester, CruiseModel model) {
       child: MaterialApp(
         home: Cruise(
           cruiseModel: model,
-          child: const Material(child: CalendarView()),
+          child: Material(child: CalendarView(key: PageStorageKey<UniqueObject>(UniqueObject()))),
         ),
       ),
     ),

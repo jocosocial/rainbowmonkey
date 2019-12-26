@@ -123,9 +123,9 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     if (newState != _onscreen) {
       _onscreen = newState;
       if (_onscreen) {
-        _twitarr.enable(serverStatus.currentValue ?? const ServerStatus());
+        _twitarr?.enable(serverStatus?.currentValue ?? const ServerStatus());
       } else {
-        _twitarr.disable();
+        _twitarr?.disable();
       }
     }
   }
@@ -164,7 +164,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
   double _debugLatency = 0.0;
   set debugLatency(double value) {
     _debugLatency = value;
-    _twitarr.debugLatency = value;
+    _twitarr?.debugLatency = value;
     store.saveSetting(Setting.debugNetworkLatency, value);
     notifyListeners();
   }
@@ -173,10 +173,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
   double _debugReliability = 1.0;
   set debugReliability(double value) {
     _debugReliability = value;
-    assert(() {
-      _twitarr.debugReliability = value;
-      return true;
-    }());
+    _twitarr?.debugReliability = value;
     store.saveSetting(Setting.debugNetworkReliability, value);
     notifyListeners();
   }

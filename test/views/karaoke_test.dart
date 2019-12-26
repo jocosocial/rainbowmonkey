@@ -7,29 +7,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/views/karaoke.dart';
-import 'package:cruisemonkey/src/progress.dart';
 
 Future<void> main() async {
   final AssetBundle bundle = TestAssetBundle();
-  const KaraokeView().createState().initSongs(bundle);
-  final Completer<void> completer = Completer<void>();
-  final Progress<void> status = KaraokeView.loadStatus;
-  void listener() {
-    if (status.value is SuccessfulProgress) {
-      completer.complete();
-      status.removeListener(listener);
-    }
-  }
-  status.addListener(listener);
-  await completer.future;
+  await karaokeView.recordsLoader.init(bundle);
 
   testWidgets('Karaoke', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: DefaultAssetBundle(
           bundle: bundle,
-          child: const Material(
-            child: KaraokeView(),
+          child: Material(
+            child: karaokeView,
           ),
         ),
       ),

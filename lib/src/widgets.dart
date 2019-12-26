@@ -16,6 +16,8 @@ import 'models/user.dart';
 import 'progress.dart';
 import 'utils.dart';
 
+class UniqueObject extends Object { }
+
 class Cruise extends InheritedNotifier<CruiseModel> {
   const Cruise({
     Key key,
