@@ -963,18 +963,24 @@ class _ServerTextViewState extends State<ServerTextView> {
                     yield* section.paragraphs.map<Widget>((ServerTextParagraph paragraph) {
                       final Widget body = Text(paragraph.text, style: textTheme.body1);
                       if (paragraph.hasBullet) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: <Widget>[
-                            Text(' • ', style: textTheme.body1),
-                            Expanded(child: body),
-                          ],
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: textTheme.body1.fontSize / 2.0,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: <Widget>[
+                              Text(' • ', style: textTheme.body1),
+                              Expanded(child: body),
+                            ],
+                          ),
                         );
                       }
                       return Padding(
                         padding: EdgeInsets.only(
-                          bottom: textTheme.body1.fontSize / 2.0,
+                          top: textTheme.body1.fontSize / 4.0,
+                          bottom: textTheme.body1.fontSize / 4.0,
                         ),
                         child: body,
                       );
