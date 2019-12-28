@@ -83,10 +83,10 @@ mixin BusyMixin {
 enum _VariableTimerState { disabled, enabled, ticking, disabling, tickingDisabling }
 
 class VariableTimer {
-  VariableTimer(this.maxDuration, this.callback);
+  VariableTimer(this.maxDuration, this.callback, { this.minDuration = const Duration(seconds: 3) });
 
   final Duration maxDuration;
-  static const Duration minDuration = Duration(seconds: 3);
+  final Duration minDuration;
 
   final AsyncCallback callback;
 
