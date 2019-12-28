@@ -25,7 +25,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   }) : assert(onError != null),
        assert(_twitarr != null),
        assert(photoManager != null) {
-    _timer = VariableTimer(maxUpdatePeriod, update);
+    _timer = VariableTimer(maxUpdatePeriod, update, minDuration: const Duration(seconds: 30));
   }
 
   Forums.empty(

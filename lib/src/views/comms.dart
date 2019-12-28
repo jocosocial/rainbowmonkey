@@ -148,6 +148,7 @@ class PrivateCommsView extends CommsView {
                     if (status.seamailEnabled) {
                       if (index == 0) {
                         return ListTile(
+                          key: const Key('private'),
                           title: Text('Private messages', style: headerStyle),
                           trailing: ValueListenableBuilder<bool>(
                             valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(true),
@@ -191,6 +192,7 @@ class PrivateCommsView extends CommsView {
                             lastMessage = '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}';
                           }
                           return ListTile(
+                            key: ValueKey<SeamailThread>(thread),
                             leading: Badge(
                               child: cruise.avatarFor(thread.users, size: 56.0),
                               alignment: const AlignmentDirectional(1.1, 1.1),
@@ -353,6 +355,7 @@ class PublicCommsView extends CommsView {
                     if (canModerate) {
                       if (index == 0) {
                         return SwitchListTile(
+                          key: const Key('masquerade'),
                           title: const Text('Masquerade as @moderator'),
                           value: isModerating,
                           onChanged: (bool value) {
@@ -365,6 +368,7 @@ class PublicCommsView extends CommsView {
                     if (status.forumsEnabled || status.streamEnabled) {
                       if (index == 0) {
                         return ListTile(
+                          key: const Key('public'),
                           title: Text('Public messages', style: headerStyle),
                           trailing: ValueListenableBuilder<bool>(
                             valueListenable: forums.active,
@@ -382,19 +386,22 @@ class PublicCommsView extends CommsView {
                       index -= 1;
                       if (!isModerating && cruise.isLoggedIn) {
                         if (index == 0) {
-                          return ValueListenableBuilder<bool>(
-                            valueListenable: mentions.hasMentions,
-                            builder: (BuildContext context, bool hasMentions, Widget child) {
-                              return ListTile(
-                                leading: Badge(
-                                  child: CircleAvatar(child: Icon(hasMentions ? Icons.notifications_active : Icons.notifications)),
-                                  alignment: const AlignmentDirectional(1.1, 1.1),
-                                  enabled: hasMentions,
-                                ),
-                                title: const Text('Mentions'),
-                                onTap: () { Navigator.pushNamed(context, '/mentions'); },
-                              );
-                            },
+                          return KeyedSubtree(
+                            key: const Key('mentions'),
+                            child: ValueListenableBuilder<bool>(
+                              valueListenable: mentions.hasMentions,
+                              builder: (BuildContext context, bool hasMentions, Widget child) {
+                                return ListTile(
+                                  leading: Badge(
+                                    child: CircleAvatar(child: Icon(hasMentions ? Icons.notifications_active : Icons.notifications)),
+                                    alignment: const AlignmentDirectional(1.1, 1.1),
+                                    enabled: hasMentions,
+                                  ),
+                                  title: const Text('Mentions'),
+                                  onTap: () { Navigator.pushNamed(context, '/mentions'); },
+                                );
+                              },
+                            ),
                           );
                         }
                         index -= 1;
@@ -402,6 +409,7 @@ class PublicCommsView extends CommsView {
                       if (status.streamEnabled) {
                         if (index == 0) {
                           return ListTile(
+                            key: const Key('twitarr'),
                             leading: const CircleAvatar(child: Icon(Icons.speaker_notes)),
                             title: const Text('Twitarr'),
                             onTap: () { Navigator.pushNamed(context, '/twitarr'); },
@@ -425,6 +433,7 @@ class PublicCommsView extends CommsView {
                         final String unread = forum.unreadCount > 0 ? ' (${forum.unreadCount} new)' : '';
                         final String lastMessage = 'Most recent from ${forum.lastMessageUser}';
                         return AnimatedOpacity(
+                          key: ValueKey<ForumThread>(forum),
                           opacity: forum.fresh ? 1.0 : 0.5,
                           duration: const Duration(milliseconds: 250),
                           curve: Curves.fastOutSlowIn,
@@ -470,6 +479,7 @@ class PublicCommsView extends CommsView {
                   Widget result = generateTile();
                   if (showDividers) {
                     result = DecoratedBox(
+                      key: result.key,
                       position: DecorationPosition.foreground,
                       decoration: BoxDecoration(
                         border: Border(
