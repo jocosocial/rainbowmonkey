@@ -228,7 +228,7 @@ class RestTwitarr implements Twitarr {
       final String jsonBody = json.encode(<String, dynamic>{
         'username': username,
         'registration_code': registrationCode,
-        'password': password,
+        'new_password': password,
       });
       final String resetRawData = await completer.chain<String>(
         _requestUtf8(
