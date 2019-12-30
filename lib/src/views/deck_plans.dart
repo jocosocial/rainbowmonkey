@@ -106,7 +106,7 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
                     alignment: Alignment.center,
                     children: _decks,
                   ),
-                  backgroundDecoration: BoxDecoration(
+                  backgroundDecoration: const BoxDecoration(
                     color: Colors.white,
                   ),
                   childSize: padding.deflateSize(constraints.biggest),
