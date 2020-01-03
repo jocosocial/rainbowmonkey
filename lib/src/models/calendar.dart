@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 
+import 'search.dart';
+
 @immutable
-class Event {
-  Event({
+class Event extends SearchResult implements Comparable<Event> {
+  const Event({
     @required this.id,
     @required this.title,
     @required this.official,
@@ -17,8 +19,7 @@ class Event {
        assert(following != null),
        assert(location != null),
        assert(startTime != null),
-       assert(endTime != null),
-       assert(startTime.isBefore(endTime), '"$title" ($id) has invalid times');
+       assert(endTime != null);
 
   final String id; // 16 bytes in hex
   final String title;
@@ -30,6 +31,27 @@ class Event {
   final DateTime endTime;
 
   @override
+  int compareTo(Event other) {
+    if (startTime.isBefore(other.startTime))
+      return -1;
+    if (startTime.isAfter(other.startTime))
+      return 1;
+    if (endTime.isBefore(other.endTime))
+      return -1;
+    if (endTime.isAfter(other.endTime))
+      return 1;
+    if (official && !other.official)
+      return -1;
+    if (other.official && !official)
+      return 1;
+    if (location != other.location)
+      return location.compareTo(other.location);
+    if (title != other.title)
+      return title.compareTo(other.title);
+    return id.compareTo(other.id);
+  }
+
+  @override
   String toString() => 'Event("$title")';
 }
 
@@ -39,28 +61,7 @@ class Calendar {
     @required List<Event> events,
   }) {
     assert(events != null);
-    return Calendar._(
-      events.toList()
-      ..sort((Event a, Event b) {
-        if (a.startTime.isBefore(b.startTime))
-          return -1;
-        if (a.startTime.isAfter(b.startTime))
-          return 1;
-        if (a.endTime.isBefore(b.endTime))
-          return -1;
-        if (a.endTime.isAfter(b.endTime))
-          return 1;
-        if (a.official && !b.official)
-          return -1;
-        if (b.official && !a.official)
-          return 1;
-        if (a.location != b.location)
-          return a.location.compareTo(b.location);
-        if (a.title != b.title)
-          return a.title.compareTo(b.title);
-        return a.id.compareTo(b.id);
-      })
-    );
+    return Calendar._(events.toList()..sort());
   }
 
   const Calendar._(this._events);

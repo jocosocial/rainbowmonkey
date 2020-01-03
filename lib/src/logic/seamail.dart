@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 import '../models/errors.dart';
+import '../models/search.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -58,14 +59,28 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
   final Map<String, SeamailThread> _threads = <String, SeamailThread>{};
 
   SeamailThread threadById(String threadId) {
-    return _threads.putIfAbsent(threadId, () => SeamailThread(
-      threadId,
-      this,
-      _twitarr,
-      _credentials,
-      _photoManager,
-      onThreadRead: onThreadRead,
-    ));
+    return _threads.putIfAbsent(threadId, () {
+      _timer.interested();
+      return SeamailThread(
+        threadId,
+        this,
+        _twitarr,
+        _credentials,
+        _photoManager,
+        onThreadRead: onThreadRead,
+      );
+    });
+  }
+
+  SeamailThread threadBySummary(SeamailThreadSummary thread) {
+    if (!_threads.containsKey(thread.id)) {
+      _timer.interested();
+      return _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
+    }
+    final SeamailThread result = _threads[thread.id];
+    if (result.updateFrom(thread))
+      _timer.interested();
+    return result;
   }
 
   int get unreadCount {
@@ -98,13 +113,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
       for (SeamailThreadSummary thread in summary.threads) {
         if (thread.messages.isNotEmpty)
           hasNewUnread = true;
-        if (_threads.containsKey(thread.id)) {
-          if (_threads[thread.id].updateFrom(thread))
-            _timer.interested();
-        } else {
-          _threads[thread.id] = SeamailThread.from(thread, this, _twitarr, _credentials, _photoManager, onThreadRead: onThreadRead);
-          _timer.interested();
-        }
+        threadBySummary(thread);
       }
       if (onCheckForMessages != null && hasNewUnread)
         onCheckForMessages();
@@ -171,7 +180,7 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
   }
 }
 
-class SeamailThread extends ChangeNotifier with BusyMixin {
+class SeamailThread extends SearchResult with ChangeNotifier, BusyMixin, Comparable<SeamailThread> {
   SeamailThread(
     this.id,
     this._parent,
@@ -356,6 +365,15 @@ class SeamailThread extends ChangeNotifier with BusyMixin {
     super.removeListener(listener);
     if (!hasListeners && maxUpdatePeriod != null)
       _timer.stop();
+  }
+
+  @override
+  int compareTo(SeamailThread other) {
+    if (subject != other.subject)
+      return subject.compareTo(other.subject);
+    if (lastMessageTimestamp != other.lastMessageTimestamp)
+      return lastMessageTimestamp.compareTo(other.lastMessageTimestamp);
+    return id.compareTo(other.id);
   }
 }
 

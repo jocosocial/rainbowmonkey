@@ -33,6 +33,7 @@ import 'src/views/karaoke.dart';
 import 'src/views/mentions.dart';
 import 'src/views/profile.dart';
 import 'src/views/profile_editor.dart';
+import 'src/views/search.dart';
 import 'src/views/settings.dart';
 import 'src/views/stream.dart';
 import 'src/views/user.dart';
@@ -61,7 +62,13 @@ void main() {
     onError: _handleError,
     onCheckForMessages: checkForMessages,
   );
-  runApp(CruiseMonkeyApp(cruiseModel: model, store: store, scaffoldKey: scaffoldKey));
+  runApp(LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints constraints) {
+      // if (constraints.maxWidth == 0)
+      //   return const SizedBox.shrink();
+      return CruiseMonkeyApp(cruiseModel: model, store: store, scaffoldKey: scaffoldKey);
+    },
+  ));
   if (Platform.isAndroid)
     runBackground(store);
   Notifications.instance.then((Notifications notifications) {
@@ -208,6 +215,7 @@ class CruiseMonkeyHome extends StatelessWidget {
     DeckPlanView(key: PageStorageKey<UniqueObject>(UniqueObject())),
     gamesView,
     karaokeView,
+    searchView,
   ];
 
   Widget buildTab(BuildContext context, View page, { EdgeInsets iconPadding = EdgeInsets.zero }) {
@@ -296,25 +304,19 @@ class CruiseMonkeyHome extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 20.0),
                           child: Center(
                             heightFactor: 1.0,
-                            child: LayoutBuilder(
-                              builder: (BuildContext context, BoxConstraints constraints) {
-                                if (constraints.maxWidth == 0)
-                                  return const SizedBox.shrink();
-                                return TabBar(
-                                  key: ValueKey<int>(pages.length),
-                                  isScrollable: true,
-                                  indicator: BoxDecoration(
-                                    color: const Color(0x10FFFFFF),
-                                    border: Border(
-                                      top: BorderSide(
-                                        color: theme.accentColor,
-                                        width: 10.0,
-                                      ),
-                                    ),
+                            child: TabBar(
+                              key: ValueKey<int>(pages.length),
+                              isScrollable: true,
+                              indicator: BoxDecoration(
+                                color: const Color(0x10FFFFFF),
+                                border: Border(
+                                  top: BorderSide(
+                                    color: theme.accentColor,
+                                    width: 10.0,
                                   ),
-                                  tabs: pages.map<Widget>((View page) => buildTab(context, page, iconPadding: const EdgeInsets.only(top: 8.0))).toList(),
-                                );
-                              },
+                                ),
+                              ),
+                              tabs: pages.map<Widget>((View page) => buildTab(context, page, iconPadding: const EdgeInsets.only(top: 8.0))).toList(),
                             ),
                           ),
                         ),

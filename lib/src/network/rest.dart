@@ -438,18 +438,20 @@ class RestTwitarr implements Twitarr {
   static Calendar _parseCalendar(String rawData) {
     final dynamic data = Json.parse(rawData);
     _checkStatusIsOk(data);
-    return Calendar(events: (data.events as Json).asIterable().map<Event>((dynamic value) {
-      return Event(
-        id: value.id.toString(),
-        title: value.title.toString(),
-        official: (value.official as Json).toBoolean(),
-        following: (value.following as Json).toBoolean(),
-        description: (value.description as Json).valueType == String ? value.description.toString() : null,
-        location: value.location.toString(),
-        startTime: _parseDateTime(value.start_time as Json),
-        endTime: _parseDateTime(value.end_time as Json),
-      );
-    }).toList());
+    return Calendar(events: (data.events as Json).asIterable().map<Event>(_parseEvent).toList());
+  }
+
+  static EventSummary _parseEvent(dynamic value) {
+    return EventSummary(
+      id: value.id.toString(),
+      title: value.title.toString(),
+      official: (value.official as Json).toBoolean(),
+      following: (value.following as Json).toBoolean(),
+      description: (value.description as Json).valueType == String ? value.description.toString() : null,
+      location: value.location.toString(),
+      startTime: _parseDateTime(value.start_time as Json),
+      endTime: _parseDateTime(value.end_time as Json),
+    );
   }
 
   @override
@@ -1778,6 +1780,52 @@ class RestTwitarr implements Twitarr {
       forums: (data.forum_mentions as Json).asIterable().map<ForumSummary>(_parseForumBody).toList(),
       freshnessToken: (data.query_time as Json).toInt(),
     );
+  }
+
+  @override
+  Progress<Set<SearchResultSummary>> search({
+    Credentials credentials,
+    String searchTerm,
+  }) {
+    // Ruby tries to interpret the search term as a path,
+    // so "/", ".", and "\" are all problematic.
+    searchTerm = searchTerm
+      .replaceAll('.', '')
+      .replaceAll('/', '')
+      .replaceAll('\\', '')
+      .replaceAll('\0', ''); // %00 is particularly bad.
+    if (searchTerm.trim().isEmpty)
+      return Progress<Set<SearchResultSummary>>.completed(const <SearchResultSummary>{});
+    final FormData body = FormData()
+      ..add('app', 'plain');
+    if (credentials != null) {
+      assert(credentials.key != null);
+      body.add('key', credentials.key);
+    }
+    return Progress<Set<SearchResultSummary>>((ProgressController<Set<SearchResultSummary>> completer) async {
+      final Set<SearchResultSummary> result = await compute<String, Set<SearchResultSummary>>(
+        _parseSearchResults,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/search/all/${Uri.encodeComponent(searchTerm)}?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
+        ),
+      );
+      return result;
+    });
+  }
+
+  static Set<SearchResultSummary> _parseSearchResults(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    return <SearchResultSummary>{
+      ...(data.users.matches as Json).asIterable().map<UserSummary>(_parseUser),
+      ...(data.seamails.matches as Json).asIterable().map<SeamailThreadSummary>(_parseSeamailThread),
+      ...(data.tweets.matches as Json).asIterable().map<StreamMessageSummary>(_parseStreamPost),
+      ...(data.forums.matches as Json).asIterable().map<ForumSummary>(_parseForumBody),
+      ...(data.events.matches as Json).asIterable().map<EventSummary>(_parseEvent),
+    };
   }
 
   static UserSummary _parseUser(dynamic user) {

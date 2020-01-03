@@ -12,6 +12,7 @@ import 'package:pedantic/pedantic.dart' show unawaited;
 
 import '../models/calendar.dart';
 import '../models/errors.dart';
+import '../models/search.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
@@ -50,7 +51,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     _busy(() async {
       selectTwitarrConfiguration(initialTwitarrConfiguration); // sync
       _seamail = Seamail.empty();
-      _mentions = Mentions.empty();
+      _mentions = Mentions.empty(this);
       _forums = _createForums();
       _tweetStream = _createTweetStream();
       _restoreSettings(); // async
@@ -351,7 +352,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       if (_currentCredentials != oldCredentials)
         _calendar.reset();
       _seamail = Seamail.empty();
-      _mentions = Mentions.empty();
+      _mentions = Mentions.empty(this);
       _forums = _createForums();
       _tweetStream = _createTweetStream();
       if (_loggedIn.isCompleted)
@@ -372,6 +373,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           onThreadRead: _handleThreadRead,
         );
         _mentions = Mentions(
+          this,
           _twitarr,
           _currentCredentials,
           this,
@@ -635,6 +637,28 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       text: text,
       photo: photo,
       parentId: parentId,
+    );
+  }
+
+  Progress<Set<SearchResult>> search(String query) {
+    return Progress.convert<Set<SearchResultSummary>, Set<SearchResult>>(
+      _twitarr.search(searchTerm: query, credentials: _currentCredentials),
+      (Set<SearchResultSummary> results) {
+        return results.map<SearchResult>((SearchResultSummary item) {
+          if (item is UserSummary)
+            return item.toUser(this);
+          if (item is EventSummary)
+            return item;
+          if (item is ForumSummary)
+            return forums.obtainForum(item);
+          if (item is SeamailThreadSummary)
+            return seamail.threadBySummary(item);
+          if (item is StreamMessageSummary)
+            return StreamPost.from(item, this);
+          assert(false);
+          return null;
+       }).where((SearchResult result) => result != null).toSet();
+      },
     );
   }
 

@@ -27,6 +27,9 @@ abstract class CommsView extends StatelessWidget implements View {
   @protected
   void startConversation(BuildContext context, AuthenticatedUser user);
 
+  @protected
+  IconData get addIcon;
+
   @override
   Widget buildFab(BuildContext context) {
     final ContinuousProgress<AuthenticatedUser> userProgress = Cruise.of(context).user;
@@ -34,7 +37,7 @@ abstract class CommsView extends StatelessWidget implements View {
     return AnimatedBuilder(
       animation: Listenable.merge(<Listenable>[userProgress.best, serverStatusProgress.best]),
       builder: (BuildContext context, Widget child) {
-        const Widget icon = Icon(Icons.add_comment);
+        final Widget icon = Icon(addIcon);
         final AuthenticatedUser user = userProgress.currentValue;
         final ServerStatus serverStatus = serverStatusProgress.currentValue ?? const ServerStatus();
         if (user != null && canPost(serverStatus)) {
@@ -69,6 +72,9 @@ class PrivateCommsView extends CommsView {
 
   @override
   void startConversation(BuildContext context, AuthenticatedUser user) => createNewSeamail(context, user);
+
+  @override
+  IconData get addIcon => Icons.mail;
 
   @override
   Widget buildTabIcon(BuildContext context) {
@@ -118,7 +124,6 @@ class PrivateCommsView extends CommsView {
     final CruiseModel cruise = Cruise.of(context);
     final Seamail seamail = cruise.seamail;
     final ContinuousProgress<ServerStatus> serverStatusProgress = cruise.serverStatus;
-    final DateTime now = Now.of(context);
     return ModeratorBuilder(
       builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
         return BusyIndicator(
@@ -129,6 +134,7 @@ class PrivateCommsView extends CommsView {
               final ServerStatus status = serverStatusProgress.currentValue ?? const ServerStatus();
               final List<SeamailThread> seamailThreads = seamail.toList()
                 ..sort(
+                  // Default SeamailThread sort is not time-based, it's subject-based.
                   (SeamailThread a, SeamailThread b) {
                     if (b.lastMessageTimestamp != a.lastMessageTimestamp)
                       return b.lastMessageTimestamp.compareTo(a.lastMessageTimestamp);
@@ -180,58 +186,8 @@ class PrivateCommsView extends CommsView {
                         }
                         index -= 1;
                       } else {
-                        if (index < seamailThreads.length) {
-                          final SeamailThread thread = seamailThreads[index];
-                          final List<SeamailMessage> messages = thread.getMessages();
-                          String lastMessage;
-                          if (messages.isNotEmpty) {
-                            lastMessage = '${messages.last.user}: ${messages.last.text}';
-                          } else if (thread.unreadCount > 0) {
-                            lastMessage = '${thread.unreadCount} new message${thread.unreadCount == 1 ? '' : "s"}';
-                          } else {
-                            lastMessage = '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}';
-                          }
-                          return ListTile(
-                            key: ValueKey<SeamailThread>(thread),
-                            leading: Badge(
-                              child: cruise.avatarFor(thread.users, size: 56.0),
-                              alignment: const AlignmentDirectional(1.1, 1.1),
-                              enabled: thread.hasUnread,
-                            ),
-                            title: Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: Text(
-                                    thread.subject,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-                                  ),
-                                ),
-                                Text(
-                                  ' ${prettyDuration(now.difference(thread.lastMessageTimestamp), short: true)}',
-                                  style: textTheme.caption,
-                                ),
-                              ],
-                            ),
-                            subtitle: ListBody(
-                              children: <Widget>[
-                                Text(
-                                  thread.users.map<String>((User user) => user.toString()).join(', '),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  lastMessage,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                            onTap: () { showSeamailThread(context, thread); },
-                            isThreeLine: true,
-                          );
-                        }
+                        if (index < seamailThreads.length)
+                          return SeamailListTile(thread: seamailThreads[index]);
                         index -= seamailThreads.length;
                       }
                     }
@@ -276,6 +232,9 @@ class PublicCommsView extends CommsView {
   void startConversation(BuildContext context, AuthenticatedUser user) => createNewForum(context);
 
   @override
+  IconData get addIcon => Icons.add_comment;
+
+  @override
   Widget buildTabIcon(BuildContext context) => const Icon(Icons.forum);
 
   @override
@@ -311,7 +270,6 @@ class PublicCommsView extends CommsView {
     final Forums forums = cruise.forums;
     final Mentions mentions = cruise.mentions;
     final ContinuousProgress<ServerStatus> serverStatusProgress = cruise.serverStatus;
-    final DateTime now = Now.of(context);
     return ModeratorBuilder(
       builder: (BuildContext context, User currentUser, bool canModerate, bool isModerating) {
         return BusyIndicator(
@@ -322,6 +280,7 @@ class PublicCommsView extends CommsView {
               final ServerStatus status = serverStatusProgress.currentValue ?? const ServerStatus();
               final List<ForumThread> forumThreads = forums.toList()
                 ..sort(
+                  // Default ForumThread sort is not time-based, it's subject-based.
                   (ForumThread a, ForumThread b) {
                     if (a.isSticky != b.isSticky) {
                       if (a.isSticky)
@@ -420,57 +379,8 @@ class PublicCommsView extends CommsView {
                       if (status.forumsEnabled) {
                         // Forums
                         // TODO(ianh): make these appear less suddenly
-                        final ForumThread forum = forumThreads[index];
                         forums.observing(index);
-                        if (forum == null) {
-                          return const ListTile(
-                            leading: CircleAvatar(child: Icon(Icons.forum)),
-                            title: Text('...'),
-                            subtitle: Text(''),
-                            isThreeLine: true,
-                          );
-                        }
-                        final String unread = forum.unreadCount > 0 ? ' (${forum.unreadCount} new)' : '';
-                        final String lastMessage = 'Most recent from ${forum.lastMessageUser}';
-                        return AnimatedOpacity(
-                          key: ValueKey<ForumThread>(forum),
-                          opacity: forum.fresh ? 1.0 : 0.5,
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.fastOutSlowIn,
-                          child: ListTile(
-                            leading: Tooltip(
-                              message: forum.isSticky ? 'Sticky forum' : 'Forum',
-                              child: Badge(
-                                child: CircleAvatar(child: Icon(forum.isSticky ? Icons.feedback : Icons.forum)),
-                                alignment: const AlignmentDirectional(1.1, 1.1),
-                                enabled: forum.hasUnread,
-                              ),
-                            ),
-                            title: Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: Text(
-                                    forum.subject,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: forum.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-                                  ),
-                                ),
-                                Text(
-                                  ' ${prettyDuration(now.difference(forum.lastMessageTimestamp), short: true)}',
-                                  style: textTheme.caption,
-                                ),
-                              ],
-                            ),
-                            subtitle: Text(
-                              '${forum.totalCount} message${forum.totalCount == 1 ? '' : "s"}$unread\n$lastMessage',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            isThreeLine: true,
-                            onTap: () { showForumThread(context, forum); },
-                          ),
-                        );
+                        return ForumListTile(thread: forumThreads[index]);
                       }
                     }
                     assert(false);
@@ -534,5 +444,126 @@ class OrListenable extends ValueNotifier<bool> {
   @override
   String toString() {
     return '$runtimeType([${_children.join(", ")}])';
+  }
+}
+
+class ForumListTile extends StatelessWidget {
+  const ForumListTile({ Key key, this.thread }) : super(key: key);
+
+  final ForumThread thread;
+
+  @override
+  Widget build(BuildContext context) {
+    if (thread == null) {
+      return const ListTile(
+        leading: CircleAvatar(child: Icon(Icons.forum)),
+        title: Text('...'),
+        subtitle: Text(''),
+        isThreeLine: true,
+      );
+    }
+    final String unread = thread.unreadCount > 0 ? ' (${thread.unreadCount} new)' : '';
+    final String lastMessage = 'Most recent from ${thread.lastMessageUser}';
+    return AnimatedOpacity(
+      key: ValueKey<ForumThread>(thread),
+      opacity: thread.fresh ? 1.0 : 0.5,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.fastOutSlowIn,
+      child: ListTile(
+        leading: Tooltip(
+          message: thread.isSticky ? 'Sticky forum' : 'Forum',
+          child: Badge(
+            child: CircleAvatar(child: Icon(thread.isSticky ? Icons.feedback : Icons.forum)),
+            alignment: const AlignmentDirectional(1.1, 1.1),
+            enabled: thread.hasUnread,
+          ),
+        ),
+        title: Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                thread.subject,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+              ),
+            ),
+            Text(
+              ' ${prettyDuration(Now.of(context).difference(thread.lastMessageTimestamp), short: true)}',
+              style: Theme.of(context).textTheme.caption,
+            ),
+          ],
+        ),
+        subtitle: Text(
+          '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}$unread\n$lastMessage',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        isThreeLine: true,
+        onTap: () { PublicCommsView.showForumThread(context, thread); },
+      ),
+    );
+  }
+}
+
+class SeamailListTile extends StatelessWidget {
+  const SeamailListTile({
+    Key key,
+    this.thread,
+  }) : super(key: key);
+
+  final SeamailThread thread;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<SeamailMessage> messages = thread.getMessages();
+    String lastMessage;
+    if (messages.isNotEmpty) {
+      lastMessage = '${messages.last.user}: ${messages.last.text}';
+    } else if (thread.unreadCount > 0) {
+      lastMessage = '${thread.unreadCount} new message${thread.unreadCount == 1 ? '' : "s"}';
+    } else {
+      lastMessage = '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}';
+    }
+    return ListTile(
+      key: ValueKey<SeamailThread>(thread),
+      leading: Badge(
+        child: Cruise.of(context).avatarFor(thread.users, size: 56.0),
+        alignment: const AlignmentDirectional(1.1, 1.1),
+        enabled: thread.hasUnread,
+      ),
+      title: Row(
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              thread.subject,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+            ),
+          ),
+          Text(
+            ' ${prettyDuration(Now.of(context).difference(thread.lastMessageTimestamp), short: true)}',
+            style: Theme.of(context).textTheme.caption,
+          ),
+        ],
+      ),
+      subtitle: ListBody(
+        children: <Widget>[
+          Text(
+            thread.users.map<String>((User user) => user.toString()).join(', '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            lastMessage,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+      onTap: () { PrivateCommsView.showSeamailThread(context, thread); },
+      isThreeLine: true,
+    );
   }
 }

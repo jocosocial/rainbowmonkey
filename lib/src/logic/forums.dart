@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/errors.dart';
 import '../models/reactions.dart';
+import '../models/search.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -72,10 +73,6 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
     _timer.reload();
   }
 
-  ForumThread getThreadById(String id) {
-    return _threads[id];
-  }
-
   bool _updating = false;
   @protected
   Future<void> update() async {
@@ -93,15 +90,8 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
         _fetchCount = _minFetchCount;
       final Set<ForumSummary> newThreads = summary.forums;
       final Set<ForumThread> removedThreads = Set<ForumThread>.from(_threads.values);
-      for (ForumSummary threadSummary in newThreads) {
-        if (_threads.containsKey(threadSummary.id)) {
-          final ForumThread thread = _threads[threadSummary.id];
-          thread.updateFrom(threadSummary);
-          removedThreads.remove(thread);
-        } else {
-          _threads[threadSummary.id] = ForumThread.from(threadSummary, this, _twitarr, _credentials, photoManager);
-        }
-      }
+      for (ForumSummary threadSummary in newThreads)
+        removedThreads.remove(obtainForum(threadSummary));
       for (ForumThread thread in removedThreads)
         thread.obsolete();
       _freshCount = newThreads.length;
@@ -114,6 +104,15 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
       endBusy();
     }
     notifyListeners();
+  }
+
+  ForumThread obtainForum(ForumSummary threadSummary) {
+    if (_threads.containsKey(threadSummary.id)) {
+      final ForumThread thread = _threads[threadSummary.id];
+      thread.updateFrom(threadSummary);
+      return thread;
+    }
+    return _threads[threadSummary.id] = ForumThread.from(threadSummary, this, _twitarr, _credentials, photoManager);
   }
 
   Progress<ForumThread> postThread({
@@ -160,7 +159,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   }
 }
 
-class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMessage> {
+class ForumThread extends SearchResult with ChangeNotifier, BusyMixin, IterableMixin<ForumMessage>, Comparable<ForumThread> {
   ForumThread(
     this.id,
     this._parent,
@@ -439,6 +438,20 @@ class ForumThread extends ChangeNotifier with BusyMixin, IterableMixin<ForumMess
     super.removeListener(listener);
     if (!hasListeners && maxUpdatePeriod != null)
       _timer.stop();
+  }
+
+  @override
+  int compareTo(ForumThread other) {
+    if (isSticky != other.isSticky) {
+      if (isSticky)
+        return -1;
+      return 1;
+    }
+    if (lastMessageTimestamp != other.lastMessageTimestamp)
+      return lastMessageTimestamp.compareTo(other.lastMessageTimestamp);
+    if (subject == other.subject)
+      return subject.compareTo(other.subject);
+    return id.compareTo(other.id);
   }
 }
 

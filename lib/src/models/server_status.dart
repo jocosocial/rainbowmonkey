@@ -87,6 +87,7 @@ class ServerStatus {
 
   final Role userRole;
 
+  // TODO(ianh): make this use user.canModerate instead
   bool get _override {
     assert(userRole != null);
     switch (userRole) {

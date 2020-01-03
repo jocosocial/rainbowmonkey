@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/server_status.dart';
 import '../searchable_list.dart';
 
-class GameRecordsLoader extends RecordsLoader<Game> {
+class GameRecordsLoader extends AssetRecordsLoader<Game> {
   @override
   bool isEnabled(ServerStatus status) => status.gamesEnabled;
 
@@ -25,7 +25,7 @@ class GameRecordsLoader extends RecordsLoader<Game> {
   }
 }
 
-class Game extends Record implements Comparable<Game> {
+class Game extends AssetRecord implements Comparable<Game> {
   const Game(this.name);
 
   final String name;
@@ -45,7 +45,7 @@ class Game extends Record implements Comparable<Game> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildSearchResult(BuildContext context) {
     return ListTile(
       title: Text(name),
     );

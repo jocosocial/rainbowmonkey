@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/errors.dart';
 import '../models/reactions.dart';
+import '../models/search.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -194,6 +195,8 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   }
 
   bool postIsNew(StreamPost post) {
+    if (!_postIds.containsKey(post.id))
+      return false;
     return _postIds[post.id] <= _anchorIndex;
   }
 
@@ -363,7 +366,7 @@ class TweetStream extends ChangeNotifier with BusyMixin {
   }
 }
 
-class StreamPost {
+class StreamPost implements SearchResult, Comparable<StreamPost> {
   const StreamPost({
     this.id,
     this.user,
@@ -456,4 +459,11 @@ class StreamPost {
 
   @override
   String toString() => '$runtimeType($id, $timestamp, $user, "$text")';
+
+  @override
+  int compareTo(StreamPost other) {
+    if (timestamp != other.timestamp)
+      return timestamp.compareTo(other.timestamp);
+    return id.compareTo(other.id);
+  }
 }
