@@ -105,44 +105,46 @@ class _MentionsViewState extends State<MentionsView> {
                               if (item is ForumMentionsItem) {
                                 if (!status.forumsEnabled)
                                   return const SizedBox.shrink();
-                                final ForumThread thread = cruise.forums.getThreadById(item.id);
+                                final ForumThread thread = item.thread;
+                                assert(thread != null);
                                 final String availability = thread == null ? ' (Forum unavailable...)' : '';
-                                final String lastMessage = 'Most recent from ${item.lastMessageUser}';
+                                final String lastMessage = 'Most recent from ${item.thread.lastMessageUser}';
                                 return ListTile(
                                   leading: Tooltip(
-                                    message: item.isSticky ? 'Sticky forum' : 'Forum',
+                                    message: thread.isSticky ? 'Sticky forum' : 'Forum',
                                     child: const CircleAvatar(child: Icon(Icons.forum)),
                                   ),
                                   title: Row(
                                     children: <Widget>[
                                       Expanded(
                                         child: Text(
-                                          item.subject,
+                                          thread.subject,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(fontWeight: FontWeight.bold),
                                         ),
                                       ),
                                       Text(
-                                        ' ${prettyDuration(now.difference(item.timestamp), short: true)}',
+                                        ' ${prettyDuration(now.difference(thread.lastMessageTimestamp), short: true)}',
                                         style: textTheme.caption,
                                       ),
                                     ],
                                   ),
                                   subtitle: Text(
-                                    '${item.totalCount} message${item.totalCount == 1 ? '' : "s"}$availability\n$lastMessage',
+                                    '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}$availability\n$lastMessage',
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   isThreeLine: true,
-                                  onTap: thread != null ? () { // TODO(ianh): make this tappable even if we haven't seen the thread yet
+                                  onTap: () {
+                                    assert(thread != null);
                                     Navigator.push<void>(
                                       context,
                                       MaterialPageRoute<void>(
                                         builder: (BuildContext context) => ForumThreadView(thread: thread),
                                       ),
                                     );
-                                  } : null,
+                                  },
                                 );
                               }
                               return const ListTile(

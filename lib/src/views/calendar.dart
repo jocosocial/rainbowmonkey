@@ -312,7 +312,7 @@ class TimeSlice extends StatelessWidget {
     @required this.direction,
     @required this.isLast,
     this.lastStartTime,
-    @required this.onFavorite,
+    this.onFavorite,
     @required this.isFavorite,
     @required this.favoriteOverride,
   }) : assert(event != null),
@@ -320,8 +320,7 @@ class TimeSlice extends StatelessWidget {
        assert(isLoggedIn != null),
        assert(direction != null),
        assert(isLast != null),
-       assert(onFavorite != null),
-       assert(isFavorite != null),
+       assert(onFavorite == null || isFavorite != null),
        assert(favoriteOverride != null),
        super(key: key ?? Key(event.id));
 
@@ -387,17 +386,18 @@ class TimeSlice extends StatelessWidget {
             ),
           ),
         ),
-        Semantics(
-          checked: isFavorite,
-          child: IconButton(
-            icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-            color: favoriteOverride ? Theme.of(context).accentColor : null,
-            tooltip: isFavorite ? 'Unmark this event.' : 'Mark this event as interesting.',
-            onPressed: isLoggedIn ? () {
-              onFavorite(!isFavorite);
-            } : null,
+        if (onFavorite != null)
+          Semantics(
+            checked: isFavorite,
+            child: IconButton(
+              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+              color: favoriteOverride ? Theme.of(context).accentColor : null,
+              tooltip: isFavorite ? 'Unmark this event.' : 'Mark this event as interesting.',
+              onPressed: isLoggedIn ? () {
+                onFavorite(!isFavorite);
+              } : null,
+            ),
           ),
-        ),
       ],
     );
     if (endTime.isBefore(now)) {

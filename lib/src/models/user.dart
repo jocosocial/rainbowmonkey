@@ -2,6 +2,8 @@ import 'dart:ui' show hashValues;
 
 import 'package:flutter/foundation.dart';
 
+import 'search.dart';
+
 enum Role { admin, tho, moderator, user, muted, banned, none }
 
 @immutable
@@ -43,7 +45,7 @@ class Credentials {
 }
 
 @immutable
-class User implements Comparable<User> {
+class User extends SearchResult implements Comparable<User> {
   const User({
     @required this.username,
     this.displayName,
@@ -92,8 +94,6 @@ class User implements Comparable<User> {
   int compareTo(User other) {
     return username.compareTo(other.username);
   }
-
-  bool get isModerator => username == 'moderator';
 
   User get effectiveUser => this; // ignore: avoid_returning_this
 
@@ -144,6 +144,26 @@ class User implements Comparable<User> {
     }
     return null;
   }
+
+  bool get canModerate {
+    assert(role != null);
+    switch (role) {
+      case Role.admin:
+      case Role.tho:
+      case Role.moderator:
+        return true;
+      case Role.user:
+      case Role.muted:
+      case Role.banned:
+      case Role.none:
+        return false;
+    }
+    return null;
+  }
+
+  bool get isModerator => username == 'moderator';
+
+  bool get isModerating => false;
 
   @override
   String toString() {
@@ -206,6 +226,9 @@ class AuthenticatedUser extends User {
 
   @override
   User get effectiveUser => credentials.asMod ? const User.moderator() : this;
+
+  @override
+  bool get isModerating => credentials.asMod;
 
   static bool isValidUsername(String username) {
     // https://github.com/seamonkeysocial/twitarr/blob/master/app/models/user.rb#L10

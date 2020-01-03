@@ -297,8 +297,15 @@ abstract class Twitarr {
     @required int freshnessToken,
   });
 
+  Progress<Set<SearchResultSummary>> search({
+    Credentials credentials,
+    String searchTerm,
+  });
+
   void dispose();
 }
+
+abstract class SearchResultSummary { }
 
 class SeamailSummary {
   const SeamailSummary({
@@ -311,7 +318,7 @@ class SeamailSummary {
   final int freshnessToken;
 }
 
-class SeamailThreadSummary {
+class SeamailThreadSummary implements SearchResultSummary {
   const SeamailThreadSummary({
     this.id,
     this.subject,
@@ -376,7 +383,7 @@ class StreamSliceSummary {
   final int boundaryToken;
 }
 
-class StreamMessageSummary {
+class StreamMessageSummary implements SearchResultSummary {
   const StreamMessageSummary({
     this.id,
     this.user,
@@ -422,7 +429,7 @@ class ForumListSummary {
   final int totalCount;
 }
 
-class ForumSummary {
+class ForumSummary implements SearchResultSummary {
   const ForumSummary({
     this.id,
     this.subject,
@@ -506,7 +513,7 @@ class AnnouncementSummary {
   }
 }
 
-class UserSummary {
+class UserSummary implements SearchResultSummary {
   const UserSummary({
     @required this.username,
     this.displayName,
@@ -547,4 +554,26 @@ class MentionsSummary {
   final List<ForumSummary> forums;
 
   final int freshnessToken;
+}
+
+class EventSummary extends Event implements SearchResultSummary {
+  const EventSummary({
+    String id,
+    String title,
+    bool official,
+    bool following,
+    String description,
+    String location,
+    DateTime startTime,
+    DateTime endTime,
+  }) : super(
+    id: id,
+    title: title,
+    official: official,
+    following: following,
+    description: description,
+    location: location,
+    startTime: startTime,
+    endTime: endTime,
+  );
 }

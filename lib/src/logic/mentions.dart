@@ -7,12 +7,15 @@ import '../models/reactions.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../utils.dart';
+import 'cruise.dart';
+import 'forums.dart';
 import 'photo_manager.dart';
 
 typedef ThreadReadCallback = void Function(String threadId);
 
 class Mentions extends ChangeNotifier with BusyMixin {
   Mentions(
+    this._cruise,
     this._twitarr,
     this._credentials,
     this._photoManager, {
@@ -26,12 +29,14 @@ class Mentions extends ChangeNotifier with BusyMixin {
   }
 
   Mentions.empty(
+    this._cruise,
   ) : _twitarr = null,
       _credentials = null,
       _photoManager = null,
       maxUpdatePeriod = null,
       onError = null;
 
+  final CruiseModel _cruise;
   final Twitarr _twitarr;
   final Credentials _credentials;
   final PhotoManager _photoManager;
@@ -59,7 +64,7 @@ class Mentions extends ChangeNotifier with BusyMixin {
       final MentionsSummary summary = await _twitarr.getMentions(credentials: _credentials).asFuture();
       final List<MentionsItem> oldList = _currentMentions;
       _currentMentions = <MentionsItem>[]
-        ..addAll(summary.forums.map<MentionsItem>((ForumSummary summary) => ForumMentionsItem.from(summary, _photoManager)))
+        ..addAll(summary.forums.map<MentionsItem>((ForumSummary summary) => ForumMentionsItem(_cruise.forums.obtainForum(summary))))
         ..addAll(summary.streamPosts.map<MentionsItem>((StreamMessageSummary summary) => StreamMentionsItem.from(summary, _photoManager)))
         ..sort(
           (MentionsItem a, MentionsItem b) {
@@ -122,12 +127,21 @@ class Mentions extends ChangeNotifier with BusyMixin {
   }
 }
 
-abstract class MentionsItem {
+abstract class MentionsItem implements Comparable<MentionsItem> {
   const MentionsItem(this.id, this.timestamp);
 
   final String id;
 
   final DateTime timestamp;
+
+  @override
+  int compareTo(MentionsItem other) {
+    if (timestamp.isBefore(other.timestamp))
+      return -1;
+    if (timestamp.isAfter(other.timestamp))
+      return 1;
+    return id.compareTo(other.id);
+  }
 
   @override
   bool operator ==(Object other) {
@@ -147,31 +161,11 @@ abstract class MentionsItem {
 }
 
 class ForumMentionsItem extends MentionsItem {
-  const ForumMentionsItem({
-    String id,
-    this.subject,
-    this.isSticky,
-    this.isLocked,
-    this.totalCount,
-    this.lastMessageUser,
-    DateTime lastMessageTimestamp,
-  }) : super(id, lastMessageTimestamp);
+  ForumMentionsItem(
+    this.thread,
+  ) : super(thread.id, thread.lastMessageTimestamp);
 
-  ForumMentionsItem.from(
-    ForumSummary thread,
-    PhotoManager photoManager,
-  ) : subject = thread.subject,
-      isSticky = thread.sticky,
-      isLocked = thread.locked,
-      totalCount = thread.totalCount,
-      lastMessageUser = thread.lastMessageUser.toUser(photoManager),
-      super(thread.id, thread.lastMessageTimestamp);
-
-  final String subject;
-  final bool isSticky;
-  final bool isLocked;
-  final int totalCount;
-  final User lastMessageUser;
+  final ForumThread thread;
 }
 
 class StreamMentionsItem extends MentionsItem {

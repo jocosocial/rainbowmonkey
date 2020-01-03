@@ -922,6 +922,7 @@ class LabeledIconButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             icon,
             const SizedBox(height: 8.0),
@@ -1599,22 +1600,8 @@ class ModeratorBuilder extends StatelessWidget {
       valueListenable: Cruise.of(context).user.best,
       builder: (BuildContext context, ProgressValue<AuthenticatedUser> userProgress, Widget child) {
         final AuthenticatedUser user = userProgress is SuccessfulProgress<AuthenticatedUser> ? userProgress.value : null;
-        bool canModerate = false;
-        if (user != null) {
-          switch (user.role) {
-            case Role.admin:
-            case Role.tho:
-            case Role.moderator:
-              canModerate = true;
-              break;
-            case Role.user:
-            case Role.muted:
-            case Role.banned:
-            case Role.none:
-              break;
-          }
-        }
-        final bool isModerating = canModerate && user.credentials.asMod;
+        final bool canModerate = user != null && user.canModerate;
+        final bool isModerating = user != null && user.isModerating;
         Widget result = builder(context, user, canModerate, isModerating);
         if (includeBorder) {
           result = ModeratorBorder(

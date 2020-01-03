@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/server_status.dart';
 import '../searchable_list.dart';
 
-class SongRecordsLoader extends RecordsLoader<Song> {
+class SongRecordsLoader extends AssetRecordsLoader<Song> {
   @override
   bool isEnabled(ServerStatus status) => status.karaokeEnabled;
 
@@ -26,7 +26,7 @@ class SongRecordsLoader extends RecordsLoader<Song> {
   }
 }
 
-class Song extends Record implements Comparable<Song> {
+class Song extends AssetRecord implements Comparable<Song> {
   const Song(this.title, this.artist, this.metadata);
 
   final String title;
@@ -51,7 +51,7 @@ class Song extends Record implements Comparable<Song> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildSearchResult(BuildContext context) {
     final TextTheme textStyle = Theme.of(context).textTheme;
     Widget trailing;
     switch (metadata) {
