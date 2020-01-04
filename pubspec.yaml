@@ -20,9 +20,8 @@ dev_dependencies:
   flutter_launcher_icons: any
 
 flutter_icons:
-  # update with: flutter packages pub run flutter_launcher_icons:main
-  # create notification icon with: convert icons/foreground.png -trim +repage android/app/src/main/res/drawable/notifications.png
-  # create about dialog icon with: convert icons/cruise_monkey.png -resize 128x128 images/cruise_monkey.png
+  # The core inputs are icons/foreground.png and icons/background.png.
+  # Run "update_icons.sh" to update the rest. Needs imagemagick installed.
   android: true
   ios: true
   image_path: icons/cruise_monkey.png
