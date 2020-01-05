@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -257,7 +259,7 @@ class _UserViewState extends State<UserView> {
               DefaultTextStyle.merge(
                 textAlign: TextAlign.center,
                 child: SizedBox(
-                  height: viewportConstraints.maxHeight * 0.3,
+                  height: math.max(viewportConstraints.maxHeight * 0.3, textTheme.display1.fontSize * 4 + textTheme.headline.fontSize * 2),
                   child: Stack(
                     children: <Widget>[
                       const Positioned(
@@ -302,6 +304,14 @@ class _UserViewState extends State<UserView> {
               ContinuousProgressBuilder<ServerStatus>(
                 progress: Cruise.of(context).serverStatus,
                 onRetry: () { Cruise.of(context).forceUpdate(); },
+                failureMessage: const Padding(
+                  padding: EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 8.0),
+                  child: Text(
+                    'If you are unable to connect to the Twitarr server, consider turning on Airplane mode and then turning on WiFi. '
+                    'Twitarr is only available on the ship network.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
                 nullChild: const Text('Delight in the cruise!', textAlign: TextAlign.center),
                 idleChild: const Text('Please enjoy the cruise!', textAlign: TextAlign.center),
                 builder: (BuildContext context, ServerStatus status) {

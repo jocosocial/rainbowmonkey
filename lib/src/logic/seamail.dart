@@ -10,8 +10,6 @@ import '../progress.dart';
 import '../utils.dart';
 import 'photo_manager.dart';
 
-typedef ThreadReadCallback = void Function(String threadId);
-
 class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixin {
   Seamail(
     this._twitarr,

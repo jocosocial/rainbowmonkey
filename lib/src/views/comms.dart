@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,11 +9,14 @@ import '../logic/mentions.dart';
 import '../logic/seamail.dart';
 import '../models/server_status.dart';
 import '../models/user.dart';
+import '../network/twitarr.dart';
 import '../progress.dart';
 import '../utils.dart';
 import '../widgets.dart';
 import 'forums.dart';
 import 'seamail.dart';
+
+typedef DividerCallback = Widget Function(Widget child);
 
 abstract class CommsView extends StatelessWidget implements View {
   const CommsView({
@@ -56,6 +58,25 @@ abstract class CommsView extends StatelessWidget implements View {
         );
       },
     );
+  }
+
+  DividerCallback getDivider(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool showDividers = theme.platform == TargetPlatform.iOS;
+    if (showDividers) {
+      return (Widget child) {
+        return DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: Divider.createBorderSide(context),
+            ),
+          ),
+          child: child,
+        );
+      };
+    }
+    return (Widget child) => child;
   }
 }
 
@@ -131,7 +152,6 @@ class PrivateCommsView extends CommsView {
           child: AnimatedBuilder(
             animation: Listenable.merge(<Listenable>[seamail, serverStatusProgress.best]),
             builder: (BuildContext context, Widget child) {
-              final ServerStatus status = serverStatusProgress.currentValue ?? const ServerStatus();
               final List<SeamailThread> seamailThreads = seamail.toList()
                 ..sort(
                   // Default SeamailThread sort is not time-based, it's subject-based.
@@ -141,73 +161,73 @@ class PrivateCommsView extends CommsView {
                     return b.id.compareTo(a.id);
                   }
                 );
-              final bool showDividers = theme.platform == TargetPlatform.iOS;
-              int itemCount = 0;
-              if (status.seamailEnabled) {
-                itemCount += 1; // "private" heading
-                itemCount += math.max<int>(seamailThreads.length, 1 /* "no messages" */);
+              final DividerCallback divide = getDivider(context);
+              Widget noMessagesWidget;
+              if (seamailThreads.isEmpty) {
+                if (cruise.isLoggedIn) {
+                  noMessagesWidget = const ListTile(
+                    leading: Icon(Icons.phonelink_erase, size: 40.0),
+                    title: Text('I check my messages'),
+                    subtitle: Text('but I don\'t have any messages.'),
+                  );
+                } else {
+                  noMessagesWidget = const ListTile(
+                    leading: Icon(Icons.account_circle, size: 40.0),
+                    title: Text('Seamail is only available when logged in'),
+                  );
+                }
               }
-              return ListView.builder(
-                itemCount: itemCount,
-                itemBuilder: (BuildContext context, int index) {
-                  Widget generateTile() {
-                    if (status.seamailEnabled) {
-                      if (index == 0) {
-                        return ListTile(
-                          key: const Key('private'),
-                          title: Text('Private messages', style: headerStyle),
-                          trailing: ValueListenableBuilder<bool>(
-                            valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(true),
-                            builder: (BuildContext context, bool active, Widget child) {
-                              return IconButton(
-                                icon: const Icon(Icons.refresh),
-                                color: Colors.black,
-                                tooltip: 'Force refresh',
-                                onPressed: active ? null : seamail.reload,
-                              );
-                            },
-                          ),
-                        );
-                      }
-                      index -= 1;
-                      if (seamailThreads.isEmpty) {
-                        if (index == 0) { // ignore: invariant_booleans
-                          if (cruise.isLoggedIn) {
-                            return const ListTile(
-                              leading: Icon(Icons.phonelink_erase, size: 40.0),
-                              title: Text('I check my messages'),
-                              subtitle: Text('but I don\'t have any messages.'),
-                            );
-                          }
-                          return const ListTile(
-                            leading: Icon(Icons.account_circle, size: 40.0),
-                            title: Text('Seamail is only available when logged in'),
-                          );
-                        }
-                        index -= 1;
-                      } else {
-                        if (index < seamailThreads.length)
-                          return SeamailListTile(thread: seamailThreads[index]);
-                        index -= seamailThreads.length;
-                      }
-                    }
-                    assert(false);
-                    return null;
-                  }
-                  Widget result = generateTile();
-                  if (showDividers) {
-                    result = DecoratedBox(
-                      position: DecorationPosition.foreground,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: Divider.createBorderSide(context),
+              return JumpToTop(
+                builder: (BuildContext context, ScrollController controller) => CustomScrollView(
+                  controller: controller,
+                  slivers: <Widget>[
+                    SliverSafeArea(
+                      bottom: false,
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate(
+                          <Widget>[
+                            if (canModerate)
+                              divide(SwitchListTile(
+                                key: const Key('masquerade'),
+                                title: const Text('Masquerade as @moderator'),
+                                value: isModerating,
+                                onChanged: (bool value) {
+                                  cruise.setAsMod(enabled: value);
+                                },
+                              )),
+                            divide(ListTile(
+                              key: const Key('private'),
+                              title: Text('Private messages', style: headerStyle),
+                              trailing: ValueListenableBuilder<bool>(
+                                valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(true),
+                                builder: (BuildContext context, bool active, Widget child) {
+                                  return IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    color: Colors.black,
+                                    tooltip: 'Force refresh',
+                                    onPressed: active ? null : seamail.reload,
+                                  );
+                                },
+                              ),
+                            )),
+                            if (noMessagesWidget != null)
+                              divide(noMessagesWidget),
+                          ],
                         ),
                       ),
-                      child: result,
-                    );
-                  }
-                  return result;
-                },
+                    ),
+                    SliverSafeArea(
+                      top: false,
+                      sliver: SliverPrototypeExtentList(
+                        prototypeItem: const SeamailListTile.prototype(),
+                        delegate: SliverChildBuilderDelegate(
+                          (BuildContext context, int index) => divide(SeamailListTile(thread: seamailThreads[index])),
+                          childCount: seamailThreads.length,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -294,113 +314,90 @@ class PublicCommsView extends CommsView {
                   }
                 )
                 ..length = forums.totalCount;
-              final bool showDividers = theme.platform == TargetPlatform.iOS;
-              int itemCount = 0;
-              if (canModerate)
-                itemCount += 1; // masquerade
-              if (status.forumsEnabled || status.streamEnabled) {
-                itemCount += 1; // "public" heading
-                if (!isModerating && cruise.isLoggedIn)
-                  itemCount += 1; // mentions
-                if (status.streamEnabled)
-                  itemCount += 1; // twitarr
-                if (status.forumsEnabled)
-                  itemCount += forumThreads.length;
-              }
-              return ListView.builder(
-                itemCount: itemCount,
-                itemBuilder: (BuildContext context, int index) {
-                  Widget generateTile() {
-                    if (canModerate) {
-                      if (index == 0) {
-                        return SwitchListTile(
-                          key: const Key('masquerade'),
-                          title: const Text('Masquerade as @moderator'),
-                          value: isModerating,
-                          onChanged: (bool value) {
-                            cruise.setAsMod(enabled: value);
-                          },
-                        );
-                      }
-                      index -= 1;
-                    }
-                    if (status.forumsEnabled || status.streamEnabled) {
-                      if (index == 0) {
-                        return ListTile(
-                          key: const Key('public'),
-                          title: Text('Public messages', style: headerStyle),
-                          trailing: ValueListenableBuilder<bool>(
-                            valueListenable: forums.active,
-                            builder: (BuildContext context, bool active, Widget child) {
-                              return IconButton(
-                                icon: const Icon(Icons.refresh),
-                                color: Colors.black,
-                                tooltip: 'Force refresh',
-                                onPressed: active ? null : forums.reload,
-                              );
-                            },
-                          ),
-                        );
-                      }
-                      index -= 1;
-                      if (!isModerating && cruise.isLoggedIn) {
-                        if (index == 0) {
-                          return KeyedSubtree(
-                            key: const Key('mentions'),
-                            child: ValueListenableBuilder<bool>(
-                              valueListenable: mentions.hasMentions,
-                              builder: (BuildContext context, bool hasMentions, Widget child) {
-                                return ListTile(
-                                  leading: Badge(
-                                    child: CircleAvatar(child: Icon(hasMentions ? Icons.notifications_active : Icons.notifications)),
-                                    alignment: const AlignmentDirectional(1.1, 1.1),
-                                    enabled: hasMentions,
-                                  ),
-                                  title: const Text('Mentions'),
-                                  onTap: () { Navigator.pushNamed(context, '/mentions'); },
-                                );
-                              },
-                            ),
-                          );
-                        }
-                        index -= 1;
-                      }
-                      if (status.streamEnabled) {
-                        if (index == 0) {
-                          return ListTile(
-                            key: const Key('twitarr'),
-                            leading: const CircleAvatar(child: Icon(Icons.speaker_notes)),
-                            title: const Text('Twitarr'),
-                            onTap: () { Navigator.pushNamed(context, '/twitarr'); },
-                          );
-                        }
-                        index -= 1;
-                      }
-                      if (status.forumsEnabled) {
-                        // Forums
-                        // TODO(ianh): make these appear less suddenly
-                        forums.observing(index);
-                        return ForumListTile(thread: forumThreads[index]);
-                      }
-                    }
-                    assert(false);
-                    return null;
-                  }
-                  Widget result = generateTile();
-                  if (showDividers) {
-                    result = DecoratedBox(
-                      key: result.key,
-                      position: DecorationPosition.foreground,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: Divider.createBorderSide(context),
+              final DividerCallback divide = getDivider(context);
+              return JumpToTop(
+                builder: (BuildContext context, ScrollController controller) => CustomScrollView(
+                  controller: controller,
+                  slivers: <Widget>[
+                    SliverSafeArea(
+                      bottom: !status.forumsEnabled,
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate(
+                          <Widget>[
+                            if (canModerate)
+                              divide(SwitchListTile(
+                                key: const Key('masquerade'),
+                                title: const Text('Masquerade as @moderator'),
+                                value: isModerating,
+                                onChanged: (bool value) {
+                                  cruise.setAsMod(enabled: value);
+                                },
+                              )),
+                            divide(ListTile(
+                              key: const Key('public'),
+                              title: Text('Public messages', style: headerStyle),
+                              trailing: ValueListenableBuilder<bool>(
+                                valueListenable: forums.active,
+                                builder: (BuildContext context, bool active, Widget child) {
+                                  return IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    color: Colors.black,
+                                    tooltip: 'Force refresh',
+                                    onPressed: active ? null : forums.reload,
+                                  );
+                                },
+                              ),
+                            )),
+                            if (!isModerating && cruise.isLoggedIn)
+                              divide(KeyedSubtree(
+                                key: const Key('mentions'),
+                                child: ValueListenableBuilder<bool>(
+                                  valueListenable: mentions.hasMentions,
+                                  builder: (BuildContext context, bool hasMentions, Widget child) {
+                                    return ListTile(
+                                      leading: Badge(
+                                        child: CircleAvatar(child: Icon(hasMentions ? Icons.notifications_active : Icons.notifications)),
+                                        alignment: const AlignmentDirectional(1.1, 1.1),
+                                        enabled: hasMentions,
+                                      ),
+                                      title: const Text('Mentions'),
+                                      onTap: () { Navigator.pushNamed(context, '/mentions'); },
+                                    );
+                                  },
+                                ),
+                              )),
+                            if (status.streamEnabled)
+                              divide(ListTile(
+                                key: const Key('twitarr'),
+                                leading: const CircleAvatar(child: Icon(Icons.speaker_notes)),
+                                title: const Text('Twitarr'),
+                                onTap: () { Navigator.pushNamed(context, '/twitarr'); },
+                              )),
+                            if (status.forumsEnabled && forumThreads.isEmpty)
+                              iconAndLabel(
+                                icon: Icons.forum,
+                                message: forums.busy.value ? 'Loading forums...' : forums.pending ? 'Forums not yet loaded.' : 'No forums.',
+                              ),
+                          ],
                         ),
                       ),
-                      child: result,
-                    );
-                  }
-                  return result;
-                },
+                    ),
+                    if (status.forumsEnabled)
+                      SliverSafeArea(
+                        top: false,
+                        sliver: SliverPrototypeExtentList(
+                          prototypeItem: const ForumListTile.prototype(),
+                          delegate: SliverChildBuilderDelegate(
+                            (BuildContext context, int index) {
+                              forums.observing(index);
+                              return divide(ForumListTile(thread: forumThreads[index]));
+                            },
+                            childCount: forumThreads.length,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               );
             },
           ),
@@ -450,6 +447,8 @@ class OrListenable extends ValueNotifier<bool> {
 class ForumListTile extends StatelessWidget {
   const ForumListTile({ Key key, this.thread }) : super(key: key);
 
+  const ForumListTile.prototype({ Key key }) : thread = null, super(key: key);
+
   final ForumThread thread;
 
   @override
@@ -478,26 +477,38 @@ class ForumListTile extends StatelessWidget {
             enabled: thread.hasUnread,
           ),
         ),
-        title: Row(
+        title: Text(
+          thread.subject,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
+        ),
+        subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Expanded(
-              child: Text(
-                thread.subject,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-              ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}$unread',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  ' ${prettyDuration(Now.of(context).difference(thread.lastMessageTimestamp), short: true)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
             Text(
-              ' ${prettyDuration(Now.of(context).difference(thread.lastMessageTimestamp), short: true)}',
-              style: Theme.of(context).textTheme.caption,
+              lastMessage,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
-        ),
-        subtitle: Text(
-          '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}$unread\n$lastMessage',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
         isThreeLine: true,
         onTap: () { PublicCommsView.showForumThread(context, thread); },
@@ -506,11 +517,92 @@ class ForumListTile extends StatelessWidget {
   }
 }
 
+class _PrototypeSeamailMessage implements SeamailThread {
+  const _PrototypeSeamailMessage();
+
+  @override
+  final Duration maxUpdatePeriod = null;
+
+  @override
+  final ThreadReadCallback onThreadRead = null;
+
+  @override
+  final String id = null;
+
+  @override
+  final String subject = '';
+
+  @override
+  final Iterable<User> users = const <User>[User.prototype()];
+
+  @override
+  DateTime get lastMessageTimestamp => DateTime(2000);
+
+  @override
+  final bool hasUnread = false;
+
+  @override
+  final int unreadCount = 0;
+
+  @override
+  final int totalCount = 0;
+
+  @override
+  List<SeamailMessage> getMessages() => const <SeamailMessage>[];
+
+  @override
+  Future<void> update() async { }
+
+  @override
+  bool updateFrom(SeamailThreadSummary thread) => false;
+
+  @override
+  Progress<void> send(String text) => null;
+
+  @override
+  final ValueListenable<bool> active = null;
+
+  @override
+  void reload() { }
+
+  @override
+  final ValueListenable<bool> busy = null;
+
+  @override
+  void startBusy() { }
+
+  @override
+  void endBusy() { }
+
+  @override
+  void addListener(VoidCallback listener) { }
+
+  @override
+  void removeListener(VoidCallback listener) { }
+
+  @override
+  void dispose() { }
+
+  @override
+  void notifyListeners() { }
+
+  @override
+  final bool hasListeners = false;
+
+  @override
+  int compareTo(SeamailThread other) => 0;
+}
+
 class SeamailListTile extends StatelessWidget {
   const SeamailListTile({
     Key key,
     this.thread,
   }) : super(key: key);
+
+  const SeamailListTile.prototype({
+    Key key,
+  }) : thread = const _PrototypeSeamailMessage(),
+       super(key: key);
 
   final SeamailThread thread;
 
@@ -532,33 +624,35 @@ class SeamailListTile extends StatelessWidget {
         alignment: const AlignmentDirectional(1.1, 1.1),
         enabled: thread.hasUnread,
       ),
-      title: Row(
-        children: <Widget>[
-          Expanded(
-            child: Text(
-              thread.subject,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
-            ),
-          ),
-          Text(
-            ' ${prettyDuration(Now.of(context).difference(thread.lastMessageTimestamp), short: true)}',
-            style: Theme.of(context).textTheme.caption,
-          ),
-        ],
+      title: Text(
+        thread.subject,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: thread.hasUnread ? const TextStyle(fontWeight: FontWeight.bold) : null,
       ),
-      subtitle: ListBody(
+      subtitle: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Text(
             thread.users.map<String>((User user) => user.toString()).join(', '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            lastMessage,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  lastMessage,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                ' ${prettyDuration(Now.of(context).difference(thread.lastMessageTimestamp), short: true)}',
+                style: Theme.of(context).textTheme.caption,
+              ),
+            ],
           ),
         ],
       ),

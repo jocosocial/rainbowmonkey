@@ -57,7 +57,7 @@ void main() {
     );
     await model.login(username: 'username', password: 'password').asFuture();
 
-    log.add('--frame 1--');
+    log.add('--bookmark 1--');
 
     await tester.pumpWidget(
       MaterialApp(
@@ -73,7 +73,7 @@ void main() {
       ),
     );
 
-    log.add('--frame 2--');
+    log.add('--bookmark 2--');
 
     expect(find.text('subject0'), findsNothing);
     expect(find.text('subject1'), findsNothing);
@@ -88,10 +88,10 @@ void main() {
     expect(find.text('...'), findsNothing);
 
     await tester.drag(
-      find.byType(ListView),
+      find.byType(CustomScrollView),
       Offset(
         0.0,
-        -50 * tester.getSize(
+        -75 * tester.getSize(
           find.ancestor(
             of: find.text('subject1'),
             matching: find.byType(ListTile),
@@ -100,35 +100,37 @@ void main() {
       ),
     );
 
-    log.add('--frame 3--');
+    log.add('--bookmark 3--');
     await tester.pump();
     expect(find.text('subject0'), findsNothing);
     expect(find.text('subject4'), findsNothing);
-    expect(find.text('subject46'), findsNothing);
-    expect(find.text('subject47'), findsOneWidget);
-    expect(find.text('subject48'), findsOneWidget);
-    expect(find.text('subject49'), findsOneWidget);
-    expect(find.text('subject50'), findsNothing);
-    expect(find.text('subject51'), findsNothing);
-    expect(find.text('subject52'), findsNothing);
-    expect(find.text('subject54'), findsNothing);
-    expect(find.text('subject55'), findsNothing);
+    expect(find.text('subject71'), findsNothing);
+    expect(find.text('subject72'), findsOneWidget);
+    expect(find.text('subject73'), findsOneWidget);
+    expect(find.text('subject74'), findsOneWidget);
+    expect(find.text('subject75'), findsNothing);
+    expect(find.text('subject76'), findsNothing);
+    expect(find.text('subject77'), findsNothing);
+    expect(find.text('subject78'), findsNothing);
+    expect(find.text('subject79'), findsNothing);
+    expect(find.text('subject80'), findsNothing);
     expect(find.text('...'), findsNWidgets(5));
 
-    log.add('--frame 4--');
+    log.add('--bookmark 4--');
     await tester.pump();
     expect(find.text('subject0'), findsNothing);
     expect(find.text('subject4'), findsNothing);
-    expect(find.text('subject46'), findsNothing);
+    expect(find.text('subject71'), findsNothing);
     expect(find.text('...'), findsNothing);
-    expect(find.text('subject47'), findsOneWidget);
-    expect(find.text('subject48'), findsOneWidget);
-    expect(find.text('subject49'), findsOneWidget);
-    expect(find.text('subject50'), findsOneWidget);
-    expect(find.text('subject51'), findsOneWidget);
-    expect(find.text('subject53'), findsOneWidget);
-    expect(find.text('subject54'), findsOneWidget);
-    expect(find.text('subject55'), findsNothing);
+    expect(find.text('subject72'), findsOneWidget);
+    expect(find.text('subject73'), findsOneWidget);
+    expect(find.text('subject74'), findsOneWidget);
+    expect(find.text('subject75'), findsOneWidget);
+    expect(find.text('subject76'), findsOneWidget);
+    expect(find.text('subject77'), findsOneWidget);
+    expect(find.text('subject78'), findsOneWidget);
+    expect(find.text('subject79'), findsOneWidget);
+    expect(find.text('subject80'), findsNothing);
 
     log.add('--end--');
 
@@ -141,16 +143,16 @@ void main() {
             'LoggingTwitarr(0).login username / password',
             'LoggingDataStore.restoreCredentials',
             'LoggingDataStore.saveCredentials Credentials(username)',
-            '--frame 1--',
+            '--bookmark 1--',
             'LoggingTwitarr(0).getCalendar(Credentials(username))',
             'LoggingTwitarr(0).getAnnouncements()',
             'LoggingTwitarr(0).getSectionStatus()',
-            'getForumThreads 50',
+            'getForumThreads 75',
             'getMentions',
-            '--frame 2--',
-            '--frame 3--',
-            'getForumThreads 100',
-            '--frame 4--',
+            '--bookmark 2--',
+            '--bookmark 3--',
+            'getForumThreads 170',
+            '--bookmark 4--',
             '--end--',
             'ForumsTwitarr(0).dispose()'
     ]);

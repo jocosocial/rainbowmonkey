@@ -327,9 +327,9 @@ class _StartSeamailViewState extends State<StartSeamailView> {
   final TextEditingController _text = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  final FocusNode _usernameFocus = FocusNode();
   final FocusNode _subjectFocus = FocusNode();
   final FocusNode _firstMessageFocus = FocusNode();
-  final FocusNode _usernameFocus = FocusNode();
 
   Progress<List<User>> _autocompleteProgress;
 
@@ -352,7 +352,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
 
   bool get _valid {
     return _users.length >= 2
-        && _subject.text.trim().isNotEmpty
+        && (_subject.text.trim().isNotEmpty || _defaultSubject.isNotEmpty)
         && _text.text.trim().isNotEmpty;
   }
 
@@ -381,6 +381,33 @@ class _StartSeamailViewState extends State<StartSeamailView> {
         && !_users.any((User candidate) => candidate.sameAs(user));
   }
 
+  static const int kMaxSubjectLength = 200;
+
+  String _applyMaxSubjectLength(String value) {
+    if (value.length > kMaxSubjectLength)
+      return value.substring(0, kMaxSubjectLength);
+    return value;
+  }
+
+  String get _defaultSubject {
+    final List<String> names = <String>[];
+    for (User user in _users) {
+      if (user.displayName != null && user.displayName != '') {
+        names.add(user.displayName.split(' ').first);
+      } else {
+        names.add(user.username);
+      }
+    }
+    names..sort();
+    assert(names.isNotEmpty);
+    if (names.length == 1)
+      return _applyMaxSubjectLength(names.single);
+    if (names.length == 2)
+      return _applyMaxSubjectLength(names.join(' and '));
+    final String last = names.removeLast();
+    return _applyMaxSubjectLength('${names.join(", ")}, and $last');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -393,7 +420,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
             onPressed: () async {
               final Progress<SeamailThread> progress = Cruise.of(context).seamail.postThread(
                 users: _users,
-                subject: _subject.text,
+                subject: _subject.text.isNotEmpty ? _subject.text : _defaultSubject,
                 text: _text.text,
               );
               final SeamailThread thread = await ProgressDialog.show<SeamailThread>(context, progress);
@@ -410,62 +437,19 @@ class _StartSeamailViewState extends State<StartSeamailView> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: ModeratorBuilder(
         builder: (BuildContext context, _, __, bool isModerating) { // using _ to avoid potential conflicts with widget.currentUser
-        assert(isModerating == widget.currentUser.isModerator);
-        return Form(
-          key: _formKey,
-          onChanged: () {
-            setState(() {
-              /* need to recheck whether the submit button should be enabled */
-            });
-          },
-          onWillPop: () => confirmDialog(context, 'Abandon creating this conversation?'),
-          child: CustomScrollView(
-            slivers: <Widget>[
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12.0, 20.0, 12.0, 0.0),
-                sliver: SliverToBoxAdapter(
-                  child: Align(
-                    alignment: AlignmentDirectional.topStart,
-                    child: TextFormField(
-                      controller: _subject,
-                      maxLength: 200,
-                      textCapitalization: TextCapitalization.sentences,
-                      focusNode: _subjectFocus,
-                      autofocus: true,
-                      onFieldSubmitted: (String value) {
-                        FocusScope.of(context).requestFocus(_firstMessageFocus);
-                      },
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Subject',
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
-                  sliver: SliverToBoxAdapter(
-                    child: Align(
-                      alignment: AlignmentDirectional.topStart,
-                      child: TextFormField(
-                        controller: _text,
-                        maxLength: 10000,
-                        textCapitalization: TextCapitalization.sentences,
-                        focusNode: _firstMessageFocus,
-                        onFieldSubmitted: (String value) {
-                          FocusScope.of(context).requestFocus(_usernameFocus);
-                        },
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: 'First message${ isModerating ? " (as moderator)" : ""}',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+          assert(isModerating == widget.currentUser.isModerator);
+          return Form(
+            key: _formKey,
+            onChanged: () {
+              setState(() {
+                /* need to recheck whether the submit button should be enabled */
+              });
+            },
+            onWillPop: () => confirmDialog(context, 'Abandon creating this conversation?'),
+            child: CustomScrollView(
+              slivers: <Widget>[
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 0.0),
+                  padding: const EdgeInsets.fromLTRB(12.0, 20.0, 12.0, 0.0),
                   sliver: SliverToBoxAdapter(
                     child: Text(
                       'Participants',
@@ -481,6 +465,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                       child: TextField(
                         controller: _nextUser,
                         focusNode: _usernameFocus,
+                        autofocus: true,
                         textInputAction: TextInputAction.search,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.search),
@@ -606,6 +591,59 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 20.0, 12.0, 0.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      'Message text',
+                      style: Theme.of(context).textTheme.title,
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 12.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Align(
+                      alignment: AlignmentDirectional.topStart,
+                      child: TextFormField(
+                        controller: _subject,
+                        maxLength: kMaxSubjectLength,
+                        textCapitalization: TextCapitalization.sentences,
+                        focusNode: _subjectFocus,
+                        onFieldSubmitted: (String value) {
+                          FocusScope.of(context).requestFocus(_firstMessageFocus);
+                        },
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'Subject (optional)',
+                          hintText: _defaultSubject,
+                          helperText: 'Defaults to the names of the people involved.',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Align(
+                      alignment: AlignmentDirectional.topStart,
+                      child: TextFormField(
+                        controller: _text,
+                        maxLength: 10000,
+                        textCapitalization: TextCapitalization.sentences,
+                        focusNode: _firstMessageFocus,
+                        onFieldSubmitted: (String value) {
+                          FocusScope.of(context).requestFocus(_usernameFocus);
+                        },
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'First message${ isModerating ? " (as moderator)" : ""}',
+                        ),
+                      ),
                     ),
                   ),
                 ),

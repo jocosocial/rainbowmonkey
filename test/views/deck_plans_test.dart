@@ -40,7 +40,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     final double height = tester.getRect(elevatorFinder).height / 11.0;
 
-    expectOpacities(tester, <double>[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
+    expectOpacities(tester, <double>[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
 
     await tester.tap(find.text('3'));
     await tester.pump();

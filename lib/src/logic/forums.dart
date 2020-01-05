@@ -14,8 +14,6 @@ import '../progress.dart';
 import '../utils.dart';
 import 'photo_manager.dart';
 
-typedef ThreadReadCallback = void Function(String threadId);
-
 class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   Forums(
     this._twitarr,
@@ -48,20 +46,36 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
 
   final Map<String, ForumThread> _threads = <String, ForumThread>{};
 
+  bool get pending => _pending;
+  bool _pending = true;
+
   int get totalCount => _totalCount;
   int _totalCount = 0;
 
-  static const int _minFetchCount = 50;
-  static const int _fetchMargin = 50;
+  static const int _minFetchCount = 75;
+  static const int _fetchNearMargin = 50;
+  static const int _fetchFarMargin = 100;
   int _fetchCount = _minFetchCount;
   int _freshCount = 0;
 
+  Timer _resetFetchCountTimer;
+
   void observing(int index) {
     assert(index < _totalCount);
-    if (index >= _fetchCount) {
-      _fetchCount = index + _fetchMargin;
-      if (index >= _freshCount)
-        scheduleMicrotask(reload);
+    if (index + _fetchNearMargin >= _fetchCount) {
+      assert(_fetchNearMargin < _fetchFarMargin);
+      _fetchCount = index + _fetchFarMargin;
+      scheduleMicrotask(reload);
+    } else if (index >= _freshCount) {
+      scheduleMicrotask(reload);
+    }
+    if (hasListeners && maxUpdatePeriod != null) {
+      _resetFetchCountTimer?.cancel();
+      _resetFetchCountTimer = Timer(const Duration(minutes: 2), () {
+        print('resetting _fetchCount');
+        _fetchCount = _minFetchCount;
+        _resetFetchCountTimer = null;
+      });
     }
   }
 
@@ -81,13 +95,10 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
     startBusy();
     _updating = true;
     try {
-      final int currentFetchCount = _fetchCount;
       final ForumListSummary summary = await _twitarr.getForumThreads(
         credentials: _credentials,
         fetchCount: _fetchCount,
       ).asFuture();
-      if (currentFetchCount >= _fetchCount)
-        _fetchCount = _minFetchCount;
       final Set<ForumSummary> newThreads = summary.forums;
       final Set<ForumThread> removedThreads = Set<ForumThread>.from(_threads.values);
       for (ForumSummary threadSummary in newThreads)
@@ -96,6 +107,7 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
         thread.obsolete();
       _freshCount = newThreads.length;
       _totalCount = summary.totalCount;
+      _pending = false;
     } on UserFriendlyError catch (error) {
       _timer.interested(wasError: true);
       onError(error);
@@ -154,8 +166,11 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
   @override
   void removeListener(VoidCallback listener) {
     super.removeListener(listener);
-    if (!hasListeners && maxUpdatePeriod != null)
+    if (!hasListeners && maxUpdatePeriod != null) {
       _timer.stop();
+      _resetFetchCountTimer?.cancel();
+      _resetFetchCountTimer = null;
+    }
   }
 }
 
