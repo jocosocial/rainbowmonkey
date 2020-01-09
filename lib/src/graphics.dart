@@ -93,6 +93,15 @@ class Ship extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color shipColor;
+    switch (Theme.of(context).brightness) {
+      case Brightness.light:
+        shipColor = Colors.grey[300];
+        break;
+      case Brightness.dark:
+        shipColor = Colors.grey[700];
+        break;
+    }
     return FittedBox(
       alignment: alignment,
       child: Padding(
@@ -100,7 +109,7 @@ class Ship extends StatelessWidget {
         child: SizedBox.fromSize(
           size: shipSize,
           child: CustomPaint(
-            painter: _ShipPainter(),
+            painter: _ShipPainter(color: shipColor),
           ),
         ),
       ),
@@ -109,12 +118,16 @@ class Ship extends StatelessWidget {
 }
 
 class _ShipPainter extends CustomPainter {
+  _ShipPainter({ @required this.color }) : assert(color != null);
+
+  final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
     assert(size == shipSize);
     final Path path = ship();
     final Paint paint = Paint()
-      ..color = Colors.grey[300];
+      ..color = color;
     canvas.drawPath(path, paint);
   }
 

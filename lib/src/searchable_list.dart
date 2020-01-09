@@ -122,7 +122,7 @@ class SearchableListView<T extends Record> extends StatefulWidget implements Vie
       child: IconTheme(
         data: IconThemeData(
           size: 64.0,
-          color: Theme.of(context).colorScheme.primaryVariant,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
         ),
         child: icon,
       ),
