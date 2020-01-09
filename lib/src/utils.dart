@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 
 typedef ValuePredicateCallback<T> = bool Function(T value);
 
+typedef ThreadReadCallback = void Function(String threadId);
+
 /// Converts a [ValueListenable<T>] to a [Future<T>].
 ///
 /// The `predicate` callback is invoked each time the given [ValueListenable]

@@ -69,6 +69,16 @@ class User extends SearchResult implements Comparable<User> {
       email = null,
       role = Role.none;
 
+  const User.prototype(
+  ) : username = '-',
+      displayName = '- -',
+      realName = '- - -',
+      pronouns = '-',
+      roomNumber = '-',
+      homeLocation = '-',
+      email = '-@-',
+      role = Role.none;
+
   const User.moderator(
   ) : username = 'moderator',
       displayName = null,

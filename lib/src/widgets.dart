@@ -124,12 +124,14 @@ class ProgressBuilder<T> extends StatelessWidget {
     this.failedBuilder,
     @required this.builder,
     this.fadeWrapper: _defaultFadeWrapper,
+    this.failureMessage,
     this.onRetry,
   }) : assert(idleChild != null),
        assert(startingChild != null),
        assert(activeBuilder != null),
        assert(builder != null),
        assert(fadeWrapper != null),
+       assert(failureMessage == null || failedBuilder == null),
        super(key: key);
 
   final Progress<T> progress;
@@ -142,6 +144,7 @@ class ProgressBuilder<T> extends StatelessWidget {
   final SuccessfulProgressBuilder<T> builder;
   final FadeWrapperBuilder fadeWrapper;
 
+  final Widget failureMessage;
   final VoidCallback onRetry;
 
   static const Key activeKey = _ActiveKey();
@@ -152,7 +155,7 @@ class ProgressBuilder<T> extends StatelessWidget {
     return Center(key: ProgressBuilder.activeKey, child: CircularProgressIndicator(value: progress / target));
   }
 
-  static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace, { VoidCallback onRetry }) {
+  static Widget defaultFailedBuilder(BuildContext context, Exception error, StackTrace stackTrace, { VoidCallback onRetry, Widget failureMessage }) {
     assert(error != null);
     final Widget message = iconAndLabel(key: ProgressBuilder.failedKey, icon: Icons.warning, message: wrapError(error));
     if (onRetry == null)
@@ -162,6 +165,8 @@ class ProgressBuilder<T> extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           message,
+          if (failureMessage != null)
+            failureMessage,
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: FlatButton(
@@ -191,7 +196,7 @@ class ProgressBuilder<T> extends StatelessWidget {
           result = activeBuilder(context, value.progress, value.target);
         } else if (value is FailedProgress) {
           result = failedBuilder != null ? failedBuilder(context, value.error, value.stackTrace)
-                   : defaultFailedBuilder(context, value.error, value.stackTrace, onRetry: onRetry);
+                   : defaultFailedBuilder(context, value.error, value.stackTrace, onRetry: onRetry, failureMessage: failureMessage);
         } else if (value is SuccessfulProgress<T>) {
           result = builder(context, value.value);
         } else {
@@ -218,6 +223,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
     this.secondaryFailedBuilder,
     this.wrap: _defaultWrap,
     this.fadeWrapper: _defaultFadeWrapper,
+    this.failureMessage,
     this.onRetry,
   }) : assert(idleChild != null),
        assert(startingChild != null),
@@ -242,6 +248,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
   final FailedProgressBuilder secondaryFailedBuilder;
   final WrapBuilder wrap;
   final FadeWrapperBuilder fadeWrapper;
+  final Widget failureMessage;
   final VoidCallback onRetry;
 
   @override
@@ -257,6 +264,7 @@ class ContinuousProgressBuilder<T> extends StatelessWidget {
         activeBuilder: activeBuilder,
         failedBuilder: failedBuilder,
         builder: builder,
+        failureMessage: failureMessage,
         onRetry: onRetry,
       ),
       builder: (BuildContext context, Widget child) {
@@ -1682,6 +1690,65 @@ class ServerStatusBuilder extends StatelessWidget {
         final ServerStatus status = serverStatus.currentValue ?? const ServerStatus();
         return builder(context, status, child);
       },
+    );
+  }
+}
+
+typedef ListBuilder = Widget Function(BuildContext context, ScrollController controller);
+
+class JumpToTop extends StatefulWidget {
+  const JumpToTop({
+    Key key,
+    this.builder,
+  }) : super(key: key);
+
+  final ListBuilder builder;
+
+  @override
+  State<JumpToTop> createState() => _JumpToTopState();
+}
+
+class _JumpToTopState extends State<JumpToTop> {
+  final ScrollController _controller = ScrollController();
+
+  void _animateToTop() {
+    _controller.animateTo(0.0, duration: const Duration(milliseconds: 350), curve: Curves.fastOutSlowIn);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) => Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          widget.builder(context, _controller),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (BuildContext context, Widget child) {
+              final double position = _controller.position.pixels;
+              final EdgeInsets padding = MediaQuery.of(context).padding;
+              final bool showIt = position > constraints.maxHeight / 3.0;
+              return PositionedDirectional(
+                end: 24.0,
+                top: padding.top + 16.0,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.fastOutSlowIn,
+                  opacity: showIt ? 1.0 : 0.0,
+                  child: IgnorePointer(
+                    ignoring: !showIt,
+                    child: RaisedButton(
+                      shape: const StadiumBorder(),
+                      child: const Text('▲ Jump to top'),
+                      onPressed: _animateToTop,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

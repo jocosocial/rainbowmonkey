@@ -30,6 +30,7 @@ class DeckPlanView extends StatefulWidget implements View {
 
 class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderStateMixin {
   static const int kMinDeck = 1;
+  static const int kDefaultDeck = 9; // Lido Deck
   static const int kMaxDeck = 11;
 
   AnimationController _currentLevel;
@@ -39,7 +40,7 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_currentLevel == null) {
-      final int startingDeck = (PageStorage.of(context).readState(context, identifier: runtimeType) ?? kMinDeck) as int;
+      final int startingDeck = (PageStorage.of(context).readState(context, identifier: runtimeType) ?? kDefaultDeck) as int;
       _currentLevel = AnimationController(
         value: startingDeck.toDouble(),
         lowerBound: kMinDeck.toDouble(),

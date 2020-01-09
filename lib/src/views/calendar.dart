@@ -69,7 +69,6 @@ class _CalendarViewState extends State<CalendarView> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    // TODO(ianh): show event overlaps somehow
     return ContinuousProgressBuilder<Calendar>(
       progress: Cruise.of(context).calendar,
       onRetry: () { Cruise.of(context).forceUpdate(); },
@@ -241,7 +240,6 @@ class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
   }
 }
 
-
 class EventList extends StatelessWidget {
   const EventList({
     Key key,
@@ -334,7 +332,9 @@ class TimeSlice extends StatelessWidget {
   final bool isFavorite;
   final bool favoriteOverride;
 
-  String _getHours(DateTime time) {
+  String _getHours(DateTime time, { @required bool use24Hour }) {
+    if (use24Hour)
+      return '${time.hour.toString().padLeft(2, "0")}:${time.minute.toString().padLeft(2, "0")}';
     if (time.hour == 12 && time.minute == 00)
       return '12:00nn';
     final String minute = time.minute.toString().padLeft(2, '0');
@@ -346,12 +346,14 @@ class TimeSlice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
     final List<Widget> eventDetails = <Widget>[
       Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      Text(event.location, style: const TextStyle(fontStyle: FontStyle.italic)),
+      if (event.location.isNotEmpty)
+        Text(event.location, style: const TextStyle(fontStyle: FontStyle.italic)),
+      if (event.description != null)
+        Text(event.description),
     ];
-    if (event.description != null)
-      eventDetails.add(Text(event.description));
     final DateTime lastTime = lastStartTime?.toLocal();
     final DateTime lastDay = lastTime != null ? DateTime(lastTime.year, lastTime.month, lastTime.day) : null;
     final DateTime startTime = event.startTime.toLocal();
@@ -363,10 +365,15 @@ class TimeSlice extends StatelessWidget {
       times.add(const Text('all day'));
     } else {
       times
-        ..add(Text(_getHours(startTime)))
-        ..add(Text('-${_getHours(endTime)}'));
+        ..add(Text(_getHours(startTime, use24Hour: use24Hour)))
+        ..add(Text('-${_getHours(endTime, use24Hour: use24Hour)}'));
     }
-    times.add(const Opacity(opacity: 0.0, child: Text('-88:88pm'))); // forces the column to the right width
+    // Force the column to the right width:
+    if (use24Hour) {
+      times.add(const Opacity(opacity: 0.0, child: Text('-88:88')));
+    } else {
+      times.add(const Opacity(opacity: 0.0, child: Text('-88:88pm')));
+    }
     Widget row = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

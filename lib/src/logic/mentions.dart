@@ -11,8 +11,6 @@ import 'cruise.dart';
 import 'forums.dart';
 import 'photo_manager.dart';
 
-typedef ThreadReadCallback = void Function(String threadId);
-
 class Mentions extends ChangeNotifier with BusyMixin {
   Mentions(
     this._cruise,
