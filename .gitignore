@@ -1,5 +1,7 @@
 .DS_Store
 .atom/
+.dart_tool/
+.flutter-plugins-dependencies/
 .idea
 .vscode/
 .packages
@@ -10,3 +12,5 @@ packages
 .flutter-plugins
 pubspec.lock
 coverage/
+*~
+flutter_*.log
