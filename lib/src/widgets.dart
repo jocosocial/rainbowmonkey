@@ -682,6 +682,15 @@ class _ChatLineState extends State<ChatLine> {
   Widget build(BuildContext context) {
     final List<Widget> lines = <Widget>[];
     final ThemeData theme = Theme.of(context);
+    Color lightColor;
+    switch (theme.brightness) {
+      case Brightness.light:
+        lightColor = Colors.grey.shade600;
+        break;
+      case Brightness.dark:
+        lightColor = Colors.grey.shade400;
+        break;
+    }
     final TextStyle body1Style = theme.primaryTextTheme.body1;
     for (String message in widget.messages)
       lines.add(_prettifyText(message, body1Style.fontSize));
@@ -764,7 +773,7 @@ class _ChatLineState extends State<ChatLine> {
                         ),
                         const SizedBox(height: 4.0),
                         DefaultTextStyle(
-                          style: theme.textTheme.caption.copyWith(color: Colors.grey.shade400),
+                          style: theme.textTheme.caption.copyWith(color: lightColor),
                           textAlign: TextAlign.start,
                           child: Directionality(
                             textDirection: TextDirection.ltr,

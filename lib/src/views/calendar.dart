@@ -374,6 +374,16 @@ class TimeSlice extends StatelessWidget {
     } else {
       times.add(const Opacity(opacity: 0.0, child: Text('-88:88pm')));
     }
+    final ThemeData theme = Theme.of(context);
+    Color todayColor;
+    switch (theme.brightness) {
+      case Brightness.light:
+        todayColor = Colors.yellow.shade100;
+        break;
+      case Brightness.dark:
+        todayColor = Colors.cyan[900];
+        break;
+    }
     Widget row = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -398,7 +408,7 @@ class TimeSlice extends StatelessWidget {
             checked: isFavorite,
             child: IconButton(
               icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-              color: favoriteOverride ? Theme.of(context).accentColor : null,
+              color: favoriteOverride ? theme.accentColor : null,
               tooltip: isFavorite ? 'Unmark this event.' : 'Mark this event as interesting.',
               onPressed: isLoggedIn ? () {
                 onFavorite(!isFavorite);
@@ -416,7 +426,7 @@ class TimeSlice extends StatelessWidget {
     } else if (!startTime.isAfter(now)) {
       // active
       row = Container(
-        color: Colors.yellow.shade100,
+        color: todayColor,
         child: row,
       );
     }

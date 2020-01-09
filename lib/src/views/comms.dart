@@ -203,7 +203,7 @@ class PrivateCommsView extends CommsView {
                                 builder: (BuildContext context, bool active, Widget child) {
                                   return IconButton(
                                     icon: const Icon(Icons.refresh),
-                                    color: Colors.black,
+                                    color: DefaultTextStyle.of(context).style.color,
                                     tooltip: 'Force refresh',
                                     onPressed: active ? null : seamail.reload,
                                   );
@@ -341,7 +341,7 @@ class PublicCommsView extends CommsView {
                                 builder: (BuildContext context, bool active, Widget child) {
                                   return IconButton(
                                     icon: const Icon(Icons.refresh),
-                                    color: Colors.black,
+                                    color: DefaultTextStyle.of(context).style.color,
                                     tooltip: 'Force refresh',
                                     onPressed: active ? null : forums.reload,
                                   );
