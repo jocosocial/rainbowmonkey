@@ -486,6 +486,7 @@ class ChatLine extends StatefulWidget {
     @required this.messages,
     this.photos,
     this.id,
+    this.isPartOfThread,
     @required this.timestamp,
     this.likes = 0,
     this.onPressed,
@@ -511,6 +512,7 @@ class ChatLine extends StatefulWidget {
   final List<String> messages;
   final List<Photo> photos;
   final String id;
+  final bool isPartOfThread;
   final DateTime timestamp;
   final int likes;
   final VoidCallback onPressed;
@@ -710,6 +712,8 @@ class _ChatLineState extends State<ChatLine> {
     } else if (widget.likes > 0) {
       metadata.add('${widget.likes} likes');
     }
+    if (widget.isPartOfThread)
+      metadata.add('thread');
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
       child: Directionality(

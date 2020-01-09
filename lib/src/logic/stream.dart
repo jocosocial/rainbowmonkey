@@ -427,6 +427,8 @@ class StreamPost implements SearchResult, Comparable<StreamPost> {
 
   final List<StreamPost> children;
 
+  bool get isPartOfThread => parents.isNotEmpty || children.isNotEmpty;
+
   final bool isDeleted;
 
   StreamPost copyWith({

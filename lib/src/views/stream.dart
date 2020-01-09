@@ -325,6 +325,7 @@ class Entry extends StatelessWidget {
         messages: <String>[ post.text ],
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         id: post.id,
+        isPartOfThread: post.isPartOfThread,
         likes: post.reactions.likes,
         onLike: effectiveCurrentUser != null && (!isModerating && !post.reactions.currentUserLiked && (!post.isLocked || canModerate)) ? () {
           ProgressDialog.show<void>(context, stream.react(post.id, 'like', selected: true));
