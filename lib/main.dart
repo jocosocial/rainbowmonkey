@@ -225,6 +225,25 @@ class CruiseMonkeyHome extends StatelessWidget {
     );
   }
 
+  @protected
+  ThemeData makeTheme(Brightness brightness) {
+    return ThemeData(
+      brightness: brightness,
+      primarySwatch: Colors.blue,
+      primaryColor: Colors.blue[900],
+      accentColor: Colors.cyanAccent,
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(),
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ServerStatusBuilder(
@@ -232,20 +251,8 @@ class CruiseMonkeyHome extends StatelessWidget {
         final List<View> pages = allPages.where((View view) => view.isEnabled(status)).toList();
         return MaterialApp(
           title: 'Rainbow Monkey',
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            primaryColor: Colors.blue[900],
-            accentColor: Colors.greenAccent,
-            inputDecorationTheme: const InputDecorationTheme(
-              border: OutlineInputBorder(),
-            ),
-            pageTransitionsTheme: const PageTransitionsTheme(
-              builders: <TargetPlatform, PageTransitionsBuilder>{
-                TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
-                TargetPlatform.iOS:CupertinoPageTransitionsBuilder(),
-              },
-            ),
-          ),
+          theme: makeTheme(Brightness.light),
+          darkTheme: makeTheme(Brightness.dark),
           home: DefaultTabController(
             key: ValueKey<int>(pages.length),
             length: pages.length,
