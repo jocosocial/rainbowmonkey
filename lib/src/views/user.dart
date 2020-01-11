@@ -340,30 +340,15 @@ class _UserViewState extends State<UserView> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: <Widget>[
                     Expanded(
-                      child: LabeledIconButton(
-                        icon: const Icon(Icons.help_outline),
-                        label: const Text('ABOUT RAINBOW MONKEY'),
-                        onPressed: () {
-                          showAboutDialog(
-                            context: context,
-                            applicationName: 'Rainbow Monkey',
-                            applicationVersion: 'v2.0 (JoCo 2020)',
-                            applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
-                            children: <Widget>[
-                            const Text('A project of the Seamonkey Social group.'),
-                              GestureDetector(
-                                onTap: () {
-                                  launch('http://seamonkeysocial.cruises/');
-                                },
-                                child: Text(
-                                  'http://seamonkeysocial.cruises/',
-                                  style: Theme.of(context).textTheme.body1.copyWith(
-                                    decoration: TextDecoration.underline,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                              ),
-                            ],
+                      child:    ValueListenableBuilder<bool>(
+                        valueListenable: Cruise.of(context).restoringSettings,
+                        builder: (BuildContext context, bool busy, Widget child) {
+                          return LabeledIconButton(
+                            icon: const Icon(Icons.settings),
+                            label: const Text('SETTINGS'),
+                            onPressed: busy ? null : () {
+                              Navigator.pushNamed(context, '/settings');
+                            },
                           );
                         },
                       ),
@@ -381,15 +366,30 @@ class _UserViewState extends State<UserView> {
                 ),
               ),
               const SizedBox(height: 48.0),
-              ValueListenableBuilder<bool>(
-                valueListenable: Cruise.of(context).restoringSettings,
-                builder: (BuildContext context, bool busy, Widget child) {
-                  return LabeledIconButton(
-                    icon: const Icon(Icons.settings),
-                    label: const Text('SETTINGS'),
-                    onPressed: busy ? null : () {
-                      Navigator.pushNamed(context, '/settings');
-                    },
+              LabeledIconButton(
+                icon: const Icon(Icons.help_outline),
+                label: const Text('ABOUT RAINBOW MONKEY'),
+                onPressed: () {
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'Rainbow Monkey',
+                    applicationVersion: 'v2.0 (JoCo 2020)',
+                    applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
+                    children: <Widget>[
+                    const Text('A project of the Seamonkey Social group.'),
+                      GestureDetector(
+                        onTap: () {
+                          launch('http://seamonkeysocial.cruises/');
+                        },
+                        child: Text(
+                          'http://seamonkeysocial.cruises/',
+                          style: Theme.of(context).textTheme.body1.copyWith(
+                            decoration: TextDecoration.underline,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),

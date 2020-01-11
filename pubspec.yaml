@@ -13,6 +13,7 @@ dependencies:
   url_launcher: any
   photo_view: any
   pedantic: any
+  battery_optimization: any
 
 dev_dependencies:
   flutter_test:
