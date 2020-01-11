@@ -226,12 +226,12 @@ class CruiseMonkeyHome extends StatelessWidget {
   }
 
   @protected
-  ThemeData makeTheme(Brightness brightness) {
+  ThemeData makeTheme(Brightness brightness, Color accent) {
     return ThemeData(
       brightness: brightness,
       primarySwatch: Colors.blue,
       primaryColor: Colors.blue[900],
-      accentColor: Colors.cyanAccent,
+      accentColor: accent,
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(),
       ),
@@ -251,8 +251,8 @@ class CruiseMonkeyHome extends StatelessWidget {
         final List<View> pages = allPages.where((View view) => view.isEnabled(status)).toList();
         return MaterialApp(
           title: 'Rainbow Monkey',
-          theme: makeTheme(Brightness.light),
-          darkTheme: makeTheme(Brightness.dark),
+          theme: makeTheme(Brightness.light, Colors.cyanAccent[400]),
+          darkTheme: makeTheme(Brightness.dark, Colors.cyanAccent),
           home: DefaultTabController(
             key: ValueKey<int>(pages.length),
             length: pages.length,
