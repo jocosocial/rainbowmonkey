@@ -63,12 +63,12 @@ class HttpServerError implements Exception, UserFriendlyError {
       case 500:
       case 501:
       case 502:
-      case 504: return 'Server is having problems (it said "$reasonPhrase"). Try again later.';
+      case 504: return 'Server is having problems (it said "$reasonPhrase").\nTry again later.';
       case 401:
-      case 403: return 'There was an authentication problem (server said "$reasonPhrase"). Try logging in again.';
+      case 403: return 'There was an authentication problem (server said "$reasonPhrase").\nTry logging in again.';
       case 400:
-      case 405: return 'There is probably a bug (server said "$reasonPhrase"). Try again, maybe?';
-      default: return 'There was an unexpected error. The server said "$reasonPhrase".';
+      case 405: return 'There is probably a bug (server said "$reasonPhrase").\nTry again, maybe?';
+      default: return 'There was an unexpected error. The server said "$statusCode $reasonPhrase".';
     }
   }
 }

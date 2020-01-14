@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'logic/cruise.dart';
 import 'models/server_status.dart';
 import 'progress.dart';
 import 'widgets.dart';
@@ -16,13 +17,15 @@ abstract class Record {
   Widget buildSearchResult(BuildContext context);
 }
 
-abstract class RecordsLoader<T extends Record> {
+abstract class SearchModel<T extends Record> {
   Future<void> attach(BuildContext context);
   void detach();
 
   bool isEnabled(ServerStatus status);
 
   Progress<List<T>> get records;
+
+  SearchQueryNotifier get searchQueryNotifier => null;
 
   /// Calling this should update [records].
   void search(String query);
@@ -33,7 +36,7 @@ abstract class AssetRecord extends Record {
   bool matches(List<String> keywords);
 }
 
-abstract class AssetRecordsLoader<T extends AssetRecord> extends RecordsLoader<T> {
+abstract class AssetSearchModel<T extends AssetRecord> extends SearchModel<T> {
   Progress<List<T>> _records;
   AssetBundle _bundle;
 
@@ -92,19 +95,19 @@ abstract class AssetRecordsLoader<T extends AssetRecord> extends RecordsLoader<T
 class SearchableListView<T extends Record> extends StatefulWidget implements View {
   SearchableListView({
     PageStorageKey<Object> key,
-    @required this.recordsLoader,
+    @required this.searchModel,
     @required this.icon,
     @required this.label,
-  }) : super(key: key ?? PageStorageKey<RecordsLoader<T>>(recordsLoader));
+  }) : super(key: key ?? PageStorageKey<SearchModel<T>>(searchModel));
 
-  final RecordsLoader<T> recordsLoader;
+  final SearchModel<T> searchModel;
 
   final Widget icon;
 
   final Widget label;
 
   @override
-  bool isEnabled(ServerStatus status) => recordsLoader.isEnabled(status);
+  bool isEnabled(ServerStatus status) => searchModel.isEnabled(status);
 
   @override
   Widget buildTabIcon(BuildContext context) => icon;
@@ -143,6 +146,7 @@ class SearchableListView<T extends Record> extends StatefulWidget implements Vie
 class _SearchableListViewState<T extends Record> extends State<SearchableListView<T>> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textEditingController = TextEditingController();
+  SearchQueryNotifier _searchQueryNotifier;
   bool _new = true;
   String _query = '';
 
@@ -155,13 +159,48 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    widget.recordsLoader.attach(context);
     if (_new) {
-      final TextEditingValue keptValue = PageStorage.of(context).readState(context, identifier: widget.recordsLoader) as TextEditingValue;
-      if (keptValue != null)
-        _textEditingController.value = keptValue;
+      widget.searchModel.attach(context);
+    }
+    _updateQueryNotifier();
+    if (_new) {
+      final String pushedQuery = _searchQueryNotifier?.pullQuery(tentative: true);
+      if (pushedQuery != null) {
+        _textEditingController.value = TextEditingValue(text: pushedQuery);
+      } else {
+        final TextEditingValue keptValue = PageStorage.of(context).readState(context, identifier: widget.searchModel) as TextEditingValue;
+        if (keptValue != null)
+          _textEditingController.value = keptValue;
+      }
       _new = false;
     }
+  }
+
+  @override
+  void didUpdateWidget(SearchableListView<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.searchModel != oldWidget.searchModel) {
+      oldWidget.searchModel.detach();
+      widget.searchModel.attach(context);
+      _updateQueryNotifier();
+    }
+  }
+
+  void _updateQueryNotifier() {
+    final SearchQueryNotifier newQueryNotifier = widget.searchModel.searchQueryNotifier;
+    if (newQueryNotifier != _searchQueryNotifier) {
+      _searchQueryNotifier?.removeListener(_updateQuery);
+      _searchQueryNotifier = newQueryNotifier;
+      _searchQueryNotifier = widget.searchModel.searchQueryNotifier;
+      _searchQueryNotifier?.addListener(_updateQuery);
+    }
+  }
+
+  void _updateQuery() {
+    assert(_searchQueryNotifier != null);
+    final String newQuery = _searchQueryNotifier.pullQuery().trim();
+    if (newQuery != _textEditingController.value.text.trim())
+      _textEditingController.value = TextEditingValue(text: newQuery);
   }
 
   void _storeTextField() {
@@ -169,19 +208,20 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
       final String newQuery = _textEditingController.value.text.trim();
       if (_query != newQuery) {
         _query = newQuery;
-        widget.recordsLoader.search(_query);
+        widget.searchModel.search(_query);
         if (_scrollController.hasClients)
           _scrollController.jumpTo(0.0);
       }
       if (!_new)
-        PageStorage.of(context).writeState(context, _textEditingController.value, identifier: widget.recordsLoader);
+        PageStorage.of(context).writeState(context, _textEditingController.value, identifier: widget.searchModel);
     });
   }
 
   @override
   void dispose() {
     _textEditingController.removeListener(_storeTextField);
-    widget.recordsLoader.detach();
+    _searchQueryNotifier?.removeListener(_updateQuery);
+    widget.searchModel.detach();
     super.dispose();
   }
 
@@ -194,7 +234,7 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
         Expanded(
           child: Scrollbar(
             child: ProgressBuilder<List<T>>(
-              progress: widget.recordsLoader.records,
+              progress: widget.searchModel.records,
               idleChild: widget.idleScreen(context),
               builder: (BuildContext context, List<T> records) {
                 if (records.isEmpty)

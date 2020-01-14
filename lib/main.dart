@@ -249,14 +249,14 @@ class CruiseMonkeyHome extends StatelessWidget {
     return ServerStatusBuilder(
       builder: (BuildContext context, ServerStatus status, Widget child) {
         final List<View> pages = allPages.where((View view) => view.isEnabled(status)).toList();
-        return MaterialApp(
-          title: 'Rainbow Monkey',
-          theme: makeTheme(Brightness.light, Colors.cyanAccent[400]),
-          darkTheme: makeTheme(Brightness.dark, Colors.cyanAccent),
-          home: DefaultTabController(
-            key: ValueKey<int>(pages.length),
-            length: pages.length,
-            child: Builder(
+        return DefaultTabController(
+          key: ValueKey<int>(pages.length),
+          length: pages.length,
+          child: MaterialApp(
+            title: 'Rainbow Monkey',
+            theme: makeTheme(Brightness.light, Colors.cyanAccent[400]),
+            darkTheme: makeTheme(Brightness.dark, Colors.cyanAccent),
+            home: Builder(
               builder: (BuildContext context) {
                 final TabController tabController = DefaultTabController.of(context);
                 final ThemeData theme = Theme.of(context);
@@ -333,18 +333,24 @@ class CruiseMonkeyHome extends StatelessWidget {
                 );
               },
             ),
+            routes: <String, WidgetBuilder>{
+              '/profile-editor': (BuildContext context) => const ProfileEditor(),
+              '/create-account': (BuildContext context) => const CreateAccount(),
+              '/settings': (BuildContext context) => Settings(store: store),
+              '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
+              '/twitarr': (BuildContext context) => const TweetStreamView(),
+              '/mentions': (BuildContext context) => const MentionsView(),
+              '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
+            },
           ),
-          routes: <String, WidgetBuilder>{
-            '/profile-editor': (BuildContext context) => const ProfileEditor(),
-            '/create-account': (BuildContext context) => const CreateAccount(),
-            '/settings': (BuildContext context) => Settings(store: store),
-            '/code-of-conduct': (BuildContext context) => const CodeOfConduct(),
-            '/twitarr': (BuildContext context) => const TweetStreamView(),
-            '/mentions': (BuildContext context) => const MentionsView(),
-            '/profile': (BuildContext context) => Profile(user: ModalRoute.of(context).settings.arguments as User),
-          },
         );
       },
     );
   }
+}
+
+void search(BuildContext context, String query) {
+  Navigator.popUntil(context, ModalRoute.withName('/'));
+  DefaultTabController.of(context).index = CruiseMonkeyHome.allPages.length - 1;
+  Cruise.of(context).pushSearchQuery(query);
 }

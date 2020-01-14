@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/server_status.dart';
 import '../searchable_list.dart';
 
-class SongRecordsLoader extends AssetRecordsLoader<Song> {
+class SongSearchModel extends AssetSearchModel<Song> {
   @override
   bool isEnabled(ServerStatus status) => status.karaokeEnabled;
 
@@ -73,7 +73,7 @@ class Song extends AssetRecord implements Comparable<Song> {
 }
 
 final SearchableListView<Song> karaokeView = SearchableListView<Song>(
-  recordsLoader: SongRecordsLoader(),
+  searchModel: SongSearchModel(),
   icon: const Icon(Icons.library_music),
   label: const Text('Karaoke'),
 );

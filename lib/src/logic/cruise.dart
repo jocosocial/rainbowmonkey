@@ -662,6 +662,9 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     );
   }
 
+  final SearchQueryNotifier searchQueryNotifier = SearchQueryNotifier();
+  void pushSearchQuery(String value) => searchQueryNotifier._pushQuery(value);
+
   void forceUpdate() {
     _calendar.triggerUnscheduledUpdate();
     _serverStatus.triggerUnscheduledUpdate();
@@ -865,5 +868,24 @@ class TwitarrImageStreamCompleter extends ImageStreamCompleter {
         reportError(exception: error, stack: stack);
       }
     }
+  }
+}
+
+class SearchQueryNotifier extends ChangeNotifier {
+  SearchQueryNotifier();
+
+  String _query;
+
+  String pullQuery({ bool tentative = false }) {
+    assert(_query != null || tentative);
+    final String result = _query;
+    _query = null;
+    return result;
+  }
+
+  void _pushQuery(String value) {
+    assert(_query == null);
+    _query = value;
+    notifyListeners();
   }
 }

@@ -72,7 +72,6 @@ class Forums extends ChangeNotifier with IterableMixin<ForumThread>, BusyMixin {
     if (hasListeners && maxUpdatePeriod != null) {
       _resetFetchCountTimer?.cancel();
       _resetFetchCountTimer = Timer(const Duration(minutes: 2), () {
-        print('resetting _fetchCount');
         _fetchCount = _minFetchCount;
         _resetFetchCountTimer = null;
       });
