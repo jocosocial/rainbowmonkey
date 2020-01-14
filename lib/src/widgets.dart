@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4;
 import 'package:photo_view/photo_view.dart';
 
@@ -542,8 +543,6 @@ class _ChatLineState extends State<ChatLine> {
     setState(() {
       _pressed = false;
     });
-    if (widget.onPressed != null)
-      widget.onPressed();
   }
 
   void _handleTapCancel() {
@@ -592,6 +591,12 @@ class _ChatLineState extends State<ChatLine> {
     );
   }
 
+  void _handleCopy() async {
+    await Clipboard.setData(ClipboardData(text: widget.messages.join('\n')));
+    if (mounted)
+      Scaffold.of(context).showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
+  }
+
   void _handleLongPress() async {
     final List<Widget> actions = <Widget>[];
     void action(String label, IconData icon, VoidCallback callback) {
@@ -606,6 +611,7 @@ class _ChatLineState extends State<ChatLine> {
     action('UNLIKE', Icons.thumb_down, widget.onUnlike);
     action('VIEW LIKES', Icons.group, widget.getLikesCallback != null && widget.likes > 0 ? _viewLikes : null);
     action('REPLY', Icons.reply, widget.onReply);
+    action('COPY${ widget.photos?.isNotEmpty == true ? " TEXT" : ""}', Icons.content_copy, widget.messages?.isNotEmpty == true ? _handleCopy : null);
     action('EDIT', Icons.edit, widget.onEdit);
     action('LOCK', Icons.lock_outline, widget.onLock);
     action('UNLOCK', Icons.lock_open, widget.onUnlock);
@@ -738,9 +744,10 @@ class _ChatLineState extends State<ChatLine> {
                       children: <Widget>[
                         IntrinsicWidth(
                           child: GestureDetector(
-                            onTapDown: widget.onPressed != null ? _handleTapDown : null,
-                            onTapUp: widget.onPressed != null ? _handleTapUp : null,
-                            onTapCancel: widget.onPressed != null ? _handleTapCancel : null,
+                            onTapDown: _handleTapDown,
+                            onTapUp: _handleTapUp,
+                            onTap: widget.onPressed,
+                            onTapCancel: _handleTapCancel,
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 150),
                               curve: Curves.fastOutSlowIn,
