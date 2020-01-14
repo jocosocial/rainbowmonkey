@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:battery_optimization/battery_optimization.dart';
 
 import '../logic/background_polling.dart';
 import '../logic/cruise.dart';
@@ -25,7 +26,7 @@ class Settings extends StatefulWidget {
   State<Settings> createState() => _SettingsState();
 }
 
-class _SettingsState extends State<Settings> {
+class _SettingsState extends State<Settings> with WidgetsBindingObserver {
   final FocusNode _serverFocus = FocusNode();
   final TextEditingController _server = TextEditingController();
 
@@ -33,10 +34,37 @@ class _SettingsState extends State<Settings> {
 
   int _setBackgroundPollingPeriod;
 
+  bool _isIgnoringBatteryOptimizations;
+
   @override
   void initState() {
     super.initState();
     _setBackgroundPollingPeriod = backgroundPollingPeriodMinutes;
+    BatteryOptimization.isIgnoringBatteryOptimizations().then((bool value) {
+      if (mounted) {
+        setState(() {
+          _isIgnoringBatteryOptimizations = value;
+        });
+      }
+    });
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    BatteryOptimization.isIgnoringBatteryOptimizations().then((bool value) {
+      if (mounted) {
+        setState(() {
+          _isIgnoringBatteryOptimizations = value;
+        });
+      }
+    });
   }
 
   Timer _timer;
@@ -90,6 +118,7 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final TextStyle headingStyle = theme.textTheme.body2.copyWith(color: theme.colorScheme.onSurface);
     final CruiseModel cruise = Cruise.of(context);
     final TwitarrConfiguration currentConfiguration = cruise.twitarrConfiguration;
     final double latency = cruise.debugLatency;
@@ -102,9 +131,78 @@ class _SettingsState extends State<Settings> {
       body: ValueListenableBuilder<bool>(
         valueListenable: cruise.restoringSettings,
         builder: (BuildContext context, bool busy, Widget child) {
-          final List<Widget> children = <Widget>[
+          final List<Widget> children = <Widget>[];
+          if (Platform.isAndroid) {
+            final String s = _setBackgroundPollingPeriod == 1 ? '' : 's';
+            String batteryMessage;
+            switch (_isIgnoringBatteryOptimizations) {
+              case true:
+                batteryMessage = 'Notifications should be relatively prompt as '
+                                 'you have exempted Rainbow Monkey from normal battery life optimizations. '
+                                 'Please remember to re-enable battery life optimizations after the cruise!';
+                break;
+              case false:
+                batteryMessage = 'Notifications will be delayed; '
+                                 'Android is saving battery life by reducing how often Rainbow Monkey can run in the background. '
+                                 'You can change this in the battery settings. '
+                                 '(On a cruise ship we can only do notifications by regularly checking with the on-board server; '
+                                 'without Internet access we cannot rely on the usual Android messaging servers.)';
+                break;
+              default:
+                batteryMessage = 'Notifications may be delayed if '
+                                 'Android is saving battery life by reducing how often Rainbow Monkey can run in the background. '
+                                 '(On a cruise ship we can only do notifications by regularly checking with the on-board server; '
+                                 'without Internet access we cannot rely on the usual Android messaging servers.)';
+                break;
+            }
+            children.addAll(<Widget>[
+              ListTile(
+                title: Text('Notifications', style: headingStyle),
+              ),
+              ListTile(
+                leading: const Icon(Icons.notifications),
+                title: pollingDisabled ?
+                  const Text('Background polling is disabled.') :
+                  Text('Time between checks for new messages when logged in: $_setBackgroundPollingPeriod minute$s'),
+              ),
+              Padding(
+                padding: sliderPadding,
+                child: Slider(
+                  value: _setBackgroundPollingPeriod.toDouble(),
+                  min: 1.0,
+                  max: 60.0,
+                  divisions: 59,
+                  onChanged: pollingDisabled ? null : (double value) {
+                    setState(() {
+                      _setBackgroundPollingPeriod = value.round();
+                    });
+                    _updateBackgroundPollingPeriod();
+                  },
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeOut,
+                child: Padding(
+                  key: ValueKey<bool>(_isIgnoringBatteryOptimizations),
+                  padding: const EdgeInsets.fromLTRB(32.0, 16.0, 32.0, 20.0),
+                  child: Text(
+                    batteryMessage,
+                  ),
+                ),
+              ),
+              Center(
+                child: FlatButton(
+                  child: const Text('OPEN BATTERY SETTINGS'),
+                  onPressed: () async => await BatteryOptimization.openBatteryOptimizationSettings(),
+                ),
+              ),
+            ]);
+          }
+          children.addAll(<Widget>[
             ListTile(
-              title: Text('Server', style: theme.textTheme.body2.copyWith(color: theme.primaryColor)),
+              title: Text('Server', style: headingStyle),
             ),
             RadioListTile<TwitarrConfiguration>(
               title: const Text('Automatically pick server'),
@@ -160,39 +258,13 @@ class _SettingsState extends State<Settings> {
               value: RestTwitarrConfiguration(baseUrl: _server.text),
               onChanged: _isValid(_server.text) ? _apply : null,
             ),
-          ];
-          if (Platform.isAndroid) {
-            final String s = _setBackgroundPollingPeriod == 1 ? '' : 's';
-            children.addAll(<Widget>[
-              const SizedBox(height: 24.0),
-              ListTile(
-                leading: const Icon(Icons.notifications),
-                title: pollingDisabled ?
-                  const Text('Background polling is disabled.') :
-                  Text('Time between checks for new messages when logged in: $_setBackgroundPollingPeriod minute$s'),
-              ),
-              Padding(
-                padding: sliderPadding,
-                child: Slider(
-                  value: _setBackgroundPollingPeriod.toDouble(),
-                  min: 1.0,
-                  max: 60.0,
-                  divisions: 59,
-                  onChanged: pollingDisabled ? null : (double value) {
-                    setState(() {
-                      _setBackgroundPollingPeriod = value.round();
-                    });
-                    _updateBackgroundPollingPeriod();
-                  },
-                ),
-              ),
-            ]);
-          }
+            const SizedBox(height: 24.0),
+          ]);
           assert(() {
             children.addAll(<Widget>[
               const Divider(),
               ListTile(
-                title: Text('Network quality test controls', style: theme.textTheme.body2.copyWith(color: theme.primaryColor)),
+                title: Text('Network quality test controls', style: headingStyle),
               ),
               ListTile(
                 leading: const Icon(Icons.hourglass_empty),
@@ -222,7 +294,7 @@ class _SettingsState extends State<Settings> {
               ),
               const Divider(),
               ListTile(
-                title: Text('Time dilation for animations', style: theme.textTheme.body2.copyWith(color: theme.primaryColor)),
+                title: Text('Time dilation for animations', style: headingStyle),
               ),
               ListTile(
                 leading: const Icon(Icons.av_timer),
