@@ -301,36 +301,39 @@ class _UserViewState extends State<UserView> {
                 ),
               ),
               const Divider(),
-              ContinuousProgressBuilder<ServerStatus>(
-                progress: Cruise.of(context).serverStatus,
-                onRetry: () { Cruise.of(context).forceUpdate(); },
-                failureMessage: const Padding(
-                  padding: EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 8.0),
-                  child: Text(
-                    'If you are unable to connect to the Twitarr server, consider turning on Airplane mode and then turning on WiFi. '
-                    'Twitarr is only available on the ship network.',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                nullChild: const Text('Delight in the cruise!', textAlign: TextAlign.center),
-                idleChild: const Text('Please enjoy the cruise!', textAlign: TextAlign.center),
-                builder: (BuildContext context, ServerStatus status) {
-                  final List<Announcement> announcements = status.announcements;
-                  if (announcements.isEmpty)
-                    return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(8.0, 12.0, 8.0, 8.0),
-                    child: ListBody(
-                      children: announcements.map<Widget>((Announcement announcement) {
-                        return ChatLine(
-                          user: announcement.user,
-                          messages: <String>[ announcement.message ],
-                          timestamp: announcement.timestamp,
-                        );
-                      }).toList(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                child: ContinuousProgressBuilder<ServerStatus>(
+                  progress: Cruise.of(context).serverStatus,
+                  onRetry: () { Cruise.of(context).forceUpdate(); },
+                  failureMessage: const Padding(
+                    padding: EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
+                    child: Text(
+                      'If you are unable to connect to the Twitarr server, consider turning on Airplane mode and then turning on WiFi. '
+                      'Twitarr is only available on the ship network.',
+                      textAlign: TextAlign.center,
                     ),
-                  );
-                },
+                  ),
+                  nullChild: const Text('Delight in the cruise!', textAlign: TextAlign.center),
+                  idleChild: const Text('Please enjoy the cruise!', textAlign: TextAlign.center),
+                  builder: (BuildContext context, ServerStatus status) {
+                    final List<Announcement> announcements = status.announcements;
+                    if (announcements.isEmpty)
+                      return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 0.0),
+                      child: ListBody(
+                        children: announcements.map<Widget>((Announcement announcement) {
+                          return ChatLine(
+                            user: announcement.user,
+                            messages: <String>[ announcement.message ],
+                            timestamp: announcement.timestamp,
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  },
+                ),
               ),
               const Divider(),
               IntrinsicHeight(

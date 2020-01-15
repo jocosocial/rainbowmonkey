@@ -14,6 +14,7 @@ import 'logic/photo_manager.dart';
 import 'models/server_status.dart';
 import 'models/server_text.dart';
 import 'models/user.dart';
+import 'pretty_text.dart';
 import 'progress.dart';
 import 'utils.dart';
 
@@ -656,36 +657,6 @@ class _ChatLineState extends State<ChatLine> {
       _pressed = false;
   }
 
-  static const String _emojiNames = 'buffet|die-ship|die|fez|hottub|joco|pirate|ship-front|ship|towel-monkey|tropical-drink|zombie|monkey|rainbow-monkey'; // the last two aren't supported by the server :-)
-  static final RegExp _emojiPattern = RegExp(':($_emojiNames):');
-  static final RegExp _emojiOnlyPattern = RegExp('^(:($_emojiNames):)+\$');
-
-  Widget _prettifyText(String message, double fontSize) {
-    if (message.contains(_emojiOnlyPattern)) {
-      assert(message.startsWith(':'));
-      assert(message.endsWith(':'));
-      final List<String> emojiList = message.substring(1, message.length - 1).split('::');
-      return Wrap(children: <Widget>[
-        for (String emoji in emojiList)
-          Image.asset('images/emoji/$emoji.png', height: fontSize * 2.0),
-      ]);
-    }
-    final List<InlineSpan> result = <InlineSpan>[];
-    message.splitMapJoin(
-      _emojiPattern,
-      onMatch: (Match match) {
-        final String emoji = match.group(0);
-        result.add(WidgetSpan(child: Image.asset('images/emoji/${emoji.substring(1, emoji.length - 1)}.png', height: fontSize)));
-        return '';
-      },
-      onNonMatch: (String nonMatch) {
-        result.add(TextSpan(text: nonMatch));
-        return '';
-      }
-    );
-    return Text.rich(TextSpan(children: result));
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> lines = <Widget>[];
@@ -701,7 +672,7 @@ class _ChatLineState extends State<ChatLine> {
     }
     final TextStyle body1Style = theme.primaryTextTheme.body1;
     for (String message in widget.messages)
-      lines.add(_prettifyText(message, body1Style.fontSize));
+      lines.add(PrettyText(text: message, fontSize: body1Style.fontSize));
     if (widget.photos != null) {
       for (Photo photo in widget.photos) {
         lines.add(PhotoImage(tag: '${widget.id}:${photo.id}', photo: photo));

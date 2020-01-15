@@ -4,16 +4,15 @@ description: The client application for the cruise, for Android and iOS. Connect
 dependencies:
   flutter:
     sdk: flutter
-  path_provider: any
+  android_alarm_manager: any
+  battery_optimization: any
   flutter_local_notifications: any
   image_picker: any
-    #path: ../plugins/packages/image_picker
-  android_alarm_manager: any
+  path_provider: any
+  pedantic: any
+  photo_view: any
   sqflite: any
   url_launcher: any
-  photo_view: any
-  pedantic: any
-  battery_optimization: any
 
 dev_dependencies:
   flutter_test:
