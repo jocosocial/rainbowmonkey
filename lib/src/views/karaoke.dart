@@ -56,10 +56,16 @@ class Song extends AssetRecord implements Comparable<Song> {
     Widget trailing;
     switch (metadata) {
       case 'M':
-        trailing = Text('M', style: textStyle.caption);
+        trailing = Tooltip(
+          message: 'Home-made MIDI version. Quality may be questionable.',
+          child: Text('MIDI', style: textStyle.caption, textAlign: TextAlign.right),
+        );
         break;
       case 'VR':
-        trailing = Text('VR', style: textStyle.caption);
+        trailing = Tooltip(
+          message: 'Track made by switching the stereo channels to drop the middle channel. Quality may be questionable.',
+          child: Text('REDUCED\nVOCALS', style: textStyle.caption, textAlign: TextAlign.right),
+        );
         break;
       // 'Bowieoke' seems to mean "David Bowie sang this",
       // which is already reflected in the artist, so...
