@@ -686,7 +686,6 @@ class RestTwitarr implements Twitarr {
       .replaceAll('\0', ''); // %00 is particularly bad.
     if (searchTerm.trim().isEmpty)
       return Progress<List<User>>.completed(const <User>[]);
-    searchTerm = searchTerm.runes.map<String>((int rune) => '[${String.fromCharCode(rune)}]').join('');
     return Progress<List<User>>((ProgressController<List<User>> completer) async {
       final List<User> result = await compute<String, List<User>>(
         _parseUserList,
