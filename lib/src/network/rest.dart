@@ -24,6 +24,7 @@ const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
 
 const bool _debugVerbose = false;
 const int kLineLength = 0x080;
+const int kMaxLines = 10;
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
@@ -1894,9 +1895,8 @@ class RestTwitarr implements Twitarr {
         .join();
       assert(() {
         if (_debugVerbose) {
-          debugPrint('<<< ${response.statusCode} from $path:');
-          for (int index = 0; index < result.length; index += kLineLength)
-            debugPrint(' 0x${index.toRadixString(16).padLeft(5, "0")}: ${result.substring(index, math.min(index + kLineLength, result.length))}');
+          debugPrint('<<< ${response.statusCode} from /$path:');
+          debugDump(result);
         }
         return true;
       }());
@@ -1934,6 +1934,13 @@ class RestTwitarr implements Twitarr {
         bytes.setRange(offset, offset + chunk.length, chunk);
         offset += chunk.length;
       }
+      assert(() {
+        if (_debugVerbose) {
+          debugPrint('<<< ${response.statusCode} from /$path:');
+          debugDump(utf8.decode(bytes, allowMalformed: true));
+        }
+        return true;
+      }());
       return bytes;
     });
   }
@@ -1975,9 +1982,19 @@ class RestTwitarr implements Twitarr {
                      : null;
     assert(() {
       if (_debugVerbose) {
-        debugPrint('>>> $method $url (body length: $length)');
+        if (length == null) {
+          debugPrint('>>> $method $url');
+        } else {
+          debugPrint('>>> $method $url with payload of length $length:');
+          debugDump(utf8.decode(<int>[
+            if (body != null)
+              ...body,
+            if (bodyParts != null)
+              ...bodyParts.expand((Uint8List inner) => inner),
+          ], allowMalformed: true));
+        }
       } else {
-        debugPrint('>>> $method ${url.path}');
+        debugPrint('>>> $method ${url.path} (body length: $length)');
       }
       return true;
     }());
@@ -2019,9 +2036,8 @@ class RestTwitarr implements Twitarr {
       if (!expectedStatusCodes.contains(response.statusCode)) {
         assert(() {
           response.transform(utf8.decoder).join().then((String result) {
-            debugPrint('<<< (!!) ${response.statusCode} from $path:');
-            for (int index = 0; index < result.length; index += kLineLength)
-              debugPrint(' 0x${index.toRadixString(16).padLeft(5, "0")}: ${result.substring(index, math.min(index + kLineLength, result.length)).replaceAll("\n", "␊")}');
+            debugPrint('<<< (!!) ${response.statusCode} from /$path:');
+            debugDump(result);
           });
           return true;
         }());
@@ -2044,6 +2060,18 @@ class RestTwitarr implements Twitarr {
       if (error.osError.errorCode == 113)
         throw const ServerError(<String>['The server cannot be reached.']);
       rethrow;
+    }
+  }
+
+  @protected
+  static void debugDump(String result) {
+    if (result.isEmpty) {
+      debugPrint(' (no content)');
+    } else {
+      for (int index = 0; index < math.min(kMaxLines * kLineLength, result.length); index += kLineLength)
+        debugPrint(' 0x${index.toRadixString(16).padLeft(5, "0")}: ${result.substring(index, math.min(index + kLineLength, result.length)).replaceAll("\n", "␊")}');
+      if (kMaxLines * kLineLength < result.length)
+        debugPrint(' ...(continues for ${result.length - kMaxLines * kLineLength} more bytes)');
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/cruise.dart';
@@ -204,7 +205,7 @@ class StreamListEntry extends CardRecord {
   }
 }
 
-class SearchRecordsLoader extends RecordsLoader<Record> {
+class SearchSearchModel extends SearchModel<Record> {
   @override
   bool isEnabled(ServerStatus status) {
     return status.forumsEnabled
@@ -231,6 +232,12 @@ class SearchRecordsLoader extends RecordsLoader<Record> {
 
   @override
   Progress<List<Record>> get records => _records ?? const Progress<List<Record>>.idle();
+
+  @override
+  SearchQueryNotifier get searchQueryNotifier {
+    assert(_context != null);
+    return Cruise.of(_context).searchQueryNotifier;
+  }
 
   @override
   void search(String query) {
@@ -263,7 +270,7 @@ class SearchRecordsLoader extends RecordsLoader<Record> {
 }
 
 final SearchableListView<Record> searchView = SearchableListView<Record>(
-  recordsLoader: SearchRecordsLoader(),
+  searchModel: SearchSearchModel(),
   icon: const Icon(Icons.search),
   label: const Text('Search'),
 );

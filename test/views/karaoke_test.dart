@@ -10,7 +10,7 @@ import 'package:cruisemonkey/src/views/karaoke.dart';
 
 Future<void> main() async {
   final AssetBundle bundle = TestAssetBundle();
-  await (karaokeView.recordsLoader as SongRecordsLoader).initFromBundle(bundle).asFuture();
+  await (karaokeView.searchModel as SongSearchModel).initFromBundle(bundle).asFuture();
 
   testWidgets('Karaoke', (WidgetTester tester) async {
     await tester.pumpWidget(

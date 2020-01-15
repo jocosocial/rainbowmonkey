@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/server_status.dart';
 import '../searchable_list.dart';
 
-class GameRecordsLoader extends AssetRecordsLoader<Game> {
+class GameSearchModel extends AssetSearchModel<Game> {
   @override
   bool isEnabled(ServerStatus status) => status.gamesEnabled;
 
@@ -53,7 +53,7 @@ class Game extends AssetRecord implements Comparable<Game> {
 }
 
 final SearchableListView<Game> gamesView = SearchableListView<Game>(
-  recordsLoader: GameRecordsLoader(),
+  searchModel: GameSearchModel(),
   icon: const Icon(Icons.toys),
   label: const Text('Games'),
 );
