@@ -2053,6 +2053,8 @@ class RestTwitarr implements Twitarr {
     } on SocketException catch (error) {
       if (error.osError.errorCode == 7)
         throw const ServerError(<String>['The DNS server is down or the Twitarr server is non-existent.']);
+      if (error.osError.errorCode == 101)
+        throw const ServerError(<String>['You are not connected to the network.']);
       if (error.osError.errorCode == 110)
         throw const ServerError(<String>['The network is too slow.']);
       if (error.osError.errorCode == 111 || error.osError.errorCode == 61)

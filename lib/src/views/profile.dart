@@ -142,7 +142,10 @@ class _ProfileState extends State<Profile> {
               if (user.sameAs(currentUser)) {
                 children.add(const SizedBox(height: 24.0));
                 children.add(LabeledIconButton(
-                  onPressed: () { Navigator.pushNamed(context, '/profile-editor'); },
+                  onPressed: () async {
+                    await Navigator.pushNamed(context, '/profile-editor');
+                    setState(_start);
+                  },
                   icon: const Icon(Icons.edit),
                   label: const Text('EDIT PROFILE'),
                 ));
