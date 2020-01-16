@@ -20,6 +20,42 @@ class ProfileEditor extends StatefulWidget {
   State<ProfileEditor> createState() => _ProfileEditorState();
 }
 
+abstract class _PendingTasks {
+  void cancel();
+}
+
+class _Pending {
+  _Pending(this.setState);
+
+  final StateSetter setState;
+
+  final Set<_PendingTasks> _tasks = <_PendingTasks>{};
+
+  void add(_PendingTasks object) {
+    setState(() {
+      _tasks.add(object);
+    });
+  }
+
+  void remove(_PendingTasks object) {
+    setState(() {
+      _tasks.remove(object);
+    });
+  }
+
+  void cancelAll() {
+    setState(() {
+      for (_PendingTasks task in _tasks)
+        task.cancel();
+      _tasks.clear();
+    });
+  }
+
+  bool get isEmpty => _tasks.isEmpty;
+
+  bool get isNotEmpty => _tasks.isNotEmpty;
+}
+
 class _ProfileEditorState extends State<ProfileEditor> {
   final FocusNode _displayNameFocus = FocusNode();
   final FocusNode _realNameFocus = FocusNode();
@@ -27,6 +63,14 @@ class _ProfileEditorState extends State<ProfileEditor> {
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _roomNumberFocus = FocusNode();
   final FocusNode _homeLocationFocus = FocusNode();
+
+  _Pending _pending;
+
+  @override
+  void initState() {
+    super.initState();
+    _pending = _Pending(setState);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +80,11 @@ class _ProfileEditorState extends State<ProfileEditor> {
         animation: userSource,
         builder: (BuildContext context, Widget child) {
           final AuthenticatedUser user = userSource.currentValue;
-          final List<Widget> children = <Widget>[
-            AvatarEditor(user: user),
+            final List<Widget> children = <Widget>[
+            AvatarEditor(
+              user: user,
+              pending: _pending,
+            ),
             ProfileField(
               title: 'Display name',
               autofocus: true,
@@ -46,6 +93,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
               textCapitalization: TextCapitalization.words,
               maxLength: 40,
               value: user.displayName,
+              pending: _pending,
               onUpdate: (String value) {
                 if (!AuthenticatedUser.isValidDisplayName(value))
                   throw const LocalError('Your display name must be at least three characters long but shorter than 40 characters, and may only consist of letters and some minimal punctuation.');
@@ -61,6 +109,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
               textCapitalization: TextCapitalization.words,
               maxLength: 100,
               value: user.realName,
+              pending: _pending,
               onUpdate: (String value) {
                 return Cruise.of(context).updateProfile(
                   realName: value,
@@ -74,6 +123,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
               textCapitalization: TextCapitalization.sentences,
               maxLength: 100,
               value: user.pronouns,
+              pending: _pending,
               onUpdate: (String value) {
                 return Cruise.of(context).updateProfile(
                   pronouns: value,
@@ -87,6 +137,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
               keyboardType: TextInputType.number,
               maxLength: 5,
               value: user.roomNumber,
+              pending: _pending,
               onUpdate: (String value) {
                 if (!AuthenticatedUser.isValidRoomNumber(value))
                   throw const LocalError('Room number must be between 1000 and 99999 and must be numeric.');
@@ -102,6 +153,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
               textCapitalization: TextCapitalization.words,
               maxLength: 100,
               value: user.homeLocation,
+              pending: _pending,
               onUpdate: (String value) {
                 return Cruise.of(context).updateProfile(
                   homeLocation: value,
@@ -114,6 +166,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
               nextNode: _displayNameFocus,
               keyboardType: TextInputType.emailAddress,
               value: user.email,
+              pending: _pending,
               onUpdate: (String value) {
                 if (!AuthenticatedUser.isValidEmail(value))
                   throw const LocalError('E-mail is not valid.');
@@ -134,10 +187,33 @@ class _ProfileEditorState extends State<ProfileEditor> {
               label: const Text('CHANGE PASSWORD'),
             ),
           ];
+          final FocusScopeNode focus = FocusScope.of(context);
+          final bool noFieldHasFocus = focus.focusedChild == null || !focus.focusedChild.hasPrimaryFocus;
           return CustomScrollView(
             slivers: <Widget>[
               SliverAppBar(
+                floating: true,
                 title: Text('Edit Profile (@${user.username})'),
+                leading: IconButton(
+                  icon: noFieldHasFocus ? const BackButtonIcon() : const Icon(Icons.done),
+                  tooltip: noFieldHasFocus ? 'Back' : 'Save changes',
+                  onPressed: noFieldHasFocus ? _pending.isNotEmpty ? null : () {
+                    Navigator.maybePop(context);
+                  } : () {
+                    // TODO(ianh): remove setState once https://github.com/flutter/flutter/issues/43497 is fixed
+                    setState(() { focus.focusedChild.unfocus(); });
+                  }
+                ),
+                actions: <Widget>[
+                  if (_pending.isNotEmpty)
+                    IconButton(
+                      icon: Icon(Icons.cancel),
+                      tooltip: 'Cancel current edit',
+                      onPressed: () {
+                        _pending.cancelAll();
+                      },
+                    ),
+                ],
               ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 26.0),
@@ -159,25 +235,35 @@ class AvatarEditor extends StatefulWidget {
   const AvatarEditor({
     Key key,
     this.user,
+    this.pending,
   }) : super(key: key);
 
   final AuthenticatedUser user;
+
+  final _Pending pending;
 
   @override
   State<AvatarEditor> createState() => _AvatarEditorState();
 }
 
-class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClientMixin<AvatarEditor> {
+class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClientMixin<AvatarEditor> implements _PendingTasks {
   bool _busy = false;
   String _error = '';
 
   @override
   bool get wantKeepAlive => _busy || _error != '';
 
-  void _updateImage(ImageSource source) async {
+  @override
+  void cancel() {
+    setState(() { _busy = false; });
+    Scaffold.of(context).showSnackBar(const SnackBar(content: Text('Avatar may have changed on the server already.')));
+  }
+
+  void _saveImage(ImageSource source) async {
     assert(!_busy);
     try {
       setState(() { _busy = true; _error = ''; });
+      widget.pending?.add(this);
       final File file = await ImagePicker.pickImage(source: source);
       if (file != null) {
         final Uint8List bytes = await file.readAsBytes();
@@ -189,8 +275,10 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
         }
       }
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() { _busy = false; });
+        widget.pending?.remove(this);
+      }
     }
   }
 
@@ -198,6 +286,7 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
     assert(!_busy);
     try {
       setState(() { _busy = true; _error = ''; });
+      widget.pending?.add(this);
       try {
         await Cruise.of(context).uploadAvatar().asFuture();
       } on UserFriendlyError catch (error) {
@@ -205,8 +294,10 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
           setState(() { _error = error.toString(); });
       }
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() { _busy = false; });
+        widget.pending?.remove(this);
+      }
     }
   }
 
@@ -236,12 +327,12 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
                   IconButton(
                     icon: const Icon(Icons.camera_alt),
                     tooltip: 'Take photograph to use as new avatar.',
-                    onPressed: _busy ? null : () { _updateImage(ImageSource.camera); },
+                    onPressed: _busy ? null : () { _saveImage(ImageSource.camera); },
                   ),
                   IconButton(
                     icon: const Icon(Icons.image),
                     tooltip: 'Select new image for avatar from gallery.',
-                    onPressed: _busy ? null : () { _updateImage(ImageSource.gallery); },
+                    onPressed: _busy ? null : () { _saveImage(ImageSource.gallery); },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
@@ -278,6 +369,7 @@ class ProfileField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.keyboardType,
     this.maxLength,
+    this.pending,
     @required this.onUpdate,
   }) : assert(onUpdate != null),
        assert(autofocus != null),
@@ -299,45 +391,65 @@ class ProfileField extends StatefulWidget {
 
   final int maxLength;
 
+  final _Pending pending;
+
   final ProgressValueSetter<String> onUpdate;
 
   @override
   State<ProfileField> createState() => _ProfileFieldState();
 }
 
-class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClientMixin<ProfileField>, TickerProviderStateMixin {
+class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClientMixin<ProfileField>, TickerProviderStateMixin implements _PendingTasks {
   final TextEditingController _field = TextEditingController();
+  String _probableServerContents;
+  String _currentlyUploadingValue;
 
   String _error;
 
-  bool _updating = false;
   Progress<void> _progress; // TODO(ianh): use this in the build method for the progress meter
 
   bool _saved = false;
 
+  bool get _updating => _currentlyUploadingValue != null;
+
   @override
   bool get wantKeepAlive => _updating || _error != null;
 
-  void _update() async {
-    setState(() { _updating = true; _saved = false; });
+  @override
+  void cancel() {
+    if (_updating)
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text('${widget.title} may have changed on the server already.')));
+    _field.text = _probableServerContents;
+    setState(() { _currentlyUploadingValue = null; _saved = false; _error = null; });
+  }
+
+  void _save() async {
+    if (_field.text == _currentlyUploadingValue)
+      return;
+    final String ourValue = _currentlyUploadingValue = _field.text;
+    widget.pending?.add(this); // may be redundant
+    setState(() { _saved = false; _error = null; });
     try {
-      _error = null;
-      _progress = widget.onUpdate(_field.text);
+      _progress = widget.onUpdate(ourValue);
       await _progress.asFuture();
-      if (mounted)
+      if (mounted && ourValue == _currentlyUploadingValue) {
+        _probableServerContents = _field.text;
         setState(() { _saved = true; });
+      }
     } on UserFriendlyError catch (message) {
-      if (mounted)
+      if (mounted && ourValue == _currentlyUploadingValue)
         setState(() { _error = message.toString(); });
     }
-    if (mounted)
-      setState(() { _updating = false; });
+    if (mounted && ourValue == _currentlyUploadingValue) {
+      setState(() { _currentlyUploadingValue = null; });
+      widget.pending?.remove(this);
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    _field.text = widget.value;
+    _field.text = _probableServerContents = widget.value;
     widget.focusNode.addListener(_focusChange);
   }
 
@@ -347,7 +459,7 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
     oldWidget.focusNode.removeListener(_focusChange);
     widget.focusNode.addListener(_focusChange);
     if (oldWidget.value != widget.value && !widget.focusNode.hasFocus && !_updating)
-      _field.text = widget.value;
+      _field.text = _probableServerContents = widget.value;
   }
 
   @override
@@ -357,9 +469,20 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
   }
 
   void _focusChange() {
+    // TODO(ianh): This gets called more often than it should when tapping away.
     setState(() { _saved = false; });
-    if (!widget.focusNode.hasFocus)
-      _update();
+    if (!widget.focusNode.hasFocus) {
+      if (_updating) {
+        if (_field.text != _currentlyUploadingValue)
+          _save();
+      } else {
+        if (_field.text != _probableServerContents) {
+          _save();
+        } else {
+          widget.pending?.remove(this);
+        }
+      }
+    }
   }
 
   @override
@@ -378,6 +501,7 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
             },
             onChanged: (String value) {
               setState(() { _saved = false; });
+              widget.pending?.add(this);
             },
             textInputAction: widget.nextNode != null ? TextInputAction.next : TextInputAction.done,
             keyboardType: widget.keyboardType,
@@ -388,22 +512,18 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
               labelText: widget.title,
               errorText: _error,
               errorMaxLines: 5,
-              suffixIcon: AnimatedOpacity(
-                duration: const Duration(milliseconds: 150),
-                curve: Curves.fastOutSlowIn,
-                opacity: _saved ? 1.0 : 0.0,
-                child: const Tooltip(
-                  message: 'Saved automatically.',
-                  child: Icon(Icons.check),
-                ),
-              ),
-            ),
-          ),
-          Visibility(
-            visible: _updating,
-            child: const Positioned.fill(
-              child: Center(
-                child: CircularProgressIndicator(),
+              disabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.0, color: Theme.of(context).disabledColor)),
+              suffixIcon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 450),
+                switchInCurve: Curves.fastOutSlowIn,
+                switchOutCurve: Curves.fastOutSlowIn,
+                child:
+                  _updating ? const CircularProgressIndicator() :
+                  _saved ? const Tooltip(
+                    message: 'Saved automatically.',
+                    child: Icon(Icons.check),
+                  ) :
+                  const SizedBox.shrink(),
               ),
             ),
           ),
