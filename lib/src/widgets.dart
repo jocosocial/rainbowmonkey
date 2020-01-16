@@ -1632,7 +1632,7 @@ class ModeratorBorder extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(
           width: isModerating ? 12.0 : 0,
-          color: Theme.of(context).accentColor,
+          color: isModerating ? Theme.of(context).accentColor : Theme.of(context).accentColor.withOpacity(0.0),
         ),
       ),
       child: child,
