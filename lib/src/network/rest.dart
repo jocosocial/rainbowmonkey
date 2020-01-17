@@ -14,6 +14,7 @@ import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import 'form_data.dart';
@@ -339,7 +340,13 @@ class RestTwitarr implements Twitarr {
       final FormData body = FormData();
       if (credentials != null)
         body.add('key', credentials.key);
-      final String rawResult = await completer.chain<String>(_requestUtf8('GET', 'api/v2/user/profile/${Uri.encodeComponent(username)}?${body.toUrlEncoded()}'));
+      final String rawResult = await completer.chain<String>(
+        _requestUtf8(
+          'GET',
+          'api/v2/user/profile/${Uri.encodeComponent(username)}?${body.toUrlEncoded()}',
+          expectedStatusCodes: <int>[200, 404],
+        ),
+      );
       final dynamic data = Json.parse(rawResult);
       _checkStatusIsOk(data);
       photoManager.heardAboutUserPhoto(
@@ -448,7 +455,7 @@ class RestTwitarr implements Twitarr {
       title: value.title.toString(),
       official: (value.official as Json).toBoolean(),
       following: (value.following as Json).toBoolean(),
-      description: (value.description as Json).valueType == String ? value.description.toString() : null,
+      description: (value.description as Json).valueType == String ? TwitarrString(value.description.toString()) : null,
       location: value.location.toString(),
       startTime: _parseDateTime(value.start_time as Json),
       endTime: _parseDateTime(value.end_time as Json),
@@ -495,7 +502,7 @@ class RestTwitarr implements Twitarr {
       return AnnouncementSummary(
         id: value.id.toString(),
         user: _parseUser(value.author as Json),
-        message: value.text.toString(),
+        message: TwitarrString(value.text.toString()),
         timestamp: _parseDateTime(value.timestamp as Json),
       );
     }).toList();
@@ -529,17 +536,17 @@ class RestTwitarr implements Twitarr {
     final Json data = Json.parse(rawData);
     final List<dynamic> sectionsList = ((data.asIterable().first as dynamic).sections as Json).asIterable().toList();
     return ServerText(sectionsList.map<ServerTextSection>((dynamic section) {
-      String header;
+      TwitarrString header;
       if ((section as Json).hasKey('header'))
-        header = section.header.toString();
+        header = TwitarrString(section.header.toString());
       List<ServerTextParagraph> paragraphs;
       if ((section as Json).hasKey('paragraphs')) {
         paragraphs = (section.paragraphs as Json).asIterable().expand<ServerTextParagraph>((dynamic paragraph) sync* {
           if ((paragraph as Json).hasKey('text'))
-            yield ServerTextParagraph(paragraph.text.toString());
+            yield ServerTextParagraph(TwitarrString(paragraph.text.toString()));
           if ((paragraph as Json).hasKey('list')) {
             yield* (paragraph.list as Json).asIterable().map<ServerTextParagraph>((dynamic item) {
-              return ServerTextParagraph(item.toString(), hasBullet: true);
+              return ServerTextParagraph(TwitarrString(item.toString()), hasBullet: true);
             });
           }
         }).toList();
@@ -953,7 +960,7 @@ class RestTwitarr implements Twitarr {
     return SeamailMessageSummary(
       id: message.id.toString(),
       user: _parseUser(message.author as Json),
-      text: message.text.toString(),
+      text: TwitarrString(message.text.toString()),
       timestamp: _parseDateTime(message.timestamp as Json),
       readReceipts: Set<UserSummary>.from(
         (message.read_users as Json)
@@ -1266,7 +1273,7 @@ class RestTwitarr implements Twitarr {
     return StreamMessageSummary(
       id: post.id.toString(),
       user: _parseUser(post.author as Json),
-      text: post.text.toString(),
+      text: TwitarrString(post.text.toString()),
       timestamp: _parseDateTime(post.timestamp as Json),
       boundaryToken: (post.timestamp as Json).toInt(),
       locked: (post.locked as Json).toBoolean(),
@@ -1678,7 +1685,7 @@ class RestTwitarr implements Twitarr {
       result.add(ForumMessageSummary(
         id: post.id.toString(),
         user: _parseUser(post.author as Json),
-        text: post.text.toString(),
+        text: TwitarrString(post.text.toString()),
         photos: (post as Json).hasKey('photos')
           ? (post.photos as Json).asIterable().map<Photo>(_parsePhoto).toList()
           : null,

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'search.dart';
+import 'string.dart';
 
 @immutable
 class Event extends SearchResult implements Comparable<Event> {
@@ -25,7 +26,7 @@ class Event extends SearchResult implements Comparable<Event> {
   final String title;
   final bool official;
   final bool following;
-  final String description;
+  final TwitarrString description;
   final String location;
   final DateTime startTime;
   final DateTime endTime;

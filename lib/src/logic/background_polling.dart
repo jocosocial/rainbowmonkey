@@ -152,7 +152,16 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
       final Notifications notifications = await Notifications.instance;
       for (SeamailThreadSummary thread in summary.threads) {
         for (SeamailMessageSummary message in thread.messages) {
-          futures.add(notifications.messageUnread(thread.id, message.id, message.timestamp, thread.subject, message.user.toUser(null), message.text, twitarr, store));
+          futures.add(notifications.messageUnread(
+            thread.id,
+            message.id,
+            message.timestamp,
+            thread.subject,
+            message.user.toUser(null),
+            message.text,
+            twitarr,
+            store,
+          ));
           futures.add(store.addNotification(thread.id, message.id));
         }
       }

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../models/string.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import 'store.dart';
@@ -88,7 +89,7 @@ class Notifications {
     )).absolute.path;
   }
 
-  Future<void> messageUnread(String threadId, String messageId, DateTime timestamp, String subject, User user, String message, Twitarr twitarr, DataStore store) async {
+  Future<void> messageUnread(String threadId, String messageId, DateTime timestamp, String subject, User user, TwitarrString message, Twitarr twitarr, DataStore store) async {
     final AndroidNotificationDetails android = AndroidNotificationDetails(
       'cruisemonkey-seamail',
       'Seamail',
@@ -102,7 +103,7 @@ class Notifications {
         conversationTitle: subject,
         messages: <Message>[
           Message(
-            message,
+            message.toString(),
             timestamp,
             Person(
               icon: await _fetchAvatar(user.username, twitarr, store),
@@ -130,7 +131,7 @@ class Notifications {
     await _plugin.show(
       _notificationId(threadId, messageId),
       subject,
-      message,
+      message.toString(),
       NotificationDetails(android, iOS),
       payload: threadId,
     );

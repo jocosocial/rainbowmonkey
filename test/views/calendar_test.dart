@@ -7,6 +7,7 @@ import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
 import 'package:cruisemonkey/src/models/errors.dart';
+import 'package:cruisemonkey/src/models/string.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/views/calendar.dart';
 import 'package:cruisemonkey/src/widgets.dart';
@@ -127,7 +128,7 @@ void main() {
         id: 'b',
         title: 'Shadow Event',
         location: 'Banana Deck',
-        description: 'Eat some food.',
+        description: const TwitarrString('Eat some food.'),
         official: false,
         startTime: DateTime(2019, 3, 9, 20, 00),
         endTime: DateTime(2019, 3, 10, 00, 00),
@@ -162,7 +163,7 @@ void main() {
         id: 'b',
         title: 'Shadow Event',
         location: 'Banana Deck',
-        description: 'Eat some food.',
+        description: const TwitarrString('Eat some food.'),
         official: false,
         startTime: DateTime(2019, 3, 9, 20, 00),
         endTime: DateTime(2019, 3, 9, 21, 30),

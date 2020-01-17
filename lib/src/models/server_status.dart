@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'string.dart';
 import 'user.dart';
 
 @immutable
@@ -15,7 +16,7 @@ class Announcement implements Comparable<Announcement> {
 
   final User user;
 
-  final String message;
+  final TwitarrString message;
 
   final DateTime timestamp;
 

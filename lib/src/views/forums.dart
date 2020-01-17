@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../logic/forums.dart';
 import '../logic/photo_manager.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -68,13 +69,17 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
     setState(() {
       _pending.add(entry);
       progress.asFuture().then((void value) {
-        setState(() {
-          _pending.remove(entry);
-        });
+        if (mounted) {
+          setState(() {
+            _pending.remove(entry);
+          });
+        }
       }, onError: (dynamic error, StackTrace stack) {
-        setState(() {
-          entry.error = error.toString();
-        });
+        if (mounted) {
+          setState(() {
+            entry.error = error.toString();
+          });
+        }
       });
     });
   }
@@ -189,7 +194,7 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         return ChatLine(
                           user: message.user,
                           isCurrentUser: isCurrentUser,
-                          messages: <String>[ message.text ],
+                          messages: <TwitarrString>[ message.text ],
                           photos: message.photos,
                           id: message.id,
                           likes: message.reactions.likes,
@@ -461,7 +466,7 @@ class _EditForumPostViewState extends State<EditForumPostView> {
   @override
   void initState() {
     super.initState();
-    _text.text = widget.message.text;
+    _text.text = widget.message.text.encodedValue;
     _keptPhotos = widget.message.photos;
   }
 

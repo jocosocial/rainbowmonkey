@@ -7,6 +7,7 @@ import '../models/calendar.dart';
 import '../models/reactions.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 
@@ -360,7 +361,7 @@ class SeamailMessageSummary {
 
   final UserSummary user;
 
-  final String text;
+  final TwitarrString text;
 
   final DateTime timestamp;
 
@@ -401,7 +402,7 @@ class StreamMessageSummary implements SearchResultSummary {
 
   final UserSummary user;
 
-  final String text;
+  final TwitarrString text;
 
   final Photo photo;
 
@@ -476,7 +477,7 @@ class ForumMessageSummary {
 
   final UserSummary user;
 
-  final String text;
+  final TwitarrString text;
 
   final List<Photo> photos;
 
@@ -499,7 +500,7 @@ class AnnouncementSummary {
 
   final UserSummary user;
 
-  final String message;
+  final TwitarrString message;
 
   final DateTime timestamp;
 
@@ -562,7 +563,7 @@ class EventSummary extends Event implements SearchResultSummary {
     String title,
     bool official,
     bool following,
-    String description,
+    TwitarrString description,
     String location,
     DateTime startTime,
     DateTime endTime,

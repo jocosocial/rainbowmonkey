@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/errors.dart';
 import '../models/reactions.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../utils.dart';
@@ -187,7 +188,7 @@ class StreamMentionsItem extends MentionsItem {
 
   final User user;
 
-  final String text;
+  final TwitarrString text;
 
   final Photo photo;
 

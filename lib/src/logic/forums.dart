@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../models/errors.dart';
 import '../models/reactions.dart';
 import '../models/search.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -495,7 +496,7 @@ class ForumMessage {
 
   final User user;
 
-  final String text;
+  final TwitarrString text;
 
   final List<Photo> photos;
 
@@ -508,7 +509,7 @@ class ForumMessage {
   ForumMessage copyWith({
     String id,
     User user,
-    String text,
+    TwitarrString text,
     List<Photo> photos,
     DateTime timestamp,
     bool read,
