@@ -8,6 +8,7 @@ import '../logic/forums.dart';
 import '../logic/mentions.dart';
 import '../logic/photo_manager.dart';
 import '../models/server_status.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../utils.dart';
@@ -86,7 +87,7 @@ class _MentionsViewState extends State<MentionsView> {
                                   padding: const EdgeInsets.symmetric(vertical: 12.0),
                                   child: ChatLine(
                                     user: item.user,
-                                    messages: <String>[ item.text ],
+                                    messages: <TwitarrString>[ item.text ],
                                     photos: item.photo != null ? <Photo>[ item.photo, ] : null,
                                     id: item.id,
                                     likes: item.reactions.likes,

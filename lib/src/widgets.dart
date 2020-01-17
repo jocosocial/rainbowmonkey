@@ -13,6 +13,7 @@ import 'logic/cruise.dart';
 import 'logic/photo_manager.dart';
 import 'models/server_status.dart';
 import 'models/server_text.dart';
+import 'models/string.dart';
 import 'models/user.dart';
 import 'pretty_text.dart';
 import 'progress.dart';
@@ -511,7 +512,7 @@ class ChatLine extends StatefulWidget {
 
   final User user;
   final bool isCurrentUser;
-  final List<String> messages;
+  final List<TwitarrString> messages;
   final List<Photo> photos;
   final String id;
   final bool isReply;
@@ -671,8 +672,8 @@ class _ChatLineState extends State<ChatLine> {
         break;
     }
     final TextStyle body1Style = theme.primaryTextTheme.body1;
-    for (String message in widget.messages)
-      lines.add(PrettyText(text: message, fontSize: body1Style.fontSize));
+    for (TwitarrString message in widget.messages)
+      lines.add(PrettyText(message));
     if (widget.photos != null) {
       for (Photo photo in widget.photos) {
         lines.add(PhotoImage(tag: '${widget.id}:${photo.id}', photo: photo));
@@ -989,12 +990,12 @@ class _ServerTextViewState extends State<ServerTextView> {
                         top: textTheme.title.fontSize,
                         bottom: textTheme.body1.fontSize / 2.0,
                       ),
-                      child: Text(section.header, style: textTheme.title),
+                      child: PrettyText(section.header, style: textTheme.title),
                     );
                   }
                   if (section.paragraphs != null) {
                     yield* section.paragraphs.map<Widget>((ServerTextParagraph paragraph) {
-                      final Widget body = Text(paragraph.text, style: textTheme.body1);
+                      final Widget body = PrettyText(paragraph.text, style: textTheme.body1);
                       if (paragraph.hasBullet) {
                         return Padding(
                           padding: EdgeInsets.only(

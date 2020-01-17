@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../models/calendar.dart';
 import '../models/server_status.dart';
+import '../pretty_text.dart';
 import '../widgets.dart';
 
 final ValueNotifier<bool> _filter = ValueNotifier<bool>(false);
@@ -352,7 +353,7 @@ class TimeSlice extends StatelessWidget {
       if (event.location.isNotEmpty)
         Text(event.location, style: const TextStyle(fontStyle: FontStyle.italic)),
       if (event.description != null)
-        Text(event.description),
+        PrettyText(event.description),
     ];
     final DateTime lastTime = lastStartTime?.toLocal();
     final DateTime lastDay = lastTime != null ? DateTime(lastTime.year, lastTime.month, lastTime.day) : null;

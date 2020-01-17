@@ -8,8 +8,10 @@ import '../logic/forums.dart';
 import '../logic/mentions.dart';
 import '../logic/seamail.dart';
 import '../models/server_status.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
+import '../pretty_text.dart';
 import '../progress.dart';
 import '../utils.dart';
 import '../widgets.dart';
@@ -462,7 +464,7 @@ class ForumListTile extends StatelessWidget {
       );
     }
     final String unread = thread.unreadCount > 0 ? ' (${thread.unreadCount} new)' : '';
-    final String lastMessage = 'Most recent from ${thread.lastMessageUser}';
+    final String recentMessageMetadata = 'Most recent from ${thread.lastMessageUser}';
     return AnimatedOpacity(
       key: ValueKey<ForumThread>(thread),
       opacity: thread.fresh ? 1.0 : 0.5,
@@ -504,7 +506,7 @@ class ForumListTile extends StatelessWidget {
               ],
             ),
             Text(
-              lastMessage,
+              recentMessageMetadata,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -609,13 +611,17 @@ class SeamailListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<SeamailMessage> messages = thread.getMessages();
-    String lastMessage;
+    String lastMessagePrefix;
+    TwitarrString lastMessageBody;
     if (messages.isNotEmpty) {
-      lastMessage = '${messages.last.user}: ${messages.last.text}';
+      lastMessagePrefix = '${messages.last.user}: ';
+      lastMessageBody = messages.last.text;
     } else if (thread.unreadCount > 0) {
-      lastMessage = '${thread.unreadCount} new message${thread.unreadCount == 1 ? '' : "s"}';
+      lastMessagePrefix = '${thread.unreadCount} new message${thread.unreadCount == 1 ? '' : "s"}';
+      lastMessageBody = const TwitarrString('');
     } else {
-      lastMessage = '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}';
+      lastMessagePrefix = '${thread.totalCount} message${thread.totalCount == 1 ? '' : "s"}';
+      lastMessageBody = const TwitarrString('');
     }
     return ListTile(
       key: ValueKey<SeamailThread>(thread),
@@ -642,8 +648,9 @@ class SeamailListTile extends StatelessWidget {
           Row(
             children: <Widget>[
               Expanded(
-                child: Text(
-                  lastMessage,
+                child: PrettyText(
+                  lastMessageBody,
+                  prefix: lastMessagePrefix,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

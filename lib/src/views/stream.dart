@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../logic/photo_manager.dart';
 import '../logic/stream.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -322,7 +323,7 @@ class Entry extends StatelessWidget {
       child: ChatLine(
         user: post.user,
         isCurrentUser: isCurrentUser,
-        messages: <String>[ post.text ],
+        messages: <TwitarrString>[ post.text ],
         photos: post.photo != null ? <Photo>[ post.photo, ] : null,
         id: post.id,
         isReply: post.hasParents,
@@ -664,7 +665,7 @@ class NestedEntry extends StatelessWidget {
       child: ChatLine(
         user: details.post.user,
         isCurrentUser: false, // because otherwise the nesting becomes meaningless
-        messages: <String>[ details.post.text ],
+        messages: <TwitarrString>[ details.post.text ],
         photos: details.post.photo != null ? <Photo>[ details.post.photo, ] : null,
         id: details.post.id,
         likes: details.post.reactions.likes,
@@ -741,7 +742,7 @@ class _EditTweetViewState extends State<EditTweetView> {
   @override
   void initState() {
     super.initState();
-    _text.text = widget.post.text;
+    _text.text = widget.post.text.encodedValue;
     _keptPhotos = widget.post.photo != null ? <Photo>[widget.post.photo] : const <Photo>[];
   }
 

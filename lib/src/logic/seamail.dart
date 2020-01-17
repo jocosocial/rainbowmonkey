@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/errors.dart';
 import '../models/search.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
@@ -400,7 +401,7 @@ class SeamailMessage {
 
   final User user;
 
-  final String text;
+  final TwitarrString text;
 
   final DateTime timestamp;
 

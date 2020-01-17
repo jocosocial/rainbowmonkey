@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../graphics.dart';
 import '../models/server_status.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -326,7 +327,7 @@ class _UserViewState extends State<UserView> {
                         children: announcements.map<Widget>((Announcement announcement) {
                           return ChatLine(
                             user: announcement.user,
-                            messages: <String>[ announcement.message ],
+                            messages: <TwitarrString>[ announcement.message ],
                             timestamp: announcement.timestamp,
                           );
                         }).toList(),

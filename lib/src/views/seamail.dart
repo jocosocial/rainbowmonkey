@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../logic/cruise.dart';
 import '../logic/seamail.dart';
+import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../utils.dart';
@@ -69,13 +70,17 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
     setState(() {
       _pending.add(entry);
       progress.asFuture().then((void value) {
-        setState(() {
-          _pending.remove(entry);
-        });
+        if (mounted) {
+          setState(() {
+            _pending.remove(entry);
+          });
+        }
       }, onError: (dynamic error, StackTrace stack) {
-        setState(() {
-          entry.error = error.toString();
-        });
+        if (mounted) {
+          setState(() {
+            entry.error = error.toString();
+          });
+        }
       });
     });
   }
@@ -224,7 +229,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                         key: ValueKey<int>(bubbleIndex),
                         user: bubble.user,
                         isCurrentUser: bubble.user.sameAs(currentUser.effectiveUser),
-                        messages: bubble.messages.map<String>((SeamailMessage message) => message.text).toList(),
+                        messages: bubble.messages.map<TwitarrString>((SeamailMessage message) => message.text).toList(),
                         photos: null,
                         timestamp: bubble.messages.first.timestamp,
                       );

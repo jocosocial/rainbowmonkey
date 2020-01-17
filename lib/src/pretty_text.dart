@@ -6,19 +6,28 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 import 'models/server_status.dart';
+import 'models/string.dart';
 import 'models/user.dart';
 import 'widgets.dart';
 
 class PrettyText extends StatefulWidget {
-  const PrettyText({
+  const PrettyText(this.text, {
     Key key,
-    this.text,
-    this.fontSize,
+    this.prefix,
+    this.style,
+    this.maxLines,
+    this.overflow,
   }) : super(key: key);
 
-  final String text;
+  final TwitarrString text;
 
-  final double fontSize;
+  final String prefix;
+
+  final TextStyle style;
+
+  final int maxLines;
+
+  final TextOverflow overflow;
 
   @override
   State<PrettyText> createState() => _PrettyTextState();
@@ -60,8 +69,11 @@ class _PrettyTextState extends State<PrettyText> {
     }
   }
 
-  List<_Part> _tokenize(String text) {
+  List<_Part> _tokenize(TwitarrString input) {
+    final String text = input.encodedValue;
     final List<_Part> result = <_Part>[];
+    if (widget.prefix != null)
+      result.add(_TextPart(widget.prefix));
     text.splitMapJoin(
       _tokenizerPattern,
       onMatch: (Match rawMatch) {
@@ -123,7 +135,12 @@ class _PrettyTextState extends State<PrettyText> {
   Widget build(BuildContext context) {
     if (_widget != null)
       return _widget;
-    return Text.rich(TextSpan(children: _parts.map<InlineSpan>((_Part part) => part.build(context)).toList()));
+    return Text.rich(TextSpan(
+      children: _parts.map<InlineSpan>((_Part part) => part.build(context)).toList()),
+      style: widget.style,
+      maxLines: widget.maxLines,
+      overflow: widget.overflow,
+    );
   }
 }
 
