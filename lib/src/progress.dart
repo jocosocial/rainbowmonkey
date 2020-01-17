@@ -70,8 +70,8 @@ class SuccessfulProgress<T> extends ProgressValue<T> {
   _ProgressIndex get _index => _ProgressIndex.successful;
 }
 
-typedef Future<T> ProgressCallback<T>(ProgressController<T> controller);
-typedef B Converter<A, B>(A value);
+typedef ProgressCallback<T> = Future<T> Function(ProgressController<T> controller);
+typedef Converter<A, B> = B Function(A value);
 
 abstract class Progress<T> implements ValueListenable<ProgressValue<T>> {
   factory Progress(ProgressCallback<T> completer) {

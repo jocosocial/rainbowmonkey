@@ -179,56 +179,58 @@ class PrivateCommsView extends CommsView {
                   );
                 }
               }
-              return JumpToTop(
-                builder: (BuildContext context, ScrollController controller) => CustomScrollView(
-                  controller: controller,
-                  slivers: <Widget>[
-                    SliverSafeArea(
-                      bottom: false,
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate(
-                          <Widget>[
-                            if (canModerate)
-                              divide(SwitchListTile(
-                                key: const Key('masquerade'),
-                                title: const Text('Masquerade as @moderator'),
-                                value: isModerating,
-                                onChanged: (bool value) {
-                                  cruise.setAsMod(enabled: value);
-                                },
+              return Scrollbar(
+                child: JumpToTop(
+                  builder: (BuildContext context, ScrollController controller) => CustomScrollView(
+                    controller: controller,
+                    slivers: <Widget>[
+                      SliverSafeArea(
+                        bottom: false,
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate(
+                            <Widget>[
+                              if (canModerate)
+                                divide(SwitchListTile(
+                                  key: const Key('masquerade'),
+                                  title: const Text('Masquerade as @moderator'),
+                                  value: isModerating,
+                                  onChanged: (bool value) {
+                                    cruise.setAsMod(enabled: value);
+                                  },
+                                )),
+                              divide(ListTile(
+                                key: const Key('private'),
+                                title: Text('Private messages', style: headerStyle),
+                                trailing: ValueListenableBuilder<bool>(
+                                  valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(true),
+                                  builder: (BuildContext context, bool active, Widget child) {
+                                    return IconButton(
+                                      icon: const Icon(Icons.refresh),
+                                      color: DefaultTextStyle.of(context).style.color,
+                                      tooltip: 'Force refresh',
+                                      onPressed: active ? null : seamail.reload,
+                                    );
+                                  },
+                                ),
                               )),
-                            divide(ListTile(
-                              key: const Key('private'),
-                              title: Text('Private messages', style: headerStyle),
-                              trailing: ValueListenableBuilder<bool>(
-                                valueListenable: cruise.isLoggedIn ? seamail.active : const AlwaysStoppedAnimation<bool>(true),
-                                builder: (BuildContext context, bool active, Widget child) {
-                                  return IconButton(
-                                    icon: const Icon(Icons.refresh),
-                                    color: DefaultTextStyle.of(context).style.color,
-                                    tooltip: 'Force refresh',
-                                    onPressed: active ? null : seamail.reload,
-                                  );
-                                },
-                              ),
-                            )),
-                            if (noMessagesWidget != null)
-                              divide(noMessagesWidget),
-                          ],
+                              if (noMessagesWidget != null)
+                                divide(noMessagesWidget),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    SliverSafeArea(
-                      top: false,
-                      sliver: SliverPrototypeExtentList(
-                        prototypeItem: const SeamailListTile.prototype(),
-                        delegate: SliverChildBuilderDelegate(
-                          (BuildContext context, int index) => divide(SeamailListTile(thread: seamailThreads[index])),
-                          childCount: seamailThreads.length,
+                      SliverSafeArea(
+                        top: false,
+                        sliver: SliverPrototypeExtentList(
+                          prototypeItem: const SeamailListTile.prototype(),
+                          delegate: SliverChildBuilderDelegate(
+                            (BuildContext context, int index) => divide(SeamailListTile(thread: seamailThreads[index])),
+                            childCount: seamailThreads.length,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -317,88 +319,90 @@ class PublicCommsView extends CommsView {
                 )
                 ..length = forums.totalCount;
               final DividerCallback divide = getDivider(context);
-              return JumpToTop(
-                builder: (BuildContext context, ScrollController controller) => CustomScrollView(
-                  controller: controller,
-                  slivers: <Widget>[
-                    SliverSafeArea(
-                      bottom: !status.forumsEnabled,
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate(
-                          <Widget>[
-                            if (canModerate)
-                              divide(SwitchListTile(
-                                key: const Key('masquerade'),
-                                title: const Text('Masquerade as @moderator'),
-                                value: isModerating,
-                                onChanged: (bool value) {
-                                  cruise.setAsMod(enabled: value);
-                                },
-                              )),
-                            divide(ListTile(
-                              key: const Key('public'),
-                              title: Text('Public messages', style: headerStyle),
-                              trailing: ValueListenableBuilder<bool>(
-                                valueListenable: forums.active,
-                                builder: (BuildContext context, bool active, Widget child) {
-                                  return IconButton(
-                                    icon: const Icon(Icons.refresh),
-                                    color: DefaultTextStyle.of(context).style.color,
-                                    tooltip: 'Force refresh',
-                                    onPressed: active ? null : forums.reload,
-                                  );
-                                },
-                              ),
-                            )),
-                            if (!isModerating && cruise.isLoggedIn)
-                              divide(KeyedSubtree(
-                                key: const Key('mentions'),
-                                child: ValueListenableBuilder<bool>(
-                                  valueListenable: mentions.hasMentions,
-                                  builder: (BuildContext context, bool hasMentions, Widget child) {
-                                    return ListTile(
-                                      leading: Badge(
-                                        child: CircleAvatar(child: Icon(hasMentions ? Icons.notifications_active : Icons.notifications)),
-                                        alignment: const AlignmentDirectional(1.1, 1.1),
-                                        enabled: hasMentions,
-                                      ),
-                                      title: const Text('Mentions'),
-                                      onTap: () { Navigator.pushNamed(context, '/mentions'); },
+              return Scrollbar(
+                child: JumpToTop(
+                  builder: (BuildContext context, ScrollController controller) => CustomScrollView(
+                    controller: controller,
+                    slivers: <Widget>[
+                      SliverSafeArea(
+                        bottom: !status.forumsEnabled,
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate(
+                            <Widget>[
+                              if (canModerate)
+                                divide(SwitchListTile(
+                                  key: const Key('masquerade'),
+                                  title: const Text('Masquerade as @moderator'),
+                                  value: isModerating,
+                                  onChanged: (bool value) {
+                                    cruise.setAsMod(enabled: value);
+                                  },
+                                )),
+                              divide(ListTile(
+                                key: const Key('public'),
+                                title: Text('Public messages', style: headerStyle),
+                                trailing: ValueListenableBuilder<bool>(
+                                  valueListenable: forums.active,
+                                  builder: (BuildContext context, bool active, Widget child) {
+                                    return IconButton(
+                                      icon: const Icon(Icons.refresh),
+                                      color: DefaultTextStyle.of(context).style.color,
+                                      tooltip: 'Force refresh',
+                                      onPressed: active ? null : forums.reload,
                                     );
                                   },
                                 ),
                               )),
-                            if (status.streamEnabled)
-                              divide(ListTile(
-                                key: const Key('twitarr'),
-                                leading: const CircleAvatar(child: Icon(Icons.speaker_notes)),
-                                title: const Text('Twitarr'),
-                                onTap: () { Navigator.pushNamed(context, '/twitarr'); },
-                              )),
-                            if (status.forumsEnabled && forumThreads.isEmpty)
-                              iconAndLabel(
-                                icon: Icons.forum,
-                                message: forums.busy.value ? 'Loading forums...' : forums.pending ? 'Forums not yet loaded.' : 'No forums.',
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (status.forumsEnabled)
-                      SliverSafeArea(
-                        top: false,
-                        sliver: SliverPrototypeExtentList(
-                          prototypeItem: const ForumListTile.prototype(),
-                          delegate: SliverChildBuilderDelegate(
-                            (BuildContext context, int index) {
-                              forums.observing(index);
-                              return divide(ForumListTile(thread: forumThreads[index]));
-                            },
-                            childCount: forumThreads.length,
+                              if (!isModerating && cruise.isLoggedIn)
+                                divide(KeyedSubtree(
+                                  key: const Key('mentions'),
+                                  child: ValueListenableBuilder<bool>(
+                                    valueListenable: mentions.hasMentions,
+                                    builder: (BuildContext context, bool hasMentions, Widget child) {
+                                      return ListTile(
+                                        leading: Badge(
+                                          child: CircleAvatar(child: Icon(hasMentions ? Icons.notifications_active : Icons.notifications)),
+                                          alignment: const AlignmentDirectional(1.1, 1.1),
+                                          enabled: hasMentions,
+                                        ),
+                                        title: const Text('Mentions'),
+                                        onTap: () { Navigator.pushNamed(context, '/mentions'); },
+                                      );
+                                    },
+                                  ),
+                                )),
+                              if (status.streamEnabled)
+                                divide(ListTile(
+                                  key: const Key('twitarr'),
+                                  leading: const CircleAvatar(child: Icon(Icons.speaker_notes)),
+                                  title: const Text('Twitarr'),
+                                  onTap: () { Navigator.pushNamed(context, '/twitarr'); },
+                                )),
+                              if (status.forumsEnabled && forumThreads.isEmpty)
+                                iconAndLabel(
+                                  icon: Icons.forum,
+                                  message: forums.busy.value ? 'Loading forums...' : forums.pending ? 'Forums not yet loaded.' : 'No forums.',
+                                ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
+                      if (status.forumsEnabled)
+                        SliverSafeArea(
+                          top: false,
+                          sliver: SliverPrototypeExtentList(
+                            prototypeItem: const ForumListTile.prototype(),
+                            delegate: SliverChildBuilderDelegate(
+                              (BuildContext context, int index) {
+                                forums.observing(index);
+                                return divide(ForumListTile(thread: forumThreads[index]));
+                              },
+                              childCount: forumThreads.length,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               );
             },

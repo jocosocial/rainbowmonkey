@@ -18,8 +18,31 @@ abstract class Record {
 }
 
 abstract class SearchModel<T extends Record> {
-  Future<void> attach(BuildContext context);
-  void detach();
+  BuildContext get context => _context;
+  BuildContext _context;
+
+  StateSetter get setState => _setState;
+  StateSetter _setState;
+
+  Future<void> _attach(BuildContext context, StateSetter setState) {
+    _context = context;
+    _setState = setState;
+    return attached();
+  }
+
+  @protected
+  @mustCallSuper
+  Future<void> attached() async { }
+
+  void _detach() {
+    detached();
+    _context = null;
+    _setState = null;
+  }
+
+  @protected
+  @mustCallSuper
+  void detached() { }
 
   bool isEnabled(ServerStatus status);
 
@@ -29,19 +52,16 @@ abstract class SearchModel<T extends Record> {
 
   /// Calling this should update [records].
   void search(String query);
+
+  Iterable<Widget> buildToolbar(BuildContext context) sync* { }
 }
 
-abstract class AssetRecord extends Record {
-  const AssetRecord();
-  bool matches(List<String> keywords);
-}
-
-abstract class AssetSearchModel<T extends AssetRecord> extends SearchModel<T> {
+abstract class AssetSearchModel<T extends Record> extends SearchModel<T> {
   Progress<List<T>> _records;
   AssetBundle _bundle;
 
   @override
-  Future<void> attach(BuildContext context) async {
+  Future<void> attached() async {
     final AssetBundle newBundle = DefaultAssetBundle.of(context);
     _bundle ??= newBundle;
     // TODO(ianh): This doesn't support handling the case of the asset bundle
@@ -49,11 +69,8 @@ abstract class AssetSearchModel<T extends AssetRecord> extends SearchModel<T> {
     // (that should only matter for tests though, in normal execution the bundle won't change)
     assert(_bundle == newBundle);
     _records ??= initFromBundle(_bundle);
-    return _records.asFuture();
+    return Future.wait<void>(<Future<void>>[ _records.asFuture(), super.attached() ]);
   }
-
-  @override
-  void detach() { }
 
   @protected
   String get resourceName;
@@ -70,8 +87,17 @@ abstract class AssetSearchModel<T extends AssetRecord> extends SearchModel<T> {
   /// This must return a static function that implements the parser.
   ///
   /// (It is passed to [Isolate.spawn].)
+  ///
+  /// The output should be sorted in the default sort order.
   @protected
   Parser<T> parser();
+
+  void _resort() {
+    _records = Progress.convert<List<T>, List<T>>(_records, sort);
+  }
+
+  @protected
+  List<T> sort(List<T> records) => records;
 
   Progress<List<T>> _filteredRecords;
 
@@ -80,16 +106,20 @@ abstract class AssetSearchModel<T extends AssetRecord> extends SearchModel<T> {
 
   @override
   void search(String query) {
+    _resort();
     if (query.isEmpty) {
       _filteredRecords = null;
     } else {
       final List<String> keywords = query.toLowerCase().split(' ');
       _filteredRecords = Progress.convert<List<T>, List<T>>(
         _records,
-        (List<T> list) => list.where((T value) => value.matches(keywords)).toList()
+        (List<T> list) => list.where((T value) => matches(value, keywords)).toList(),
       );
     }
   }
+
+  @protected
+  bool matches(T record, List<String> keywords);
 }
 
 class SearchableListView<T extends Record> extends StatefulWidget implements View {
@@ -160,7 +190,7 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_new) {
-      widget.searchModel.attach(context);
+      widget.searchModel._attach(context, _setModelState);
     }
     _updateQueryNotifier();
     if (_new) {
@@ -180,8 +210,8 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
   void didUpdateWidget(SearchableListView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.searchModel != oldWidget.searchModel) {
-      oldWidget.searchModel.detach();
-      widget.searchModel.attach(context);
+      oldWidget.searchModel._detach();
+      widget.searchModel._attach(context, _setModelState);
       _updateQueryNotifier();
     }
   }
@@ -194,6 +224,13 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
       _searchQueryNotifier = widget.searchModel.searchQueryNotifier;
       _searchQueryNotifier?.addListener(_updateQuery);
     }
+  }
+
+  void _setModelState(VoidCallback callback) {
+    setState(callback);
+    widget.searchModel.search(_query);
+    if (_scrollController.hasClients)
+      _scrollController.jumpTo(0.0);
   }
 
   void _updateQuery() {
@@ -221,7 +258,7 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
   void dispose() {
     _textEditingController.removeListener(_storeTextField);
     _searchQueryNotifier?.removeListener(_updateQuery);
-    widget.searchModel.detach();
+    widget.searchModel._detach();
     super.dispose();
   }
 
@@ -232,20 +269,24 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
       verticalDirection: VerticalDirection.up,
       children: <Widget>[
         Expanded(
-          child: Scrollbar(
-            child: ProgressBuilder<List<T>>(
-              progress: widget.searchModel.records,
-              idleChild: widget.idleScreen(context),
-              builder: (BuildContext context, List<T> records) {
-                if (records.isEmpty)
-                  return widget.emptyResults(context);
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: outerPadding.copyWith(top: 0.0) + const EdgeInsets.all(8.0),
-                  itemCount: records.length,
-                  itemBuilder: (BuildContext context, int index) => records[index].buildSearchResult(context),
-                );
-              },
+          child: MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: Scrollbar(
+              child: ProgressBuilder<List<T>>(
+                progress: widget.searchModel.records,
+                idleChild: widget.idleScreen(context),
+                builder: (BuildContext context, List<T> records) {
+                  if (records.isEmpty)
+                    return widget.emptyResults(context);
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: outerPadding.copyWith(top: 0.0) + const EdgeInsets.all(8.0),
+                    itemCount: records.length,
+                    itemBuilder: (BuildContext context, int index) => records[index].buildSearchResult(context),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -253,15 +294,20 @@ class _SearchableListViewState<T extends Record> extends State<SearchableListVie
           elevation: 4.0,
           child: Padding(
             padding: outerPadding.copyWith(bottom: 0.0) + const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _textEditingController,
-              decoration: InputDecoration(
-                labelText: 'Search',
-                suffixIcon: IconButton(
-                  icon: _textEditingController.text.isEmpty ? const Icon(Icons.search) : const Icon(Icons.close),
-                  onPressed: _textEditingController.clear,
+            child: ListBody(
+              children: <Widget>[
+                TextField(
+                  controller: _textEditingController,
+                  decoration: InputDecoration(
+                    labelText: 'Search',
+                    suffixIcon: IconButton(
+                      icon: _textEditingController.text.isEmpty ? const Icon(Icons.search) : const Icon(Icons.close),
+                      onPressed: _textEditingController.clear,
+                    ),
+                  ),
                 ),
-              ),
+                ...widget.searchModel.buildToolbar(context),
+              ],
             ),
           ),
         ),
