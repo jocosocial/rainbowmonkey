@@ -49,11 +49,18 @@ Future<void> main() async {
       Song('aa', 'aa', ''),
       Song('bb', 'bb', ''),
     ]);
-    songs.sort();
+    songs.sort(SongSearchModel.compareTitles);
     expect(songs, const <Song>[
       Song('aa', 'aa', ''),
       Song('aa', 'bb', ''),
       Song('bb', 'aa', ''),
+      Song('bb', 'bb', ''),
+    ]);
+    songs.sort(SongSearchModel.compareArtists);
+    expect(songs, const <Song>[
+      Song('aa', 'aa', ''),
+      Song('bb', 'aa', ''),
+      Song('aa', 'bb', ''),
       Song('bb', 'bb', ''),
     ]);
   });

@@ -21,34 +21,125 @@ class SongSearchModel extends AssetSearchModel<Song> {
       if (parts.length >= 2)
         songs.add(Song(parts[1], parts[0], parts.length > 2 ? parts[2] : ''));
     }
-    songs.sort();
+    songs.sort(compareTitles);
     return songs;
+  }
+
+  bool _sortByTitles = true;
+
+  @override
+  List<Song> sort(List<Song> records) {
+    if (_sortByTitles)
+      return records.toList()..sort(compareTitles);
+    return records.toList()..sort(compareArtists);
+  }
+
+  static int compareTitles(Song a, Song b) {
+    if (a.title == b.title)
+      return a.artist.compareTo(b.artist);
+    return a.title.compareTo(b.title);
+  }
+
+  static int compareArtists(Song a, Song b) {
+    if (a.artist == b.artist)
+      return a.title.compareTo(b.title);
+    return a.artist.compareTo(b.artist);
+  }
+
+  bool _searchTitles = true;
+  bool _searchArtists = true;
+
+  @override
+  bool matches(Song record, List<String> substrings) {
+    return substrings.every(
+      (String substring) {
+        return (record.title.toLowerCase().contains(substring) && _searchTitles)
+            || (record.artist.toLowerCase().contains(substring) && _searchArtists);
+      },
+    );
+  }
+
+  @override
+  Iterable<Widget> buildToolbar(BuildContext context) sync* {
+    assert(setState != null);
+    yield Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Wrap(
+              spacing: 8.0,
+              children: <Widget>[
+                ChoiceChip(
+                  label: const Text('Search all'),
+                  selected: _searchTitles && _searchArtists,
+                  onSelected: (bool selected) {
+                    assert(setState != null);
+                    if (selected) {
+                      setState(() {
+                        _searchTitles = true;
+                        _searchArtists = true;
+                      });
+                    }
+                  },
+                ),
+                ChoiceChip(
+                  label: const Text('Songs'),
+                  selected: _searchTitles && !_searchArtists,
+                  onSelected: (bool selected) {
+                    assert(setState != null);
+                    if (selected) {
+                      setState(() {
+                        _searchTitles = true;
+                        _searchArtists = false;
+                      });
+                    }
+                  },
+                ),
+                ChoiceChip(
+                  label: const Text('Artists'),
+                  selected: _searchArtists && !_searchTitles,
+                  onSelected: (bool selected) {
+                    assert(setState != null);
+                    if (selected) {
+                      setState(() {
+                        _searchTitles = false;
+                        _searchArtists = true;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          PopupMenuButton<bool>(
+            icon: Icon(Icons.sort),
+            onSelected: (bool result) { setState(() { _sortByTitles = result; }); },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<bool>>[
+              CheckedPopupMenuItem<bool>(
+                value: true,
+                checked: _sortByTitles,
+                child: const Text('Sort by titles'),
+              ),
+              CheckedPopupMenuItem<bool>(
+                value: false,
+                checked: !_sortByTitles,
+                child: const Text('Sort by artists'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
-class Song extends AssetRecord implements Comparable<Song> {
+class Song extends Record {
   const Song(this.title, this.artist, this.metadata);
 
   final String title;
   final String artist;
   final String metadata;
-
-  @override
-  int compareTo(Song other) {
-    if (title == other.title)
-      return artist.compareTo(other.artist);
-    return title.compareTo(other.title);
-  }
-
-  @override
-  bool matches(List<String> substrings) {
-    return substrings.every(
-      (String substring) {
-        return title.toLowerCase().contains(substring)
-            || artist.toLowerCase().contains(substring);
-      },
-    );
-  }
 
   @override
   Widget buildSearchResult(BuildContext context) {

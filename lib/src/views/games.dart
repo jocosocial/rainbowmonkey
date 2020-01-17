@@ -23,9 +23,18 @@ class GameSearchModel extends AssetSearchModel<Game> {
     games.sort();
     return games;
   }
+
+  @override
+  bool matches(Game record, List<String> substrings) {
+    return substrings.every(
+      (String substring) {
+        return record.name.toLowerCase().contains(substring);
+      },
+    );
+  }
 }
 
-class Game extends AssetRecord implements Comparable<Game> {
+class Game extends Record implements Comparable<Game> {
   const Game(this.name);
 
   final String name;
@@ -33,15 +42,6 @@ class Game extends AssetRecord implements Comparable<Game> {
   @override
   int compareTo(Game other) {
     return name.compareTo(other.name);
-  }
-
-  @override
-  bool matches(List<String> substrings) {
-    return substrings.every(
-      (String substring) {
-        return name.toLowerCase().contains(substring);
-      },
-    );
   }
 
   @override

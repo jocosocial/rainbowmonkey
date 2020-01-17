@@ -216,18 +216,6 @@ class SearchSearchModel extends SearchModel<Record> {
         || status.registrationEnabled;
   }
 
-  BuildContext _context;
-
-  @override
-  Future<void> attach(BuildContext context) async {
-    _context = context;
-  }
-
-  @override
-  void detach() {
-    _context = null;
-  }
-
   Progress<List<Record>> _records;
 
   @override
@@ -235,8 +223,8 @@ class SearchSearchModel extends SearchModel<Record> {
 
   @override
   SearchQueryNotifier get searchQueryNotifier {
-    assert(_context != null);
-    return Cruise.of(_context).searchQueryNotifier;
+    assert(context != null);
+    return Cruise.of(context).searchQueryNotifier;
   }
 
   @override
@@ -246,7 +234,7 @@ class SearchSearchModel extends SearchModel<Record> {
       return;
     }
     _records = Progress.convert<Set<SearchResult>, List<Record>>(
-      Cruise.of(_context).search(query),
+      Cruise.of(context).search(query),
       (Set<SearchResult> results) {
         final List<SeamailThread> seamailThreads = results.whereType<SeamailThread>().toList()..sort();
         final List<Event> events = results.whereType<Event>().toList()..sort();
