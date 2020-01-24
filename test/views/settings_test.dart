@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:platform/platform.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
+import 'package:cruisemonkey/src/logic/notifications.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
@@ -17,6 +20,7 @@ import '../mocks.dart';
 
 Future<void> main() async {
   final List<String> log = <String>[];
+  Notifications.overridePlugin = FlutterLocalNotificationsPlugin.private(FakePlatform(operatingSystem: 'android'));
   RestTwitarrConfiguration.register();
   LoggingTwitarrConfiguration.register(log);
 
