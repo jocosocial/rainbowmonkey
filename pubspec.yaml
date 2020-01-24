@@ -11,6 +11,7 @@ dependencies:
   path_provider: any
   pedantic: any
   photo_view: any
+  platform: any
   sqflite: any
   url_launcher: any
 
