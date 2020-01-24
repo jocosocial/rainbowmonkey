@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart';
+import 'package:meta/meta.dart';
 
 import '../models/string.dart';
 import '../models/user.dart';
@@ -15,13 +17,16 @@ class Notifications {
 
   final FlutterLocalNotificationsPlugin _plugin;
 
+  @visibleForTesting
+  static FlutterLocalNotificationsPlugin overridePlugin;
+
   static Future<Notifications> _future;
   static Future<Notifications> get instance {
     if (_future != null)
       return _future;
     final Completer<Notifications> completer = Completer<Notifications>();
     _future = completer.future;
-    final Notifications result = Notifications._(FlutterLocalNotificationsPlugin());
+    final Notifications result = Notifications._(overridePlugin ?? FlutterLocalNotificationsPlugin());
     result._plugin.initialize(
       const InitializationSettings(
         AndroidInitializationSettings('@drawable/notifications'),
