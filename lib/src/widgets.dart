@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4;
 import 'package:photo_view/photo_view.dart';
@@ -714,41 +715,40 @@ class _ChatLineState extends State<ChatLine> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        IntrinsicWidth(
-                          child: GestureDetector(
-                            onTapDown: _handleTapDown,
-                            onTapUp: _handleTapUp,
-                            onTap: widget.onPressed,
-                            onTapCancel: _handleTapCancel,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              curve: Curves.fastOutSlowIn,
-                              margin: const EdgeInsetsDirectional.only(end: 20.0),
-                              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
-                              decoration: ShapeDecoration(
-                                gradient: LinearGradient(
-                                  begin: _pressed ? const Alignment(0.0, 0.6) : const Alignment(0.0, -1.0),
-                                  end: _pressed ? const Alignment(0.0, -1.0) : const Alignment(0.0, 0.6),
-                                  colors: <Color>[
-                                    Color.lerp(theme.primaryColor, Colors.white, 0.15),
-                                    theme.primaryColor,
-                                  ],
-                                ),
-                                shadows: kElevationToShadow[1],
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
+                        GestureDetector(
+                          onTapDown: _handleTapDown,
+                          onTapUp: _handleTapUp,
+                          onTap: widget.onPressed,
+                          onTapCancel: _handleTapCancel,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: Curves.fastOutSlowIn,
+                            margin: const EdgeInsetsDirectional.only(end: 20.0),
+                            padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                            decoration: ShapeDecoration(
+                              gradient: LinearGradient(
+                                begin: _pressed ? const Alignment(0.0, 0.6) : const Alignment(0.0, -1.0),
+                                end: _pressed ? const Alignment(0.0, -1.0) : const Alignment(0.0, 0.6),
+                                colors: <Color>[
+                                  Color.lerp(theme.primaryColor, Colors.white, 0.15),
+                                  theme.primaryColor,
+                                ],
                               ),
-                              child: DefaultTextStyle(
-                                style: body1Style,
-                                textAlign: widget.isCurrentUser ? TextAlign.right : TextAlign.left,
-                                child: Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: lines,
-                                  ),
+                              shadows: kElevationToShadow[1],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                            child: DefaultTextStyle(
+                              style: body1Style,
+                              textAlign: widget.isCurrentUser ? TextAlign.right : TextAlign.left,
+                              // TODO(ianh): use only longestLine on next line once https://github.com/flutter/flutter/issues/49412 is fixed
+                              textWidthBasis: widget.isCurrentUser ? TextWidthBasis.parent : TextWidthBasis.longestLine,
+                              child: Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: ChatBody(
+                                  alignment: widget.isCurrentUser ? Alignment.topRight : Alignment.topLeft,
+                                  children: lines,
                                 ),
                               ),
                             ),
@@ -832,6 +832,126 @@ class ProgressChatLine extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class ChatBodyParentData extends ContainerBoxParentData<RenderBox> { }
+
+class RenderChatBody extends RenderBox
+    with ContainerRenderObjectMixin<RenderBox, ChatBodyParentData>,
+         RenderBoxContainerDefaultsMixin<RenderBox, ChatBodyParentData> {
+  RenderChatBody({
+    List<RenderBox> children,
+    Alignment alignment = Alignment.center,
+  }) : assert(alignment != null),
+       _alignment = alignment {
+    addAll(children);
+  }
+
+  Alignment get alignment => _alignment;
+  Alignment _alignment;
+  set alignment(Alignment value) {
+    if (_alignment == value)
+      return;
+    _alignment = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! ChatBodyParentData)
+      child.parentData = ChatBodyParentData();
+  }
+
+  double _mainAxisExtent;
+  double _crossAxisExtent;
+  Size _innerSize;
+
+  @override
+  void performLayout() {
+    _mainAxisExtent = 0.0;
+    _crossAxisExtent = 0.0;
+    final BoxConstraints childConstraints = constraints.loosen();
+    RenderBox child = firstChild;
+    while (child != null) {
+      child.layout(childConstraints, parentUsesSize: true);
+      _mainAxisExtent += child.size.height;
+      _crossAxisExtent = math.max(_crossAxisExtent, child.size.width);
+      child = childAfter(child);
+    }
+    _innerSize = Size(_crossAxisExtent, _mainAxisExtent);
+    size = constraints.constrain(_innerSize);
+    assert(size.isFinite);
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) {
+    throw Exception('not implemented');
+  }
+
+  @override
+  double computeMaxIntrinsicWidth(double height) {
+    throw Exception('not implemented');
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) {
+    throw Exception('not implemented');
+  }
+
+  @override
+  double computeMaxIntrinsicHeight(double width) {
+    throw Exception('not implemented');
+  }
+
+  @override
+  double computeDistanceToActualBaseline(TextBaseline baseline) {
+    return defaultComputeDistanceToFirstActualBaseline(baseline);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    RenderBox child = firstChild;
+    double y = (1 + alignment.y) * (size.height - _mainAxisExtent) / 2.0;
+    while (child != null) {
+      final double x = (1 + alignment.x) * (size.width - child.size.width) / 2.0;
+      final ChatBodyParentData childParentData = child.parentData as ChatBodyParentData;
+      childParentData.offset = Offset(x, y);
+      context.paintChild(child, childParentData.offset + offset);
+      y += child.size.height;
+      child = childAfter(child);
+    }
+    defaultPaint(context, offset);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, { Offset position }) {
+    return defaultHitTestChildren(result, position: position);
+  }
+}
+
+class ChatBody extends MultiChildRenderObjectWidget {
+  ChatBody({
+    Key key,
+    this.alignment = Alignment.center,
+    List<Widget> children = const <Widget>[],
+  }) : assert(alignment != null),
+       super(key: key, children: children);
+
+  final AlignmentGeometry alignment;
+
+  Alignment _computeAlignment(BuildContext context) {
+    return alignment.resolve(Directionality.of(context));
+  }
+
+  @override
+  RenderChatBody createRenderObject(BuildContext context) {
+    return RenderChatBody(alignment: _computeAlignment(context));
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, RenderChatBody renderObject) {
+    renderObject.alignment = _computeAlignment(context);
   }
 }
 

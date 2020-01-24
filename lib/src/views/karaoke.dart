@@ -65,6 +65,7 @@ class SongSearchModel extends AssetSearchModel<Song> {
     yield Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Expanded(
             child: Wrap(
