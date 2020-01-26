@@ -38,7 +38,7 @@ const String _emojiNames = 'buffet|die-ship|die|fez|hottub|joco|pirate|ship-fron
 
 const String _schemePatternFragment = r'(?:(?:[a-zA-Z]+)://)';
 const String _portPatternFragment = r'(?::[0-9]+)';
-const String _hostPatternFragment = r'(?:(?:[^ \t\n:/.]{1,63}\.)+[^ \t\n:/.]{1,63})';
+const String _hostPatternFragment = r'(?:(?:\p{Letter}[\p{Letter}\p{Number}]*\.)+\p{Letter}[\p{Letter}\p{Number}]*)';
 const String _pathPatternFragment = r'(?:/[^ \t\n]+)';
 final RegExp _tokenizerPattern = RegExp(
   '(?::(?<EMOJI>$_emojiNames):)'
@@ -177,7 +177,10 @@ class _EmojiPart extends _Part {
 
   Widget buildSpecial(BuildContext context) {
     final double height = DefaultTextStyle.of(context).style.fontSize;
-    return Image.asset(_path, height: height * 2.0);
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: Image.asset(_path, height: height * 2.0),
+    );
   }
 }
 
