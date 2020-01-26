@@ -143,19 +143,22 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
             ],
           ),
         ),
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Text(
-                widget.thread.subject,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.primaryTextTheme.bodyText2.apply(fontSizeFactor: 0.8),
+        title: SizedBox(
+          height: kToolbarHeight,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Text(
+                  widget.thread.subject,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.primaryTextTheme.bodyText2.apply(fontSizeFactor: 0.8),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: <Widget>[
           ValueListenableBuilder<bool>(
