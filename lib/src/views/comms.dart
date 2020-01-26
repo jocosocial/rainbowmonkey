@@ -143,7 +143,7 @@ class PrivateCommsView extends CommsView {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final TextTheme textTheme = theme.textTheme;
-    final TextStyle headerStyle = textTheme.title;
+    final TextStyle headerStyle = textTheme.headline6;
     final CruiseModel cruise = Cruise.of(context);
     final Seamail seamail = cruise.seamail;
     final ContinuousProgress<ServerStatus> serverStatusProgress = cruise.serverStatus;
@@ -289,7 +289,7 @@ class PublicCommsView extends CommsView {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final TextTheme textTheme = theme.textTheme;
-    final TextStyle headerStyle = textTheme.title;
+    final TextStyle headerStyle = textTheme.headline6;
     final CruiseModel cruise = Cruise.of(context);
     final Forums forums = cruise.forums;
     final Mentions mentions = cruise.mentions;

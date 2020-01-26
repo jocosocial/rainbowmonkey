@@ -177,7 +177,7 @@ class _UserViewState extends State<UserView> {
                       ),
                     ),
                   ),
-                  Text(user.toString(), style: textTheme.display1),
+                  Text(user.toString(), style: textTheme.headline4),
                 ];
                 switch (user.role) {
                   case Role.admin:
@@ -210,8 +210,8 @@ class _UserViewState extends State<UserView> {
                   key: _idleHeader,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    Text('Welcome to', style: textTheme.headline),
-                    Text('Rainbow Monkey', style: textTheme.headline),
+                    Text('Welcome to', style: textTheme.headline5),
+                    Text('Rainbow Monkey', style: textTheme.headline5),
                   ],
                 );
                 loggedIn = false;
@@ -260,7 +260,7 @@ class _UserViewState extends State<UserView> {
               DefaultTextStyle.merge(
                 textAlign: TextAlign.center,
                 child: SizedBox(
-                  height: math.max(viewportConstraints.maxHeight * 0.3, textTheme.display1.fontSize * 4 + textTheme.headline.fontSize * 2),
+                  height: math.max(viewportConstraints.maxHeight * 0.3, textTheme.headline4.fontSize * 4 + textTheme.headline5.fontSize * 2),
                   child: Stack(
                     children: <Widget>[
                       const Positioned(
@@ -387,7 +387,7 @@ class _UserViewState extends State<UserView> {
                         },
                         child: Text(
                           'http://seamonkeysocial.cruises/',
-                          style: Theme.of(context).textTheme.body1.copyWith(
+                          style: Theme.of(context).textTheme.bodyText2.copyWith(
                             decoration: TextDecoration.underline,
                             color: Colors.blue,
                           ),

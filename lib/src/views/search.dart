@@ -61,7 +61,7 @@ class SeamailListEntry extends CardRecord {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           'Matching seamail${ children.length == 1 ? "" : "s" }',
-          style: Theme.of(context).textTheme.subhead,
+          style: Theme.of(context).textTheme.subtitle1,
         )
       ),
     );
@@ -110,7 +110,7 @@ class UserListEntry extends CardRecord {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           'Matching user${ children.length == 1 ? "" : "s" }',
-          style: Theme.of(context).textTheme.subhead,
+          style: Theme.of(context).textTheme.subtitle1,
         )
       ),
     );
@@ -160,7 +160,7 @@ class ForumListEntry extends CardRecord {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           'Matching forum${ children.length == 1 ? "" : "s" }',
-          style: Theme.of(context).textTheme.subhead,
+          style: Theme.of(context).textTheme.subtitle1,
         )
       ),
     );
@@ -195,7 +195,7 @@ class StreamListEntry extends CardRecord {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           'Matching Twitarr post${ children.length == 1 ? "" : "s" }',
-          style: Theme.of(context).textTheme.subhead,
+          style: Theme.of(context).textTheme.subtitle1,
         )
       ),
     );
