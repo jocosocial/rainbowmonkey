@@ -672,7 +672,7 @@ class _ChatLineState extends State<ChatLine> {
         lightColor = Colors.grey.shade400;
         break;
     }
-    final TextStyle body1Style = theme.primaryTextTheme.body1;
+    final TextStyle body1Style = theme.primaryTextTheme.bodyText2;
     for (TwitarrString message in widget.messages)
       lines.add(PrettyText(message));
     if (widget.photos != null) {
@@ -1107,25 +1107,25 @@ class _ServerTextViewState extends State<ServerTextView> {
                   if (section.header != null) {
                     yield Padding(
                       padding: EdgeInsets.only(
-                        top: textTheme.title.fontSize,
-                        bottom: textTheme.body1.fontSize / 2.0,
+                        top: textTheme.headline6.fontSize,
+                        bottom: textTheme.bodyText2.fontSize / 2.0,
                       ),
-                      child: PrettyText(section.header, style: textTheme.title),
+                      child: PrettyText(section.header, style: textTheme.headline6),
                     );
                   }
                   if (section.paragraphs != null) {
                     yield* section.paragraphs.map<Widget>((ServerTextParagraph paragraph) {
-                      final Widget body = PrettyText(paragraph.text, style: textTheme.body1);
+                      final Widget body = PrettyText(paragraph.text, style: textTheme.bodyText2);
                       if (paragraph.hasBullet) {
                         return Padding(
                           padding: EdgeInsets.only(
-                            bottom: textTheme.body1.fontSize / 2.0,
+                            bottom: textTheme.bodyText2.fontSize / 2.0,
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,
                             children: <Widget>[
-                              Text(' • ', style: textTheme.body1),
+                              Text(' • ', style: textTheme.bodyText2),
                               Expanded(child: body),
                             ],
                           ),
@@ -1133,8 +1133,8 @@ class _ServerTextViewState extends State<ServerTextView> {
                       }
                       return Padding(
                         padding: EdgeInsets.only(
-                          top: textTheme.body1.fontSize / 4.0,
-                          bottom: textTheme.body1.fontSize / 4.0,
+                          top: textTheme.bodyText2.fontSize / 4.0,
+                          bottom: textTheme.bodyText2.fontSize / 4.0,
                         ),
                         child: body,
                       );
@@ -1162,7 +1162,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
           final ThemeData theme = Theme.of(context);
-          TextStyle textStyle = theme.primaryTextTheme.subhead;
+          TextStyle textStyle = theme.primaryTextTheme.subtitle1;
           switch (ThemeData.estimateBrightnessForColor(colors.single)) {
             case Brightness.dark:
               textStyle = textStyle.copyWith(color: theme.primaryColorLight);
@@ -1548,7 +1548,7 @@ Widget createAvatarWidgetsFor(List<User> sortedUsers, List<Color> colors, List<I
                             fit: BoxFit.contain,
                             child: Text(
                               '+${sortedUsers.length - 3}',
-                              style: Theme.of(context).primaryTextTheme.body2,
+                              style: Theme.of(context).primaryTextTheme.bodyText1,
                             ),
                           ),
                         ),
