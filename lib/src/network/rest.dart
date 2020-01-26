@@ -1338,7 +1338,7 @@ class RestTwitarr implements Twitarr {
         body.add('key', credentials.key);
       body.add('limit', '4096'); // one post every 2.5 minutes for 7 days straight
       return await compute<String, ForumSummary>(
-        _parseForumThread,
+        _parseRawForumThread,
         await completer.chain<String>(
           _requestUtf8(
             'GET',
@@ -1390,7 +1390,9 @@ class RestTwitarr implements Twitarr {
         ),
         steps: (photos != null ? photos.length : 0) + 1,
       );
-      return _parseForumThread(rawData);
+      final Json data = Json.parse(rawData);
+      _checkStatusIsOk(data);
+      return _parseForumThread(data);
     });
   }
 
@@ -1662,8 +1664,12 @@ class RestTwitarr implements Twitarr {
     );
   }
 
-  static ForumSummary _parseForumThread(String rawData) {
-    final dynamic data = Json.parse(rawData);
+  static ForumSummary _parseRawForumThread(String rawData) {
+    final Json data = Json.parse(rawData);
+    return _parseForumThread(data);
+  }
+
+  static ForumSummary _parseForumThread(dynamic data) {
     final dynamic forum = data.forum_thread as Json;
     final List<ForumMessageSummary> posts = _parseForumMessageList(forum.posts as Json);
     return ForumSummary(
