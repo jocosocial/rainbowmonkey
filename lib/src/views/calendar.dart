@@ -494,7 +494,7 @@ class DayHeaderRow extends StatelessWidget {
     final int dayNumber = headerDay.day;
     return Material(
       color: Theme.of(context).accentColor,
-      textStyle: Theme.of(context).accentTextTheme.subhead,
+      textStyle: Theme.of(context).accentTextTheme.subtitle1,
       child: Container(
         padding: const EdgeInsets.all(12.0),
         child: Text('$dayOfWeek $monthName $dayNumber'),

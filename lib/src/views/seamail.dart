@@ -93,7 +93,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final TextStyle appBarTitleTextStyle = theme.primaryTextTheme.body1.apply(fontSizeFactor: 0.8);
+    final TextStyle appBarTitleTextStyle = theme.primaryTextTheme.bodyText2.apply(fontSizeFactor: 0.8);
     final CruiseModel cruise = Cruise.of(context);
     final List<User> users = widget.thread.users.toList();
     final List<SeamailMessage> messages = widget.thread.getMessages() ?? const <SeamailMessage>[];
@@ -152,7 +152,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                 widget.thread.subject,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.primaryTextTheme.body1.apply(fontSizeFactor: 0.8),
+                style: theme.primaryTextTheme.bodyText2.apply(fontSizeFactor: 0.8),
               ),
             ),
           ],
@@ -186,14 +186,14 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                           padding: const EdgeInsets.fromLTRB(12.0, 24.0, 12.0, 56.0),
                           child: ListBody(
                             children: <Widget>[
-                              Text(widget.thread.subject, textAlign: TextAlign.center, style: theme.textTheme.title),
+                              Text(widget.thread.subject, textAlign: TextAlign.center, style: theme.textTheme.headline6),
                               const SizedBox(height: 24.0),
                               const Divider(),
                               const SizedBox(height: 24.0),
-                              Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.subhead),
+                              Text('Participants', textAlign: TextAlign.center, style: theme.textTheme.subtitle1),
                               Center(
                                 child: DefaultTextStyle(
-                                  style: theme.textTheme.body2,
+                                  style: theme.textTheme.bodyText1,
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,7 +458,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                   sliver: SliverToBoxAdapter(
                     child: Text(
                       'Participants',
-                      style: Theme.of(context).textTheme.title,
+                      style: Theme.of(context).textTheme.headline6,
                     ),
                   ),
                 ),
@@ -604,7 +604,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                   sliver: SliverToBoxAdapter(
                     child: Text(
                       'Message text',
-                      style: Theme.of(context).textTheme.title,
+                      style: Theme.of(context).textTheme.headline6,
                     ),
                   ),
                 ),

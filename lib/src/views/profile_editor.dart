@@ -350,7 +350,7 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
             ),
           ],
         ),
-        Text(_error, style: themeData.textTheme.subhead.copyWith(color: themeData.errorColor), textAlign: TextAlign.center),
+        Text(_error, style: themeData.textTheme.subtitle1.copyWith(color: themeData.errorColor), textAlign: TextAlign.center),
       ],
     );
   }

@@ -118,7 +118,7 @@ class _SettingsState extends State<Settings> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final TextStyle headingStyle = theme.textTheme.body2.copyWith(color: theme.colorScheme.onSurface);
+    final TextStyle headingStyle = theme.textTheme.bodyText1.copyWith(color: theme.colorScheme.onSurface);
     final CruiseModel cruise = Cruise.of(context);
     final TwitarrConfiguration currentConfiguration = cruise.twitarrConfiguration;
     final double latency = cruise.debugLatency;
