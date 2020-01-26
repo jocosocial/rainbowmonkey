@@ -72,18 +72,30 @@ void main() {
   if (Platform.isAndroid)
     runBackground(store);
   Notifications.instance.then((Notifications notifications) {
-    notifications.onTap = (String payload) {
+    notifications.onMessageTap = (String payload) {
       assert(() {
-        print('Main thread handled user tapping notification with payload "$payload".');
+        print('Main thread handled user tapping thread notification with payload "$payload".');
         return true;
       }());
       showThread(payload);
     };
+    notifications.onEventTap = () {
+      assert(() {
+        print('Main thread handled user tapping calendar notification with payload "$kCalendarPayload".');
+        return true;
+      }());
+      showCalendar();
+    };
   });
   final ReceivePort port = ReceivePort()
     ..forEach((dynamic event) {
-      if (event is String)
-        showThread(event);
+      if (event is String) {
+        if (event == kCalendarPayload) {
+          showCalendar();
+        } else {
+          showThread(event);
+        }
+      }
     });
   IsolateNameServer.registerPortWithName(port.sendPort, 'main');
 }
@@ -96,6 +108,17 @@ void showThread(String threadId) async {
   await model.loggedIn;
   Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
   PrivateCommsView.showSeamailThread(scaffoldKey.currentContext, model.seamail.threadById(threadId));
+}
+
+void showCalendar() async {
+  Navigator.popUntil(scaffoldKey.currentContext, ModalRoute.withName('/'));
+  DefaultTabController.of(scaffoldKey.currentContext).index = 1;
+}
+
+void search(BuildContext context, String query) {
+  Navigator.popUntil(context, ModalRoute.withName('/'));
+  DefaultTabController.of(context).index = CruiseMonkeyHome.allPages.length - 1;
+  Cruise.of(context).pushSearchQuery(query);
 }
 
 void _handleError(UserFriendlyError error) {
@@ -209,13 +232,13 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   static final List<View> allPages = <View>[
     UserView(key: PageStorageKey<UniqueObject>(UniqueObject())),
-    CalendarView(key: PageStorageKey<UniqueObject>(UniqueObject())),
+    CalendarView(key: PageStorageKey<UniqueObject>(UniqueObject())), // must be index 1 for showCalendar()
     PrivateCommsView(key: PageStorageKey<UniqueObject>(UniqueObject())),
     PublicCommsView(key: PageStorageKey<UniqueObject>(UniqueObject())),
     DeckPlanView(key: PageStorageKey<UniqueObject>(UniqueObject())),
     gamesView,
     karaokeView,
-    searchView,
+    searchView, // must be last for search()
   ];
 
   Widget buildTab(BuildContext context, View page, { EdgeInsets iconPadding = EdgeInsets.zero }) {
@@ -347,10 +370,4 @@ class CruiseMonkeyHome extends StatelessWidget {
       },
     );
   }
-}
-
-void search(BuildContext context, String query) {
-  Navigator.popUntil(context, ModalRoute.withName('/'));
-  DefaultTabController.of(context).index = CruiseMonkeyHome.allPages.length - 1;
-  Cruise.of(context).pushSearchQuery(query);
 }

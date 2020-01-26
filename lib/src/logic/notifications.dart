@@ -10,7 +10,10 @@ import '../models/user.dart';
 import '../network/twitarr.dart';
 import 'store.dart';
 
+const String kCalendarPayload = ':calendar:';
+
 typedef NotificationCallback = void Function(String payload);
+typedef VoidCallback = void Function();
 
 class Notifications {
   Notifications._(this._plugin);
@@ -49,18 +52,24 @@ class Notifications {
 
   String _pendingPayload;
 
-  NotificationCallback get onTap => _onTap;
-  NotificationCallback _onTap;
-  set onTap(NotificationCallback value) {
-    if (value == onTap)
+  NotificationCallback get onMessageTap => _onMessageTap;
+  NotificationCallback _onMessageTap;
+  set onMessageTap(NotificationCallback value) {
+    if (value == onMessageTap)
       return;
-    _onTap = value;
-    if (_pendingPayload != null) {
-      assert(_onTap != null); // otherwise value would have been non-null and we should not have set _pendingPayload
-      final String payload = _pendingPayload;
-      _pendingPayload = null;
-      _onTap(payload);
-    }
+    _onMessageTap = value;
+    if (_pendingPayload != null)
+      _handlePayload(_pendingPayload);
+  }
+
+  VoidCallback get onEventTap => _onEventTap;
+  VoidCallback _onEventTap;
+  set onEventTap(VoidCallback value) {
+    if (value == onEventTap)
+      return;
+    _onEventTap = value;
+    if (_pendingPayload != null)
+      _handlePayload(_pendingPayload);
   }
 
   Future<void> _handleSelection(String payload) async {
@@ -68,10 +77,23 @@ class Notifications {
       print('User tapped notification with payload: $payload');
       return true;
     }());
-    if (onTap == null) {
-      _pendingPayload = payload;
+    _handlePayload(payload);
+  }
+
+  void _handlePayload(String payload) {
+    _pendingPayload = null;
+    if (payload == kCalendarPayload) {
+      if (onEventTap == null) {
+        _pendingPayload = payload;
+      } else {
+        onEventTap();
+      }
     } else {
-      onTap(payload);
+      if (onMessageTap == null) {
+        _pendingPayload = payload;
+      } else {
+        onMessageTap(payload);
+      }
     }
   }
 
@@ -81,6 +103,10 @@ class Notifications {
 
   int _notificationId(String threadId, String messageId) {
     return '$threadId:$messageId'.hashCode;
+  }
+
+  int _eventId(String eventId) {
+    return eventId.hashCode;
   }
 
   final Int64List _fantasticDrumBeat = Int64List.fromList(<int>[0, 60, 60, 60, 60, 180, 60, 60, 60, 60, 60, 180, 60]);
@@ -99,7 +125,7 @@ class Notifications {
       'cruisemonkey-seamail',
       'Seamail',
       'Seamail notifications',
-      // icon
+      category: 'msg',
       importance: Importance.High,
       priority: Priority.High,
       style: AndroidNotificationStyle.Messaging,
@@ -119,17 +145,10 @@ class Notifications {
         ],
       ),
       playSound: true,
-      // sound
       enableVibration: true,
       vibrationPattern: _fantasticDrumBeat,
       groupKey: threadId,
-      // setAsGroupSummary
-      // groupAlertBehavior
       autoCancel: true,
-      // color
-      // largeIcon
-      // largeIconBitmapSource
-      // onlyAlertOnce
       channelShowBadge: true,
     );
     final IOSNotificationDetails iOS = IOSNotificationDetails();
@@ -140,6 +159,38 @@ class Notifications {
       NotificationDetails(android, iOS),
       payload: threadId,
     );
+  }
+
+  Future<void> event({ String eventId, Duration duration, String from, String to, String name, String location, String description, DataStore store }) async {
+    if (await store.didShowEventNotification(eventId))
+      return;
+    final AndroidNotificationDetails android = AndroidNotificationDetails(
+      'cruisemonkey-calendar',
+      'Events',
+      'JocoCruise event notifications, for events you have favorited.',
+      category: 'event',
+      style: AndroidNotificationStyle.BigText,
+      styleInformation: BigTextStyleInformation(
+        '$from-$to $location\n$description',
+        contentTitle: name,
+        summaryText: '$from-$to $name',
+      ),
+      playSound: true,
+      onlyAlertOnce: true,
+      enableVibration: true,
+      autoCancel: true,
+      channelShowBadge: false,
+      timeoutAfter: duration.inMilliseconds,
+    );
+    final IOSNotificationDetails iOS = IOSNotificationDetails();
+    await _plugin.show(
+      _eventId(eventId),
+      name,
+      '$from-$to $location',
+      NotificationDetails(android, iOS),
+      payload: kCalendarPayload,
+    );
+    await store.addEventNotification(eventId);
   }
 
   Future<void> messageRead(String threadId, String messageId) async {

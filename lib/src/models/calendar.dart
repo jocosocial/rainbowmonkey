@@ -52,6 +52,10 @@ class Event extends SearchResult implements Comparable<Event> {
     return id.compareTo(other.id);
   }
 
+  bool startsDuring(DateTime startWindow, DateTime endWindow) {
+    return startTime.isAfter(startWindow) && startTime.isBefore(endWindow);
+  }
+
   @override
   String toString() => 'Event("$title")';
 }
@@ -69,6 +73,25 @@ class Calendar {
 
   final List<Event> _events;
   List<Event> get events => _events;
+
+  Iterable<Event> upcoming(DateTime serverTime, Duration window) sync* {
+    for (Event event in events) {
+      if (event.following && event.startsDuring(serverTime, serverTime.add(window)))
+        yield event;
+    }
+  }
+
+  static String getHours(DateTime time, { @required bool use24Hour }) {
+    if (use24Hour)
+      return '${time.hour.toString().padLeft(2, "0")}:${time.minute.toString().padLeft(2, "0")}';
+    if (time.hour == 12 && time.minute == 00)
+      return '12:00nn';
+    final String minute = time.minute.toString().padLeft(2, '0');
+    final String suffix = time.hour < 12 ? 'am' : 'pm';
+    if (time.hour == 00 || time.hour == 12)
+      return '12:$minute$suffix';
+    return '${(time.hour % 12).toString()}:$minute$suffix';
+  }
 
   @override
   String toString() => 'Calendar($events)';

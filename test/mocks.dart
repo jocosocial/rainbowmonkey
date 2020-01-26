@@ -70,6 +70,19 @@ class TrivialDataStore implements DataStore {
     return thread.toList();
   }
 
+  Set<String> eventNotifications = <String>{};
+
+  @override
+  Future<void> addEventNotification(String eventId) async {
+    eventNotifications.add(eventId);
+  }
+
+  @override
+  Future<bool> didShowEventNotification(String eventId) async {
+    return eventNotifications.contains(eventId);
+  }
+
+
   int storedFreshnessToken;
 
   @override

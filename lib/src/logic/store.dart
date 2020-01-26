@@ -12,6 +12,7 @@ enum Setting {
   debugTimeDilation,
   notificationFreshnessToken,
   lastNotificationsCheck,
+  lastCalendarCheck,
   notificationCheckPeriod,
 }
 
@@ -28,6 +29,9 @@ abstract class DataStore {
   Future<void> addNotification(String threadId, String messageId);
   Future<void> removeNotification(String threadId, String messageId);
   Future<List<String>> getNotifications(String threadId);
+
+  Future<void> addEventNotification(String eventId);
+  Future<bool> didShowEventNotification(String eventId);
 
   Future<void> updateFreshnessToken(FreshnessCallback callback);
 

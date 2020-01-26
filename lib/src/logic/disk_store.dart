@@ -24,7 +24,7 @@ class DiskDataStore extends DataStore {
   static Future<Database> _init() async {
     return await openDatabase(
       '${await getDatabasesPath()}/config.db',
-      version: 4,
+      version: 5,
       onUpgrade: (Database database, int oldVersion, int newVersion) async {
         final Batch batch = database.batch();
         if (oldVersion < 1) {
@@ -39,6 +39,9 @@ class DiskDataStore extends DataStore {
         }
         if (oldVersion < 4) {
           batch.execute('CREATE TABLE userPhotos (id STRING PRIMARY KEY, value INTEGER NOT NULL)');
+        }
+        if (oldVersion < 5) {
+          batch.execute('CREATE TABLE eventNotifications (event STRING NOT NULL)');
         }
         await batch.commit(noResult: true);
       },
@@ -155,6 +158,28 @@ class DiskDataStore extends DataStore {
       <dynamic>[threadId],
     );
     return rows.map<String>((Map<String, dynamic> row) => row['message'].toString()).toList();
+  }
+
+  @override
+  Future<void> addEventNotification(String eventId) async {
+    final Database database = await _database;
+    await database.insert(
+      'eventNotifications',
+      <String, dynamic>{
+        'event': eventId,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  @override
+  Future<bool> didShowEventNotification(String eventId) async {
+    final Database database = await _database;
+    final List<Map<String, dynamic>> rows = await database.rawQuery(
+      'SELECT event FROM eventNotifications WHERE event=?',
+      <dynamic>[eventId],
+    );
+    return rows.isNotEmpty;
   }
 
   @override
