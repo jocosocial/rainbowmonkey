@@ -5,6 +5,7 @@ import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../models/calendar.dart';
 import '../models/errors.dart';
 import '../models/user.dart';
 import '../network/rest.dart';
@@ -61,22 +62,39 @@ Future<void> _periodicCallback() async {
   if (!_initialized) {
     AutoTwitarrConfiguration.register();
     RestTwitarrConfiguration.register();
-    (await Notifications.instance).onTap = (String payload) {
-      assert(() {
-        print('Background thread handled user tapping notification with payload "$payload".');
-        return true;
-      }());
-      final SendPort port = IsolateNameServer.lookupPortByName('main');
-      if (port == null) {
-        print('Application is not running; could not show thread.');
-        return;
+    (await Notifications.instance)
+      ..onMessageTap = (String payload) {
+        assert(() {
+          print('Background thread handled user tapping notification with payload "$payload".');
+          return true;
+        }());
+        final SendPort port = IsolateNameServer.lookupPortByName('main');
+        if (port == null) {
+          print('Application is not running; could not show thread.');
+          return;
+        }
+        assert(() {
+          print('Sending message to main thread...');
+          return true;
+        }());
+        port.send(payload);
       }
-      assert(() {
-        print('Sending message to main thread...');
-        return true;
-      }());
-      port.send(payload);
-    };
+      ..onEventTap = () {
+        assert(() {
+          print('Background thread handled user tapping notification with payload "$kCalendarPayload".');
+          return true;
+        }());
+        final SendPort port = IsolateNameServer.lookupPortByName('main');
+        if (port == null) {
+          print('Application is not running; could not show calendar.');
+          return;
+        }
+        assert(() {
+          print('Sending calendar message to main thread...');
+          return true;
+        }());
+        port.send(kCalendarPayload);
+      };
     _initialized = true;
   }
   try {
@@ -94,6 +112,7 @@ Future<void> _periodicCallback() async {
       }());
       final Credentials credentials = await store.restoreCredentials().asFuture();
       await checkForMessages(credentials, twitarr, store);
+      await checkForCalendar(credentials, twitarr, store);
     } on DatabaseException catch (error) {
       if (error.toString() == 'DatabaseException(database is locked (code 5 SQLITE_BUSY))') {
         assert(() {
@@ -127,7 +146,7 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
       isUtc: true,
     );
     final DateTime now = DateTime.now().toUtc();
-    if (!forced && now.difference(lastCheck) < const Duration(minutes: 1)) {
+    if (!forced && now.difference(lastCheck) < const Duration(seconds: 30)) {
       assert(() {
         print('Excessive checking of messages detected.');
         return true;
@@ -167,6 +186,57 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
       }
       await Future.wait(futures);
     }
+  } on UserFriendlyError catch (error) {
+    print('Failed to check for messages: $error');
+  }
+}
+
+Future<void> checkForCalendar(Credentials credentials, Twitarr twitarr, DataStore store, { bool forced = false }) async {
+  try {
+    if (credentials == null) {
+      assert(() {
+        print('Not logged in; skipping check for calendar.');
+        return true;
+      }());
+      return;
+    }
+    assert(() {
+      print('Checking calendar.');
+      return true;
+    }());
+    final DateTime lastCheck = DateTime.fromMillisecondsSinceEpoch(
+      await store.restoreSetting(Setting.lastCalendarCheck).asFuture() as int ?? 0,
+      isUtc: true,
+    );
+    final DateTime now = DateTime.now().toUtc();
+    if (!forced && now.difference(lastCheck) < const Duration(minutes: 5)) {
+      assert(() {
+        print('Excessive checking of calendar detected.');
+        return true;
+      }());
+      return;
+    }
+    final List<Future<void>> futures = <Future<void>>[];
+    final Notifications notifications = await Notifications.instance;
+    final ServerTime serverTime = await twitarr.getServerTime().asFuture();
+    final List<Event> events = (await twitarr.getCalendar(credentials: credentials).asFuture())
+      .upcoming(serverTime.now, const Duration(minutes: 20)).toList();
+    final bool use24Hour = window.alwaysUse24HourFormat;
+    for (Event event in events) {
+      final Duration duration = event.startTime.difference(serverTime.now) + const Duration(minutes: 5);
+      futures.add(notifications.event(
+        eventId: event.id,
+        duration: duration, // how long to leave the notification up
+        from: Calendar.getHours(event.startTime.toLocal(), use24Hour: use24Hour),
+        to: Calendar.getHours(event.endTime.toLocal(), use24Hour: use24Hour),
+        name: event.title,
+        location: event.location,
+        description: event.description.toString(),
+        store: store,
+      ));
+    }
+    await Future.wait(futures);
+    await store.saveSetting(Setting.lastCalendarCheck, now.millisecondsSinceEpoch).asFuture();
   } on UserFriendlyError catch (error) {
     print('Failed to check for messages: $error');
   }

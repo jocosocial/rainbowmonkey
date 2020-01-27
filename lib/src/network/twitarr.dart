@@ -102,6 +102,8 @@ abstract class Twitarr {
 
   Progress<List<AnnouncementSummary>> getAnnouncements();
 
+  Progress<ServerTime> getServerTime();
+
   Progress<Map<String, bool>> getSectionStatus();
 
   Progress<ServerText> fetchServerText(String filename);
@@ -577,4 +579,23 @@ class EventSummary extends Event implements SearchResultSummary {
     startTime: startTime,
     endTime: endTime,
   );
+}
+
+class ServerTime {
+  const ServerTime({
+    this.now,
+    this.skew,
+    this.serverTimeZoneOffset,
+  });
+
+  // The time on the server.
+  final DateTime now;
+
+  // The difference between the device time and the server time.
+  //
+  // Positive numbers mean that the server time is ahead of the device time.
+  // Negative numbers mean that the server time is behind the device time.
+  final Duration skew;
+
+  final int serverTimeZoneOffset;
 }

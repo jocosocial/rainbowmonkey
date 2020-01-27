@@ -481,6 +481,22 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<ServerTime> getServerTime() {
+    return Progress<ServerTime>((ProgressController<ServerTime> completer) async {
+      return await compute<String, ServerTime>(
+        _parseServerTime,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/time',
+            expectedStatusCodes: <int>[200],
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
   Progress<Map<String, bool>> getSectionStatus() {
     return Progress<Map<String, bool>>((ProgressController<Map<String, bool>> completer) async {
       final String rawData = await completer.chain<String>(_requestUtf8('GET', 'api/v2/admin/sections'));
@@ -506,6 +522,18 @@ class RestTwitarr implements Twitarr {
         timestamp: _parseDateTime(value.timestamp as Json),
       );
     }).toList();
+  }
+
+  static ServerTime _parseServerTime(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    _checkStatusIsOk(data);
+    final DateTime serverTime = _parseDateTime(data.epoch as Json);
+    final DateTime deviceTime = DateTime.now();
+    return ServerTime(
+      now: serverTime,
+      skew: serverTime.difference(deviceTime),
+      serverTimeZoneOffset: (data.offset as Json).toInt(),
+    );
   }
 
   final Map<String, ServerText> _serverTextCache = <String, ServerText>{};

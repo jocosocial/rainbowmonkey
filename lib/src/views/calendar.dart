@@ -333,18 +333,6 @@ class TimeSlice extends StatelessWidget {
   final bool isFavorite;
   final bool favoriteOverride;
 
-  String _getHours(DateTime time, { @required bool use24Hour }) {
-    if (use24Hour)
-      return '${time.hour.toString().padLeft(2, "0")}:${time.minute.toString().padLeft(2, "0")}';
-    if (time.hour == 12 && time.minute == 00)
-      return '12:00nn';
-    final String minute = time.minute.toString().padLeft(2, '0');
-    final String suffix = time.hour < 12 ? 'am' : 'pm';
-    if (time.hour == 00 || time.hour == 12)
-      return '12:$minute$suffix';
-    return '${(time.hour % 12).toString()}:$minute$suffix';
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
@@ -366,8 +354,8 @@ class TimeSlice extends StatelessWidget {
       times.add(const Text('all day'));
     } else {
       times
-        ..add(Text(_getHours(startTime, use24Hour: use24Hour)))
-        ..add(Text('-${_getHours(endTime, use24Hour: use24Hour)}'));
+        ..add(Text(Calendar.getHours(startTime, use24Hour: use24Hour)))
+        ..add(Text('-${Calendar.getHours(endTime, use24Hour: use24Hour)}'));
     }
     // Force the column to the right width:
     if (use24Hour) {
