@@ -25,7 +25,7 @@ const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
 
 const bool _debugVerbose = false;
 const int kLineLength = 0x080;
-const int kMaxLines = 10;
+const int kMaxLines = 12;
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
   const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
@@ -2111,10 +2111,22 @@ class RestTwitarr implements Twitarr {
     if (result.isEmpty) {
       debugPrint(' (no content)');
     } else {
-      for (int index = 0; index < math.min(kMaxLines * kLineLength, result.length); index += kLineLength)
-        debugPrint(' 0x${index.toRadixString(16).padLeft(5, "0")}: ${result.substring(index, math.min(index + kLineLength, result.length)).replaceAll("\n", "␊")}');
-      if (kMaxLines * kLineLength < result.length)
-        debugPrint(' ...(continues for ${result.length - kMaxLines * kLineLength} more bytes)');
+      try {
+        const JsonDecoder decoder = JsonDecoder();
+        const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+        final List<String> lines = encoder.convert(decoder.convert(result)).split('\n').map((String line) => ' |  $line').toList();
+        if (lines.length > kMaxLines) {
+          lines.take(kMaxLines).forEach(debugPrint);
+          debugPrint(' ...(continues for ${lines.length - kMaxLines} more lines)');
+        } else {
+          lines.forEach(debugPrint);
+        }
+      } on FormatException {
+        for (int index = 0; index < math.min(kMaxLines * kLineLength, result.length); index += kLineLength)
+          debugPrint(' 0x${index.toRadixString(16).padLeft(5, "0")}: ${result.substring(index, math.min(index + kLineLength, result.length)).replaceAll("\n", "␊")}');
+        if (kMaxLines * kLineLength < result.length)
+          debugPrint(' ...(continues for ${result.length - kMaxLines * kLineLength} more bytes)');
+      }
     }
   }
 
