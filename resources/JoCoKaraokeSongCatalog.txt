@@ -174,49 +174,49 @@ Aaliyah	Try Again
 Aaliyah & Ludacris	Are You That Somebody
 Aaliyah & Timbaland	We Need A Resolution
 Aaron	I Get A Kick Out Of You
-Abba	Angel Eyes
-Abba	As Good As New
-Abba	Chiquitita
-Abba	Dancing Queen
-Abba	Day Before You Came, The
-Abba	Does Your Mother Know
-Abba	Fernando
-Abba	Gimme Gimme Gimme (A Man After Midnight)
-Abba	Happy New Year
-Abba	Hasta Manana
-Abba	Head Over Heels
-Abba	Honey Honey
-Abba	I Do I Do I Do I Do I Do
-Abba	I Have A Dream
-Abba	I've Been Waiting For You	M
-Abba	If It Wasn't For The Nights	M
-Abba	Knowing Me, Knowing You
-Abba	Lay All Your Love On Me
-Abba	Lovers Live A Little Longer	M
-Abba	Mamma Mia
-Abba	Money Money Money
-Abba	My Love My Life	M
-Abba	Name Of The Game, The
-Abba	Nina Pretty Ballerina	M
-Abba	One Of Us
-Abba	Our Last Summer
-Abba	Put On Your White Sombrero
-Abba	Ring Ring
-Abba	Rock Me
-Abba	Slipping Through My Fingers
-Abba	So Long
-Abba	SOS
-Abba	Summer Night City
-Abba	Super Trouper
-Abba	Take A Chance On Me
-Abba	Thank You For The Music
-Abba	That's Me	M
-Abba	Tiger	M
-Abba	Under Attack	M
-Abba	Voulez Vous
-Abba	Waterloo
-Abba	When I Kissed The Teacher	M
-Abba	Winner Takes It All, The
+ABBA	Angel Eyes
+ABBA	As Good As New
+ABBA	Chiquitita
+ABBA	Dancing Queen
+ABBA	Day Before You Came, The
+ABBA	Does Your Mother Know
+ABBA	Fernando
+ABBA	Gimme Gimme Gimme (A Man After Midnight)
+ABBA	Happy New Year
+ABBA	Hasta Manana
+ABBA	Head Over Heels
+ABBA	Honey Honey
+ABBA	I Do I Do I Do I Do I Do
+ABBA	I Have A Dream
+ABBA	I've Been Waiting For You	M
+ABBA	If It Wasn't For The Nights	M
+ABBA	Knowing Me, Knowing You
+ABBA	Lay All Your Love On Me
+ABBA	Lovers Live A Little Longer	M
+ABBA	Mamma Mia
+ABBA	Money Money Money
+ABBA	My Love My Life	M
+ABBA	Name Of The Game, The
+ABBA	Nina Pretty Ballerina	M
+ABBA	One Of Us
+ABBA	Our Last Summer
+ABBA	Put On Your White Sombrero
+ABBA	Ring Ring
+ABBA	Rock Me
+ABBA	Slipping Through My Fingers
+ABBA	So Long
+ABBA	SOS
+ABBA	Summer Night City
+ABBA	Super Trouper
+ABBA	Take A Chance On Me
+ABBA	Thank You For The Music
+ABBA	That's Me	M
+ABBA	Tiger	M
+ABBA	Under Attack	M
+ABBA	Voulez Vous
+ABBA	Waterloo
+ABBA	When I Kissed The Teacher	M
+ABBA	Winner Takes It All, The
 Abbot, Russ	Atmosphere
 Abbott, Gregory	Shake You Down
 Abbott, Josh Band & Kacey Musgraves	Oh, Tonight
@@ -293,13 +293,12 @@ Adams, Bryan	Best Of Me
 Adams, Bryan	Cloud No. 9
 Adams, Bryan	Cuts Like A Knife
 Adams, Bryan	Do I Have To Say The Words
-Adams, Bryan	Everything I Do, I Do It For You
+Adams, Bryan	(Everything I Do) I Do It For You
 Adams, Bryan	Flying
 Adams, Bryan	Have You Ever Really Loved A Woman
 Adams, Bryan	Heaven
 Adams, Bryan	Here I Am
 Adams, Bryan	House Arrest	M
-Adams, Bryan	I Do It For You
 Adams, Bryan	I Thought I'd Seen Everything
 Adams, Bryan	Inside Out
 Adams, Bryan	Let's Make A Night To Remember
@@ -352,6 +351,7 @@ Adele	Sweetest Devotion	VR
 Adele	Take It All
 Adele	Turning Tables
 Adele	Water Under the Bridge	VR
+Adele	When We Were Young
 Adema	Everyone
 Adema	Freaking Out
 Adema	Unstable
@@ -680,6 +680,7 @@ Alter Bridge	Find The Real
 Alter Bridge	Open Your Eyes
 Altered Images	Don't Talk To Me About Love
 Altered Images	Happy Birthday
+Altered Images	I Could Be Happy
 Althea & Donna	Up Town Top Ranking
 AlunaGeorge	Attracting Flies
 Aly & AJ	Do You Believe In Magic
@@ -948,6 +949,7 @@ Arctic Monkeys	From The Ritz To The Rubble
 Arctic Monkeys	I Bet You Look Good On The Dancefloor
 Arctic Monkeys	Leave Before The Lights Come On
 Arctic Monkeys	Mardy Bum
+Arctic Monkeys	No. 1 Party Anthem
 Arctic Monkeys	R U Mine
 Arctic Monkeys	Red Light Indicates Doors Are Secured
 Arctic Monkeys	Riot Van
@@ -968,6 +970,7 @@ Arena, Tina	Chains
 Arena, Tina	Symphony Of Life
 Arena, Tina	Whistle Down The Wind
 Argent	Hold Your Head Up
+Ark, The	Worrying Kind, The
 Arlen, Harold	As Long As I Live
 Arlen, Harold	Blues In The Night, The
 Arlen, Harold	Come Rain Or Come Shine
@@ -1122,6 +1125,7 @@ Automatic, The	Recover
 Automatic, The	Steve McQueen
 Autry, Gene	Be Honest With Me	M
 Autry, Gene	I'm Thinking Tonight Of My Blue Eyes
+Avalanches	Since I Left You
 Avalon, Frankie	Dede Dinah
 Avalon, Frankie	Just Ask Your Heart
 Avalon, Frankie	Venus
@@ -1184,12 +1188,14 @@ Azar, Steve	Waitin' On Joe
 Aznavour, Charles	I Have Lived	M
 Aznavour, Charles	Old Fashioned Way	M
 Aznavour, Charles	She
+Aztec Camera	Oblivious
 Aztec Camera	Somewhere In My Heart
 B-52's, The	Dance This Mess Around
 B-52's, The	Deadbeat Club
 B-52's, The	Debbie
 B-52's, The	Give Me Back My Man
 B-52's, The	Love Shack
+B-52's, The	Mesopotamia
 B-52's, The	Private Idaho
 B-52's, The	Roam
 B-52's, The	Rock Lobster
@@ -1293,6 +1299,7 @@ Bad Religion	No Control
 Bad Religion	Sorrow
 Bad Religion	Were Only Gonna Die (From Our Own Arrogance)
 Bad Religion	You	VR
+Baddiel & Skinner	Three Lions
 Badfinger	Baby Blue
 Badfinger	Come And Get It
 Badfinger	Day After Day
@@ -1507,6 +1514,7 @@ Basement Jaxx	Where's Your Head At
 Basement Jaxx & Lisa Kekaula	U Don't Know Me
 Basia	New Day For You, A
 Basia	Time And Tide
+Basil, Toni	Breakaway
 Basil, Toni	Mickey
 Bass, Fontella	Rescue Me
 Bassey, Shirley	And I Love You So
@@ -1542,6 +1550,7 @@ Bat For Lashes	What's A Girl To Do
 Bates, Jeff	No Shame
 Bauhaus	Bela Lugosi's Dead
 Bauhaus	Kick In The Eye
+Bauhaus	She's In Parties
 Bay City Rollers, The	Bye Bye Baby
 Bay City Rollers, The	Give A Little Love
 Bay City Rollers, The	I Only Wanna Be With You
@@ -1589,7 +1598,7 @@ Beach Boys, The	Let Him Run Wild
 Beach Boys, The	Little Deuce Coupe
 Beach Boys, The	Rock & Roll Music
 Beach Boys, The	Sail On Sailor
-Beach Boys, The	Sloop John B
+Beach Boys, The	Sloop John B.
 Beach Boys, The	Sloop John B. (Vocal Only Ending)
 Beach Boys, The	Surfer Girl
 Beach Boys, The	Surfin' Safari
@@ -1600,11 +1609,13 @@ Beach Boys, The	Wendy
 Beach Boys, The	When I Grow Up To Be A Man
 Beach Boys, The	Wouldn't It Be Nice
 Beach House	Myth
+Beach House	Other People
 Beastie Boys	Brass Monkey
 Beastie Boys	Ch-Check It Out
 Beastie Boys	Fight For Your Right To Party
 Beastie Boys	Get It Together
 Beastie Boys	Girls
+Beastie Boys	Gratitude
 Beastie Boys	Hey Ladies
 Beastie Boys	Intergalactic
 Beastie Boys	Make Some Noise
@@ -1633,7 +1644,7 @@ Beatles, The	Any Time At All
 Beatles, The	Ask Me Why
 Beatles, The	Baby It's You
 Beatles, The	Baby You're A Rich Man
-Beatles, The	Baby's In Black
+Beatles, The	Baby's in Black
 Beatles, The	Back In The U.S.S.R.
 Beatles, The	Bad Boy
 Beatles, The	Ballad Of John & Yoko
@@ -1642,7 +1653,7 @@ Beatles, The	Being For The Benefit Of Mr. Kite!
 Beatles, The	Besame Mucho
 Beatles, The	Birthday
 Beatles, The	Blackbird
-Beatles, The	Blue Jay Way	M
+Beatles, The	Blue Jay Way
 Beatles, The	Boys
 Beatles, The	Can't Buy Me Love
 Beatles, The	Carol	M
@@ -1656,7 +1667,7 @@ Beatles, The	Dear Prudence
 Beatles, The	Devil In Her Heart
 Beatles, The	Dizzy Miss Lizzy
 Beatles, The	Do You Want To Know A Secret
-Beatles, The	Doctor Robert	M
+Beatles, The	Doctor Robert
 Beatles, The	Don't Bother Me
 Beatles, The	Don't Let Me Down
 Beatles, The	Don't Pass Me By
@@ -1680,7 +1691,7 @@ Beatles, The	Glass Onion
 Beatles, The	Golden Slumbers/Carry That Weight/The End
 Beatles, The	Good Day Sunshine
 Beatles, The	Good Morning, Good Morning
-Beatles, The	Goodnight	M
+Beatles, The	Good Night
 Beatles, The	Got To Get You Into My Life
 Beatles, The	Happiness Is A Warm Gun
 Beatles, The	Hard Day's Night, A
@@ -1728,7 +1739,7 @@ Beatles, The	If I Fell (Without Harmonies)
 Beatles, The	If I Needed Someone
 Beatles, The	In My Life
 Beatles, The	In Spite Of All The Danger	M
-Beatles, The	Inner Light, The	M
+Beatles, The	Inner Light, The
 Beatles, The	It Won't Be Long
 Beatles, The	It's All Too Much
 Beatles, The	It's Only Love
@@ -1739,15 +1750,16 @@ Beatles, The	Let It Be
 Beatles, The	Like Dreamers Do	M
 Beatles, The	Little Child
 Beatles, The	Long And Winding Road
-Beatles, The	Long Long Long	M
+Beatles, The	Long Long Long
 Beatles, The	Long Tall Sally	M
 Beatles, The	Love Me Do
-Beatles, The	Love You To	M
+Beatles, The	Love You To
 Beatles, The	Lovely Rita
 Beatles, The	Lucy In The Sky With Diamonds
 Beatles, The	Maggie Mae	M
 Beatles, The	Magical Mystery Tour
 Beatles, The	Martha My Dear
+Beatles, The	Matchbox
 Beatles, The	Maxwell's Silver Hammer
 Beatles, The	Mean Mr. Mustard
 Beatles, The	Mean Mr. Mustard/Polythene Pam/She Came In Through The Bathroom Window	M
@@ -1772,6 +1784,7 @@ Beatles, The	Penny Lane
 Beatles, The	Piggies
 Beatles, The	Please Mr. Postman
 Beatles, The	Please Please Me
+Beatles, The	Polythene Pam
 Beatles, The	Rain
 Beatles, The	Real Love
 Beatles, The	Revolution
@@ -1789,6 +1802,7 @@ Beatles, The	She Said She Said
 Beatles, The	She's A Woman
 Beatles, The	She's Leaving Home
 Beatles, The	Slow Down
+Beatles, The	Some Other Guy
 Beatles, The	Something
 Beatles, The	Strawberry Fields Forever
 Beatles, The	Sun King
@@ -1803,7 +1817,7 @@ Beatles, The	There's A Place
 Beatles, The	Things We Said Today
 Beatles, The	Think For Yourself
 Beatles, The	This Boy
-Beatles, The	Three Cool Cats	M
+Beatles, The	Three Cool Cats
 Beatles, The	Ticket To Ride
 Beatles, The	Till There Was You
 Beatles, The	Tomorrow Never Knows
@@ -1811,12 +1825,13 @@ Beatles, The	Twist & Shout
 Beatles, The	Two Of Us
 Beatles, The	Wait
 Beatles, The	We Can Work It Out
+Beatles, The	What Goes On
 Beatles, The	What You're Doing
 Beatles, The	When I Get Home
 Beatles, The	When I'm Sixty-Four
 Beatles, The	While My Guitar Gently Weeps
 Beatles, The	Why Don't We Do It In The Road
-Beatles, The	Wild Honey Pie	M
+Beatles, The	Wild Honey Pie
 Beatles, The	With A Little Help From My Friends
 Beatles, The	Within You Without You	M
 Beatles, The	Word, The
@@ -1979,6 +1994,7 @@ Bellamy Brothers, The	When I'm Away From You
 Belle Amie	Girls Up
 Belle And Sebastian	Blues Are Still Blue, The
 Belle And Sebastian	Funny Little Frog
+Belle And Sebastian	String Bean Jean
 Belle And Sebastian	There's Too Much Love
 Belle Stars, The	Clapping Song
 Belle Stars, The	Iko Iko
@@ -2188,6 +2204,8 @@ Big Mountain	Baby I Love Your Way
 Big Pink, The	Dominos
 Big Sean	I Do It
 Big Shaq	Man's Not Hot
+Big Star	I'm in Love With a Girl
+Big Star	September Gurls
 Big Star	Thirteen
 Big Tom	Four Country Roads	VR
 Big Twist	Turn Back The Hands Of Time
@@ -2195,7 +2213,6 @@ Big Tymers	Still Fly
 Big Tymers, Gotti, Boo & Tateeze	Oh Yeah!
 Biggun, Ivor	Winker's Song
 Bikini Kill	Rebel Girl
-Bikini Kill	Rebel Grrrl
 Bilal	Love It
 Bingo Players & Far East Movement	Get Up
 Birdy	Skinny Love
@@ -2378,7 +2395,7 @@ Blige, Mary J	Enough Cryin
 Blige, Mary J	Everything
 Blige, Mary J	Family Affair
 Blige, Mary J	I Feel Good
-Blige, Mary J	I'm Going Down
+Blige, Mary J	I'm Goin' Down
 Blige, Mary J	Just Fine
 Blige, Mary J	Love Is All We Need
 Blige, Mary J	Love No Limit
@@ -2753,6 +2770,7 @@ Bow Wow Wow	I Want Candy
 Bowers, Ash	I Still Believe In That
 Bowie, David	1984	Bowieoke
 Bowie, David	Absolute Beginners	Bowieoke
+Bowie, David	Aladdin Sane
 Bowie, David	All The Madmen	Bowieoke
 Bowie, David	Amsterdam	Bowieoke
 Bowie, David	Andy Warhol	Bowieoke
@@ -2766,6 +2784,8 @@ Bowie, David	Blackstar	Bowieoke
 Bowie, David	Blue Jean	Bowieoke
 Bowie, David	Boss Of Me	Bowieoke
 Bowie, David	Boys Keep Swinging	Bowieoke
+Bowie, David	Breaking Glass
+Bowie, David	Bring Me the Disco King
 Bowie, David	Cactus	Bowieoke
 Bowie, David	Cat People (Putting Out Fire)	Bowieoke
 Bowie, David	Changes	Bowieoke
@@ -2821,6 +2841,7 @@ Bowie, David	Occasional Dream, An	Bowieoke
 Bowie, David	Oh! You Pretty Things	Bowieoke
 Bowie, David	Panic In Detroit	Bowieoke
 Bowie, David	Prettiest Star, The	Bowieoke
+Bowie, David	Pretty Things Are Going To Hell, The
 Bowie, David	Queen Bitch	Bowieoke
 Bowie, David	Quicksand	Bowieoke
 Bowie, David	Rebel Rebel	Bowieoke
@@ -2836,6 +2857,7 @@ Bowie, David	Star	Bowieoke
 Bowie, David	Starman	Bowieoke
 Bowie, David	Stars (Are Out Tonight), The	Bowieoke
 Bowie, David	Station To Station	Bowieoke
+Bowie, David	Stay
 Bowie, David	Suffragette City	Bowieoke
 Bowie, David	Supermen, The	Bowieoke
 Bowie, David	Thursday's Child	Bowieoke
@@ -2852,6 +2874,7 @@ Bowie, David	White Light, White Heat
 Bowie, David	Width Of A Circle, The	Bowieoke
 Bowie, David	Wild Is The Wind	Bowieoke
 Bowie, David	Wild-Eyed Boy From Freecloud, The	Bowieoke
+Bowie, David	Win
 Bowie, David	Word On A Wing	Bowieoke
 Bowie, David	Young Americans	Bowieoke
 Bowie, David	Ziggy Stardust	Bowieoke
@@ -3386,6 +3409,7 @@ Bush	Sound Of Winter, The
 Bush	Swallowed
 Bush	Warm Machine
 Bush Tetras	Can't Be Funky
+Bush Tetras	Too Many Creeps
 Bush, Kate	Army Dreamers
 Bush, Kate	Babooshka
 Bush, Kate	Cloudbusting
@@ -3410,7 +3434,7 @@ Busta Rhymes	Dangerous
 Busta Rhymes	Make It Clap
 Busta Rhymes	Touch It
 Busta Rhymes, Mariah Carey & The Flipmode Squad	I Know What You Want (Radio Version)
-Busted	3am
+Busted	3AM
 Busted	Air Hostess
 Busted	Boys Of Summer
 Busted	Crashed The Wedding
@@ -3429,6 +3453,8 @@ Butler, Jerry	Only The Strong Survive
 Butler, Jerry	What's The Use Of Breaking Up
 Butthole Surfers	Pepper
 Buzzcocks, The	Ever Fallen In Love
+Buzzcocks, The	Everybody's Happy Nowadays
+Buzzcocks, The	Harmony in My Head
 Buzzcocks, The	Promises
 Buzzcocks, The	What Do I Get?
 Bye Bye Birdie	English Teacher, An
@@ -3518,10 +3544,12 @@ Cake	Distance, The
 Cake	I Will Survive
 Cake	Never There
 Cake	No Phone
+Cake	Sheep Go To Heaven
 Cake	Short Skirt, Long Jacket
 Caldwell, Bobby	Love Lite
 Caldwell, Bobby	Stuck On You
 Caldwell, Bobby	What You Won't Do For Love
+Cale, John	Paris 1919
 Call, The	I Still Believe (Great Design)
 Calling, The	Adrienne
 Calling, The	Anything
@@ -3534,6 +3562,7 @@ Calling, The	Wherever You Will Go
 Calloway	I Wanna Be Rich
 Calloway, Cab	Minnie The Moocher
 Calum Scott	You are the Reason
+Calvi, Anna	Blackout
 Cam'ron & Juelz Santana	Oh Boy
 Cam'ron & Juelz Santana & Freekey Zekey & Kay Slay	Hey Ma
 Cam'ron & Vado	Hey Muma
@@ -3576,6 +3605,7 @@ Campbell, Tevin	Confused
 Campbell, Tevin	I'm Ready
 Campbell, Tevin	Round & Round
 Camper Van Beethoven	Take The Skinheads Bowling
+Can	Moonshake
 Can	Vitamin C
 Candlebox	Cover Me
 Candlebox	Far Behind
@@ -3615,7 +3645,7 @@ Cara, Irene	Fame
 Cara, Irene	Flashdance (What A Feeling)
 Cara, Irene	Out Here On My Own
 Caravelles	You Don't Have To Be A Baby To Cry
-Caray, Harry	Take Me Out To The Ballgame (No Lyrics)
+Caray, Harry	Take Me Out To The Ballgame	(No Lyrics)
 Cardi B	Bodak Yellow
 Cardigans, The	Burning Down The House
 Cardigans, The	For What It's Worth	M
@@ -3644,6 +3674,7 @@ Carey, Mariah	Forever
 Carey, Mariah	Hero
 Carey, Mariah	I Don't Wanna Cry
 Carey, Mariah	I Stay In Love
+Carey, Mariah	I Still Believe
 Carey, Mariah	I Want to Know What Love Is
 Carey, Mariah	Infinity
 Carey, Mariah	It's Like That
@@ -3669,6 +3700,7 @@ Carey, Mariah & Snoop Dogg	Say Somethin'
 Carey, Mariah & Trey Lorenz	I'll Be There
 Carey, Mariah, Joe & 98 Degrees	Thank God I Found You
 Carey, Tony	Room With A View	M
+Carlile, Brandi	Joke, The
 Carlile, Brandi	Story, The
 Carlisle, Belinda	Circles In The Sand
 Carlisle, Belinda	Heaven Is A Place On Earth
@@ -3801,6 +3833,7 @@ Cars, The	You Might Think
 Cars, The	You're All I've Got Tonight
 Carson, Jeff	Real Life (I Never Was The Same Again)
 Cartel	Honestly
+Carter Family, The	Wildwood Flower
 Carter, Aaron	Aaron's Party (Come Get It)
 Carter, Carlene	Every Little Thing
 Carter, Carlene	I Love You 'Cause I Want To
@@ -3897,6 +3930,7 @@ Cassidy, David	Last Kiss, The
 Cassidy, David	Some Kind Of A Summer
 Cassidy, David	Walking In The Rain
 Cassidy, Eva	American Tune
+Cassidy, Eva	How Can I Keep From Singing
 Cassidy, Eva	Over The Rainbow
 Cassidy, Eva	Songbird
 Cassidy, Eva & Katie Melua	What A Wonderful World
@@ -3915,18 +3949,18 @@ Catatonia	Road Rage
 Catatonia	Strange Glue
 Catherine Wheel, The	Sparks Are Gonna Fly
 Cats	Memory
-Cats (No Lyrics)	Ad-dressing Of Cats, The
-Cats (No Lyrics)	Grizabella The Glamour Cat
-Cats (No Lyrics)	Gus The Theatre Cat
-Cats (No Lyrics)	Jellicle Songs For Jellicle Cats
-Cats (No Lyrics)	Macavity The Mystery Cat
-Cats (No Lyrics)	Moments Of Happiness, The
-Cats (No Lyrics)	Mr. Mistoffelees
-Cats (No Lyrics)	Mungojerrie & Rumpelteazer
-Cats (No Lyrics)	Old Deuteronomy
-Cats (No Lyrics)	Old Gumbie Cat
-Cats (No Lyrics)	Rum Tum Tugger
-Cats (No Lyrics)	Skimbleshanks The Railway Cat
+Cats	Ad-dressing Of Cats, The	(No Lyrics)
+Cats	Grizabella The Glamour Cat	(No Lyrics)
+Cats	Gus The Theatre Cat	(No Lyrics)
+Cats	Jellicle Songs For Jellicle Cats	(No Lyrics)
+Cats	Macavity The Mystery Cat	(No Lyrics)
+Cats	Moments Of Happiness, The	(No Lyrics)
+Cats	Mr. Mistoffelees	(No Lyrics)
+Cats	Mungojerrie & Rumpelteazer	(No Lyrics)
+Cats	Old Deuteronomy	(No Lyrics)
+Cats	Old Gumbie Cat	(No Lyrics)
+Cats	Rum Tum Tugger	(No Lyrics)
+Cats	Skimbleshanks The Railway Cat	(No Lyrics)
 Cats UK	Luton Airport
 Caught In The Act	Love Is Everywhere	M
 Caulfield, Emma	I'll Never Tell
@@ -3939,6 +3973,7 @@ Cave, Nick and the Bad Seeds	Red Right Hand
 Cave, Nick and the Bad Seeds	Ship Song
 Caviar	Tangerine Speedo
 Celentano, Adriano	Prisencolinensinainciusol
+Cerrone	Supernature
 Cetera & Kahn	Feels Like Heaven
 Cetera, Peter	Glory Of Love, The
 Cetera, Peter	One Clear Voice
@@ -4213,6 +4248,7 @@ Chevelle	Panic Prone
 Chevelle	Red, The
 Chevelle	Send The Pain Below
 Chevelle	Vitamin R
+Chi-Lites, The	Are You My Woman (Tell Me So)
 Chi-Lites, The	Have You Seen Her
 Chi-Lites, The	Homely Girl
 Chi-Lites, The	Oh Girl
@@ -4242,7 +4278,7 @@ Chicago	Just You 'N Me
 Chicago	Look Away
 Chicago	Make Me Smile
 Chicago	Old Days
-Chicago	Question 67 & 68
+Chicago	Questions 67 & 68
 Chicago	Saturday In The Park
 Chicago	What Kind Of Man Would I Be	M
 Chicago	Will You Still Love Me
@@ -4431,6 +4467,7 @@ Cinderella (Disney)	Dream Is A Wish Your Heart Makes, A
 Cinderella (Disney)	So This Is Love
 Circle Jerks	Beverly Hills
 Circle Jerks	Letter Bomb	VR
+Circle Jerks	Wild in the Streets
 City And Colour	Comin Home
 City High	Caramel
 City High	What Would You Do
@@ -4543,6 +4580,8 @@ Clash, The	Magnificent Seven, The
 Clash, The	Rock The Casbah
 Clash, The	Should I Stay Or Should I Go
 Clash, The	Somebody Got Murdered
+Clash, The	Spanish Bombs
+Clash, The	Straight to Hell
 Clash, The	(This Is) Radio Clash
 Clash, The	Train In Vain
 Clash, The	White Riot	VR
@@ -4551,6 +4590,7 @@ Classics IV	Spooky
 Classics IV	Stormy
 Classics IV	Sunny
 Classics IV	Traces
+Clayton, Merry	Southern Man
 Clayton, Merry	Yes
 Clean Bandit	I Miss You
 Clean Bandit	Rockabye
@@ -4559,7 +4599,7 @@ Clean Bandit & Anne-Marie & Sean Paul	Rockabye
 Clean Bandit & Jess Glynne	Rather Be
 Clean Bandit & Louisa Johnson	Tears
 Clean Bandit & Sharma Bass	Extraordinary
-Clean Bandit ft Zara Larsson	Synphony
+Clean Bandit & Zara Larsson	Synphony
 Clegg, Johnny	Scatterlings Of Africa
 Click Five, The	Catch Your Wave
 Click Five, The	Just The Girl
@@ -4689,6 +4729,7 @@ Coco	Llorona, La
 Coco	Recuerdame
 Coco	Remember Me
 Cocteau Twins	Lorelei
+Cocteau Twins	Pearly Dewdrops' Drops
 Coe, David Allan	Divers Do It Deeper
 Coe, David Allan	Get A Little Dirt On Your Hands
 Coe, David Allan	Hank Williams Junior Junior
@@ -4720,6 +4761,7 @@ Coheed & Cambria	World Of Lines
 Cohen, Izhar & Alphabeta	A-Ba-Ni-Bi
 Cohen, Leonard	Ain't No Cure For Love	M
 Cohen, Leonard	Bird On A Wire
+Cohen, Leonard	Chelsea Hotel No. 2
 Cohen, Leonard	Closing Time
 Cohen, Leonard	Dance Me To The End Of Love
 Cohen, Leonard	Death of a Ladies' Man (Full)
@@ -4764,6 +4806,7 @@ Coldplay	Every Teardrop Is A Waterfall
 Coldplay	Fix You
 Coldplay	God Put A Smile Upon Your Face
 Coldplay	Gravity
+Coldplay	Green Eyes
 Coldplay	Hardest Part
 Coldplay	In My Place
 Coldplay	Life In Technicolor II
@@ -4919,6 +4962,7 @@ Colter, Jessie	I'm Not Lisa
 Coltrane, Chi	Thunder And Lightning
 Colvin, Shawn	Get Out Of This House
 Colvin, Shawn	I Don't Know Why
+Colvin, Shawn	Sunny Came Home
 Colvin, Shawn	Whole New You
 Comic Relief	(Barry) Islands In The Stream
 Commander Cody	Hot Rod Lincoln
@@ -4958,17 +5002,17 @@ Como, Perry	Till The End Of Time
 Company	Another Hundred People
 Company	Being Alive
 Company	Ladies Who Lunch, The
-Company (No Lyrics)	Barcelona
-Company (No Lyrics)	Company
-Company (No Lyrics)	Getting Married Today
-Company (No Lyrics)	Have I Got A Girl For You
-Company (No Lyrics)	Little Things You Do Together, The
-Company (No Lyrics)	Marry Me A Little
-Company (No Lyrics)	Poor Baby
-Company (No Lyrics)	Side By Side By Side
-Company (No Lyrics)	Someone Is Waiting
-Company (No Lyrics)	Sorry-Grateful
-Company (No Lyrics)	You Could Drive A Person Crazy
+Company	Barcelona	(No Lyrics)
+Company	Company	(No Lyrics)
+Company	Getting Married Today	(No Lyrics)
+Company	Have I Got A Girl For You	(No Lyrics)
+Company	Little Things You Do Together, The	(No Lyrics)
+Company	Marry Me A Little	(No Lyrics)
+Company	Poor Baby	(No Lyrics)
+Company	Side By Side By Side	(No Lyrics)
+Company	Someone Is Waiting	(No Lyrics)
+Company	Sorry-Grateful	(No Lyrics)
+Company	You Could Drive A Person Crazy	(No Lyrics)
 Company B	Fascinated
 Con Funk Shun	Ffun
 Con Funk Shun	Love Train (Part 1)
@@ -5146,6 +5190,7 @@ Costello, Elvis	Shipbuilding
 Costello, Elvis	Veronica
 Costello, Elvis	Watch Your Step
 Costello, Elvis	Watching The Detectives
+Costello, Elvis	Welcome to the Working Week
 Costello, Elvis & Burt Bacharach	God Give Me Strength
 Costello, Elvis & Burt Bacharach	She
 Costello, Elvis & Burt Bacharach	Toledo
@@ -5213,6 +5258,7 @@ Counting Crows	Rain King
 Counting Crows	Round Here
 Counting Crows & Vanessa Carlton	Big Yellow Taxi
 Course Of Nature	Caught In The Sun
+Cousteau	Last Good Day of the Year, The
 Coven	One Tin Soldier, The Legend Of Billy Jack
 Cover Drive	Sparks
 Cover Drive	Twilight
@@ -5251,6 +5297,7 @@ Coyle, Nadine	Insatiable
 Coyote Ugly	Can't Fight The Moonlight
 Coyote Ugly	Please Remember Me
 Cozier, Jimmy	She's All I Got
+Crabby Appleton	Go Back
 Cracker	I Hate My Generation
 Cracker	Low
 Craddock, Billy Crash	Ain't Nothin' Shakin'
@@ -5269,8 +5316,9 @@ Craddock, Billy Crash	Sweet Magnolia Blossom
 Craddock, Billy Crash	Tear Fell, A
 Craddock, Billy Crash	You Rubbed It In All Wrong
 Cramer, Floyd	Bonaparte's Retreat	M
-Cramps	Strychnine
+Cramps, The	Garbage Man
 Cramps, The	Human Fly (Live)	VR
+Cramps, The	Strychnine
 Cranberries, The	Analyse
 Cranberries, The	Copycat	M
 Cranberries, The	Dreams
@@ -5286,6 +5334,7 @@ Cranberries, The	Zombie
 Crash Test Dummies	Afternoons And Coffee Spoons
 Crash Test Dummies	Ballad Of Peter Pumpkinhead, The
 Crash Test Dummies	Mmm Mmm Mmm Mmm
+Crash Test Dummies	Superman's Song
 Craven, Beverly	Promise Me
 Craven, Beverly	Woman To Woman
 Crawford, Randy	Cajun Moon
@@ -5842,6 +5891,7 @@ Dean, Kiley	Who Will I Run To
 Dean, Sharif	Do You Love Me	VR
 Deanda, Paula	Doing Too Much
 Death Cab For Cutie	Crooked Teeth
+Death Cab For Cutie	I Will Follow You Into The Dark
 Death Cab For Cutie	I Will Possess Your Heart
 Death Cab For Cutie	Soul Meets Body
 Debarge	All This Love
@@ -6068,6 +6118,7 @@ Depeche Mode	Wrong
 Derek & The Dominos	Bell Bottom Blues
 Derek & The Dominos	Have You Ever Loved A Woman
 Derek & The Dominos	Layla
+Derek & The Dominos	Little Wing
 Derek & The Dominos	Nobody Knows You When You're Down & Out
 Derek & The Dominos	Why Does Love Got To Be So Sad
 Dern, Daisy	Gettin' Back To You
@@ -6120,6 +6171,7 @@ Destiny's Child	So Good
 Destiny's Child	Stand Up For Love
 Destiny's Child	Survivor
 Destiny's Child, T.I. & Lil' Wayne	Soldier
+Dethklok	Bloodlines
 Detroit Emeralds, The	Feel The Need In Me
 Deuce	Call It Love
 DEV	In The Dark
@@ -6365,6 +6417,8 @@ Dion, Celine & Clive Griffin	When I Fall In Love
 Dion, Celine & Paul Anka	It's Hard To Say Goodbye
 Dion, Celine & The Bee Gees	Immortality
 Dionysos	Tais-toi mon coeur
+Dir en Grey	Myaku
+Dir en Grey	Schwein no isu
 Dire Straits	Brothers In Arms
 Dire Straits	Calling Elvis
 Dire Straits	Lady Writer
@@ -6702,6 +6756,7 @@ Dr. Horrible's Sing-Along Blog	Everything You Ever
 Dr. Horrible's Sing-Along Blog	Man's Gotta Do, A
 Dr. Horrible's Sing-Along Blog	My Eyes
 Dr. Horrible's Sing-Along Blog	My Freeze Ray
+Dr. John	Junko Partner
 Dr. John	Making Whoopie
 Dr. John	Right Place Wrong Time
 Dr. Kucho & Gregor Salto & Ane Brun	Can't Stop Playing (Makes Me High)
@@ -6727,15 +6782,15 @@ Dream	He Loves U Not
 Dream	Shawty Is A Ten
 Dream	This Is Me
 Dream Academy	Life In A Northern Town
-Dream Theater	Beneath the Surface (Instrumental, No Lyrics)
-Dream Theater	Bridges In The Sky (Edited, No Lyrics)
-Dream Theater	Build Me Up, Break Me Down (Instrumental, No Lyrics)
-Dream Theater	Count Of Tuscany, The (Edited, No Lyrics)
-Dream Theater	Learning To Live (Edited Short Version, No Lyrics)
-Dream Theater	Metropolis (Edited, No Lyrics)
-Dream Theater	On The Backs Of Angels (Edited, No Lyrics)
-Dream Theater	Rite Of Passage, A (Edited, No Lyrics)
-Dream Theater	This Is the Life (Instrumental, No Lyrics)
+Dream Theater	Beneath the Surface (Instrumental)	(No Lyrics)
+Dream Theater	Bridges In The Sky (Edited)	(No Lyrics)
+Dream Theater	Build Me Up, Break Me Down (Instrumental)	(No Lyrics)
+Dream Theater	Count Of Tuscany, The (Edited)	(No Lyrics)
+Dream Theater	Learning To Live (Edited Short Version)	(No Lyrics)
+Dream Theater	Metropolis (Edited)	(No Lyrics)
+Dream Theater	On The Backs Of Angels (Edited)	(No Lyrics)
+Dream Theater	Rite Of Passage, A (Edited)	(No Lyrics)
+Dream Theater	This Is the Life (Instrumental)	(No Lyrics)
 Dream Warriors	My Definition Of A Boombastic Jazz Style
 Dreamgirls	When I First Saw You
 Dreamgirls, The	Dreamgirls
@@ -7028,17 +7083,18 @@ Easton, Sheena	When He Shines
 Easton, Sheena	You Could Have Been With Me
 Easybeats, The	Friday On My Mind
 Easybeats, The	She's So Fine
+Easybeats, The	Sorry
 EAV	Heisse Nachte In Palermo
 EAV	Kuss Die Hand Schoene Frau
 Eazy-E	Boyz 'n the Hood
 Eberly, Bob & Helen O'Connell	Tangerine	M
 Ebn-Ozn	AEIOU (and Sometimes Y)
+Echo & The Bunnymen	Back of Love
 Echo & The Bunnymen	Bring On The Dancing Horses
 Echo & The Bunnymen	Cutter, The
 Echo & The Bunnymen	Killing Moon
 Echo & The Bunnymen	Lips Like Sugar
 Echo & The Bunnymen	Seven Seas
-Echosmith	Bright
 Echosmith	Bright
 Eddie & The Hot Rods	Do Anything You Wanna Do
 Eden's Crush	Get Over Yourself
@@ -7177,7 +7233,7 @@ Emerson, Lake & Palmer	Touch And Go	M
 Emerson, Lake & Palmer	Trilogy	M
 EMF	Unbelievable
 Emilia	Big Big World
-Eminem	3am
+Eminem	3 a.m.
 Eminem	8 Mile
 Eminem	Ass Like That
 Eminem	Berzerk (Clean)
@@ -7192,6 +7248,7 @@ Eminem	Mockingbird
 Eminem	Mosh (Radio Version)
 Eminem	My Name Is
 Eminem	Phenomenal
+Eminem	Rap God
 Eminem	Real Slim Shady, The
 Eminem	Rhyme or Reason
 Eminem	River
@@ -7226,12 +7283,12 @@ En Vogue	Hold On
 En Vogue	My Lovin' (You're Never Gonna Get It)
 En Vogue	Riddle
 En Vogue	Whatever
-Enchanted	Ever Ever After (No Lyrics)
-Enchanted	Happy Working Song (No Lyrics)
-Enchanted	So Close (No Lyrics)
+Enchanted	Ever Ever After	(No Lyrics)
+Enchanted	Happy Working Song	(No Lyrics)
+Enchanted	So Close	(No Lyrics)
 Enchanted	That's Amore
 Enchanted	That's How You Know
-Enchanted	True Love's Kiss (No Lyrics)
+Enchanted	True Love's Kiss	(No Lyrics)
 Enemy, The	Had Enough
 Enemy, The	No Time For Tears
 Enemy, The	You're Not Alone
@@ -7253,6 +7310,8 @@ English, Jon	Hollywood Seven	M
 English, Michael	Your Love Amazes Me
 English, Robin	Girl In Love, A
 Engvall, Byrd, McCoy & Brown	Now That's Awesome!
+Eno, Brian	Baby's On Fire
+Eno, Brian	Needle in the Camel's Eye
 Eno, Brian	Seven Deadly Finns
 Enriquez, Jocelyn	Do You Miss Me
 Enter Shikari	Juggernauts
@@ -7755,6 +7814,7 @@ Firehouse	When I Look Into Your Eyes
 Firm, The	Radioactive
 Firm, The	Satisfaction Guaranteed
 Firm, The	Star Trekkin'
+First Aid Kit	Emmylou
 First Aid Kit	Fireworks
 First Aid Kit	My Silver Lining
 First Class	Beach Baby
@@ -7905,7 +7965,9 @@ Floetry	Floetic
 Floetry	Say Yes
 Flogging Molly	Black Friday Rule
 Flogging Molly	Drunken Lullabies
+Flogging Molly	If I Ever Leave This World Alive
 Flogging Molly	Screaming at the Wailing Wall	VR
+Flogging Molly	What's Left Of The Flag
 Florence & Dizzee	You Got The Dirtee Love
 Florence & The Machine	Cosmic Love
 Florence & The Machine	Dog Days Are Over
@@ -7930,6 +7992,7 @@ Floyd, Eddie	Knock On Wood
 Floyd, King	Groove Me
 Flying Burrito Brothers, The	Dark End Of The Street
 Flying Burrito Brothers, The	Hot Burrito No. 1
+Flying Burrito Brothers, The	Sin City
 Flying Machine, The	Smile A Little Smile For Me
 Flying Pickets, The	Only You
 Flyleaf	All Around Me
@@ -8457,6 +8520,7 @@ Gallagher, Noel's High Flying Birds	Holy Mountain
 Gallery	Nice To Be With You
 Game, The & 50 Cent	Hate It Or Love It
 Game, The & 50 Cent	How We Do (Radio Version)
+Gang of Four	At Home He's A Tourist
 Gang of Four	Damaged Goods
 Gang of Four	I Love A Man In A Uniform
 Gang of Four	Is It Love
@@ -8651,7 +8715,7 @@ Gershwin, George	How Long Has This Been Going On
 Gershwin, George	I've Got A Crush On You
 Gershwin, George	Man I Love, The
 Gershwin, George	Oh Lady Be Good
-Gershwin, George	'S Wonderful
+Gershwin, George	S Wonderful
 Gershwin, George	Someone To Watch Over Me
 Geto Boys	Damn It Feels Good To Be a Gangsta
 Geto Boys	Mind Playing Tricks On Me
@@ -8668,6 +8732,7 @@ Gibb, Andy	Shadow Dancing
 Gibb, Robin	Boys Do Fall in Love
 Gibbs, Georgia	Kiss Of Fire
 Gibbs, Georgia	Tweedle Dee
+Gibbs, Terri	Somebody's Knockin'
 Gibson Brothers, The	Cuba
 Gibson Brothers, The	Que Sera Mi Vida
 Gibson, Debbie	Electric Youth
@@ -8809,6 +8874,7 @@ Girls Aloud & Sugababes	Walk This Way
 GLaDOS	Still Alive	M
 GLaDOS	Want You Gone	M
 Glaser, Tom	It's A Mad, Mad, Mad, Mad World
+Glass Animals	Gooey
 Glass Tiger	Don't Forget Me When I'm Gone
 Glass Tiger	My Town
 Glass Tiger	Someday
@@ -8979,6 +9045,7 @@ Gore, Lesley	That's The Way Boys Are
 Gore, Lesley	You Don't Own Me
 Gorgon City & Laura Welsh	Here For You
 Gorgon City & MNEK	Ready For Your Love
+Gories, The	Give Me Some Money
 Gorilla Biscuits	New Direction
 Gorillaz	19-2000
 Gorillaz	Clint Eastwood
@@ -9051,11 +9118,13 @@ Grande, Ariana	Best Mistake	VR
 Grande, Ariana	Dangerous Woman
 Grande, Ariana	Into You
 Grande, Ariana	One Last Time
+Grande, Ariana	Piano
+Grande, Ariana	Thank U Next
 Grande, Ariana & Iggy Azalea	Problem
 Grande, Ariana & John Legend	Beauty & the Beast
 Grande, Ariana & Zedd	Break Free
 Grandmaster Flash	Message, The
-Grandmaster Flash	New York New York
+Grandmaster Flash	New York, New York
 Grandmaster Flash	White Lines
 Grant, Amy	Baby Baby
 Grant, Amy	Believe
@@ -9151,6 +9220,7 @@ Green Day	Warning
 Green Day	Welcome To Paradise
 Green Day	When I Come Around
 Green Day	Working Class Hero
+Green Jello	Three Little Pigs
 Green, Al	Call Me (Come Back Home)
 Green, Al	Don't Say No Tonight
 Green, Al	For The Good Times
@@ -9217,9 +9287,9 @@ Groban, Josh	My Confession
 Groban, Josh	Remember
 Groban, Josh	Remember When It Rained
 Groban, Josh	She's Out Of My Life
-Groban, Josh	Si Volvieras A Mi (No Lyrics)
+Groban, Josh	Si Volvieras A Mi	(No Lyrics)
 Groban, Josh	To Where You Are
-Groban, Josh	When You Say You Love Me (No Lyrics)
+Groban, Josh	When You Say You Love Me	(No Lyrics)
 Groban, Josh	You Are Loved (Don't Give Up)
 Groban, Josh	You Raise Me Up
 Groban, Josh	You're Still You
@@ -9283,6 +9353,7 @@ Guided By Voices	Game of Pricks	M
 Guided By Voices	Hold On Hope
 Guillemots, The	Falling Out Of Reach
 Guillemots, The	Get Over It
+Gun Club	Sex Beat
 Gun Club	She's Like Heroin To Me
 Guns 'N Roses	Ain't It Fun
 Guns 'N Roses	Anything Goes Tonight	M
@@ -9311,6 +9382,7 @@ Guthrie, Arlo	City Of New Orleans
 Guthrie, Arlo	Coming Into Los Angeles
 Guthrie, Arlo	Motorcycle Song
 Guthrie, Gwen	Ain't Nothing Going On But The Rent
+Guthrie, Woody	All You Fascists Bound To Lose
 Guthrie, Woody	John Henry
 Guy	Dancin'
 Guy, Buddy	Damn Right, I've Got The Blues
@@ -9537,7 +9609,7 @@ Hamilton	Your Obedient Servant
 Hamilton (Dessa)	Congratulations
 Hamilton Park	Thing Called Us
 Hamilton, Anthony	Comin' From Where I'm From
-Hamilton, Anthony	Please Stay
+Hamilton, Anthony	Please
 Hamilton, Charles & Rita Ora	New York Raining
 Hamilton, George IV	Abilene
 Hamilton, Joe Frank & Reynolds	Don't Pull Your Love
@@ -9678,6 +9750,7 @@ Hartman, Dan	Instant Replay
 Hartman, Dan	Relight My Fire
 Harvey Danger	Flagpole Sitta
 Harvey, Adam	Better Than This
+Harvey, PJ	50ft Queenie
 Harvey, PJ	Down By The Water
 Harvey, PJ	Good Fortune
 Harvey, PJ	One Line
@@ -9891,6 +9964,7 @@ High School Musical 2	Fabulous
 Highway 101	Honky Tonk Heart
 Highway 101	Whiskey, If You Were A Woman
 Highwaymen, The	Michael Row The Boat Ashore
+Highwomen, The	Chain, The
 Hill Toppers, The	Marianne
 Hill, Benny	Andalucian Gypsies
 Hill, Benny	Ernie (The Fastest Milkman In The West)
@@ -9980,7 +10054,9 @@ Hole	Asking For It	M
 Hole	Celebrity Skin
 Hole	Doll Parts
 Hole	Gold Dust Woman
+Hole	Jennifer's Body
 Hole	Malibu
+Hole	Miss World
 Hole	Violet
 Holiday, Billie	Ain't Nobody's Business
 Holiday, Billie	Crazy He Calls Me
@@ -10112,6 +10188,7 @@ Hooters, The	And We Danced
 Hooters, The	Satellite
 Hootie & The Blowfish	Hannah Jane
 Hootie & The Blowfish	Hold My Hand
+Hootie & The Blowfish	I Go Blind
 Hootie & The Blowfish	Let Her Cry
 Hootie & The Blowfish	Only Lonely
 Hootie & The Blowfish	Only Want To Be With You
@@ -10265,7 +10342,7 @@ Hues Corporation, The	Rock The Boat
 Hugh, Grayson	Can't We Talk It Over In Bed
 Hugh, Grayson	Talk It Over
 Huld, Hafdis	Action Man
-Hum	Stars (No Lyrics)
+Hum	Stars	(No Lyrics)
 Human Beinz, The	Nobody But Me
 Human League, The	Don't You Want Me
 Human League, The	Human
@@ -10479,22 +10556,22 @@ Interpol	Evil
 Interpol	Slow Hands
 Into The Woods	I Know Things Now
 Into The Woods	Steps Of The Palace, The
-Into The Woods (No Lyrics)	Agony
-Into The Woods (No Lyrics)	Any Moment
-Into The Woods (No Lyrics)	Finale Act 1
-Into The Woods (No Lyrics)	Finale Act 2
-Into The Woods (No Lyrics)	Giants In The Sky
-Into The Woods (No Lyrics)	Hello, Little Girl
-Into The Woods (No Lyrics)	I Guess This Is Goodbye-Maybe They're Magic
-Into The Woods (No Lyrics)	It Takes Two
-Into The Woods (No Lyrics)	Last Midnight, The
-Into The Woods (No Lyrics)	Moments In The Woods
-Into The Woods (No Lyrics)	No More
-Into The Woods (No Lyrics)	No One Is Alone
-Into The Woods (No Lyrics)	Opening
-Into The Woods (No Lyrics)	Stay With Me
-Into The Woods (No Lyrics)	Witch's Lament
-Into The Woods (No Lyrics)	Your Fault
+Into The Woods	Agony	(No Lyrics)
+Into The Woods	Any Moment	(No Lyrics)
+Into The Woods	Finale Act 1	(No Lyrics)
+Into The Woods	Finale Act 2	(No Lyrics)
+Into The Woods	Giants In The Sky	(No Lyrics)
+Into The Woods	Hello, Little Girl	(No Lyrics)
+Into The Woods	I Guess This Is Goodbye-Maybe They're Magic	(No Lyrics)
+Into The Woods	It Takes Two	(No Lyrics)
+Into The Woods	Last Midnight, The	(No Lyrics)
+Into The Woods	Moments In The Woods	(No Lyrics)
+Into The Woods	No More	(No Lyrics)
+Into The Woods	No One Is Alone	(No Lyrics)
+Into The Woods	Opening	(No Lyrics)
+Into The Woods	Stay With Me	(No Lyrics)
+Into The Woods	Witch's Lament	(No Lyrics)
+Into The Woods	Your Fault	(No Lyrics)
 Intruders	Cowboys To Girls
 Intruders, The	I'll Always Love My Mama
 INXS	After Glow
@@ -11030,8 +11107,11 @@ Jessie J & Ariana Grande & Nicki Minaj	Bang Bang
 Jessie J & B.o.B	Price Tag
 Jessie J & Big Sean & Dizzee Rascal	Wild
 Jessie J & David Guetta	Laserlight
+Jesus & Mary Chain, The	Happy When It Rains
 Jesus & Mary Chain, The	Head On
 Jesus & Mary Chain, The	Just Like Honey
+Jesus & Mary Chain, The	Sidewalking
+Jesus & Mary Chain, The & Hope Sandoval	Sometimes Always
 Jesus Christ Superstar	Could We Start Again Please
 Jesus Christ Superstar	Damned For All Time
 Jesus Christ Superstar	Everything's Alright
@@ -11274,7 +11354,7 @@ John, Elton	Teacher I Need You	M
 John, Elton	This Town	M
 John, Elton	Ticking	M
 John, Elton	Tiny Dancer
-John, Elton	Tonight	M
+John, Elton	Tonight
 John, Elton	Too Young
 John, Elton	Wake Up Wendy
 John, Elton	We All Fall In Love Sometimes	M
@@ -11543,6 +11623,7 @@ Jordan, Alexis	Hush Hush
 Jordan, David	Move On
 Jordan, David	Sun Goes Down
 Jordan, Jeremy	Right Kind Of Love, The
+Jordan, Louis	Is You Is Or Is You Ain't My Baby
 Jordan, Louis	Saturday Night Fish Fry
 Jordan, Montell	Falling
 Jordan, Montell	Get It On Tonite
@@ -11594,6 +11675,7 @@ Joy Division	Disorder
 Joy Division	Love Will Tear Us Apart
 Joy Division	New Dawn Fades
 Joy Division	She's Lost Control
+Joy Division	These Days
 Joy Division	Transmission
 JT Machinima	Five Long Nights
 JT Machinima	Five More Nights
@@ -11681,7 +11763,8 @@ Justice	D.A.N.C.E.
 Justice & Simian	We Are Your Friends
 Juvenile & Mannie Fresh	In My Life
 Juvenile & Soulja Slim	Slow Motion
-Juvenile, Manny Fresh & L'il Wayne	Back That Thang Up
+Juvenile, Manny Fresh & L'il Wayne	Back That Azz Up
+Juvenile, Manny Fresh & L'il Wayne	Back That Thang Up (Clean)
 K-Ci & Jojo	All My Life
 K-Ci & Jojo	Crazy
 K-Ci & Jojo	It's Me
@@ -11850,25 +11933,25 @@ Kelly, Gene	Singin' In The Rain
 Kelly, Gene & Donald O'Connor	Moses Supposes (aka Tongue Twisters)
 Kelly, Paul	Leaps & Bounds
 Kelly, Paul	To Her Door
-Kelly, R	Bad Man
-Kelly, R	Bump 'N Grind
-Kelly, R	Down Low (Nobody Has To Know)
-Kelly, R	Feelin' On Yo Booty
-Kelly, R	Gotham City
-Kelly, R	Happy People [Radio Version]
-Kelly, R	I Believe I Can Fly
-Kelly, R	I Can't Sleep Baby (If I)
-Kelly, R	I Wish
-Kelly, R	Ignition
-Kelly, R	Ignition (Remix)
-Kelly, R	Number One Hit
-Kelly, R	Radio Message
-Kelly, R	She's Got That Vibe
-Kelly, R	Snake
-Kelly, R	Step In The Name Of Love
-Kelly, R	World's Greatest, The
+Kelly, R.	Bad Man
+Kelly, R.	Bump 'N Grind
+Kelly, R.	Down Low (Nobody Has To Know)
+Kelly, R.	Feelin' On Yo Booty
+Kelly, R.	Gotham City
+Kelly, R.	Happy People [Radio Version]
+Kelly, R.	I Believe I Can Fly
+Kelly, R.	I Can't Sleep Baby (If I)
+Kelly, R.	I Wish
+Kelly, R.	Ignition
+Kelly, R.	Ignition (Remix)
+Kelly, R.	Number One Hit
+Kelly, R.	Radio Message
+Kelly, R.	She's Got That Vibe
+Kelly, R.	Snake
+Kelly, R.	Step In The Name Of Love
 Kelly, R.	Trapped in the Closet (Chapter 1)
 Kelly, R.	Trapped in the Closet (Chapter 2)
+Kelly, R.	World's Greatest, The
 Kelly, R. & Boo & Gotti	Fiesta
 Kelly, R. & Jay-Z	Get This Money
 Kelly, R. & Keith Murray	Home Alone
@@ -12025,16 +12108,16 @@ Kincade	Dreams Are Ten a Penny
 Kindred The Family Soul	Magic Happen
 King	Love And Pride
 King & I, The	Getting To Know You
-King & I, The (No Lyrics)	Hello, Young Lovers
-King & I, The (No Lyrics)	I Have Dreamed
-King & I, The (No Lyrics)	I Whistle A Happy Tune
-King & I, The (No Lyrics)	My Lord And Master
-King & I, The (No Lyrics)	Puzzlement, A
-King & I, The (No Lyrics)	Shall I Tell you What I Think Of you
-King & I, The (No Lyrics)	Shall We Dance
-King & I, The (No Lyrics)	Something Wonderful
-King & I, The (No Lyrics)	We Kiss In A Shadow
-King & I, The (No Lyrics)	Western People Funny
+King & I, The	Hello, Young Lovers	(No Lyrics)
+King & I, The	I Have Dreamed	(No Lyrics)
+King & I, The	I Whistle A Happy Tune	(No Lyrics)
+King & I, The	My Lord And Master	(No Lyrics)
+King & I, The	Puzzlement, A	(No Lyrics)
+King & I, The	Shall I Tell you What I Think Of you	(No Lyrics)
+King & I, The	Shall We Dance	(No Lyrics)
+King & I, The	Something Wonderful	(No Lyrics)
+King & I, The	We Kiss In A Shadow	(No Lyrics)
+King & I, The	Western People Funny	(No Lyrics)
 King Crimson	In The Court Of The Crimson King	M
 King David & Teen Boy Band	Girl from Tennessee, Boy from Texas	VR
 King Diamond	Welcome Home
@@ -12144,6 +12227,7 @@ Kinks, The	Tired Of Waiting For You
 Kinks, The	Victoria
 Kinks, The	Waterloo Sunset
 Kinks, The	Well Respected Man, A
+Kinks, The	Who'll Be the Next in Line
 Kinks, The	(Wish I Could Fly Like) Superman
 Kinks, The	You Really Got Me
 Kinleys, The	I'm In
@@ -12300,6 +12384,7 @@ Korn	Twisted Transistor
 Korn	Y'all Want A Single
 Kraftwerk	Das Modell
 Kraftwerk	Model, The
+Kraftwerk	Tour de France
 Krall, Diana	Let's Fall in Love
 Krall, Diana	Peel Me A Grape
 Kramer, Billy J. & The Dakotas	Bad To Me
@@ -12457,6 +12542,7 @@ Lady Gaga	Just Dance
 Lady Gaga	Love Game
 Lady Gaga	Million Reasons
 Lady Gaga	Money Honey
+Lady Gaga	Monster
 Lady Gaga	Paparazzi
 Lady Gaga	Perfect Illusion
 Lady Gaga	Poker Face
@@ -12466,6 +12552,7 @@ Lady Gaga	Teeth
 Lady Gaga	Til It Happens To You
 Lady Gaga	You And I
 Lady Gaga & Beyonce	Telephone
+Lady Gaga & Bradley Cooper	Shallow
 Lady Gaga & R. Kelly	Do What U Want
 Lady Hawk	My Delirium
 Ladyhawke	Back Of The Van
@@ -12473,7 +12560,7 @@ Ladyhawke	Paris Is Burning
 Ladytron	Seventeen
 Lagwagon	Alison's Disease	VR
 Laine, Frankie	Blazing Saddles
-Laine, Frankie	Cool Water
+Laine, Frankie	Cool, Cool Water
 Laine, Frankie	High Noon
 Laine, Frankie	Jezebel
 Laine, Frankie	Making Memories
@@ -12627,8 +12714,10 @@ LCD Soundsystem	All My Friends
 LCD Soundsystem	Daft Punk Is Playing at My House
 LCD Soundsystem	Drunk Girls
 LCD Soundsystem	I Can Change
+LCD Soundsystem	Losing My Edge
 LCD Soundsystem	New York, I Love You But You're Bringing Me Down
 LCD Soundsystem	North American Scum
+Le Tigre	My My Metrocard
 Leandros, Vicky	Apres Toi
 Leandros, Vicky	Come What May
 Leary, Dennis	Asshole
@@ -12659,6 +12748,7 @@ Led Zeppelin	Kashmir
 Led Zeppelin	Living Loving Maid
 Led Zeppelin	Misty Mountain Hop
 Led Zeppelin	Night Flight
+Led Zeppelin	No Quarter
 Led Zeppelin	Ocean, The
 Led Zeppelin	Out On The Tiles
 Led Zeppelin	Over The Hills And Far Away
@@ -12724,6 +12814,7 @@ Lee, Peggy	I've Got You Under My Skin
 Lee, Peggy	Is That All There Is
 Lee, Peggy	Johnny Guitar
 Lee, Peggy	My Heart Belongs To Daddy
+Lee, Peggy	Why Don't You Do Right
 Lee, Ricki	Love Is All Around
 Lee, Robin	Black Velvet
 Lee, Stagga	Roll Wit M.V.P.
@@ -13006,6 +13097,8 @@ Lightning Seeds	Pure
 Lightning Seeds	Ready Or Not
 Lightning Seeds	Sugar Coated Iceberg
 Lightning Seeds	Three Lions
+Lil Nas X	Old Town Road
+Lil Nas X	Old Town Road (remix)
 Lil' Bow Wow	Bow Wow (That's My Name)
 Lil' Chris	Checkin It Out
 Lil' Chris	Figure It Out
@@ -13233,6 +13326,11 @@ Lizzie McGuire	Supermodel
 Lizzie McGuire	Tide Is High (Get The Feeling), The
 Lizzie McGuire	What Dreams Are Made Of
 Lizzie McGuire	Why Not
+Lizzo	Boys
+Lizzo	Cuz I Love You
+Lizzo	Good As Hell
+Lizzo	Juice
+Lizzo	Truth Hurts
 LL Cool J	Ain't Nobody
 LL Cool J	Around The Way Girl
 LL Cool J	Doin' It
@@ -13331,6 +13429,7 @@ Lonely Island, The	Cool Guys Don't Look At Explosions
 Lonely Island, The	Creep, The
 Lonely Island, The	Jizz In My Pants	VR
 Lonely Island, The	Like A Boss	VR
+Lonely Island, The	MotherLover
 Lonely Island, The	Threw It on the Ground
 Lonely Island, The	YOLO
 Lonely Island, The & Akon	I Just Had Sex (Explicit)
@@ -13396,6 +13495,7 @@ Lordi	Hard Rock Hallelujah
 Loreen	Euphoria
 Loring, Gloria & Carl Anderson	Friends & Lovers
 Los Bravos	Black Is Black
+Los Bravos	Bring a Little Lovin'
 Lost Frequencies	Are You With Me
 Lost Prophets	I Don't Know
 Lost Prophets	Last Train Home
@@ -13411,7 +13511,7 @@ Lott, Pixie	Mama Do
 Lott, Pixie	Turn It Up
 Lott, Pixie & Pusha T	What Do You Take Me For
 Lotus Eaters	First Picture Of You
-Loudness	Crazy Nights (No Lyrics)
+Loudness	Crazy Nights	(No Lyrics)
 Louisana's Leroux	New Orleans Ladies
 Louise	Arms Around The World
 Louise	Let's Go Round Again
@@ -13425,6 +13525,7 @@ Lovato, Demi	Give Your Heart A Break
 Lovato, Demi	Heart Attack
 Lovato, Demi	La La Land
 Lovato, Demi	Neon Lights
+Lovato, Demi	Sorry Not Sorry
 Lovato, Demi	Stone Cold
 Lovato, Demi	Warrior
 Lovato, Demi	Warrior (Lower Female Key)
@@ -14028,6 +14129,7 @@ Maroon 5	Tangled
 Maroon 5	This Love
 Maroon 5	Through With You
 Maroon 5	Wake Up Call
+Maroon 5	Won't Go Home Without You
 Maroon 5 & Rihanna	If I Never See Your Face Again
 Maroon 5 & Wiz Khalifa	Payphone
 MARRS	Pump Up The Volume
@@ -14144,7 +14246,7 @@ Marvelettes, The	Playboy
 Marvelettes, The	Please Mr. Postman
 Marvelettes, The	Too Many Fish In The Sea
 Marvelettes, The	When You're Young & In Love
-Marvelous 3	Freak Of The Week (No Lyrics)
+Marvelous 3	Freak Of The Week	(No Lyrics)
 Marvin, Lee	Wandrin' Star
 Marx, Groucho	Lydia, The Tattooed Lady
 Marx, Richard	Angelia
@@ -14181,6 +14283,7 @@ Mason, Barbara	Yes I'm Ready
 Mason, Dave	We Just Disagree
 Massive Attack	Karmacoma
 Massive Attack	Protection
+Massive Attack	Teardrop
 Massive Attack	Unfinished Sympathy
 Master P	Kenny's Dead
 Master P & Fiend & Silkk The Shocker, Mia X & Mystikal	Make 'em Say Uhh
@@ -14411,8 +14514,10 @@ McCartney, Paul	With A Little Luck
 McCartney, Paul	Young Boy
 McCartney, Paul	Your Loving Flame
 McCartney, Paul & Frog Chorus	We All Stand Together
-McCartney, Paul & Linda	Heart Of The Country	M
-McCartney, Paul & Linda	Monkberry Moon Delight	M
+McCartney, Paul & Linda	Back Seat of My Car, The
+McCartney, Paul & Linda	Dear Boy
+McCartney, Paul & Linda	Heart Of The Country
+McCartney, Paul & Linda	Monkberry Moon Delight
 McCartney, Paul & Linda	Uncle Albert/Admiral Halsey
 McCartney, Paul & Michael Jackson	Say, Say, Say
 McCartney, Paul & Stevie Wonder	Ebony & Ivory
@@ -15154,14 +15259,14 @@ Miss Li	Bourgeois Shangri-La
 Missing Persons	Destination Unknown
 Missing Persons	Walking In L.A.
 Missing Persons	Words
-Mitch & Mickey	Kiss at the End of the Rainbow, A (No Lyrics)
+Mitch & Mickey	Kiss at the End of the Rainbow, A	(No Lyrics)
 Mitchell, Guy	Heartaches By The Number
 Mitchell, Guy	Look At That Girl
 Mitchell, Guy	My Heart Cries For You
 Mitchell, Guy	Rock A Billy
 Mitchell, Guy	Singing The Blues
 Mitchell, Joni	Big Yellow Taxi
-Mitchell, Joni	Blue (No Lyrics)
+Mitchell, Joni	Blue	(No Lyrics)
 Mitchell, Joni	Both Sides Now
 Mitchell, Joni	California
 Mitchell, Joni	Chelsea Morning
@@ -15316,7 +15421,7 @@ Montgomery, John Michael	Love Working On You
 Montgomery, John Michael	Rope The Moon
 Montgomery, John Michael	Sold (The Grundy County Auction Incident)
 Montgomery, John Michael	That's What I Like About You
-Montgomery, John Michael	'Til Nothing Comes Between Us
+Montgomery, John Michael	Til Nothing Comes Between Us
 Montrose	Bad Motor Scooter
 Montrose	Rock Candy
 Monty Python	Always Look On The Bright Side Of Life
@@ -15540,7 +15645,6 @@ Moyet, Alison	That Old Devil Called Love
 Moyet, Alison	Weak In The Presence Of Beauty
 Moyet, Alison	When I Was Your Girl
 Moyet, Alison	Whispering Your Name
-Mr Jukes & Charles Bradley	Grant Green
 Mr. Big	Just Take My Heart
 Mr. Big	Romeo
 Mr. Big	To Be With You
@@ -15548,6 +15652,7 @@ Mr. Big	Wild World
 Mr. C Slide Man	Cha-Cha Slide
 Mr. Cheeks	Lights, Camera, Action!
 Mr. Hudson & Kanye West	Supernova
+Mr. Jukes & Charles Bradley	Grant Green
 Mr. Mister	Broken Wings
 Mr. Mister	Is It Love
 Mr. Mister	Kyrie
@@ -15570,7 +15675,7 @@ Mud	Rocket	VR
 Mud	Secrets That You Keep, The
 Mud	Show Me You're A Woman
 Mud	Tiger Feet
-Mudhoney (String Quartet Tribute)	Touch Me, I'm Sick
+Mudhoney	Touch Me I'm Sick
 Mudvayne	Fall Into Sleep
 Mudvayne	Forget To Remember
 Mudvayne	Happy
@@ -15935,7 +16040,10 @@ Nesmith, Michael & the First National Band	Joanne	VR
 Nesmith, Michael & the First National Band	Silver Moon	VR
 Netta	Toy
 Nettles, Jennifer	Unlove You
+Neutral Milk Hotel	Holland, 1945
 Neutral Milk Hotel	In the Aeroplane Over the Sea
+Neutral Milk Hotel	King of Carrot Flowers
+Neutral Milk Hotel	Two Headed Boy
 Neville, Aaron	Crazy Love
 Neville, Aaron	Don't Fall Apart On Me Tonight
 Neville, Aaron	Everybody Plays The Fool
@@ -15978,8 +16086,10 @@ New Order	Temptation
 New Order	Thieves Like Us	M
 New Order	True Faith
 New Order	World In Motion
+New Pornographers	All the Things That Go to Make Heaven and Earth
 New Pornographers	Challengers
 New Pornographers	Letter from an Occupant
+New Pornographers	Use It
 New Radicals	You Get What You Give
 New Riders Of The Purple Sage	Panama Red
 New Seekers, The	Beg, Steal Or Borrow
@@ -16031,6 +16141,7 @@ Newton John, Olivia	Make A Move On Me
 Newton John, Olivia	Not Gonna Be The One	M
 Newton John, Olivia	Physical
 Newton John, Olivia	Soul Kiss	M
+Newton John, Olivia	Suddenly
 Newton John, Olivia	Suspended In Time
 Newton John, Olivia	Twist Of Fate
 Newton John, Olivia & Electric Light Orchestra	Xanadu
@@ -16183,6 +16294,7 @@ Nirvana	All Apologies
 Nirvana	Been a Son
 Nirvana	Blew
 Nirvana	Breed
+Nirvana	Breed
 Nirvana	Come As You Are
 Nirvana	Drain You
 Nirvana	Dumb	M
@@ -16201,6 +16313,7 @@ Nirvana	On a Plain
 Nirvana	Pennyroyal Tea	M
 Nirvana	Polly
 Nirvana	Rape Me
+Nirvana	School
 Nirvana	Sliver
 Nirvana	Smells Like Teen Spirit
 Nirvana	Something in the Way
@@ -16209,6 +16322,7 @@ Nirvana	Territorial Pissings
 Nirvana	Where Did You Sleep Last Night
 Nirvana	You Know You're Right
 Nirvana (Original)	Rainbow Chaser
+Nitty Gritty Dirt Band	Will the Circle Be Unbroken
 Nitty Gritty Dirt Band, The	Fishin' In The Dark
 Nitty Gritty Dirt Band, The	Long Hard Road The Sharecropper's Dream
 Nitty Gritty Dirt Band, The	Mr. Bojangles
@@ -16251,6 +16365,7 @@ NOFX	Brews	VR
 NOFX	Don't Call Me White	VR
 NOFX	Drugs Are Good	VR
 NOFX	Kill All The White Man	VR
+NOFX	Linoleum
 NOFX	Linoleum	VR
 NOFX	Liza and Louise	VR
 NOFX	We Threw Gasoline On The Fire And Now We Have Stumps For Arms And No Eyes
@@ -16265,6 +16380,7 @@ Non Point	Bullet With A Name
 Non Point	Truth, The
 Noonan, Paddy & The Grand Band	McNamara's Band
 Norful, Smokie	I Understand
+Normal, The	Warm Leatherette
 Notorious B.I.G.	Big Poppa
 Notorious B.I.G.	Hypnotize
 Notorious B.I.G.	Juicy
@@ -16282,7 +16398,7 @@ Nugent, Ted	Just What The Doctor Ordered
 Nugent, Ted	Motor City Madhouse
 Nugent, Ted	Stranglehold
 Nugent, Ted	Wango Tango
-Numan, Gary	Are “Friends” Electric?
+Numan, Gary	Are "Friends" Electric?
 Numan, Gary	Bombers
 Numan, Gary	Cars
 Numan, Gary	Crazier
@@ -16307,6 +16423,7 @@ O-Town	All Or Nothing
 O-Town	Liquid Dreams
 O-Town	These Are The Days
 O-Town	We Fit Together
+O-Zone	Dragostea Din Tei
 O.A.R.	Heard The World
 O.A.R.	Love And Memories
 O.C.	Time's Up
@@ -16316,7 +16433,9 @@ O'Connor, Des	I Pretend
 O'Connor, Hazel	Calls The Tune
 O'Connor, Hazel	Eighth Day
 O'Connor, Hazel	Will You
+O'Connor, Sinead	I Am Stretched on Your Grave
 O'Connor, Sinead	Love Letters	M
+O'Connor, Sinead	Mandinka
 O'Connor, Sinead	Nothing Compares 2 U
 O'Day, Anita	Bewitched
 O'Day, Anita	Take The A Train
@@ -16519,6 +16638,7 @@ Oliver (Musical)	Where Is Love
 Oliver (Musical)	Where Is Love (Reprise)
 Oliver (Musical)	Who Will Buy
 Olivia	Bizounce
+Olsen, Angel	Shut Up Kiss Me
 Olympics, The	Hully Gully
 Olympics, The	Western Movies
 Omar	There's Nothing Like This
@@ -16623,6 +16743,7 @@ Orchestral Manoeuvres in the Dark	Walking The Milky Way
 Ordinary Boys, The	Boys Will Be Boys
 Ordinary Boys, The	I Luv U
 Ordinary Boys, The	Nine2five
+Orff, Carl	O Fortuna (Carmina Burana)
 Orgy	Blue Monday
 Orgy	Fiction (Dreams In Digital)
 Orgy	Opticon
@@ -16807,7 +16928,7 @@ Page, Patti	Mockingbird Hill
 Page, Patti	Old Cape Cod
 Page, Patti	Steam Heat
 Page, Patti	Tennessee Waltz, The
-Pagliacci	Vesti la Giubba (No Lyrics)
+Pagliacci	Vesti la Giubba	(No Lyrics)
 Pagliaro, Michel	J'entends Frapper
 Paige, Elaine & Barbara Dickson	I Know Him So Well
 Paige, Jennifer	Beautiful
@@ -16873,6 +16994,7 @@ Paper Lace	Night Chicago Died, The
 Parade	Louder
 Paradis, Vanessa	Be My Baby
 Paradis, Vanessa	Joe Le Taxi
+Paramore	Ain't It Fun
 Paramore	Brick By Boring Brick
 Paramore	Crush Crush Crush
 Paramore	Decode
@@ -17224,13 +17346,13 @@ Phantom Of The Opera, The	Music Of The Night, The
 Phantom Of The Opera, The	Phantom Of The Opera, The
 Phantom Of The Opera, The	Think Of Me
 Phantom Of The Opera, The	Wishing You Were Somehow Here Again
-Phantom Of The Opera, The (No Lyrics)	All I Ask Of You (Reprise)
-Phantom Of The Opera, The (No Lyrics)	Angel Of Music
-Phantom Of The Opera, The (No Lyrics)	Little Lotte
-Phantom Of The Opera, The (No Lyrics)	Masquerade
-Phantom Of The Opera, The (No Lyrics)	Notes
-Phantom Of The Opera, The (No Lyrics)	Point Of No Return, The
-Phantom Of The Opera, The (No Lyrics)	Prima Donna
+Phantom Of The Opera, The	All I Ask Of You (Reprise)	(No Lyrics)
+Phantom Of The Opera, The	Angel Of Music	(No Lyrics)
+Phantom Of The Opera, The	Little Lotte	(No Lyrics)
+Phantom Of The Opera, The	Masquerade	(No Lyrics)
+Phantom Of The Opera, The	Notes	(No Lyrics)
+Phantom Of The Opera, The	Point Of No Return, The	(No Lyrics)
+Phantom Of The Opera, The	Prima Donna	(No Lyrics)
 Phantom Planet	California
 Phantom Planet	California 2005 (From The O.C. Mix 5)
 Pharrell	Angel
@@ -17291,6 +17413,7 @@ Pigeon Detectives, The	I'm Not Sorry
 Pigeon Detectives, The	Take Her Back
 Pigeon Detectives, The	This Is An Emergency
 Pigg, Landon	Can't Let Go
+Pikotaro	PPAP (Pen Pineapple Apple Pen)
 Pillar	Fireproof
 Piller, Sandra	Days Like These
 Pilot	January
@@ -17337,15 +17460,20 @@ Pink Floyd	Bike
 Pink Floyd	Brain Damage
 Pink Floyd	Brain Damage/Eclipse
 Pink Floyd	Breathe
+Pink Floyd	Bring The Boys Back Home
 Pink Floyd	Comfortably Numb
 Pink Floyd	Coming Back To Life
+Pink Floyd	Don't Leave Me Now
 Pink Floyd	Eclipse
 Pink Floyd	Final Cut, The
 Pink Floyd	Goodbye Blue Sky
 Pink Floyd	Great Gig In The Sky, The
+Pink Floyd	Happiest Days Of Our Lives, The
 Pink Floyd	Have A Cigar
 Pink Floyd	Hey You
 Pink Floyd	High Hopes
+Pink Floyd	In The Flesh
+Pink Floyd	Is There Anybody Out There
 Pink Floyd	Keep Talking
 Pink Floyd	Learning To Fly
 Pink Floyd	Money
@@ -17353,15 +17481,25 @@ Pink Floyd	Mother
 Pink Floyd	Nobody Home
 Pink Floyd	Not Now John
 Pink Floyd	On The Turning Away
+Pink Floyd	One of My Turns
+Pink Floyd	Pigs (Three Different Ones)
+Pink Floyd	Pigs On The Wing
+Pink Floyd	Pigs On The Wing Pt 1
+Pink Floyd	Pigs On The Wing Pt 2
+Pink Floyd	Run Like Hell
 Pink Floyd	See Emily Play
 Pink Floyd	Sheep
 Pink Floyd	Shine On You Crazy Diamond
-Pink Floyd	Thin Ice, The	M
+Pink Floyd	Stop
+Pink Floyd	Thin Ice, The
 Pink Floyd	Time
-Pink Floyd	Trial, The	M
+Pink Floyd	Trial, The
 Pink Floyd	Us & Them
+Pink Floyd	Vera
+Pink Floyd	Waiting For The Worms
 Pink Floyd	Welcome To The Machine
 Pink Floyd	What Do You Want From Me
+Pink Floyd	What Shall We Do Now
 Pink Floyd	When The Tigers Broke Free
 Pink Floyd	Wish You Were Here
 Pink Floyd	Young Lust
@@ -17369,6 +17507,7 @@ Pinkard & Bowden	Guns Made America Great
 Pinkard & Bowden	Help Me Make It Through The Yard
 Pinkees, The	Danger Games
 Pinkerton's Assorted Colours	Mirror Mirror
+Pinkfong	Baby Shark
 Pinmonkey	I Drove All Night
 Pinocchio	Give A Little Whistle
 Pinocchio	Hi-Diddle-Dee-Dee
@@ -17391,6 +17530,7 @@ Pippin	Simple Joys
 Pippin	Spread A Little Sunshine
 Pippin	With You
 Piranhas, The	Tom Hark
+Pistol Annies	Got My Name Changed Back
 Pistol Annies	Hell On Heels
 Pitbull	Back In Time
 Pitbull	Freedom
@@ -17546,9 +17686,11 @@ Pop Evil	Monster You Made
 Pop Evil	Trenches
 Pop Will Eat Itself	Can U Dig It
 Pop, Iggy	Lust For Life	Bowieoke
+Pop, Iggy	Nightclubbing
 Pop, Iggy	Passenger, The	Bowieoke
 Pop, Iggy	Real Wild Child	Bowieoke
 Pop, Iggy	Take Care of Me
+Pop, Iggy	TV Eye
 Pop, Iggy & Kate Pierson	Candy
 Pop, Iggy & The Stooges	Gimme Danger	Bowieoke
 Pop, Iggy & The Stooges	I Got a Right
@@ -17589,11 +17731,13 @@ Postal Service, The	We Will Become Silhouettes
 Postmodern Jukebox	All About That Bass
 Postmodern Jukebox	All Of Me
 Postmodern Jukebox	All The Small Things
+Postmodern Jukebox	Bad Romance
 Postmodern Jukebox	Blank Space
 Postmodern Jukebox	Blurred Lines
 Postmodern Jukebox	Burn
 Postmodern Jukebox	Careless Whisper
 Postmodern Jukebox	Chandelier
+Postmodern Jukebox	Creep
 Postmodern Jukebox	Die Young
 Postmodern Jukebox	Get Lucky
 Postmodern Jukebox	Girls Just Wanna Have Fun
@@ -17646,6 +17790,7 @@ Presley, Elvis	Any Way You Want Me
 Presley, Elvis	Are You Lonesome Tonight
 Presley, Elvis	Are You Sincere
 Presley, Elvis	Ask Me
+Presley, Elvis	Baby What You Want Me To Do
 Presley, Elvis	Baby, Let's Play House
 Presley, Elvis	Beginner's Luck	VR
 Presley, Elvis	Beyond the Reef	VR
@@ -17887,6 +18032,7 @@ Priest, Maxi	Close To You
 Priest, Maxi	Just a Little Bit Longer	VR
 Priest, Maxi	Some Guys Have All The Luck	VR
 Priest, Maxi	Wild World	VR
+Prima, Louis	Buona Sera
 Prima, Louis	Enjoy Yourself (It's Later than You Think)
 Prima, Louis	I'm In The Mood For Love
 Prima, Louis	Jump, Jive, An' Wail
@@ -17903,7 +18049,7 @@ Prince	Alphabet Street
 Prince	Baby I'm A Star
 Prince	Batdance
 Prince	Beautiful Ones, The
-Prince	Bob George (No Lyrics)
+Prince	Bob George	(No Lyrics)
 Prince	Call My Name
 Prince	Controversy
 Prince	Cream
@@ -18143,6 +18289,7 @@ Queen Latifah	U.N.I.T.Y.
 Queens Of The Stone Age	3's & 7's
 Queens Of The Stone Age	Another Love Song
 Queens Of The Stone Age	Burn The Witch
+Queens Of The Stone Age	Go With The Flow
 Queens Of The Stone Age	In My Head
 Queens Of The Stone Age	Leg Of Lamb
 Queens Of The Stone Age	Little Sister
@@ -18174,6 +18321,7 @@ R.E.M.	Crush With Eyeliner
 R.E.M.	Daysleeper
 R.E.M.	(Don't Go Back To) Rockville
 R.E.M.	Drive
+R.E.M.	Driver 8
 R.E.M.	E Bow The Letter
 R.E.M.	Everybody Hurts
 R.E.M.	Fall On Me
@@ -18190,12 +18338,15 @@ R.E.M.	Radio Free Europe
 R.E.M.	Radio Song
 R.E.M.	Shiny Happy People
 R.E.M.	Sidewinder Sleeps Tonight, The
+R.E.M.	Sitting Still
+R.E.M.	So. Central Rain (I'm Sorry)
 R.E.M.	Stand
 R.E.M.	Strange Currencies
 R.E.M.	Superman (Duet)
 R.E.M.	Superman (Solo)
 R.E.M.	Tongue
 R.E.M.	What's The Frequency Kenneth
+R.E.M.	Wolves, Lower
 Ra	Do You Call My Name
 Rabbitt, Eddie	Do You Right Tonight
 Rabbitt, Eddie	Drinkin' My Baby Off My Mind
@@ -18281,6 +18432,8 @@ Rainbow	Since You've Been Gone
 Rainbow	Stone Cold
 Rainbow	Street Of Dreams
 Rainbow	Temple Of The King	M
+Raincoats, The	Fairytale in the Supermarket
+Raincoats, The	Only Loved at Night
 Raitt, Bonnie	All At Once
 Raitt, Bonnie	Come To Me
 Raitt, Bonnie	Give It Up Or Let Me Go
@@ -18314,6 +18467,7 @@ Rammstein	Du Hast (English Version)
 Rammstein	Engel
 Ramone, Joey	What A Wonderful World
 Ramone, Marky	53rd and 3rd	VR
+Ramones, The	Beat on the Brat
 Ramones, The	Beat On The Brat
 Ramones, The	Blitzkrieg Bop
 Ramones, The	Do You Remember Rock 'N Roll Radio
@@ -18327,7 +18481,7 @@ Ramones, The	Rockaway Beach
 Ramones, The	She's the One
 Ramones, The	Sheena Is A Punk Rocker
 Ramones, The	Teenage Lobotomy
-Ramones, The	Today Your Love, Tomorrow The World (No Lyrics)
+Ramones, The	Today Your Love, Tomorrow The World	(No Lyrics)
 Ramones, The	We're A Happy Family
 Ramones, The	You Didn't Mean Anything To Me	M
 Ramsey, Tarralyn	Up Against All Odds
@@ -18387,7 +18541,7 @@ Raspberries, The	Go All The Way
 Raspberries, The	Overnight Sensation
 Rateliff, Nathaniel & The Night Sweats	S.O.B.
 Ratt	Back For More
-Ratt	I'm Insane (No Lyrics)
+Ratt	I'm Insane	(No Lyrics)
 Ratt	Lack Of Communication
 Ratt	Lay It Down
 Ratt	Round & Round
@@ -18463,6 +18617,7 @@ Real Thing, The	You To Me Are Everything
 Reba	Sweet Music Man
 Rebel MC	Street Tuff
 Rebel Meets Rebel	Get Outta My Life
+Records, The	Starry Eyes
 Red Box	For America
 Red Box	Lean On Me
 Red Hot Chili Peppers	Aeroplane
@@ -18611,9 +18766,10 @@ REO Speedwagon	Roll With The Changes
 REO Speedwagon	Take It On The Run
 REO Speedwagon	Time For Me To Fly
 Reparata & The Delrons	Captain Of Your Ship
+Replacements, The	Alex Chilton
 Replacements, The	I.O.U.
 Replacements, The	I'll Be You
-Replacements, The	i'm in Trouble
+Replacements, The	I'm in Trouble
 Replacements, The	Skyway
 Republica	From Rush Hour With Love
 Republica	Ready To Go
@@ -18755,15 +18911,16 @@ Richie, Lionel	Truly
 Richie, Lionel	Why
 Richie, Lionel	You Are
 Richie, Lionel & Enrique	To Love A Woman
-Richman, Jonathan and the Modern Lovers	Government Center
-Richman, Jonathon & The Modern Lovers	Roadrunner
+Richman, Jonathan	I Was Dancing in the Lesbian Bar
+Richman, Jonathon & the Modern Lovers	Government Center
+Richman, Jonathon & the Modern Lovers	Roadrunner
 Rickett, Adam	I Breathe Again
 Ricki-Lee	Wiggle It
 Ricochet	Daddy's Money
 Ricochet	She's Gone
 Riddle, Jessica	Even Angels Fall
 Ridgeway, Stan	Camouflage
-Riff Raff	Larry Bird (No Lyrics)
+Riff Raff	Larry Bird	(No Lyrics)
 Righeira	Vamos A La Playa
 Right Said Fred	Deeply Dippy
 Right Said Fred	I'm Too Sexy
@@ -18864,7 +19021,6 @@ Rivers, Johnny	Secret Agent Man
 Rivers, Johnny	Seventh Son
 Rivers, Johnny	Summer Rain
 Rivers, Johnny	Swaying To The Music (Slow Dancing)
-Rivers, Nick	Star Wars
 Rivieras, The	California Sun
 Rivingtons, The	Papa Oo Mau Mau
 Rixton	Me And My Broken Heart
@@ -18937,6 +19093,7 @@ Robyn	Handle Me
 Robyn	Who's That Girl
 Robyn & Kleerup	With Every Heartbeat
 Rock Kills Kid	Paralyzed
+Rocketman	Amoreena
 Rockin' Berries, The	He's in Town
 Rockin' Berries, The	Poor Man's Son
 Rockwell	Somebody's Watching Me
@@ -19048,6 +19205,8 @@ Rolling Stones, The	Let It Bleed
 Rolling Stones, The	Let's Spend The Night Together
 Rolling Stones, The	Little Red Rooster
 Rolling Stones, The	Love Is Strong
+Rolling Stones, The	Loving Cup
+Rolling Stones, The	Memo From Turner
 Rolling Stones, The	Midnight Rambler
 Rolling Stones, The	Miss You
 Rolling Stones, The	Mixed Emotions
@@ -19107,6 +19266,7 @@ Ronson, Mark & Bruno Mars	Uptown Funk
 Ronson, Mark & Daniel Merriweather	Stop Me
 Ronson, Mark & Katy B (London Olympics 2012)	Anywhere In The World
 Ronson, Mark & Lily Allen	Oh My God
+Ronson, Mark & Miley Cyrus	Nothing Breaks Like a Heart
 Ronson, Mark & Phantom Planet	Just
 Ronson, Mark & The Business Intl	Bang Bang Bang
 Ronson, Mark & The Business Intl	Bike Song, The
@@ -19227,7 +19387,6 @@ Roxette	Look, The
 Roxette	She's Got Nothing On (But The Radio)
 Roxette	Sleeping In My Car
 Roxette	Spending My Time
-Roxette	Wish I Could Fly
 Roxy Music	Angel Eyes
 Roxy Music	Avalon
 Roxy Music	Dance Away
@@ -19237,6 +19396,7 @@ Roxy Music	Love Is The Drug
 Roxy Music	More Than This
 Roxy Music	Oh Yeah
 Roxy Music	Over You
+Roxy Music	Pyjamarama
 Roxy Music	Same Old Scene
 Roxy Music	Strand, The
 Roxy Music	Virginia Plain
@@ -19293,6 +19453,7 @@ Run DMC	Peter Piper
 Run DMC	You Be Illin'
 Run The Jewels	Legend Has It
 Runaways, The	Cherry Bomb
+Runaways, The	School Days
 Rundgren, Todd	Bang The Drum All Day
 Rundgren, Todd	Can We Still Be Friends
 Rundgren, Todd	Cold Morning Light	M
@@ -19388,7 +19549,7 @@ Sade	Soldier Of Love
 Sade	Still In Love With You
 Sade	Sweetest Taboo, The
 Sade	Your Love Is King
-Sadler, Barry	Ballad Of The Green Berets, The
+Sadler, SSgt Barry	Ballad Of The Green Berets, The
 SafetySuit	Get Around This
 Saga	On The Loose
 Saigon Kick	Love Is On The Way
@@ -19452,7 +19613,7 @@ Santana	Everybody's Everything
 Santana	Evil Ways
 Santana	Love Of My Life
 Santana	Open Invitation
-Santana	Oye Coma Va
+Santana	Oye Como Va
 Santana	She's Not There
 Santana	Well Alright
 Santana	Winning
@@ -19717,6 +19878,7 @@ Sedaka, Neil	Bad Blood
 Sedaka, Neil	Breaking Up Is Hard To Do
 Sedaka, Neil	Breaking Up Is Hard To Do (Slow Version)
 Sedaka, Neil	Calendar Girl
+Sedaka, Neil	Going Nowhere
 Sedaka, Neil	Happy Birthday Sweet Sixteen
 Sedaka, Neil	Hungry Years, The	M
 Sedaka, Neil	King Of Clowns
@@ -19957,6 +20119,8 @@ Sheik, Duncan	Barely Breathing
 Sheila	Bang Bang	M
 Sheila E	Glamorous Life
 Sheila E	Love Bizarre, A
+Shelley, Pete	Homosapien
+Shelley, Pete	Telephone Operator
 Shelton, Blake	All Over Me
 Shelton, Blake	Austin
 Shelton, Blake	Baby, The
@@ -20007,7 +20171,7 @@ Sheppard, T.G	Tryin' To Beat The Morning Home
 Sheppard, T.G	War Is Hell On The Homefront Too
 Sheppard, T.G	You Still Do
 Sherbet	Howzat
-Sheridan, Tony & the Beat Brothers	My Bonnie
+Sheridan, Tony & the Beat Brothers	My Bonnie
 Sheriff	When I'm With You
 Sherman, Allan	Crazy Downtown
 Sherman, Allan	Hello Muddah Hello Fadduh
@@ -20030,7 +20194,7 @@ Shinedown	Save Me
 Shinedown	Shed Some Light
 Shinedown	Simple Man
 Shinedown	Yer Majesty
-Shins, The	Australia (No Lyrics)
+Shins, The	Australia	(No Lyrics)
 Shiny Toy Guns	You Are The One
 Shirelles, The	Baby It's You
 Shirelles, The	Dedicated To The One I Love
@@ -20086,6 +20250,7 @@ Shriekback	Nemesis
 Shust, Aaron	My Savior, My God
 Sia	Alive
 Sia	Bird Set Free
+Sia	Breathe Me
 Sia	Chandelier
 Sia	Cheap Thrills
 Sia	Elastic Heart
@@ -20403,9 +20568,11 @@ Singletary, Daryle	I've Thought Of Everything
 Singletary, Daryle	That's Why I Sing This Way
 Sinitta	So Macho
 Sinitta	Toy Boy
+Siouxsie & The Banshees	Christine
 Siouxsie & The Banshees	Cities in Dust
 Siouxsie & The Banshees	Dear Prudence
 Siouxsie & The Banshees	Face To Face
+Siouxsie & the Banshees	Halloween
 Siouxsie & The Banshees	Happy House
 Siouxsie & The Banshees	Hong Kong Garden
 Siouxsie & The Banshees	Israel
@@ -20427,6 +20594,7 @@ Sister Sledge	Frankie
 Sister Sledge	He's The Greatest Dancer
 Sister Sledge	Lost In Music
 Sister Sledge	We Are Family
+Sisters Of Mercy	Black Planet
 Sisters Of Mercy	Dominion
 Sisters Of Mercy	Temple Of Love
 Sisters Of Mercy	This Corrosion
@@ -20461,7 +20629,6 @@ Skid Row	Monkey Business
 Skid Row	Wasted Time
 Skid Row	Youth Gone Wild
 Skids	Into The Valley
-Skinner & Baddiel	Three Lions
 Skrillex	Bangarang
 Skrillex & Diplo & Justin Bieber	Where Are U Now
 Skunk Anansie	Brazen
@@ -20574,6 +20741,7 @@ Smith, Connie	You And Your Sweet Love
 Smith, Corey	Twenty-One (2011)
 Smith, Elliott	Fond Farewell, A
 Smith, Elliott	Miss Misery (Early Version)
+Smith, Elliott	Needle In The Hay
 Smith, Elliott	Waltz #2 (XO)
 Smith, Frankie	Double Dutch Bus
 Smith, Huey	Don't You Just Know It
@@ -20626,7 +20794,10 @@ Smiths, The	Heaven Knows I'm Miserable Now
 Smiths, The	How Soon Is Now
 Smiths, The	I Know It's Over
 Smiths, The	I Started Something I Couldn't Finish
+Smiths, The	Last Night I Dreamt (That Somebody Loved Me)
 Smiths, The	Meat Is Murder (Live)
+Smiths, The	Nowhere Fast
+Smiths, The	Paint a Vulgar Picture
 Smiths, The	Panic
 Smiths, The	Please Please Please Let Me Get What I Want
 Smiths, The	Queen Is Dead, The
@@ -20637,6 +20808,7 @@ Smiths, The	Shoplifters Of The World Unite
 Smiths, The	Some Girls Are Bigger Than Others
 Smiths, The	Still Ill
 Smiths, The	Stop Me If You Think You've Heard This One Before
+Smiths, The	Stretch Out and Wait
 Smiths, The	There Is A Light That Never Goes Out
 Smiths, The	This Charming Man
 Smiths, The	Unhappy Birthday
@@ -20716,6 +20888,7 @@ Social Distortion	Ball And Chain
 Social Distortion	I Was Wrong
 Social Distortion	Reach For The Sky
 Social Distortion	Ring Of Fire	VR
+Social Distortion	Story of My Life
 Socialburn	Down
 Socialburn	Everyone
 Sodium	Alyssa Milano
@@ -20744,8 +20917,10 @@ Son Of Dork	Eddie's Song
 Son Volt	Drown
 Song Of The South	Zip-A-Dee-Doo-Dah
 Sonia	Better The Devil You Know
+Sonic Youth	Bull in the Heather
 Sonic Youth	Kool Thing
 Sonic Youth	Teen Age Riot	VR
+Sonics, The	Have Love, Will Travel
 Sonique	It Feels So Good
 Sonique	Sky
 Sonny & Cher	All I Ever Need Is You
@@ -20766,6 +20941,7 @@ Soul Coughing	Circles
 Soul Coughing	Super Bon Bon
 Soul Decision	Faded
 Soul for Real	Candy Rain
+Soul II Soul	Back to Life (However Do You Want Me)
 Soul Survivors, The	Expressway to Your Heart
 Soul, David	Don't Give Up On Us
 Soul, David	Silver Lady
@@ -20776,16 +20952,16 @@ Sound Of Music, The	Do Re Mi
 Sound Of Music, The	Edelweiss
 Sound Of Music, The	My Favorite Things
 Sound Of Music, The	Sixteen Going On Seventeen
-Sound Of Music, The (No Lyrics)	Climb Ev'ry Mountain
-Sound Of Music, The (No Lyrics)	How Can Love Survive
-Sound Of Music, The (No Lyrics)	I Have Confidence
-Sound Of Music, The (No Lyrics)	Lonely Goatherd, The
-Sound Of Music, The (No Lyrics)	Maria
-Sound Of Music, The (No Lyrics)	No Way To Stop It
-Sound Of Music, The (No Lyrics)	Ordinary Couple, An
-Sound Of Music, The (No Lyrics)	So Long, Farewell
-Sound Of Music, The (No Lyrics)	Something Good
-Sound Of Music, The (No Lyrics)	Sound Of Music (Reprise), The
+Sound Of Music, The	Climb Ev'ry Mountain	(No Lyrics)
+Sound Of Music, The	How Can Love Survive	(No Lyrics)
+Sound Of Music, The	I Have Confidence	(No Lyrics)
+Sound Of Music, The	Lonely Goatherd, The	(No Lyrics)
+Sound Of Music, The	Maria	(No Lyrics)
+Sound Of Music, The	No Way To Stop It	(No Lyrics)
+Sound Of Music, The	Ordinary Couple, An	(No Lyrics)
+Sound Of Music, The	So Long, Farewell	(No Lyrics)
+Sound Of Music, The	Something Good	(No Lyrics)
+Sound Of Music, The	Sound Of Music (Reprise), The	(No Lyrics)
 Soundgarden	Black Hole Sun
 Soundgarden	Blow Up The Outside World
 Soundgarden	Burden In My Hand
@@ -20799,6 +20975,7 @@ Soundgarden	Pretty Noose
 Soundgarden	Rusty Cage
 Soundgarden	Spoonman
 Soundgarden	Superunknown
+Sounds, The	Living in America
 Soup Dragons, The	Pleasure
 Source, The & Candi Staton	You Got The Love
 South 65	Most Beautiful Girl, The
@@ -20928,6 +21105,7 @@ Specials, The	Message To You Rudi, A
 Specials, The	Nite Klub
 Specials, The	Rat Race
 Specials, The	Too Much Too Young
+Specials, The	You're Wondering Now
 Spektor, Regina	Better
 Spektor, Regina	Fidelity
 Spektor, Regina	Hotel Song
@@ -21070,11 +21248,13 @@ Springsteen, Bruce	Murder Incorporated
 Springsteen, Bruce	My Hometown
 Springsteen, Bruce	Paradise
 Springsteen, Bruce	Pink Cadillac
+Springsteen, Bruce	Prove It All Night
 Springsteen, Bruce	Rising, The
 Springsteen, Bruce	Rosalita (Come Out Tonight)
 Springsteen, Bruce	Sad Eyes	M
 Springsteen, Bruce	Secret Garden
 Springsteen, Bruce	Sherry Darling
+Springsteen, Bruce	Spirit in the Night
 Springsteen, Bruce	Streets Of Philadelphia
 Springsteen, Bruce	Tenth Avenue Freeze Out
 Springsteen, Bruce	Thunder Road
@@ -21141,7 +21321,7 @@ Staind	Warm Safe Place
 Staind	Waste
 Staind	Zoe Jane
 Stakka Bo	Here We Go
-Stallone, Frank	Far From Over
+Stallone, Frank	Far From Over
 Stampeders, The	Carry Me
 Stampeders, The	Oh My Lady
 Stampeders, The	Playin' In The Band
@@ -21166,7 +21346,7 @@ Stan, Alexandra	Get Back
 Stan, Alexandra	Mr. Saxobeat
 Standard	Come See Me
 Standard	Goodnight Irene
-Standard	My Foolish Heart
+Standard	My Foolish Heart
 Standells, The	Dirty Water
 Stanley, Ralph	O Death
 Stansfield, Lisa	All Around The World
@@ -21205,8 +21385,9 @@ Starr, Ringo	No No Song
 Starr, Ringo	Oh My My
 Starr, Ringo	Photograph
 Starr, Ringo	You're Sixteen
-Stars On 45	Abba
+Stars On 45	ABBA
 Stars On 45	Beatles, The
+Starsailor	Alcoholic	(No Lyrics)
 Starsailor	Fever
 Starsailor	Four To The Floor
 Starsailor	Good Souls
@@ -21283,6 +21464,7 @@ Steely Dan	Deacon Blues
 Steely Dan	Dirty Work
 Steely Dan	Do It Again
 Steely Dan	Doctor Wu
+Steely Dan	Don't Take Me Alive
 Steely Dan	Everyone's Gone To The Movies
 Steely Dan	Fez, The
 Steely Dan	FM (No Static At All)
@@ -21390,6 +21572,7 @@ Stevens, Cat	Two Fine People
 Stevens, Cat	Where Do The Children Play
 Stevens, Cat	Wild World
 Stevens, Cat	Wind, The
+Stevens, Dodie	Pink Shoelaces
 Stevens, Donnalou	Older Ladies	VR
 Stevens, Rachel	I Said Never Again
 Stevens, Rachel	Some Girls
@@ -21459,6 +21642,7 @@ Stewart, Rod	Downtown Train
 Stewart, Rod	Every Beat Of My Heart
 Stewart, Rod	Every Picture Tells A Story
 Stewart, Rod	First Cut Is The Deepest, The
+Stewart, Rod	Forever Young
 Stewart, Rod	Have I Told You Lately
 Stewart, Rod	Having A Party
 Stewart, Rod	Hot Legs
@@ -21533,6 +21717,7 @@ Sting	Soul Cages, The	M
 Sting	We'll Be Together
 Sting	You Still Touch Me
 Sting & Mary J. Blige	Whenever I Say Your Name
+Sting & Shaggy	Don't Make Me Wait
 Stir	Climbing The Walls
 Stir	New Beginning
 Stockton, Shane	Visions Of A Sunset
@@ -21558,6 +21743,7 @@ Stone Temple Pilots	Between The Lines
 Stone Temple Pilots	Big Bang Baby
 Stone Temple Pilots	Big Empty
 Stone Temple Pilots	Cracker Man
+Stone Temple Pilots	Creep
 Stone Temple Pilots	Interstate Love Song
 Stone Temple Pilots	Lady Picture Show
 Stone Temple Pilots	Piece Of Pie	M
@@ -21742,7 +21928,7 @@ Strokes, The	Hard to Explain
 Strokes, The	Heart In A Cage
 Strokes, The	Juicebox
 Strokes, The	Last Night
-Strokes, The	New York City Cops (No Lyrics)
+Strokes, The	New York City Cops	(No Lyrics)
 Strokes, The	Razorblade
 Strokes, The	Reptilia
 Strokes, The	Someday
@@ -21821,6 +22007,7 @@ Sublime	Badfish
 Sublime	Date Rape
 Sublime	Santeria
 Sublime	Waiting For My Ruca
+Suburban Lawns	Janitor
 Suede	Animal Nitrate
 Suede	Beautiful Ones
 Suede	Saturday Night
@@ -21857,6 +22044,7 @@ Sugar Ray	RPM
 Sugar Ray	Someday
 Sugar Ray	When It's Over
 Sugarcubes	Birthday
+Sugarcubes	Motorcrash
 Sugarhill Gang, The	Apache
 Sugarhill Gang, The	Rapper's Delight
 Sugarhill Gang, The	Rapper's Delight (Short Version)
@@ -21930,6 +22118,7 @@ Sunset Boulevard	With One Look
 Superchunk	Detroit Has a Skyline
 Superdrag	Sucked Out
 Supergrass	Alright
+Supergrass	Caught By The Fuzz
 Supergrass	Pumping On Your Stereo
 Supergrass	Richard III
 Supergrass	Seen The Light
@@ -22036,6 +22225,7 @@ Swift, Taylor	Our Song
 Swift, Taylor	Ours
 Swift, Taylor	Out of the Woods
 Swift, Taylor	Picture To Burn
+Swift, Taylor	Red
 Swift, Taylor	Shake It Off
 Swift, Taylor	Speak Now
 Swift, Taylor	Story Of Us, The
@@ -22103,6 +22293,7 @@ System Of A Down	Needles
 System Of A Down	Prison Song
 System Of A Down	Psycho
 System Of A Down	Question
+System Of A Down	Shimmy
 System Of A Down	Soil
 System Of A Down	Spiders
 System Of A Down	Sugar
@@ -22121,6 +22312,7 @@ T. Rex	Cosmic Dancer
 T. Rex	Get It On
 T. Rex	Hot Love
 T. Rex	I Love To Boogie
+T. Rex	Jeepster
 T. Rex	Mambo Sun
 T. Rex	Metal Guru
 T. Rex	Ride A White Swan
@@ -22281,6 +22473,7 @@ Tears For Fears	Goodnight Song
 Tears For Fears	Head Over Heels
 Tears for Fears	I Love You But I'm Lost
 Tears For Fears	Mad World
+Tears For Fears	Pale Shelter
 Tears For Fears	Shout
 Tears For Fears	Sowing The Seeds Of Love
 Technohead	I Wanna Be Hippy
@@ -22297,7 +22490,10 @@ Teenage Head	Let's Shake
 Teenage Mutant Ninja Turtles	T.U.R.T.L.E. Power
 Tegan & Sara	Closer
 Tegan & Sara	Everything Is Awesome
+Tegan & Sara	Walking With A Ghost
 Teletubbies	Teletubbies Say Eh-Oh
+Television	See No Evil
+Television	Venus
 Telo, Michael	Ai Se Eu Te Pego!
 Tempah, Tinie	Frisky
 Tempah, Tinie	Pass Out
@@ -22448,6 +22644,7 @@ Thomas, Carl	Make It Alright
 Thomas, Carl	Summer Rain
 Thomas, Carla	B-A-B-Y
 Thomas, Carla	Gee Whiz (Look At His Eyes)
+Thomas, Irma	Anyone Who Knows What Love Is (Will Understand)
 Thomas, Kenny	Thinking About Your Love
 Thomas, Mickey	Dream A Little Dream
 Thomas, Rob	Ever The Same
@@ -22692,9 +22889,9 @@ Tony Rich Project	Nobody Knows
 Tony! Toni! Tone!	Feels Good
 Tony! Toni! Tone!	If I Had No Loot
 Tony! Toni! Tone!	Thinking Of You
-Tool	46 & 2 (Acoustic Goth)
-Tool	46 & 2 (Forty Six And Two)
 Tool	Aenema
+Tool	Forty Six & 2
+Tool	Forty Six & 2 (Acoustic Goth)
 Tool	Lateralus
 Tool	Parabola
 Tool	Pot, The
@@ -22712,7 +22909,7 @@ Torme, Mel	Careless Hands	M
 Torme, Mel	Comin' Home, Baby!
 Torme, Mel	Sweet Georgia Brown
 Toronto	Your Daddy Don't Know
-Tosca	E Lucevan Le Stelle (No Lyrics)
+Tosca	E Lucevan Le Stelle	(No Lyrics)
 Tosh, Peter	Legalize It
 Tosh, Peter	Stepping Razor
 Tosh, Peter	(You Gotta Walk) Don't Look Back
@@ -22889,6 +23086,7 @@ Trevino, Rick	Looking For The Light
 Trevino, Rick	Save This One For Me
 Trevino, Rick	She Can't Say I Didn't Cry
 Trey Songz	Gotta Go
+Tribe Called Quest	Award Tour
 Tribe Called Quest, A	Bonita Applebum
 Tribe Called Quest, A	Can I Kick It
 Tribe Called Quest, A	I Left My Wallet In El Segundo
@@ -23147,7 +23345,7 @@ TV Theme	Sesame Street
 TV Theme	Sigmund And The Sea Monsters
 TV Theme	Silver Spoons
 TV Theme	Speed Racer
-TV Theme	Spiderman
+TV Theme	Spider-Man
 TV Theme	Superchicken
 TV Theme	Three's Company
 TV Theme	Underdog
@@ -23278,6 +23476,7 @@ U2	Electrical Storm
 U2	Elevation
 U2	Even Better Than The Real Thing
 U2	Get On Your Boots
+U2	Gloria
 U2	Ground Beneath Her Feet, The
 U2	Hands That Built America, The
 U2	Helter Skelter
@@ -23300,7 +23499,7 @@ U2	Running to Stand Still	M
 U2	So Cruel
 U2	Sometimes You Can't Make It On Your Own
 U2	Staring At The Sun
-U2	Stay (So Far Away)
+U2	Stay (Far Away, So Close)
 U2	Stuck In A Moment
 U2	Sunday Bloody Sunday
 U2	Sweetest Thing
@@ -23423,7 +23622,7 @@ Union J	Tonight (We Live Forever)
 Union Underground	Across The Nation
 Unit Four Plus Two	Concrete & Clay
 Unit Four Plus Two	You've Never Been In Love Like This Before
-UNKLE	Rabbit In Your Headlights (No Lyrics)
+UNKLE	Rabbit In Your Headlights	(No Lyrics)
 Unklejam	What Am I Fighting For
 Unwritten Law	Save Me
 Unwritten Law	Seein' Red
@@ -23525,6 +23724,7 @@ Valli, Frankie	My Eyes Adored You
 Valli, Frankie	Night, The
 Valli, Frankie	Swearin' To God
 Valli, Frankie	You're Ready Now
+Valli, Frankie & The Four Seasons	Night, The
 Valli, Frankie & The Four Seasons	Who Loves You
 Valli, June	I Understand
 Vampire Weekend	A-Punk
@@ -23680,16 +23880,19 @@ Velvet Revolver	Come On, Come In
 Velvet Revolver	Dirty Little Thing
 Velvet Revolver	Fall To Pieces
 Velvet Revolver	Slither
+Velvet Underground	After Hours
 Velvet Underground	Cool It Down
 Velvet Underground	I'm Sticking With You
 Velvet Underground	I'm Waiting For The Man
 Velvet Underground	Pale Blue Eyes
 Velvet Underground	Rock & Roll (Loaded Version)
+Velvet Underground	Sister Ray
 Velvet Underground	Sunday Morning
 Velvet Underground	Sweet Jane
 Velvet Underground	What Goes On
 Velvet Underground & Nico	All Tomorrow's Parties
 Velvet Underground & Nico	Femme Fatale
+Velvet Underground & Nico	I'll Be Your Mirror
 Velvet Underground & Nico	Venus In Furs
 Vendetta Red	Seconds Away
 Vendetta Red	Shatterday
@@ -23759,6 +23962,7 @@ Vinton, Bobby	My Melody Of Love
 Vinton, Bobby	Roses Are Red
 Vinton, Bobby	There I've Said It Again
 Violent Femmes, The	Add It Up
+Violent Femmes, The	American Music
 Violent Femmes, The	Blister In The Sun
 Violent Femmes, The	Country Death Song
 Violent Femmes, The	Crazy	VR
@@ -23830,6 +24034,7 @@ Waite, John	How Did I Get By Without You
 Waite, John	Missing You
 Waitresses, The	I Know What Boys Like
 Waits, Tom	16 Shells from a Thirty-Ought-Six
+Waits, Tom	Downtown Train
 Waits, Tom	Grapefruit Moon	VR
 Waits, Tom	I Hope That I Don't Fall In Love With You
 Waits, Tom	Jockey Full of Bourbon
@@ -23869,9 +24074,11 @@ Walker, Clay	Where Do I Fit In The Picture
 Walker, Clay	White Palace
 Walker, Clay	Who Needs You Baby
 Walker, Clay	You're Beginning To Get To Me
+Walker, Jerry Jeff	Up Against the Wall Redneck Mother
 Walker, Junior & The All Stars	Shotgun
 Walker, Junior & The All Stars	What Does it Take To Win Your Love
 Walker, Mike	Honey Do
+Walker, Scott	30 Century Man
 Walker, Scott	Joanna
 Walker, Scott	Lights of Cincinnati	VR
 Walker, Scott	Mathilde
@@ -23883,7 +24090,7 @@ Walker, T-Bone	Call It Stormy Monday
 Walker, Tamara	Didn't We Love
 Walker, Terri	Whoopsie Daisy
 Walker, Tom	Leave A Light On
-Walkmen, The	Rat, The (No Lyrics)
+Walkmen, The	Rat, The	(No Lyrics)
 Wall Of Voodoo	Mexican Radio
 Wall, Paul	Girl
 Wallace, Jerry	If You Leave Me Tonight I'll Cry
@@ -23902,7 +24109,9 @@ Walters, Jamie	Hold On
 Walters, Jamie	Why
 Wang Chung	Dance Hall Days
 Wang Chung	Everybody Have Fun Tonight
+Wang Chung	Let's Go!
 Wankelmut & Emma Louise	My Head Is A Jungle
+Wannadies, The	Cherry Man
 Wannadies, The	You & Me Song
 Wanted, The	All Time Low
 Wanted, The	Chasing The Sun
@@ -24042,6 +24251,7 @@ Weeknd, The & Kendrick Lamar	Pray For Me
 Ween	Bananas & Blow	VR
 Ween	Exactly Where I'm At
 Ween	Japanese Cowboy
+Ween	Mollusk, The
 Ween	Ocean Man
 Ween	Piss Up a Rope	VR
 Ween	Waving My Dick In The Wind
@@ -24062,6 +24272,7 @@ Weezer	Pork And Beans
 Weezer	Say It Ain't So
 Weezer	Slob
 Weezer	Susanne
+Weezer	Take On Me
 Weezer	This Is Such A Pity
 Weezer	Trippin' Down The Freeway
 Weezer	Undone (The Sweater Song)
@@ -24089,7 +24300,7 @@ Wells, Mary	My Guy
 Wells, Mary	One Who Really Loves You, The
 Wells, Mary	Two Lovers
 Wells, Mary	You Beat Me To The Punch
-Werther	Pourquoi Me Réveiller (No Lyrics)
+Werther	Pourquoi Me Réveiller	(No Lyrics)
 West End	Love I Lost, The
 West Side Story	Gee Officer Krupke
 West Side Story	I Feel Pretty
@@ -24122,6 +24333,7 @@ West, Kanye	Heard 'em Say
 West, Kanye	Heartless
 West, Kanye	Jesus Walks
 West, Kanye	Love Lockdown
+West, Kanye	Monster
 West, Kanye	Stronger
 West, Kanye	Touch The Sky
 West, Kanye & Chris Martin	Homecoming
@@ -24208,6 +24420,7 @@ White Stripes, The	I Just Don't Know What To Do With Myself
 White Stripes, The	Icky Thump
 White Stripes, The	My Doorbell
 White Stripes, The	Seven Nation Army
+White Stripes, The	We're Going to Be Friends
 White Stripes, The	You Don't Know What Love Is (You Just Do As You're Told)
 White Town	Your Woman
 White Zombie	Black Sunshine
@@ -24655,6 +24868,7 @@ Winnie The Pooh	Winnie The Pooh
 Winslet, Kate	What If
 Winter, Edgar	Keep Playing That Rock And Roll
 Winter, Johnny	Mojo Boogie
+Winters, Nick	Star Wars
 Winwood, Steve	Back In The High Life
 Winwood, Steve	Finer Things
 Winwood, Steve	Higher Love
@@ -24777,6 +24991,7 @@ Worley, Darryl	Second Wind
 Worley, Darryl	Sideways
 Wray, Nicole	If I Was Your Girlfriend
 Wreckers, The	My, Oh My
+Wreckless Eric	Whole Wide World
 Wreckx 'N Effect	Rump Shaker
 Wretch 32 & Ed Sheeran	Hush Little Baby
 Wretch 32 & Etta Bond	Forgiveness (Clean)
@@ -24802,6 +25017,7 @@ Wright, Michelle	One Good Man
 Wright, Michelle	Take It Like A Man
 Wright, Stevie	Evie
 WSTRN	In2
+Wu Tang Clan	Protect Ya Neck
 Wurst, Conchita	Rise Like A Phoenix
 Wurzels, The	Combine Harvester
 Wurzels, The	I Am A Cider Drinker
@@ -24845,6 +25061,7 @@ X-Factor Finalists	You Are Not Alone
 X-Factor Finalists 2011	Wishing On A Star
 X-Press 2 & David Byrne	Lazy
 X-Ray Spex	Germ Free Adolescent
+X-Ray Spex	Identity
 X-Ray Spex	Oh Bondage, Up Yours!
 Xscape	Arms Of The One Who Loves You
 XTC	Dear God
@@ -24967,6 +25184,7 @@ Yes	Machine Messiah	M
 Yes	Onward	M
 Yes	Owner Of A Lonely Heart
 Yes	Roundabout
+Yes	South Side Of The Sky
 Yes	Wonderous Stories
 Ying Yang Twins, The	Wait (The Whisper Song)
 Ying Yang Twins, The & Lil Jon & East Side Boyz	Salt Shaker
@@ -25049,6 +25267,7 @@ Young, Neil	Let's Roll
 Young, Neil	Like A Hurricane
 Young, Neil	Lookin For Love	M
 Young, Neil	My My Hey Hey (Acoustic)
+Young, Neil	My My Hey Hey (Out of the Blue)
 Young, Neil	Needle And The Damage Done, The
 Young, Neil	Ohio
 Young, Neil	Old Man
