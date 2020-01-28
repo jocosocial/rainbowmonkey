@@ -49,12 +49,15 @@ class SongSearchModel extends AssetSearchModel<Song> {
   bool _searchTitles = true;
   bool _searchArtists = true;
 
+  bool get _searchMetadata => _searchTitles && _searchArtists;
+
   @override
   bool matches(Song record, List<String> substrings) {
     return substrings.every(
       (String substring) {
         return (record.title.toLowerCase().contains(substring) && _searchTitles)
-            || (record.artist.toLowerCase().contains(substring) && _searchArtists);
+            || (record.artist.toLowerCase().contains(substring) && _searchArtists)
+            || (record.metadata.toLowerCase().contains(substring) && _searchMetadata);
       },
     );
   }
@@ -159,8 +162,18 @@ class Song extends Record {
           child: Text('REDUCED\nVOCALS', style: textStyle.caption, textAlign: TextAlign.right),
         );
         break;
-      // 'Bowieoke' seems to mean "David Bowie sang this",
-      // which is already reflected in the artist, so...
+      case 'Bowieoke':
+        trailing = Tooltip(
+          message: 'ALL BOWIE KARAOKE',
+          child: Text('BOWIEOKE', style: textStyle.caption, textAlign: TextAlign.right),
+        );
+        break;
+      case '(No Lyrics)':
+        trailing = Tooltip(
+          message: 'This track does not show any lyrics on the screen.',
+          child: Text('NO LYRICS', style: textStyle.caption, textAlign: TextAlign.right),
+        );
+        break;
     }
     return ListTile(
       title: Text(title),
