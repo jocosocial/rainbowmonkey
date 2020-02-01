@@ -37,7 +37,7 @@ void main() {
 
     expect(
       tester.getRect(find.text('Enjoy the cruise!')),
-      rectMoreOrLessEquals(const Rect.fromLTRB(281.0, 302.0, 519.0, 316.0)),
+      rectMoreOrLessEquals(const Rect.fromLTRB(281.0, 320.0, 519.0, 334.0)),
     );
 
     // To go another tab.

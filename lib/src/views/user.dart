@@ -301,6 +301,7 @@ class _UserViewState extends State<UserView> {
                   ),
                 ),
               ),
+              const SizedBox(height: 8.0),
               const Divider(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
@@ -319,8 +320,12 @@ class _UserViewState extends State<UserView> {
                   idleChild: const Text('Please enjoy the cruise!', textAlign: TextAlign.center),
                   builder: (BuildContext context, ServerStatus status) {
                     final List<Announcement> announcements = status.announcements;
-                    if (announcements.isEmpty)
-                      return const Text('Enjoy the cruise!', textAlign: TextAlign.center);
+                    if (announcements.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 10.0),
+                        child: Text('Enjoy the cruise!', textAlign: TextAlign.center),
+                      );
+                    }
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 0.0),
                       child: ListBody(
@@ -337,6 +342,7 @@ class _UserViewState extends State<UserView> {
                 ),
               ),
               const Divider(),
+              const SizedBox(height: 8.0),
               IntrinsicHeight(
                 child: Row(
                   key: ValueKey<bool>(loggedIn),
