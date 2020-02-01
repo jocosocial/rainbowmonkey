@@ -3,17 +3,13 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart' as painting show ImageCache;
-import 'package:flutter/painting.dart' hide ImageCache;
+import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 import 'src/graphics.dart';
-import 'src/image_cache.dart' as cruise_monkey;
 import 'src/logic/background_polling.dart';
 import 'src/logic/cruise.dart';
 import 'src/logic/disk_store.dart';
@@ -38,11 +34,6 @@ import 'src/views/settings.dart';
 import 'src/views/stream.dart';
 import 'src/views/user.dart';
 import 'src/widgets.dart';
-
-class CruiseMonkeyBinding extends BindingBase with GestureBinding, ServicesBinding, SchedulerBinding, PaintingBinding, SemanticsBinding, RendererBinding, WidgetsBinding {
-  @override
-  painting.ImageCache createImageCache() => cruise_monkey.ImageCache();
-}
 
 final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 CruiseModel model;
