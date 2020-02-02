@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../models/calendar.dart';
 import '../models/errors.dart';
+import '../models/isolate_message.dart';
 import '../models/user.dart';
 import '../network/rest.dart';
 import '../network/twitarr.dart';
@@ -77,7 +78,7 @@ Future<void> _periodicCallback() async {
           print('Sending message to main thread...');
           return true;
         }());
-        port.send(payload);
+        port.send(OpenSeamail(payload));
       }
       ..onEventTap = () {
         assert(() {
@@ -93,7 +94,7 @@ Future<void> _periodicCallback() async {
           print('Sending calendar message to main thread...');
           return true;
         }());
-        port.send(kCalendarPayload);
+        port.send(const OpenCalendar());
       };
     _initialized = true;
   }
@@ -167,6 +168,7 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
     });
     await store.saveSetting(Setting.lastNotificationsCheck, now.millisecondsSinceEpoch).asFuture();
     if (summary != null) {
+      bool didNotify = false;
       final List<Future<void>> futures = <Future<void>>[];
       final Notifications notifications = await Notifications.instance;
       for (SeamailThreadSummary thread in summary.threads) {
@@ -182,8 +184,11 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
             store,
           ));
           futures.add(store.addNotification(thread.id, message.id));
+          didNotify = true;
         }
       }
+      if (didNotify)
+        IsolateNameServer.lookupPortByName('main')?.send(const CheckMail());
       await Future.wait(futures);
     }
   } on UserFriendlyError catch (error) {
