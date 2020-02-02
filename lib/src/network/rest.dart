@@ -423,6 +423,32 @@ class RestTwitarr implements Twitarr {
   }
 
   @override
+  Progress<UpcomingCalendar> getUpcomingEvents({
+    @required Credentials credentials,
+    @required Duration window,
+  }) {
+    assert(credentials != null);
+    assert(window != null);
+    if (_enabled?.calendarEnabled == false)
+      return Progress<UpcomingCalendar>.completed(UpcomingCalendar(events: const <Event>[], serverTime: null));
+    final FormData body = FormData()
+      ..add('app', 'plain');
+    body.add('key', credentials.key);
+    return Progress<UpcomingCalendar>((ProgressController<UpcomingCalendar> completer) async {
+      return await compute<String, UpcomingCalendar>(
+        _parseUpcomingCalendar,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/event/mine_soon/${window.inMinutes}?${body.toUrlEncoded()}',
+            expectedStatusCodes: <int>[200],
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
   Progress<void> setEventFavorite({
     @required Credentials credentials,
     @required String eventId,
@@ -446,7 +472,18 @@ class RestTwitarr implements Twitarr {
   static Calendar _parseCalendar(String rawData) {
     final dynamic data = Json.parse(rawData);
     _checkStatusIsOk(data);
-    return Calendar(events: (data.events as Json).asIterable().map<Event>(_parseEvent).toList());
+    return Calendar(
+      events: (data.events as Json).asIterable().map<Event>(_parseEvent).toList(),
+    );
+  }
+
+  static UpcomingCalendar _parseUpcomingCalendar(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    _checkStatusIsOk(data);
+    return UpcomingCalendar(
+      serverTime: _parseDateTime(data.now as Json),
+      events: (data.events as Json).asIterable().map<Event>(_parseEvent).toList(),
+    );
   }
 
   static EventSummary _parseEvent(dynamic value) {

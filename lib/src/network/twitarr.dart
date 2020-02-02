@@ -94,6 +94,11 @@ abstract class Twitarr {
     Credentials credentials,
   });
 
+  Progress<UpcomingCalendar> getUpcomingEvents({
+    Credentials credentials,
+    Duration window,
+  });
+
   Progress<void> setEventFavorite({
     @required Credentials credentials,
     @required String eventId,
