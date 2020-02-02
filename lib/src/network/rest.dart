@@ -567,9 +567,10 @@ class RestTwitarr implements Twitarr {
     final DateTime serverTime = _parseDateTime(data.epoch as Json);
     final DateTime deviceTime = DateTime.now();
     return ServerTime(
-      now: serverTime,
-      skew: serverTime.difference(deviceTime),
-      serverTimeZoneOffset: (data.offset as Json).toInt(),
+      serverNow: serverTime,
+      clientNow: deviceTime,
+      serverTimeZoneOffset: Duration(seconds: (data.offset as Json).toInt()),
+      clientTimeZoneOffset: deviceTime.timeZoneOffset,
     );
   }
 
