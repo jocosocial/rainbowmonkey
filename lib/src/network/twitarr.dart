@@ -588,19 +588,37 @@ class EventSummary extends Event implements SearchResultSummary {
 
 class ServerTime {
   const ServerTime({
-    this.now,
-    this.skew,
-    this.serverTimeZoneOffset,
-  });
+    @required DateTime serverNow,
+    @required this.clientNow,
+    @required this.serverTimeZoneOffset,
+    @required this.clientTimeZoneOffset,
+  }) : now = serverNow;
 
   // The time on the server.
   final DateTime now;
+
+  // The time on the client at roughly the same instant as [now].
+  final DateTime clientNow;
 
   // The difference between the device time and the server time.
   //
   // Positive numbers mean that the server time is ahead of the device time.
   // Negative numbers mean that the server time is behind the device time.
-  final Duration skew;
+  Duration get skew => now.difference(clientNow);
 
-  final int serverTimeZoneOffset;
+  // Server time zone.
+  //
+  // Negative numbers are west of the meridian.
+  // Positive numbers are east of the meridian.
+  //
+  // For example, -480 is -8 hours which is PDT (California in winter).
+  final Duration serverTimeZoneOffset;
+
+  // Device time zone.
+  //
+  // Negative numbers are west of the meridian.
+  // Positive numbers are east of the meridian.
+  //
+  // For example, -480 is -8 hours which is PDT (California in winter).
+  final Duration clientTimeZoneOffset;
 }
