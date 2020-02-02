@@ -47,7 +47,7 @@ class FieldErrors implements Exception {
   final Map<String, List<String>> fields;
 
   @override
-  String toString() => 'Account creation failed:\n$fields';
+  String toString() => 'Account creation failed:\n${fields.values.expand((List<String> messages) => messages).join('\n')}';
 }
 
 class HttpServerError implements Exception, UserFriendlyError {
