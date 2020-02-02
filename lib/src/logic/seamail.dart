@@ -50,8 +50,6 @@ class Seamail extends ChangeNotifier with IterableMixin<SeamailThread>, BusyMixi
   /// mark everything as read.
   final ThreadReadCallback onThreadRead;
 
-  static String kSeamailLoop = 'seamail-loop';
-
   @override
   Iterator<SeamailThread> get iterator => _threads.values.iterator;
 
