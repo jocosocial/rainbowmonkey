@@ -62,6 +62,7 @@ class _LoginDialogState extends State<LoginDialog> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> children = <Widget>[
+      const SizedBox(height: 12.0),
       SizedBox(
         height: 96.0,
         child: Align(
@@ -171,35 +172,59 @@ class _LoginDialogState extends State<LoginDialog> {
             ),
           ),
         ),
+        const SizedBox(height: 12.0),
+        const Text('If you no longer have your registration desk, ask the JoCo info desk in the Atrium on Deck 1. If you remembered your password, you can log in with that instead.'),
+        FlatButton(
+          onPressed: () {
+            setState(() {
+              _forgot = false;
+            });
+            FocusScope.of(context).requestFocus(_usernameFocus);
+          },
+          child: const Text('USE PASSWORD'),
+        ),
       ]);
     } else {
-      children.add(SizedBox(
-        height: 96.0,
-        child: Align(
-          alignment: AlignmentDirectional.topStart,
-          child: TextFormField(
-            controller: _password,
-            focusNode: _passwordFocus,
-            onFieldSubmitted: (String value) {
-              if (_valid)
-                _submit();
-            },
-            textInputAction: TextInputAction.done,
-            obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Password',
-              errorMaxLines: null,
+      children.addAll(<Widget>[
+        SizedBox(
+          height: 96.0,
+          child: Align(
+            alignment: AlignmentDirectional.topStart,
+            child: TextFormField(
+              controller: _password,
+              focusNode: _passwordFocus,
+              onFieldSubmitted: (String value) {
+                if (_valid)
+                  _submit();
+              },
+              textInputAction: TextInputAction.done,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                errorMaxLines: null,
+              ),
+              validator: (String password) {
+                if (password.isNotEmpty) {
+                  if (!AuthenticatedUser.isValidPassword(password))
+                    return 'Passwords must be at least six characters long.';
+                }
+                return null;
+              },
             ),
-            validator: (String password) {
-              if (password.isNotEmpty) {
-                if (!AuthenticatedUser.isValidPassword(password))
-                  return 'Passwords must be at least six characters long.';
-              }
-              return null;
-            },
           ),
         ),
-      ));
+        const SizedBox(height: 12.0),
+        const Text('If you forgot your password, you can log in again using your registration code instead. If you no longer have that, ask the JoCo info desk in the Atrium on Deck 1.'),
+        FlatButton(
+          onPressed: () {
+            setState(() {
+              _forgot = true;
+            });
+            FocusScope.of(context).requestFocus(_usernameFocus);
+          },
+          child: const Text('FORGOT PASSWORD'),
+        ),
+      ]);
     }
     return AlertDialog(
       title: const Text('Login'),
@@ -228,15 +253,6 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
       ),
       actions: <Widget>[
-        FlatButton(
-          onPressed: () {
-            setState(() {
-              _forgot = !_forgot;
-            });
-            FocusScope.of(context).requestFocus(_usernameFocus);
-          },
-          child: _forgot ? const Text('USE PASSWORD INSTEAD') : const Text('USE REGISTRATION CODE INSTEAD'),
-        ),
         FlatButton(
           onPressed: _valid ? _submit : null,
           child: const Text('LOGIN'),
