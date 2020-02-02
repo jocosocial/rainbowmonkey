@@ -550,6 +550,7 @@ class ChatLine extends StatefulWidget {
     this.onLike,
     this.onUnlike,
     this.getLikesCallback,
+    this.currentUser,
     this.readUsers,
     this.allUsers,
   }) : assert(user != null),
@@ -559,6 +560,8 @@ class ChatLine extends StatefulWidget {
        assert(likes != null),
        assert(likes >= 0),
        assert(photos == null || id != null),
+       assert((readUsers == null) == (allUsers == null)),
+       assert(currentUser == null || readUsers != null),
        super(key: key);
 
   final User user;
@@ -578,6 +581,7 @@ class ChatLine extends StatefulWidget {
   final VoidCallback onUnlock;
   final VoidCallback onReply;
   final ProgressCallback<Set<User>> getLikesCallback;
+  final AuthenticatedUser currentUser;
   final Set<String> readUsers;
   final Map<String, User> allUsers;
 
@@ -769,9 +773,12 @@ class _ChatLineState extends State<ChatLine> {
     if (widget.isReply)
       metadata.add('threaded reply');
     if (widget.allUsers != null && widget.readUsers != null) {
-      if (widget.allUsers.length > widget.readUsers.length) {
-        metadata.add('read by ${widget.readUsers.length} of ${widget.allUsers.length}');
-      }
+      final bool unread = widget.currentUser != null && !widget.readUsers.contains(widget.currentUser.username);
+      final int readCount = widget.readUsers.length + (unread ? 1 : 0);
+      if (widget.allUsers.length > readCount)
+        metadata.add('read by $readCount of ${widget.allUsers.length}');
+      if (unread)
+        metadata.add('new');
     }
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
