@@ -502,6 +502,8 @@ class ChatLine extends StatefulWidget {
     this.onLike,
     this.onUnlike,
     this.getLikesCallback,
+    this.readUsers,
+    this.allUsers,
   }) : assert(user != null),
        assert(isCurrentUser != null),
        assert(messages != null),
@@ -528,6 +530,8 @@ class ChatLine extends StatefulWidget {
   final VoidCallback onUnlock;
   final VoidCallback onReply;
   final ProgressCallback<Set<User>> getLikesCallback;
+  final Set<String> readUsers;
+  final Map<String, User> allUsers;
 
   @override
   State<ChatLine> createState() => _ChatLineState();
@@ -623,6 +627,29 @@ class _ChatLineState extends State<ChatLine> {
       Text('Posted by: ${widget.user}'),
       Text('Timestamp: ${widget.timestamp}'),
     ];
+    if (widget.allUsers != null && widget.readUsers != null) {
+      final List<User> users = widget.allUsers.values.toList();
+      final CruiseModel cruise = Cruise.of(context);
+      children.addAll(<Widget>[
+        const Divider(),
+        Wrap(
+          alignment: WrapAlignment.start,
+          spacing: 8.0,
+          crossAxisAlignment: WrapCrossAlignment.start,
+          runSpacing: 8.0,
+          children: <Widget>[
+            const Text('Read by:'),
+            ...users.map((User user) {
+              final bool read = widget.readUsers.contains(user.username);
+              return Opacity(
+                opacity: read ? 1.0 : 0.1,
+                child: cruise.avatarFor(<User>[user]),
+              );
+            }),
+          ],
+        ),
+      ]);
+    }
     if (actions.isNotEmpty) {
       children.addAll(<Widget>[
         const Divider(),
@@ -693,6 +720,11 @@ class _ChatLineState extends State<ChatLine> {
     }
     if (widget.isReply)
       metadata.add('threaded reply');
+    if (widget.allUsers != null && widget.readUsers != null) {
+      if (widget.allUsers.length > widget.readUsers.length) {
+        metadata.add('read by ${widget.readUsers.length} of ${widget.allUsers.length}');
+      }
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
       child: Directionality(
