@@ -218,12 +218,10 @@ Future<void> checkForCalendar(Credentials credentials, Twitarr twitarr, DataStor
     }
     final List<Future<void>> futures = <Future<void>>[];
     final Notifications notifications = await Notifications.instance;
-    final ServerTime serverTime = await twitarr.getServerTime().asFuture();
-    final List<Event> events = (await twitarr.getCalendar(credentials: credentials).asFuture())
-      .upcoming(serverTime.now, const Duration(minutes: 20)).toList();
+    final UpcomingCalendar calendar = await twitarr.getUpcomingEvents(credentials: credentials, window: const Duration(minutes: 20)).asFuture();
     final bool use24Hour = window.alwaysUse24HourFormat;
-    for (Event event in events) {
-      final Duration duration = event.startTime.difference(serverTime.now) + const Duration(minutes: 5);
+    for (Event event in calendar.events) {
+      final Duration duration = event.startTime.difference(calendar.serverTime) + const Duration(minutes: 5);
       futures.add(notifications.event(
         eventId: event.id,
         duration: duration, // how long to leave the notification up

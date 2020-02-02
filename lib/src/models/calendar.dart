@@ -96,3 +96,20 @@ class Calendar {
   @override
   String toString() => 'Calendar($events)';
 }
+
+class UpcomingCalendar extends Calendar {
+  factory UpcomingCalendar({
+    @required List<Event> events,
+    @required DateTime serverTime,
+  }) {
+    assert(events != null);
+    return UpcomingCalendar._(events.toList()..sort(), serverTime);
+  }
+
+  const UpcomingCalendar._(List<Event> events, this.serverTime) : super._(events);
+
+  final DateTime serverTime;
+
+  @override
+  String toString() => 'UpcomingCalendar($serverTime; $events)';
+}
