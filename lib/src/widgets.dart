@@ -7,8 +7,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:vector_math/vector_math_64.dart' show Matrix4;
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 import 'logic/cruise.dart';
 import 'logic/photo_manager.dart';
@@ -354,6 +356,52 @@ class _ProgressDialogState<T> extends State<ProgressDialog<T>> with SingleTicker
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class FutureDialog<T> extends StatefulWidget {
+  const FutureDialog({
+    Key key,
+    this.future,
+    this.message,
+  }) : super(key: key);
+
+  final Future<T> future;
+
+  final String message;
+
+  static Future<T> show<T>(BuildContext context, Future<T> future, { String message }) {
+    return showDialog<T>(
+      context: context,
+      builder: (BuildContext context) => FutureDialog<T>(
+        future: future,
+        message: message,
+      ),
+    );
+  }
+
+  @override
+  _FutureDialogState<T> createState() => _FutureDialogState<T>();
+}
+
+class _FutureDialogState<T> extends State<FutureDialog<T>> with SingleTickerProviderStateMixin {
+  @override
+  void initState() {
+    super.initState();
+    widget.future.whenComplete(() {
+      if (mounted)
+        Navigator.pop<T>(context);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text(widget.message),
       ),
     );
   }
@@ -1629,8 +1677,6 @@ class PhotoImage extends StatelessWidget {
               bool appBarVisible = false;
               Navigator.push<void>(context, MaterialPageRoute<void>(
                 builder: (BuildContext context) {
-                  // TODO(ianh): download button in app bar
-                  // TODO(ianh): pinch zoom
                   return StatefulBuilder(
                     builder: (BuildContext context, StateSetter setState) {
                       return Container(
@@ -1680,6 +1726,51 @@ class PhotoImage extends StatelessWidget {
                                   backgroundColor: Colors.transparent,
                                   brightness: Brightness.dark,
                                   iconTheme: const IconThemeData(color: Colors.white),
+                                  actions: <Widget>[
+                                    IconButton(
+                                      icon: Icon(Icons.cloud_download),
+                                      tooltip: 'Download image to device',
+                                      onPressed: () async {
+                                        final Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler()
+                                          .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
+                                        if (permissions[PermissionGroup.storage] == PermissionStatus.granted) {
+                                          final Uint8List data = await ProgressDialog.show<Uint8List>(
+                                            context,
+                                            cruise.imageBytesFor(photo),
+                                          );
+                                          if (data != null) {
+                                            // For some reason ImageGallerySaver.saveImage hangs the UI thread,
+                                            // so we add a 1 second delay to get the UI into a good position before
+                                            // we call it, and we don't try to use a progress indicator here.
+                                            await FutureDialog.show<dynamic>(
+                                              context,
+                                              Future<dynamic>.delayed(const Duration(seconds: 1)).whenComplete(() => ImageGallerySaver.saveImage(data)),
+                                              message: 'Saving image...',
+                                            );
+                                          }
+                                        } else {
+                                          String message;
+                                          switch (permissions[PermissionGroup.storage]) {
+                                            case PermissionStatus.denied:
+                                              message = 'To download images, you must grant Rainbow Monkey access to your storage.';
+                                              break;
+                                            case PermissionStatus.disabled:
+                                              message = 'Your device does not appear to support downloading images.';
+                                              break;
+                                            case PermissionStatus.neverAskAgain:
+                                              message = 'To download images, you must grant Rainbow Monkey access to your storage. You have told your device never to allow Rainbow Monkey to ask for this permission. You can change this from the system settings application.';
+                                              break;
+                                            case PermissionStatus.restricted:
+                                              message = 'Your device has been configured to disallow downloading images (for example via parental controls).';
+                                              break;
+                                            default:
+                                              message = 'An unknown error occurred. Sorry.';
+                                          }
+                                          await showMessageDialog(context, message);
+                                        }
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -1810,6 +1901,21 @@ Future<bool> confirmDialog(BuildContext context, String message, { String yes = 
       ],
     ),
   ) == true;
+}
+
+Future<void> showMessageDialog(BuildContext context, String message, { String ok = 'OK' }) async {
+  return await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) => AlertDialog(
+      title: Text(message),
+      actions: <Widget>[
+        FlatButton(
+          onPressed: () { Navigator.of(context).pop(); },
+          child: Text(ok),
+        ),
+      ],
+    ),
+  );
 }
 
 typedef ServerStatusBuilderCallback = Widget Function(BuildContext context, ServerStatus status, Widget child);

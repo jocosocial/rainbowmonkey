@@ -7,9 +7,11 @@ dependencies:
   android_alarm_manager: any
   battery_optimization: any
   flutter_local_notifications: any
+  image_gallery_saver: any
   image_picker: any
   path_provider: any
   pedantic: any
+  permission_handler: any
   photo_view: any
   platform: any
   sqflite: any

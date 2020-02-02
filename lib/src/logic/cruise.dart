@@ -586,6 +586,8 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     return TwitarrImage(photo, this, _twitarr, onError: _handleError, thumbnail: thumbnail);
   }
 
+  Progress<Uint8List> imageBytesFor(Photo photo) => _twitarr.fetchImage(photo.id);
+
   Progress<void> updateProfile({
     String displayName,
     String realName,
