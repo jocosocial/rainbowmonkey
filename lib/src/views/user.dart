@@ -10,6 +10,7 @@ import '../models/string.dart';
 import '../models/user.dart';
 import '../progress.dart';
 import '../widgets.dart';
+import 'clock.dart';
 import 'login.dart';
 
 class UserView extends StatefulWidget implements View {
@@ -350,7 +351,7 @@ class _UserViewState extends State<UserView> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: <Widget>[
                     Expanded(
-                      child:    ValueListenableBuilder<bool>(
+                      child: ValueListenableBuilder<bool>(
                         valueListenable: Cruise.of(context).restoringSettings,
                         builder: (BuildContext context, bool busy, Widget child) {
                           return LabeledIconButton(
@@ -376,32 +377,54 @@ class _UserViewState extends State<UserView> {
                 ),
               ),
               const SizedBox(height: 48.0),
-              LabeledIconButton(
-                icon: const Icon(Icons.help_outline),
-                label: const Text('ABOUT RAINBOW MONKEY'),
-                onPressed: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: 'Rainbow Monkey',
-                    applicationVersion: 'v2.0 (JoCo 2020)',
-                    applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
-                    children: <Widget>[
-                    const Text('A project of the Seamonkey Social group.'),
-                      GestureDetector(
-                        onTap: () {
-                          launch('http://seamonkeysocial.cruises/');
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    Expanded(
+                      child: LabeledIconButton(
+                        icon: const Icon(Icons.schedule),
+                        label: const Text('CHECK TIME ZONE AND CLOCK'),
+                        onPressed: () {
+                          showDialog<void>(
+                            context: context,
+                            builder: (BuildContext context) => const CheckClockDialog(),
+                          );
                         },
-                        child: Text(
-                          'http://seamonkeysocial.cruises/',
-                          style: Theme.of(context).textTheme.bodyText2.copyWith(
-                            decoration: TextDecoration.underline,
-                            color: Colors.blue,
-                          ),
-                        ),
                       ),
-                    ],
-                  );
-                },
+                    ),
+                    Expanded(
+                      child: LabeledIconButton(
+                        icon: const Icon(Icons.help_outline),
+                        label: const Text('ABOUT RAINBOW MONKEY'),
+                        onPressed: () {
+                          showAboutDialog(
+                            context: context,
+                            applicationName: 'Rainbow Monkey',
+                            applicationVersion: 'v2.0 (JoCo 2020)',
+                            applicationIcon: Image.asset('images/cruise_monkey.png', width: 96.0),
+                            children: <Widget>[
+                            const Text('A project of the Seamonkey Social group.'),
+                              GestureDetector(
+                                onTap: () {
+                                  launch('http://seamonkeysocial.cruises/');
+                                },
+                                child: Text(
+                                  'http://seamonkeysocial.cruises/',
+                                  style: Theme.of(context).textTheme.bodyText2.copyWith(
+                                    decoration: TextDecoration.underline,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ];
 

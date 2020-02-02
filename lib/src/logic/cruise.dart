@@ -450,6 +450,10 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     return result;
   }
 
+  Progress<ServerTime> getServerTime() {
+    return _twitarr.getServerTime();
+  }
+
   Progress<ServerText> fetchServerText(String filename) {
     return _twitarr.fetchServerText(filename);
   }
