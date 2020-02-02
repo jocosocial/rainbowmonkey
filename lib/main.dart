@@ -86,7 +86,7 @@ void main() {
       } else if (event is OpenSeamail) {
         showThread(event.id);
       } else if (event is CheckMail) {
-        model.seamail.reload();
+        model.seamail?.reload();
       }
     });
   IsolateNameServer.registerPortWithName(port.sendPort, 'main');

@@ -235,6 +235,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                         messages: bubble.messages.map<TwitarrString>((SeamailMessage message) => message.text).toList(),
                         photos: null,
                         timestamp: bubble.messages.first.timestamp,
+                        currentUser: currentUser,
                         readUsers: bubble.messages.last.readReceipts.keys.toSet(),
                         allUsers: Map<String, User>.fromIterable(users, key: (dynamic user) => (user as User).username),
                       );
