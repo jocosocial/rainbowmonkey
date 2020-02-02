@@ -16,6 +16,7 @@ import 'src/logic/disk_store.dart';
 import 'src/logic/notifications.dart';
 import 'src/logic/store.dart';
 import 'src/models/errors.dart';
+import 'src/models/isolate_message.dart';
 import 'src/models/server_status.dart';
 import 'src/models/user.dart';
 import 'src/network/rest.dart';
@@ -80,12 +81,12 @@ void main() {
   });
   final ReceivePort port = ReceivePort()
     ..forEach((dynamic event) {
-      if (event is String) {
-        if (event == kCalendarPayload) {
-          showCalendar();
-        } else {
-          showThread(event);
-        }
+      if (event is OpenCalendar) {
+        showCalendar();
+      } else if (event is OpenSeamail) {
+        showThread(event.id);
+      } else if (event is CheckMail) {
+        model.seamail.reload();
       }
     });
   IsolateNameServer.registerPortWithName(port.sendPort, 'main');
