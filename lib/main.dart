@@ -242,7 +242,7 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   @protected
   ThemeData makeTheme(Brightness brightness, Color accent) {
-    return ThemeData(
+    ThemeData result = ThemeData(
       brightness: brightness,
       primarySwatch: Colors.blue,
       primaryColor: Colors.blue[900],
@@ -257,6 +257,16 @@ class CruiseMonkeyHome extends StatelessWidget {
         },
       ),
     );
+    if (brightness == Brightness.dark) {
+      // workaround for https://github.com/flutter/flutter/issues/49984
+      result = result.copyWith(
+        chipTheme: result.chipTheme.copyWith(
+          secondarySelectedColor: result.primaryColor,
+          secondaryLabelStyle: result.chipTheme.secondaryLabelStyle.copyWith(color: Colors.white),
+        ),
+      );
+    }
+    return result;
   }
 
   @override
@@ -287,8 +297,7 @@ class CruiseMonkeyHome extends StatelessWidget {
                       ),
                       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
                       resizeToAvoidBottomInset: false,
-                      body: AnnotatedRegion<SystemUiOverlayStyle>(
-                        value: SystemUiOverlayStyle.dark,
+                      body: StatusBarBackground(
                         child: LayoutBuilder(
                           builder: (BuildContext context, BoxConstraints constraints) {
                             const double bottomPadding = 50.0;

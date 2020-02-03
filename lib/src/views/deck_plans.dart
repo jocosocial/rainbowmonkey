@@ -99,23 +99,26 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
       children: <Widget>[
         Expanded(
           child: ClipRect(
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                final EdgeInsets padding = MediaQuery.of(context).padding;
-                return PhotoView.customChild(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: _decks,
-                  ),
-                  backgroundDecoration: const BoxDecoration(
-                    color: Colors.white,
-                  ),
-                  childSize: padding.deflateSize(constraints.biggest),
-                  customSize: padding.deflateSize(constraints.biggest),
-                  initialScale: PhotoViewComputedScale.contained,
-                  minScale: PhotoViewComputedScale.contained,
-                );
-              },
+            child: StatusBarBackground(
+              brightness: Brightness.light,
+              child: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final EdgeInsets padding = MediaQuery.of(context).padding;
+                  return PhotoView.customChild(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: _decks,
+                    ),
+                    backgroundDecoration: const BoxDecoration(
+                      color: Colors.white,
+                    ),
+                    childSize: padding.deflateSize(constraints.biggest),
+                    customSize: padding.deflateSize(constraints.biggest),
+                    initialScale: PhotoViewComputedScale.contained,
+                    minScale: PhotoViewComputedScale.contained,
+                  );
+                },
+              ),
             ),
           ),
         ),
