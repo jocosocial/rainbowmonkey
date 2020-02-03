@@ -189,41 +189,43 @@ class _ProfileEditorState extends State<ProfileEditor> {
           ];
           final FocusScopeNode focus = FocusScope.of(context);
           final bool noFieldHasFocus = focus.focusedChild == null || !focus.focusedChild.hasPrimaryFocus;
-          return CustomScrollView(
-            slivers: <Widget>[
-              SliverAppBar(
-                floating: true,
-                title: Text('Edit Profile (@${user.username})'),
-                leading: IconButton(
-                  icon: noFieldHasFocus ? const BackButtonIcon() : const Icon(Icons.done),
-                  tooltip: noFieldHasFocus ? 'Back' : 'Save changes',
-                  onPressed: noFieldHasFocus ? _pending.isNotEmpty ? null : () {
-                    Navigator.maybePop(context);
-                  } : () {
-                    // TODO(ianh): remove setState once https://github.com/flutter/flutter/issues/43497 is fixed
-                    setState(() { focus.focusedChild.unfocus(); });
-                  }
+          return StatusBarBackground(
+            child: CustomScrollView(
+              slivers: <Widget>[
+                SliverAppBar(
+                  floating: true,
+                  title: Text('Edit Profile (@${user.username})'),
+                  leading: IconButton(
+                    icon: noFieldHasFocus ? const BackButtonIcon() : const Icon(Icons.done),
+                    tooltip: noFieldHasFocus ? 'Back' : 'Save changes',
+                    onPressed: noFieldHasFocus ? _pending.isNotEmpty ? null : () {
+                      Navigator.maybePop(context);
+                    } : () {
+                      // TODO(ianh): remove setState once https://github.com/flutter/flutter/issues/43497 is fixed
+                      setState(() { focus.focusedChild.unfocus(); });
+                    }
+                  ),
+                  actions: <Widget>[
+                    if (_pending.isNotEmpty)
+                      IconButton(
+                        icon: Icon(Icons.cancel),
+                        tooltip: 'Cancel current edit',
+                        onPressed: () {
+                          _pending.cancelAll();
+                        },
+                      ),
+                  ],
                 ),
-                actions: <Widget>[
-                  if (_pending.isNotEmpty)
-                    IconButton(
-                      icon: Icon(Icons.cancel),
-                      tooltip: 'Cancel current edit',
-                      onPressed: () {
-                        _pending.cancelAll();
-                      },
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 26.0),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate(
+                      children,
                     ),
-                ],
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 26.0),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate(
-                    children,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

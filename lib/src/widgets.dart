@@ -2009,3 +2009,28 @@ class _JumpToTopState extends State<JumpToTop> {
     );
   }
 }
+
+class StatusBarBackground extends StatelessWidget {
+  const StatusBarBackground({
+    Key key,
+    this.brightness,
+    this.child,
+  }) : super(key: key);
+
+  final Brightness brightness;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final Brightness effectiveBrightness = brightness ?? MediaQuery.of(context).platformBrightness;
+    SystemUiOverlayStyle overlayStyle;
+    switch (effectiveBrightness) {
+      case Brightness.dark: overlayStyle = SystemUiOverlayStyle.light; break;
+      case Brightness.light: overlayStyle = SystemUiOverlayStyle.dark; break;
+    }
+    if (effectiveBrightness != null)
+      return AnnotatedRegion<SystemUiOverlayStyle>(value: overlayStyle, child: child);
+    return child;
+  }
+}

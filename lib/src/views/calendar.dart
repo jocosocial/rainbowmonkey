@@ -480,12 +480,16 @@ class DayHeaderRow extends StatelessWidget {
       case 12: monthName = 'December'; break;
     }
     final int dayNumber = headerDay.day;
-    return Material(
-      color: Theme.of(context).accentColor,
-      textStyle: Theme.of(context).accentTextTheme.subtitle1,
-      child: Container(
-        padding: const EdgeInsets.all(12.0),
-        child: Text('$dayOfWeek $monthName $dayNumber'),
+    final ThemeData theme = Theme.of(context);
+    return StatusBarBackground(
+      brightness: theme.accentColorBrightness,
+      child: Material(
+        color: theme.accentColor,
+        textStyle: theme.accentTextTheme.subtitle1,
+        child: Container(
+          padding: const EdgeInsets.all(12.0),
+          child: Text('$dayOfWeek $monthName $dayNumber'),
+        ),
       ),
     );
   }
