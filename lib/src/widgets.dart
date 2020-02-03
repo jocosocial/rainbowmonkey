@@ -773,7 +773,7 @@ class _ChatLineState extends State<ChatLine> {
     if (widget.isReply)
       metadata.add('threaded reply');
     if (widget.allUsers != null && widget.readUsers != null) {
-      final bool unread = widget.currentUser != null && !widget.readUsers.contains(widget.currentUser.username);
+      final bool unread = widget.currentUser != null && !widget.readUsers.contains(widget.currentUser.effectiveUser.username);
       final int readCount = widget.readUsers.length + (unread ? 1 : 0);
       if (widget.allUsers.length > readCount)
         metadata.add('read by $readCount of ${widget.allUsers.length}');
