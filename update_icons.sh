@@ -5,6 +5,7 @@ convert icons/badge.png \( -clone 0 -background black -shadow 50x15+25+25 \) \( 
 flutter packages pub run flutter_launcher_icons:main
 convert icons/foreground.png -trim +repage -transparent white android/app/src/main/res/drawable/notifications.png
 convert icons/cruise_monkey.png -resize 128x128 images/cruise_monkey.png
+convert icons/cruise_monkey.png -resize 512x512 images/android_store_icon.png
 convert icons/foreground.png -trim -resize 80x80 images/emoji/monkey.png
 convert icons/badge.png -trim -resize 80x80 images/emoji/rainbow-monkey.png
 convert icons/splash.png -trim -resize 500x500 android/app/src/main/res/drawable/splash.png
