@@ -18,3 +18,14 @@ uconv --from-code mac --to-code utf8 --output converted.txt JoCoKaraokeSongCatal
 ```
 
 You may also need to replace U+000D characters with U+000A characters.
+
+
+## Deployment
+
+Update the version in `pubspec.yaml`.
+
+Run `flutter build appbundle --build-number X` (set X to a number higher than ever before).
+
+That creates `build/app/outputs/bundle/release/app.aab`, which you upload at: https://play.google.com/apps/publish
+
+You can figure out what the build number should be by looking at the Play console, you want "Version code + 1".
