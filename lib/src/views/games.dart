@@ -17,8 +17,11 @@ class GameSearchModel extends AssetSearchModel<Game> {
     final List<String> lines = data.split('\n');
     final List<Game> games = <Game>[];
     for (String line in lines) {
-      if (line.isNotEmpty)
-        games.add(Game(line));
+      if (line.isNotEmpty) {
+        final List<String> cells = line.split('\t');
+        assert(cells.length == 2);
+        games.add(Game(cells.first, int.parse(cells.last)));
+      }
     }
     games.sort();
     return games;
@@ -35,9 +38,11 @@ class GameSearchModel extends AssetSearchModel<Game> {
 }
 
 class Game extends Record implements Comparable<Game> {
-  const Game(this.name);
+  const Game(this.name, this.count);
 
   final String name;
+
+  final int count;
 
   @override
   int compareTo(Game other) {
@@ -48,6 +53,10 @@ class Game extends Record implements Comparable<Game> {
   Widget buildSearchResult(BuildContext context) {
     return ListTile(
       title: Text(name),
+      trailing: Tooltip(
+        message: 'Number of copies',
+        child: Text('$count'),
+      ),
     );
   }
 }
