@@ -1703,7 +1703,7 @@ class PhotoImage extends StatelessWidget {
                                   initialScale: PhotoViewComputedScale.contained,
                                   minScale: PhotoViewComputedScale.contained,
                                   heroAttributes: PhotoViewHeroAttributes(tag: tag),
-                                  loadingChild: Stack(
+                                  loadingBuilder: (BuildContext context, ImageChunkEvent event) => Stack(
                                     children: <Widget>[
                                       Center(
                                         child: Hero(
