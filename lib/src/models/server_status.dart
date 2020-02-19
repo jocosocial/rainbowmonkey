@@ -43,6 +43,7 @@ class ServerStatus {
     bool deckPlansEnabled = true,
     bool gamesEnabled = true,
     bool karaokeEnabled = true,
+    bool searchEnabled = true,
     bool registrationEnabled = true,
     bool userProfileEnabled = true,
   }) : assert(userRole != null),
@@ -53,6 +54,7 @@ class ServerStatus {
        _deckPlansEnabled = deckPlansEnabled,
        _gamesEnabled = gamesEnabled,
        _karaokeEnabled = karaokeEnabled,
+       _searchEnabled = searchEnabled,
        _registrationEnabled = registrationEnabled,
        _userProfileEnabled = userProfileEnabled;
 
@@ -66,6 +68,7 @@ class ServerStatus {
     bool deckPlansEnabled,
     bool gamesEnabled,
     bool karaokeEnabled,
+    bool searchEnabled,
     bool registrationEnabled,
     bool userProfileEnabled,
   }) {
@@ -79,6 +82,7 @@ class ServerStatus {
       deckPlansEnabled: deckPlansEnabled ?? _deckPlansEnabled,
       gamesEnabled: gamesEnabled ?? _gamesEnabled,
       karaokeEnabled: karaokeEnabled ?? _karaokeEnabled,
+      searchEnabled: searchEnabled ?? _searchEnabled,
       registrationEnabled: registrationEnabled ?? _registrationEnabled,
       userProfileEnabled: userProfileEnabled ?? _userProfileEnabled,
     );
@@ -125,6 +129,9 @@ class ServerStatus {
 
   bool get karaokeEnabled => _karaokeEnabled || _override;
   final bool _karaokeEnabled;
+
+  bool get searchEnabled => _searchEnabled || _override;
+  final bool _searchEnabled;
 
   bool get registrationEnabled => _registrationEnabled || _override;
   final bool _registrationEnabled;
