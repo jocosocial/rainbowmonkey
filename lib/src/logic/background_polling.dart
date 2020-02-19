@@ -10,6 +10,7 @@ import '../models/errors.dart';
 import '../models/isolate_message.dart';
 import '../models/user.dart';
 import '../network/rest.dart';
+import '../network/settings.dart';
 import '../network/twitarr.dart';
 import 'disk_store.dart';
 import 'notifications.dart';
@@ -61,7 +62,6 @@ Future<void> _periodicCallback() async {
     return;
   }
   if (!_initialized) {
-    AutoTwitarrConfiguration.register();
     RestTwitarrConfiguration.register();
     (await Notifications.instance)
       ..onMessageTap = (String payload) {
@@ -103,7 +103,7 @@ Future<void> _periodicCallback() async {
       final DataStore store = DiskDataStore();
       final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
       final String server = settings[Setting.server] as String;
-      final Twitarr twitarr = TwitarrConfiguration.from(server, const AutoTwitarrConfiguration()).createTwitarr();
+      final Twitarr twitarr = TwitarrConfiguration.from(server, kShipTwitarr).createTwitarr();
       assert(() {
         if (settings.containsKey(Setting.debugNetworkLatency))
           twitarr.debugLatency = settings[Setting.debugNetworkLatency] as double;

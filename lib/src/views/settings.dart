@@ -11,6 +11,7 @@ import '../logic/background_polling.dart';
 import '../logic/cruise.dart';
 import '../logic/store.dart';
 import '../network/rest.dart';
+import '../network/settings.dart';
 import '../network/twitarr.dart';
 import '../widgets.dart';
 
@@ -205,33 +206,21 @@ class _SettingsState extends State<Settings> with WidgetsBindingObserver {
               title: Text('Server', style: headingStyle),
             ),
             RadioListTile<TwitarrConfiguration>(
-              title: const Text('Automatically pick server'),
+              title: const Text('Twit-arr server on Nieuw Amsterdam'),
               groupValue: cruise.twitarrConfiguration,
-              value: const AutoTwitarrConfiguration(),
+              value: kShipTwitarr,
               onChanged: busy ? null : _apply,
             ),
             RadioListTile<TwitarrConfiguration>(
-              title: const Text('http://joco.hollandamerica.com/'),
+              title: const Text('Host on Nieuw Amsterdam'),
               groupValue: cruise.twitarrConfiguration,
-              value: const RestTwitarrConfiguration(baseUrl: 'http://joco.hollandamerica.com/'),
+              value: kShipTwitarrHost,
               onChanged: busy ? null : _apply,
             ),
             RadioListTile<TwitarrConfiguration>(
-              title: const Text('http://jococruise.hollandamerica.com/'),
+              title: const Text('Development test server'),
               groupValue: cruise.twitarrConfiguration,
-              value: const RestTwitarrConfiguration(baseUrl: 'http://jococruise.hollandamerica.com/'),
-              onChanged: busy ? null : _apply,
-            ),
-            RadioListTile<TwitarrConfiguration>(
-              title: const Text('http://10.26.129.55/'),
-              groupValue: cruise.twitarrConfiguration,
-              value: const RestTwitarrConfiguration(baseUrl: 'http://10.26.129.55/'),
-              onChanged: busy ? null : _apply,
-            ),
-            RadioListTile<TwitarrConfiguration>(
-              title: const Text('http://10.26.129.56/'),
-              groupValue: cruise.twitarrConfiguration,
-              value: const RestTwitarrConfiguration(baseUrl: 'http://10.26.129.56/'),
+              value: kDevTwitarr,
               onChanged: busy ? null : _apply,
             ),
             RadioListTile<TwitarrConfiguration>(
