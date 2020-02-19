@@ -973,22 +973,22 @@ class RenderChatBody extends RenderBox
 
   @override
   double computeMinIntrinsicWidth(double height) {
-    throw Exception('not implemented');
+    return 0.0;
   }
 
   @override
   double computeMaxIntrinsicWidth(double height) {
-    throw Exception('not implemented');
+    return 0.0;
   }
 
   @override
   double computeMinIntrinsicHeight(double width) {
-    throw Exception('not implemented');
+    return 0.0;
   }
 
   @override
   double computeMaxIntrinsicHeight(double width) {
-    throw Exception('not implemented');
+    return 0.0;
   }
 
   @override
@@ -1675,123 +1675,126 @@ class PhotoImage extends StatelessWidget {
     );
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
-      child: AspectRatio(
-        aspectRatio: photo.mediumSize.width == 0 ? 1.0 : photo.mediumSize.width / photo.mediumSize.height,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: GestureDetector(
-            onTap: () {
-              bool appBarVisible = false;
-              Navigator.push<void>(context, MaterialPageRoute<void>(
-                builder: (BuildContext context) {
-                  return StatefulBuilder(
-                    builder: (BuildContext context, StateSetter setState) {
-                      return Container(
-                        color: Colors.black,
-                        child: Stack(
-                          children: <Widget>[
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                                setState(() {
-                                  appBarVisible = !appBarVisible;
-                                });
-                              },
-                              child: SafeArea(
-                                child: PhotoView(
-                                  imageProvider: cruise.imageFor(photo),
-                                  initialScale: PhotoViewComputedScale.contained,
-                                  minScale: PhotoViewComputedScale.contained,
-                                  heroAttributes: PhotoViewHeroAttributes(tag: tag),
-                                  loadingBuilder: (BuildContext context, ImageChunkEvent event) => Stack(
-                                    children: <Widget>[
-                                      Center(
-                                        child: Hero(
-                                          tag: tag,
-                                          child: Image(image: thumbnail),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: photo.mediumSize.width / metrics.devicePixelRatio),
+        child: AspectRatio(
+          aspectRatio: photo.mediumSize.width == 0 ? 1.0 : photo.mediumSize.width / photo.mediumSize.height,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: GestureDetector(
+              onTap: () {
+                bool appBarVisible = false;
+                Navigator.push<void>(context, MaterialPageRoute<void>(
+                  builder: (BuildContext context) {
+                    return StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                        return Container(
+                          color: Colors.black,
+                          child: Stack(
+                            children: <Widget>[
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () {
+                                  setState(() {
+                                    appBarVisible = !appBarVisible;
+                                  });
+                                },
+                                child: SafeArea(
+                                  child: PhotoView(
+                                    imageProvider: cruise.imageFor(photo),
+                                    initialScale: PhotoViewComputedScale.contained,
+                                    minScale: PhotoViewComputedScale.contained,
+                                    heroAttributes: PhotoViewHeroAttributes(tag: tag),
+                                    loadingBuilder: (BuildContext context, ImageChunkEvent event) => Stack(
+                                      children: <Widget>[
+                                        Center(
+                                          child: Hero(
+                                            tag: tag,
+                                            child: Image(image: thumbnail),
+                                          ),
                                         ),
-                                      ),
-                                      const PositionedDirectional(
-                                        top: 12.0,
-                                        end: 12.0,
-                                        child: CircularProgressIndicator(),
+                                        const PositionedDirectional(
+                                          top: 12.0,
+                                          end: 12.0,
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 0.0,
+                                left: 0.0,
+                                right: 0.0,
+                                child: AnimatedOpacity(
+                                  opacity: appBarVisible ? 1.0 : 0.0,
+                                  duration: const Duration(milliseconds: 150),
+                                  curve: Curves.fastOutSlowIn,
+                                  child: AppBar(
+                                    backgroundColor: Colors.transparent,
+                                    brightness: Brightness.dark,
+                                    iconTheme: const IconThemeData(color: Colors.white),
+                                    actions: <Widget>[
+                                      IconButton(
+                                        icon: Icon(Icons.cloud_download),
+                                        tooltip: 'Download image to device',
+                                        onPressed: () async {
+                                          final Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler()
+                                            .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
+                                          if (permissions[PermissionGroup.storage] == PermissionStatus.granted) {
+                                            final Uint8List data = await ProgressDialog.show<Uint8List>(
+                                              context,
+                                              cruise.imageBytesFor(photo),
+                                            );
+                                            if (data != null) {
+                                              // For some reason ImageGallerySaver.saveImage hangs the UI thread,
+                                              // so we add a 1 second delay to get the UI into a good position before
+                                              // we call it, and we don't try to use a progress indicator here.
+                                              await FutureDialog.show<dynamic>(
+                                                context,
+                                                Future<dynamic>.delayed(const Duration(seconds: 1)).whenComplete(() => ImageGallerySaver.saveImage(data)),
+                                                message: 'Saving image...',
+                                              );
+                                            }
+                                          } else {
+                                            String message;
+                                            switch (permissions[PermissionGroup.storage]) {
+                                              case PermissionStatus.denied:
+                                                message = 'To download images, you must grant Rainbow Monkey access to your storage.';
+                                                break;
+                                              case PermissionStatus.disabled:
+                                                message = 'Your device does not appear to support downloading images.';
+                                                break;
+                                              case PermissionStatus.neverAskAgain:
+                                                message = 'To download images, you must grant Rainbow Monkey access to your storage. You have told your device never to allow Rainbow Monkey to ask for this permission. You can change this from the system settings application.';
+                                                break;
+                                              case PermissionStatus.restricted:
+                                                message = 'Your device has been configured to disallow downloading images (for example via parental controls).';
+                                                break;
+                                              default:
+                                                message = 'An unknown error occurred. Sorry.';
+                                            }
+                                            await showMessageDialog(context, message);
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ),
-                            Positioned(
-                              top: 0.0,
-                              left: 0.0,
-                              right: 0.0,
-                              child: AnimatedOpacity(
-                                opacity: appBarVisible ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 150),
-                                curve: Curves.fastOutSlowIn,
-                                child: AppBar(
-                                  backgroundColor: Colors.transparent,
-                                  brightness: Brightness.dark,
-                                  iconTheme: const IconThemeData(color: Colors.white),
-                                  actions: <Widget>[
-                                    IconButton(
-                                      icon: Icon(Icons.cloud_download),
-                                      tooltip: 'Download image to device',
-                                      onPressed: () async {
-                                        final Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler()
-                                          .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
-                                        if (permissions[PermissionGroup.storage] == PermissionStatus.granted) {
-                                          final Uint8List data = await ProgressDialog.show<Uint8List>(
-                                            context,
-                                            cruise.imageBytesFor(photo),
-                                          );
-                                          if (data != null) {
-                                            // For some reason ImageGallerySaver.saveImage hangs the UI thread,
-                                            // so we add a 1 second delay to get the UI into a good position before
-                                            // we call it, and we don't try to use a progress indicator here.
-                                            await FutureDialog.show<dynamic>(
-                                              context,
-                                              Future<dynamic>.delayed(const Duration(seconds: 1)).whenComplete(() => ImageGallerySaver.saveImage(data)),
-                                              message: 'Saving image...',
-                                            );
-                                          }
-                                        } else {
-                                          String message;
-                                          switch (permissions[PermissionGroup.storage]) {
-                                            case PermissionStatus.denied:
-                                              message = 'To download images, you must grant Rainbow Monkey access to your storage.';
-                                              break;
-                                            case PermissionStatus.disabled:
-                                              message = 'Your device does not appear to support downloading images.';
-                                              break;
-                                            case PermissionStatus.neverAskAgain:
-                                              message = 'To download images, you must grant Rainbow Monkey access to your storage. You have told your device never to allow Rainbow Monkey to ask for this permission. You can change this from the system settings application.';
-                                              break;
-                                            case PermissionStatus.restricted:
-                                              message = 'Your device has been configured to disallow downloading images (for example via parental controls).';
-                                              break;
-                                            default:
-                                              message = 'An unknown error occurred. Sorry.';
-                                          }
-                                          await showMessageDialog(context, message);
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ));
-            },
-            child: Hero(
-              tag: tag,
-              child: Image(image: thumbnail, height: maxHeight),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ));
+              },
+              child: Hero(
+                tag: tag,
+                child: Image(image: thumbnail, height: maxHeight),
+              ),
             ),
           ),
         ),

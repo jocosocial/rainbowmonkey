@@ -30,7 +30,7 @@ import 'stream.dart';
 
 // TODO(ianh): Move polling logic into RestTwitarr class
 
-typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store, { bool forced });
+typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store, DateTime now, Duration minInterval, { bool forced });
 
 class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements PhotoManager {
   CruiseModel({
@@ -367,8 +367,10 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           this,
           onError: _handleError,
           onCheckForMessages: () {
-            if (onCheckForMessages != null)
-              onCheckForMessages(_currentCredentials, _twitarr, store, forced: true);
+            if (onCheckForMessages != null) {
+              final DateTime now = DateTime.now().toUtc();
+              onCheckForMessages(_currentCredentials, _twitarr, store, now, serverStatus.currentValue.updateIntervals.seamail, forced: true);
+            }
           },
           onThreadRead: _handleThreadRead,
         );
@@ -432,8 +434,10 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       .toList()
       ..sort();
     final Map<String, bool> sections = await completer.chain<Map<String, bool>>(_twitarr.getSectionStatus());
+    final UpdateIntervals updateIntervals = await _twitarr.getUpdateIntervals().asFuture();
     final ServerStatus result = ServerStatus(
       announcements: announcements,
+      updateIntervals: updateIntervals,
       userRole: user.currentValue?.role ?? Role.none,
       forumsEnabled: sections['rainbow_monkey_forums'] ?? true,
       streamEnabled: sections['rainbow_monkey_stream'] ?? true,

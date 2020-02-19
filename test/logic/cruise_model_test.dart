@@ -56,6 +56,7 @@ void main() {
         'LoggingTwitarr(2).getCalendar(null)',
         'LoggingTwitarr(2).getAnnouncements()',
         'LoggingTwitarr(2).getSectionStatus()',
+        'LoggingTwitarr(2).getUpdateIntervals()',
         '--- waiting ten minutes',
         '--- login',
         'LoggingTwitarr(2).login aaa / bbb',
@@ -107,6 +108,7 @@ void main() {
         'LoggingTwitarr(1).getCalendar(Credentials(aaa))',
         'LoggingTwitarr(1).getAnnouncements()',
         'LoggingTwitarr(1).getSectionStatus()',
+        'LoggingTwitarr(1).getUpdateIntervals()',
         '--- waiting one hour',
         '--- end',
         'LoggingTwitarr(1).dispose()'
@@ -156,6 +158,7 @@ void main() {
         'LoggingTwitarr(0).getCalendar(null)',
         'LoggingTwitarr(0).getAnnouncements()',
         'LoggingTwitarr(0).getSectionStatus()',
+        'LoggingTwitarr(0).getUpdateIntervals()',
         '--- waiting 1 minute',
         '--- logging in 1',
         'LoggingTwitarr(0).login user1 / password1',
@@ -215,6 +218,7 @@ void main() {
         'LoggingTwitarr(1).getCalendar(Credentials(aaa))',
         'LoggingTwitarr(1).getAnnouncements()',
         'LoggingTwitarr(1).getSectionStatus()',
+        'LoggingTwitarr(1).getUpdateIntervals()',
         '--- waiting one hour',
         '--- end',
         'LoggingTwitarr(1).dispose()'

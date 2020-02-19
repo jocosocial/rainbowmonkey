@@ -516,6 +516,22 @@ class RestTwitarr implements Twitarr {
     });
   }
 
+  @override
+  Progress<UpdateIntervals> getUpdateIntervals() {
+    return Progress<UpdateIntervals>((ProgressController<UpdateIntervals> completer) async {
+      return await compute<String, UpdateIntervals>(
+        _parseUpdateIntervals,
+        await completer.chain<String>(
+          _requestUtf8(
+            'GET',
+            'api/v2/text/update_intervals',
+            expectedStatusCodes: <int>[200],
+          ),
+        ),
+      );
+    });
+  }
+
   static List<AnnouncementSummary> _parseAnnouncements(String rawData) {
     final dynamic data = Json.parse(rawData);
     _checkStatusIsOk(data);
@@ -539,6 +555,15 @@ class RestTwitarr implements Twitarr {
       clientNow: deviceTime,
       serverTimeZoneOffset: Duration(seconds: (data.offset as Json).toInt()),
       clientTimeZoneOffset: deviceTime.timeZoneOffset,
+    );
+  }
+
+  static UpdateIntervals _parseUpdateIntervals(String rawData) {
+    final dynamic data = Json.parse(rawData);
+    return UpdateIntervals(
+      seamail: Duration(seconds: (data.seamail as Json).toInt()),
+      events: Duration(seconds: (data.events as Json).toInt()),
+      updateIntervals: Duration(seconds: (data.update_intervals as Json).toInt()),
     );
   }
 

@@ -170,6 +170,18 @@ class LoggingTwitarr extends Twitarr {
   }
 
   @override
+  Progress<UpdateIntervals> getUpdateIntervals() {
+    addLog('$this.getUpdateIntervals()');
+    return Progress<UpdateIntervals>.completed(
+      const UpdateIntervals(
+        seamail: Duration(hours: 1),
+        events: Duration(hours: 1),
+        updateIntervals: Duration(hours: 1),
+      ),
+    );
+  }
+
+  @override
   Progress<ServerText> fetchServerText(String filename) {
     addLog('LoggingTwitarr(${_configuration.id}).fetchServerText($filename)');
     return const Progress<ServerText>.idle();
@@ -178,7 +190,14 @@ class LoggingTwitarr extends Twitarr {
   @override
   Progress<Uint8List> fetchProfilePicture(String username) {
     addLog('fetchProfilePicture');
-    return Progress<Uint8List>.completed(Uint8List.fromList(<int>[0]));
+    return Progress<Uint8List>.completed(Uint8List.fromList(<int>[
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00,
+      0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01,
+      0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f,
+      0x15, 0xc4, 0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41,
+      0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00,
+      0x01,
+    ]));
   }
 
   @override
