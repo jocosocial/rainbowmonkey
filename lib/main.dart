@@ -20,6 +20,7 @@ import 'src/models/isolate_message.dart';
 import 'src/models/server_status.dart';
 import 'src/models/user.dart';
 import 'src/network/rest.dart';
+import 'src/network/settings.dart';
 import 'src/views/calendar.dart';
 import 'src/views/code_of_conduct.dart';
 import 'src/views/comms.dart';
@@ -45,11 +46,10 @@ void main() {
     print('Rainbow Monkey has started');
     return true;
   }());
-  AutoTwitarrConfiguration.register();
   RestTwitarrConfiguration.register();
   final DataStore store = DiskDataStore();
   model = CruiseModel(
-    initialTwitarrConfiguration: const AutoTwitarrConfiguration(),
+    initialTwitarrConfiguration: kShipTwitarr,
     store: store,
     onError: _handleError,
     onCheckForMessages: checkForMessages,

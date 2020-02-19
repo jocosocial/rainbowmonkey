@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:ui' show Size;
+import 'dart:ui' show Size, hashValues;
 
 import 'package:flutter/foundation.dart';
 
@@ -20,31 +20,32 @@ import '../progress.dart';
 import 'form_data.dart';
 import 'twitarr.dart';
 
-const String _kShipTwitarrUrl = 'http://joco.hollandamerica.com/';
-const String _kDevTwitarrUrl = 'http://twitarrdev.wookieefive.net:3000/';
-
 const bool _debugVerbose = false;
 const int kLineLength = 0x080;
 const int kMaxLines = 12;
 
 class RestTwitarrConfiguration extends TwitarrConfiguration {
-  const RestTwitarrConfiguration({ @required this.baseUrl }) : assert(baseUrl != null);
+  const RestTwitarrConfiguration({ @required this.baseUrl, this.builtin = false }) : assert(baseUrl != null), assert(builtin != null);
 
   final String baseUrl;
 
+  /// Whether this was sourced from settings.dart (builtin) or from the user (custom).
+  final bool builtin;
+
   @override
-  Twitarr createTwitarr() => RestTwitarr(baseUrl: baseUrl);
+  Twitarr createTwitarr() => RestTwitarr(baseUrl: baseUrl, builtin: builtin);
 
   @override
   bool operator ==(Object other) {
     if (other.runtimeType != runtimeType)
       return false;
     final RestTwitarrConfiguration typedOther = other as RestTwitarrConfiguration;
-    return typedOther.baseUrl == baseUrl;
+    return typedOther.baseUrl == baseUrl
+        && typedOther.builtin == builtin;
   }
 
   @override
-  int get hashCode => baseUrl.hashCode;
+  int get hashCode => hashValues(baseUrl, builtin);
 
   static void register() {
     TwitarrConfiguration.register(_prefix, _factory);
@@ -53,66 +54,33 @@ class RestTwitarrConfiguration extends TwitarrConfiguration {
   static const String _prefix = 'rest';
 
   static RestTwitarrConfiguration _factory(String settings) {
-    return RestTwitarrConfiguration(baseUrl: settings);
+    return RestTwitarrConfiguration(
+      baseUrl: settings.substring(1),
+      builtin: settings.isNotEmpty && settings[0] == 'B',
+    );
   }
 
   @override
   String get prefix => _prefix;
 
   @override
-  String get settings => baseUrl;
-}
-
-class AutoTwitarrConfiguration extends TwitarrConfiguration {
-  const AutoTwitarrConfiguration();
-
-  @override
-  Twitarr createTwitarr() {
-    final DateTime now = DateTime.now();
-    if (now.isBefore(DateTime(2019, 3, 7)) || now.isAfter(DateTime(2019, 3, 18)))
-      return RestTwitarr(baseUrl: _kDevTwitarrUrl, isAuto: true);
-    return RestTwitarr(baseUrl: _kShipTwitarrUrl, isAuto: true);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other.runtimeType == runtimeType;
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
-
-  static void register() {
-    TwitarrConfiguration.register(_prefix, _factory);
-  }
-
-  static const String _prefix = 'auto';
-
-  static AutoTwitarrConfiguration _factory(String settings) {
-    return const AutoTwitarrConfiguration();
-  }
-
-  @override
-  String get prefix => _prefix;
-
-  @override
-  String get settings => '';
+  String get settings => '${builtin ? 'B' : 'C'}$baseUrl';
 }
 
 /// An implementation of [Twitarr] that uses the HTTP protocol
 /// implemented by <https://github.com/seamonkeysocial/twitarr>.
 class RestTwitarr implements Twitarr {
-  RestTwitarr({ @required this.baseUrl, this.isAuto = false }) : assert(baseUrl != null), assert(isAuto != null) {
+  RestTwitarr({ @required this.baseUrl, this.builtin = false }) : assert(baseUrl != null), assert(builtin != null) {
     _client = HttpClient();
     _parsedBaseUrl = Uri.parse(baseUrl);
   }
 
   final String baseUrl;
 
-  final bool isAuto;
+  final bool builtin;
 
   @override
-  TwitarrConfiguration get configuration => isAuto ? const AutoTwitarrConfiguration() : RestTwitarrConfiguration(baseUrl: baseUrl);
+  TwitarrConfiguration get configuration => RestTwitarrConfiguration(baseUrl: baseUrl, builtin: builtin);
 
   @override
   String get photoCacheKey => baseUrl;

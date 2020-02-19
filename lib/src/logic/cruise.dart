@@ -16,7 +16,7 @@ import '../models/search.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
-import '../network/rest.dart' show AutoTwitarrConfiguration;
+import '../network/settings.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -200,7 +200,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
             return true;
           }());
           if (settings.containsKey(Setting.server))
-            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, const AutoTwitarrConfiguration()));
+            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, kShipTwitarr));
           if (settings.containsKey(Setting.debugTimeDilation)) {
             timeDilation = settings[Setting.debugTimeDilation] as double;
             await SchedulerBinding.instance.reassembleApplication();

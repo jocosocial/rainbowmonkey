@@ -12,6 +12,7 @@ import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/rest.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
+import 'package:cruisemonkey/src/network/settings.dart';
 import 'package:cruisemonkey/src/views/settings.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
@@ -46,9 +47,9 @@ Future<void> main() async {
     log.add('--');
     expect(find.text('URL is not valid'), findsNothing);
     expect(find.text('https://example.com/'), findsOneWidget);
-    await tester.tap(find.text('Automatically pick server'));
+    await tester.tap(find.text('Twit-arr server on Nieuw Amsterdam'));
     await tester.pump();
-    expect(model.twitarrConfiguration, const AutoTwitarrConfiguration());
+    expect(model.twitarrConfiguration, kShipTwitarr);
     log.add('--');
     await tester.enterText(find.text('https://example.com/'), 'bla');
     await tester.pump();
@@ -57,7 +58,7 @@ Future<void> main() async {
     expect(find.text('bla'), findsOneWidget);
     log.add('--');
     await tester.idle();
-    expect(model.twitarrConfiguration, const AutoTwitarrConfiguration());
+    expect(model.twitarrConfiguration, kShipTwitarr);
     await tester.enterText(find.text('bla'), 'http://invalid');
     await tester.pump();
     expect(find.text('bla'), findsNothing);
@@ -67,25 +68,25 @@ Future<void> main() async {
     expect(log, <String>[
       'LoggingDataStore.restoreSettings',
       'LoggingDataStore.restoreCredentials',
-      'LoggingTwitarr(25).login aaa / aaaaaa',
+      'LoggingTwitarr(26).login aaa / aaaaaa', // the 26 comes from the TestCruiseModel.selectTwitarrConfiguration method below
       'LoggingDataStore.saveCredentials Credentials(aaa)',
-      'LoggingTwitarr(25).getCalendar(Credentials(aaa))',
-      'LoggingTwitarr(25).getAnnouncements()',
-      'LoggingTwitarr(25).getSectionStatus()',
+      'LoggingTwitarr(26).getCalendar(Credentials(aaa))',
+      'LoggingTwitarr(26).getAnnouncements()',
+      'LoggingTwitarr(26).getSectionStatus()',
       '--',
-      'LoggingTwitarr(25).dispose()',
+      'LoggingTwitarr(26).dispose()',
       'LoggingDataStore.saveCredentials null',
-      'LoggingDataStore.saveSetting Setting.server auto:',
-      'LoggingTwitarr(5).getCalendar(null)',
-      'LoggingTwitarr(5).getAnnouncements()',
-      'LoggingTwitarr(5).getSectionStatus()',
+      'LoggingDataStore.saveSetting Setting.server rest:Bhttp://10.114.238.135/',
+      'LoggingTwitarr(28).getCalendar(null)',
+      'LoggingTwitarr(28).getAnnouncements()',
+      'LoggingTwitarr(28).getSectionStatus()',
       '--',
       '--',
-      'LoggingTwitarr(5).dispose()',
-      'LoggingDataStore.saveSetting Setting.server rest:http://invalid',
-      'LoggingTwitarr(19).getCalendar(null)',
-      'LoggingTwitarr(19).getAnnouncements()',
-      'LoggingTwitarr(19).getSectionStatus()',
+      'LoggingTwitarr(28).dispose()',
+      'LoggingDataStore.saveSetting Setting.server rest:Chttp://invalid',
+      'LoggingTwitarr(20).getCalendar(null)',
+      'LoggingTwitarr(20).getAnnouncements()',
+      'LoggingTwitarr(20).getSectionStatus()',
       '--'
     ]);
   });
