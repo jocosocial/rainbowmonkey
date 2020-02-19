@@ -435,15 +435,16 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
     final ServerStatus result = ServerStatus(
       announcements: announcements,
       userRole: user.currentValue?.role ?? Role.none,
-      forumsEnabled: sections['forums'] ?? true,
-      streamEnabled: sections['stream'] ?? true,
-      seamailEnabled: sections['seamail'] ?? true,
-      calendarEnabled: sections['calendar'] ?? true,
-      deckPlansEnabled: sections['deck_plans'] ?? true,
-      gamesEnabled: sections['games'] ?? true,
-      karaokeEnabled: sections['karaoke'] ?? true,
-      registrationEnabled: sections['registration'] ?? true,
-      userProfileEnabled: sections['user_profile'] ?? true,
+      forumsEnabled: sections['rainbow_monkey_forums'] ?? true,
+      streamEnabled: sections['rainbow_monkey_stream'] ?? true,
+      seamailEnabled: sections['rainbow_monkey_seamail'] ?? true,
+      calendarEnabled: sections['rainbow_monkey_calendar'] ?? true,
+      deckPlansEnabled: sections['rainbow_monkey_deck_plans'] ?? true,
+      gamesEnabled: sections['rainbow_monkey_games'] ?? true,
+      karaokeEnabled: sections['rainbow_monkey_karaoke'] ?? true,
+      searchEnabled: sections['rainbow_monkey_search'] ?? true,
+      registrationEnabled: sections['rainbow_monkey_registration'] ?? true,
+      userProfileEnabled: sections['rainbow_monkey_user_profile'] ?? true,
     );
     if (_onscreen)
       _twitarr.enable(result);
