@@ -111,6 +111,8 @@ abstract class Twitarr {
 
   Progress<Map<String, bool>> getSectionStatus();
 
+  Progress<UpdateIntervals> getUpdateIntervals();
+
   Progress<ServerText> fetchServerText(String filename);
 
   Progress<Uint8List> fetchProfilePicture(String username);

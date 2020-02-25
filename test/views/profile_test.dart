@@ -39,7 +39,6 @@ Future<void> main() async {
         ),
       ),
     );
-    expect(tester.takeException(), isNotNull); // because in tests, our profile image is bogus
     log.add('--');
     expect(find.text('Display name'), findsOneWidget);
     expect(find.text('Home location'), findsNothing);
@@ -65,12 +64,14 @@ Future<void> main() async {
       'LoggingTwitarr(0).getCalendar(Credentials(username))',
       'LoggingTwitarr(0).getAnnouncements()',
       'LoggingTwitarr(0).getSectionStatus()',
+      'ProfileTestTwitarr(0).getUpdateIntervals()',
       'fetchProfilePicture',
       '--',
       'LoggingTwitarr(0).getAuthenticatedUser Credentials(username)',
       // this is where the ui subscribes to everything:
       'LoggingTwitarr(0).getAnnouncements()',
       'LoggingTwitarr(0).getSectionStatus()',
+      'ProfileTestTwitarr(0).getUpdateIntervals()',
       '--',
       'overridden',
       'updateProfile null/null/null/null/Hello/null',

@@ -32,9 +32,29 @@ class Announcement implements Comparable<Announcement> {
 }
 
 @immutable
+class UpdateIntervals {
+  const UpdateIntervals({
+    @required this.seamail,
+    @required this.events,
+    @required this.updateIntervals,
+  });
+
+  final Duration seamail;
+
+  final Duration events;
+
+  final Duration updateIntervals;
+}
+
+@immutable
 class ServerStatus {
   const ServerStatus({
     this.announcements = const <Announcement>[],
+    this.updateIntervals = const UpdateIntervals(
+      seamail: Duration(minutes: 1),
+      events: Duration(minutes: 5),
+      updateIntervals: Duration(seconds: 30),
+    ),
     this.userRole = Role.none,
     bool forumsEnabled = true,
     bool streamEnabled = true,
@@ -60,6 +80,7 @@ class ServerStatus {
 
   ServerStatus copyWith({
     List<Announcement> announcements,
+    UpdateIntervals updateIntervals,
     Role userRole,
     bool forumsEnabled,
     bool streamEnabled,
@@ -74,6 +95,7 @@ class ServerStatus {
   }) {
     return ServerStatus(
       announcements: announcements ?? this.announcements,
+      updateIntervals: updateIntervals ?? this.updateIntervals,
       userRole: userRole ?? this.userRole,
       forumsEnabled: forumsEnabled ?? _forumsEnabled,
       streamEnabled: streamEnabled ?? _streamEnabled,
@@ -89,6 +111,8 @@ class ServerStatus {
   }
 
   final List<Announcement> announcements;
+
+  final UpdateIntervals updateIntervals;
 
   final Role userRole;
 

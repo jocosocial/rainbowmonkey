@@ -296,7 +296,7 @@ class _SeamailThreadViewState extends State<SeamailThreadView> {
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                        counter: const SizedBox.shrink(),
+                        counterText: '',
                         hintText: 'Message${ isModerating ? " (as moderator)" : ""}',
                       ),
                     ),

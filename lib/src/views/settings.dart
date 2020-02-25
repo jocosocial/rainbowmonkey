@@ -212,13 +212,25 @@ class _SettingsState extends State<Settings> with WidgetsBindingObserver {
               onChanged: busy ? null : _apply,
             ),
             RadioListTile<TwitarrConfiguration>(
-              title: const Text('Host on Nieuw Amsterdam'),
+              title: const Text('Unencrypted fallback 1 (local DNS)'),
               groupValue: cruise.twitarrConfiguration,
-              value: kShipTwitarrHost,
+              value: kShipTwitarrUnencrypted1,
               onChanged: busy ? null : _apply,
             ),
             RadioListTile<TwitarrConfiguration>(
-              title: const Text('Development test server'),
+              title: const Text('Unencrypted fallback 2 (IP)'),
+              groupValue: cruise.twitarrConfiguration,
+              value: kShipTwitarrUnencrypted2,
+              onChanged: busy ? null : _apply,
+            ),
+            // RadioListTile<TwitarrConfiguration>(
+            //   title: const Text('Unencrypted fallback 3 (Host IP)'),
+            //   groupValue: cruise.twitarrConfiguration,
+            //   value: kShipTwitarrHost,
+            //   onChanged: busy ? null : _apply,
+            // ),
+            RadioListTile<TwitarrConfiguration>(
+              title: const Text('Development test server (off-ship only)'),
               groupValue: cruise.twitarrConfiguration,
               value: kDevTwitarr,
               onChanged: busy ? null : _apply,
