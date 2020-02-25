@@ -221,6 +221,14 @@ class ForumThread extends SearchResult with ChangeNotifier, BusyMixin, IterableM
   int get unreadCount => _unreadCount ?? 0;
   int _unreadCount;
 
+  void forceRead() {
+    if (_updating || unreadCount == 0)
+      return;
+    _unreadCount = 0;
+    _parent._childUpdated(this);
+    notifyListeners();
+  }
+
   int get totalCount => math.max(_totalCount ?? 0, _messages.length);
   int _totalCount;
 
