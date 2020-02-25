@@ -189,6 +189,10 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                             child: Text(widget.thread.subject, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline6),
                           );
                         }
+                        if (index == 0) {
+                          // when we see the most recent message, mark the thread as read
+                          widget.thread.forceRead();
+                        }
                         final ForumMessage message = messages[index];
                         final bool isCurrentUser = message.user.sameAs(currentUser?.effectiveUser);
                         return ChatLine(
