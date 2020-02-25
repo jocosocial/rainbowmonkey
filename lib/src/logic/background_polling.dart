@@ -1,4 +1,5 @@
 import 'dart:isolate';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:android_alarm_manager/android_alarm_manager.dart';
@@ -8,8 +9,10 @@ import 'package:flutter/material.dart';
 import '../models/calendar.dart';
 import '../models/errors.dart';
 import '../models/isolate_message.dart';
+import '../models/server_status.dart';
 import '../models/user.dart';
 import '../network/rest.dart';
+import '../network/settings.dart';
 import '../network/twitarr.dart';
 import 'disk_store.dart';
 import 'notifications.dart';
@@ -54,6 +57,8 @@ Future<void> rescheduleBackground(DataStore store) async {
 }
 
 bool _initialized = false;
+bool currentlyInCallback = false;
+UpdateIntervals updateIntervals;
 
 Future<void> _periodicCallback() async {
   if (pollingDisabled) {
@@ -61,7 +66,6 @@ Future<void> _periodicCallback() async {
     return;
   }
   if (!_initialized) {
-    AutoTwitarrConfiguration.register();
     RestTwitarrConfiguration.register();
     (await Notifications.instance)
       ..onMessageTap = (String payload) {
@@ -98,12 +102,20 @@ Future<void> _periodicCallback() async {
       };
     _initialized = true;
   }
+  if (currentlyInCallback) {
+    assert(() {
+      print('Re-entrant Rainbow Monkey polling mitigated.');
+      return true;
+    }());
+    return;
+  }
+  currentlyInCallback = true;
   try {
     try {
       final DataStore store = DiskDataStore();
       final Map<Setting, dynamic> settings = await store.restoreSettings().asFuture();
       final String server = settings[Setting.server] as String;
-      final Twitarr twitarr = TwitarrConfiguration.from(server, const AutoTwitarrConfiguration()).createTwitarr();
+      final Twitarr twitarr = TwitarrConfiguration.from(server, kShipTwitarr).createTwitarr();
       assert(() {
         if (settings.containsKey(Setting.debugNetworkLatency))
           twitarr.debugLatency = settings[Setting.debugNetworkLatency] as double;
@@ -112,8 +124,12 @@ Future<void> _periodicCallback() async {
         return true;
       }());
       final Credentials credentials = await store.restoreCredentials().asFuture();
-      await checkForMessages(credentials, twitarr, store);
-      await checkForCalendar(credentials, twitarr, store);
+      // try to spread the load over several seconds, in case the OSes get synchronized somehow
+      final DateTime now = DateTime.now().toUtc();
+      await Future<void>.delayed(Duration(seconds: math.Random().nextInt(20)));
+      await checkUpdateIntervals(twitarr, now, updateIntervals?.updateIntervals ?? const Duration(seconds: 30));
+      await checkForMessages(credentials, twitarr, store, now, updateIntervals.seamail);
+      await checkForCalendar(credentials, twitarr, store, now, updateIntervals.events);
     } on DatabaseException catch (error) {
       if (error.toString() == 'DatabaseException(database is locked (code 5 SQLITE_BUSY))') {
         assert(() {
@@ -126,10 +142,22 @@ Future<void> _periodicCallback() async {
     }
   } on UserFriendlyError catch (error) {
     print('Skipping background update: $error');
+  } finally {
+    currentlyInCallback = false;
   }
 }
 
-Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStore store, { bool forced = false }) async {
+DateTime lastCheckForUpdateIntervals;
+
+Future<void> checkUpdateIntervals(Twitarr twitarr, DateTime now, Duration minInterval) async {
+  if (lastCheckForUpdateIntervals == null || now.difference(lastCheckForUpdateIntervals) >= minInterval) {
+    updateIntervals = await twitarr.getUpdateIntervals().asFuture();
+    lastCheckForUpdateIntervals = now;
+  }
+  assert(updateIntervals != null);
+}
+
+Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStore store, DateTime now, Duration minInterval, { bool forced = false }) async {
   try {
     if (credentials == null) {
       assert(() {
@@ -146,10 +174,9 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
       await store.restoreSetting(Setting.lastNotificationsCheck).asFuture() as int ?? 0,
       isUtc: true,
     );
-    final DateTime now = DateTime.now().toUtc();
-    if (!forced && now.difference(lastCheck) < const Duration(seconds: 30)) {
+    if (!forced && now.difference(lastCheck) < minInterval) {
       assert(() {
-        print('Excessive checking of messages detected.');
+        print('Excessive checking of messages detected; server limit is ${minInterval.inSeconds} but we are at ${now.difference(lastCheck).inSeconds}.');
         return true;
       }());
       return;
@@ -196,7 +223,7 @@ Future<void> checkForMessages(Credentials credentials, Twitarr twitarr, DataStor
   }
 }
 
-Future<void> checkForCalendar(Credentials credentials, Twitarr twitarr, DataStore store, { bool forced = false }) async {
+Future<void> checkForCalendar(Credentials credentials, Twitarr twitarr, DataStore store, DateTime now, Duration minInterval, { bool forced = false }) async {
   try {
     if (credentials == null) {
       assert(() {
@@ -213,10 +240,9 @@ Future<void> checkForCalendar(Credentials credentials, Twitarr twitarr, DataStor
       await store.restoreSetting(Setting.lastCalendarCheck).asFuture() as int ?? 0,
       isUtc: true,
     );
-    final DateTime now = DateTime.now().toUtc();
-    if (!forced && now.difference(lastCheck) < const Duration(minutes: 5)) {
+    if (!forced && now.difference(lastCheck) < minInterval) {
       assert(() {
-        print('Excessive checking of calendar detected.');
+        print('Excessive checking of calendar detected; server limit is ${minInterval.inSeconds} but we are at ${now.difference(lastCheck).inSeconds}.');
         return true;
       }());
       return;

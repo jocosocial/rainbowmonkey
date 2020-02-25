@@ -32,9 +32,29 @@ class Announcement implements Comparable<Announcement> {
 }
 
 @immutable
+class UpdateIntervals {
+  const UpdateIntervals({
+    @required this.seamail,
+    @required this.events,
+    @required this.updateIntervals,
+  });
+
+  final Duration seamail;
+
+  final Duration events;
+
+  final Duration updateIntervals;
+}
+
+@immutable
 class ServerStatus {
   const ServerStatus({
     this.announcements = const <Announcement>[],
+    this.updateIntervals = const UpdateIntervals(
+      seamail: Duration(minutes: 1),
+      events: Duration(minutes: 5),
+      updateIntervals: Duration(seconds: 30),
+    ),
     this.userRole = Role.none,
     bool forumsEnabled = true,
     bool streamEnabled = true,
@@ -43,6 +63,7 @@ class ServerStatus {
     bool deckPlansEnabled = true,
     bool gamesEnabled = true,
     bool karaokeEnabled = true,
+    bool searchEnabled = true,
     bool registrationEnabled = true,
     bool userProfileEnabled = true,
   }) : assert(userRole != null),
@@ -53,11 +74,13 @@ class ServerStatus {
        _deckPlansEnabled = deckPlansEnabled,
        _gamesEnabled = gamesEnabled,
        _karaokeEnabled = karaokeEnabled,
+       _searchEnabled = searchEnabled,
        _registrationEnabled = registrationEnabled,
        _userProfileEnabled = userProfileEnabled;
 
   ServerStatus copyWith({
     List<Announcement> announcements,
+    UpdateIntervals updateIntervals,
     Role userRole,
     bool forumsEnabled,
     bool streamEnabled,
@@ -66,11 +89,13 @@ class ServerStatus {
     bool deckPlansEnabled,
     bool gamesEnabled,
     bool karaokeEnabled,
+    bool searchEnabled,
     bool registrationEnabled,
     bool userProfileEnabled,
   }) {
     return ServerStatus(
       announcements: announcements ?? this.announcements,
+      updateIntervals: updateIntervals ?? this.updateIntervals,
       userRole: userRole ?? this.userRole,
       forumsEnabled: forumsEnabled ?? _forumsEnabled,
       streamEnabled: streamEnabled ?? _streamEnabled,
@@ -79,12 +104,15 @@ class ServerStatus {
       deckPlansEnabled: deckPlansEnabled ?? _deckPlansEnabled,
       gamesEnabled: gamesEnabled ?? _gamesEnabled,
       karaokeEnabled: karaokeEnabled ?? _karaokeEnabled,
+      searchEnabled: searchEnabled ?? _searchEnabled,
       registrationEnabled: registrationEnabled ?? _registrationEnabled,
       userProfileEnabled: userProfileEnabled ?? _userProfileEnabled,
     );
   }
 
   final List<Announcement> announcements;
+
+  final UpdateIntervals updateIntervals;
 
   final Role userRole;
 
@@ -125,6 +153,9 @@ class ServerStatus {
 
   bool get karaokeEnabled => _karaokeEnabled || _override;
   final bool _karaokeEnabled;
+
+  bool get searchEnabled => _searchEnabled || _override;
+  final bool _searchEnabled;
 
   bool get registrationEnabled => _registrationEnabled || _override;
   final bool _registrationEnabled;

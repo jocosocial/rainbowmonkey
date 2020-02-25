@@ -208,12 +208,13 @@ class StreamListEntry extends CardRecord {
 class SearchSearchModel extends SearchModel<Record> {
   @override
   bool isEnabled(ServerStatus status) {
-    return status.forumsEnabled
-        || status.streamEnabled
-        || status.seamailEnabled
-        || status.calendarEnabled
-        || status.userProfileEnabled
-        || status.registrationEnabled;
+    return (status.forumsEnabled
+         || status.streamEnabled
+         || status.seamailEnabled
+         || status.calendarEnabled
+         || status.userProfileEnabled
+         || status.registrationEnabled)
+        && status.searchEnabled;
   }
 
   Progress<List<Record>> _records;

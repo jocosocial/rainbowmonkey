@@ -16,7 +16,7 @@ import '../models/search.dart';
 import '../models/server_status.dart';
 import '../models/server_text.dart';
 import '../models/user.dart';
-import '../network/rest.dart' show AutoTwitarrConfiguration;
+import '../network/settings.dart';
 import '../network/twitarr.dart';
 import '../progress.dart';
 import '../widgets.dart';
@@ -30,7 +30,7 @@ import 'stream.dart';
 
 // TODO(ianh): Move polling logic into RestTwitarr class
 
-typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store, { bool forced });
+typedef CheckForMessagesCallback = void Function(Credentials credentials, Twitarr twitarr, DataStore store, DateTime now, Duration minInterval, { bool forced });
 
 class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements PhotoManager {
   CruiseModel({
@@ -200,7 +200,7 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
             return true;
           }());
           if (settings.containsKey(Setting.server))
-            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, const AutoTwitarrConfiguration()));
+            selectTwitarrConfiguration(TwitarrConfiguration.from(settings[Setting.server] as String, kShipTwitarr));
           if (settings.containsKey(Setting.debugTimeDilation)) {
             timeDilation = settings[Setting.debugTimeDilation] as double;
             await SchedulerBinding.instance.reassembleApplication();
@@ -367,8 +367,10 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
           this,
           onError: _handleError,
           onCheckForMessages: () {
-            if (onCheckForMessages != null)
-              onCheckForMessages(_currentCredentials, _twitarr, store, forced: true);
+            if (onCheckForMessages != null) {
+              final DateTime now = DateTime.now().toUtc();
+              onCheckForMessages(_currentCredentials, _twitarr, store, now, serverStatus.currentValue.updateIntervals.seamail, forced: true);
+            }
           },
           onThreadRead: _handleThreadRead,
         );
@@ -432,18 +434,21 @@ class CruiseModel extends ChangeNotifier with WidgetsBindingObserver implements 
       .toList()
       ..sort();
     final Map<String, bool> sections = await completer.chain<Map<String, bool>>(_twitarr.getSectionStatus());
+    final UpdateIntervals updateIntervals = await _twitarr.getUpdateIntervals().asFuture();
     final ServerStatus result = ServerStatus(
       announcements: announcements,
+      updateIntervals: updateIntervals,
       userRole: user.currentValue?.role ?? Role.none,
-      forumsEnabled: sections['forums'] ?? true,
-      streamEnabled: sections['stream'] ?? true,
-      seamailEnabled: sections['seamail'] ?? true,
-      calendarEnabled: sections['calendar'] ?? true,
-      deckPlansEnabled: sections['deck_plans'] ?? true,
-      gamesEnabled: sections['games'] ?? true,
-      karaokeEnabled: sections['karaoke'] ?? true,
-      registrationEnabled: sections['registration'] ?? true,
-      userProfileEnabled: sections['user_profile'] ?? true,
+      forumsEnabled: sections['rainbow_monkey_forums'] ?? true,
+      streamEnabled: sections['rainbow_monkey_stream'] ?? true,
+      seamailEnabled: sections['rainbow_monkey_seamail'] ?? true,
+      calendarEnabled: sections['rainbow_monkey_calendar'] ?? true,
+      deckPlansEnabled: sections['rainbow_monkey_deck_plans'] ?? true,
+      gamesEnabled: sections['rainbow_monkey_games'] ?? true,
+      karaokeEnabled: sections['rainbow_monkey_karaoke'] ?? true,
+      searchEnabled: sections['rainbow_monkey_search'] ?? true,
+      registrationEnabled: sections['rainbow_monkey_registration'] ?? true,
+      userProfileEnabled: sections['rainbow_monkey_user_profile'] ?? true,
     );
     if (_onscreen)
       _twitarr.enable(result);

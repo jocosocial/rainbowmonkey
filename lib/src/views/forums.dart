@@ -266,8 +266,8 @@ class _ForumThreadViewState extends State<ForumThreadView> with WidgetsBindingOb
                         enabled: canPostInPrinciple,
                         decoration: InputDecoration(
                           border: InputBorder.none,
+                          counterText: '',
                           contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 16.0, 8.0, 16.0),
-                          counter: const SizedBox.shrink(),
                           hintText: !loggedIn ? 'Log in to send messages'
                                   : widget.thread.isLocked ? 'Forum locked'
                                   : _photos.isEmpty ? 'Message${ isModerating ? " (as moderator)" : ""}'
