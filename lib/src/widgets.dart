@@ -1737,7 +1737,7 @@ class PhotoImage extends StatelessWidget {
                                     iconTheme: const IconThemeData(color: Colors.white),
                                     actions: <Widget>[
                                       IconButton(
-                                        icon: Icon(Icons.cloud_download),
+                                        icon: const Icon(Icons.cloud_download),
                                         tooltip: 'Download image to device',
                                         onPressed: () async {
                                           final Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler()

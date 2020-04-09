@@ -208,7 +208,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
                   actions: <Widget>[
                     if (_pending.isNotEmpty)
                       IconButton(
-                        icon: Icon(Icons.cancel),
+                        icon: const Icon(Icons.cancel),
                         tooltip: 'Cancel current edit',
                         onPressed: () {
                           _pending.cancelAll();

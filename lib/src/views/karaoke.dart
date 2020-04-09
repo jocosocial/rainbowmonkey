@@ -117,7 +117,7 @@ class SongSearchModel extends AssetSearchModel<Song> {
             ),
           ),
           PopupMenuButton<bool>(
-            icon: Icon(Icons.sort),
+            icon: const Icon(Icons.sort),
             onSelected: (bool result) { setState(() { _sortByTitles = result; }); },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<bool>>[
               CheckedPopupMenuItem<bool>(
