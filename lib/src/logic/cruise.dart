@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:meta/meta.dart';
-import 'package:pedantic/pedantic.dart' show unawaited;
 
 import '../models/calendar.dart';
 import '../models/errors.dart';
