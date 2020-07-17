@@ -87,7 +87,7 @@ class _CreateAccountState extends State<CreateAccount> {
       ),
       body: Form(
         key: _formKey,
-        autovalidate: true,
+        autovalidateMode: AutovalidateMode.always,
         onChanged: () {
           setState(() {
             /* need to recheck whether the submit button should be enabled */
