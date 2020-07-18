@@ -238,7 +238,7 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
         child: Form(
           key: _formKey,
-          autovalidate: true,
+          autovalidateMode: AutovalidateMode.always,
           onChanged: () {
             setState(() {
               /* need to recheck whether the submit button should be enabled */
