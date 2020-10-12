@@ -258,7 +258,7 @@ class _AvatarEditorState extends State<AvatarEditor> with AutomaticKeepAliveClie
   @override
   void cancel() {
     setState(() { _busy = false; });
-    Scaffold.of(context).showSnackBar(const SnackBar(content: Text('Avatar may have changed on the server already.')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Avatar may have changed on the server already.')));
   }
 
   void _saveImage(ImageSource source) async {
@@ -420,7 +420,7 @@ class _ProfileFieldState extends State<ProfileField> with AutomaticKeepAliveClie
   @override
   void cancel() {
     if (_updating)
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text('${widget.title} may have changed on the server already.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${widget.title} may have changed on the server already.')));
     _field.text = _probableServerContents;
     setState(() { _currentlyUploadingValue = null; _saved = false; _error = null; });
   }

@@ -653,7 +653,7 @@ class _ChatLineState extends State<ChatLine> {
   void _handleCopy() async {
     await Clipboard.setData(ClipboardData(text: widget.messages.join('\n')));
     if (mounted)
-      Scaffold.of(context).showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
   }
 
   void _handleLongPress() async {
