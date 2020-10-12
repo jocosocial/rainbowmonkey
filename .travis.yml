@@ -1,3 +1,5 @@
+# TRAVIS CONFIGURATION FILE
+
 os:
   - linux
 sudo: false
