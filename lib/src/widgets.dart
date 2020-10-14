@@ -175,7 +175,7 @@ class ProgressBuilder<T> extends StatelessWidget {
             failureMessage,
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: FlatButton(
+            child: TextButton(
               child: const Text('RETRY'),
               onPressed: onRetry,
             ),
@@ -1124,7 +1124,7 @@ class LabeledIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = FlatButton(
+    Widget result = TextButton(
       onPressed: onPressed,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -1900,11 +1900,11 @@ Future<bool> confirmDialog(BuildContext context, String message, { String yes = 
     builder: (BuildContext context) => AlertDialog(
       title: Text(message),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           onPressed: () { Navigator.of(context).pop(true); },
           child: Text(yes),
         ),
-        FlatButton(
+        TextButton(
           onPressed: () { Navigator.of(context).pop(false); },
           child: Text(no),
         ),
@@ -1919,7 +1919,7 @@ Future<void> showMessageDialog(BuildContext context, String message, { String ok
     builder: (BuildContext context) => AlertDialog(
       title: Text(message),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           onPressed: () { Navigator.of(context).pop(); },
           child: Text(ok),
         ),
@@ -1997,8 +1997,8 @@ class _JumpToTopState extends State<JumpToTop> {
                   opacity: showIt ? 1.0 : 0.0,
                   child: IgnorePointer(
                     ignoring: !showIt,
-                    child: RaisedButton(
-                      shape: const StadiumBorder(),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(shape: const StadiumBorder()),
                       child: const Text('▲ Jump to top'),
                       onPressed: _animateToTop,
                     ),

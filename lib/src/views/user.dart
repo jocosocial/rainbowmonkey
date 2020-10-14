@@ -153,7 +153,7 @@ class _UserViewState extends State<UserView> {
                     iconAndLabel(icon: Icons.warning, message: 'Could not log in:\n${wrapError(_bestUserValue.error)}'),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: FlatButton(
+                      child: TextButton(
                         child: const Text('RETRY'),
                         onPressed: () {
                           Cruise.of(context).retryUserLogin();

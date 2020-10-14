@@ -76,7 +76,7 @@ class AttachImageButton extends StatelessWidget {
                 },
               ),
               actions: <Widget>[
-                FlatButton(
+                TextButton(
                   onPressed: () { Navigator.pop(context); },
                   child: const Text('CLOSE'),
                 ),

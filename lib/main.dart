@@ -259,6 +259,17 @@ class CruiseMonkeyHome extends StatelessWidget {
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
         },
       ),
+      // Make TextButtons look like FlatButtons.
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          primary: brightness == Brightness.dark ? Colors.white : Colors.black87,
+          minimumSize: const Size(88, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(2.0)),
+          ),
+        ),
+      ),
     );
     if (brightness == Brightness.dark) {
       // workaround for https://github.com/flutter/flutter/issues/49984

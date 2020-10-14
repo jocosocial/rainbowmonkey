@@ -45,7 +45,7 @@ class _CheckClockDialogState extends State<CheckClockDialog> {
         child: CircularProgressIndicator(),
       ),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           onPressed: () { Navigator.of(context).pop(); },
           child: const Text('CANCEL'),
         ),
@@ -66,7 +66,7 @@ class _CheckClockDialogState extends State<CheckClockDialog> {
             ),
           ),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () { Navigator.of(context).pop(); },
               child: const Text('CANCEL'),
             ),
@@ -89,7 +89,7 @@ class _CheckClockDialogState extends State<CheckClockDialog> {
             child: Text(message),
           ),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -134,11 +134,11 @@ class _CheckClockDialogState extends State<CheckClockDialog> {
               ),
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 onPressed: () { setState(_refresh); },
                 child: const Text('RETEST'),
               ),
-              FlatButton(
+              TextButton(
                 onPressed: () { Navigator.of(context).pop(); },
                 child: const Text('CLOSE'),
               ),
@@ -181,11 +181,11 @@ class _CheckClockDialogState extends State<CheckClockDialog> {
               ),
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 onPressed: () { setState(_refresh); },
                 child: const Text('RETEST'),
               ),
-              FlatButton(
+              TextButton(
                 onPressed: () { Navigator.of(context).pop(); },
                 child: const Text('CLOSE'),
               ),
@@ -230,11 +230,11 @@ class _CheckClockDialogState extends State<CheckClockDialog> {
               ),
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 onPressed: () { setState(_refresh); },
                 child: const Text('RETEST'),
               ),
-              FlatButton(
+              TextButton(
                 onPressed: () { Navigator.of(context).pop(); },
                 child: const Text('CLOSE'),
               ),
@@ -281,7 +281,7 @@ class _CheckClockDialogState extends State<CheckClockDialog> {
             ),
           ),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () { Navigator.of(context).pop(); },
               child: const Text('CLOSE'),
             ),
