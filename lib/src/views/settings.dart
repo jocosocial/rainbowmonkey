@@ -194,7 +194,7 @@ class _SettingsState extends State<Settings> with WidgetsBindingObserver {
                 ),
               ),
               Center(
-                child: FlatButton(
+                child: TextButton(
                   child: const Text('OPEN BATTERY SETTINGS'),
                   onPressed: () async => await BatteryOptimization.openBatteryOptimizationSettings(),
                 ),

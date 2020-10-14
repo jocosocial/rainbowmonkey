@@ -243,11 +243,11 @@ class _CreateAccountState extends State<CreateAccount> {
                     ),
                     ButtonBar(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           onPressed: () { Navigator.maybePop(context); },
                           child: const Text('CANCEL'),
                         ),
-                        FlatButton(
+                        TextButton(
                           onPressed: _valid ? _createAccount : null,
                           child: const Text('CREATE ACCOUNT'),
                         ),
@@ -287,7 +287,7 @@ class _AccountCreationStatus extends StatelessWidget {
         child: CircularProgressIndicator(),
       ),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           onPressed: () { Navigator.of(context).pop(close); },
           child: const Text('CANCEL'),
         ),
@@ -307,7 +307,7 @@ class _AccountCreationStatus extends StatelessWidget {
             ),
           ),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () { Navigator.of(context).pop(close); },
               child: const Text('CANCEL'),
             ),
@@ -356,7 +356,7 @@ class _AccountCreationStatus extends StatelessWidget {
             ),
           ),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () {
                 Navigator.of(context).pop(_AccountCreationServerResponse(fields, close: false));
               },
@@ -370,7 +370,7 @@ class _AccountCreationStatus extends StatelessWidget {
           title: const Text('Account created!'),
           content: Text('Your account username is "$value".'),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () { Navigator.of(context).pop(close); },
               child: const Text('YAY!'),
             ),

@@ -174,7 +174,7 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
         const SizedBox(height: 12.0),
         const Text('If you no longer have your registration desk, ask the JoCo info desk in the Atrium on Deck 1. If you remembered your password, you can log in with that instead.'),
-        FlatButton(
+        TextButton(
           onPressed: () {
             setState(() {
               _forgot = false;
@@ -215,7 +215,7 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
         const SizedBox(height: 12.0),
         const Text('If you forgot your password, you can log in again using your registration code instead. If you no longer have that, ask the JoCo info desk in the Atrium on Deck 1.'),
-        FlatButton(
+        TextButton(
           onPressed: () {
             setState(() {
               _forgot = true;
@@ -253,7 +253,7 @@ class _LoginDialogState extends State<LoginDialog> {
         ),
       ),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           onPressed: _valid ? _submit : null,
           child: const Text('LOGIN'),
         ),

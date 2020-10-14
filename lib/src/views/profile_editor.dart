@@ -674,7 +674,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         ),
       ),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           onPressed: _valid ? _submit : null,
           child: const Text('CHANGE PASSWORD'),
         ),

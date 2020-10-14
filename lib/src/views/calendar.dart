@@ -74,7 +74,7 @@ class _CalendarViewState extends State<CalendarView> with SingleTickerProviderSt
       progress: Cruise.of(context).calendar,
       onRetry: () { Cruise.of(context).forceUpdate(); },
       idleChild: Center(
-        child: FlatButton(
+        child: TextButton(
           child: const Text('LOAD CALENDAR'),
           onPressed: () {
             Cruise.of(context).forceUpdate();
@@ -221,8 +221,8 @@ class _CalendarViewInternalsState extends State<_CalendarViewInternals> {
               opacity: showIt ? 1.0 : 0.0,
               child: IgnorePointer(
                 ignoring: !showIt,
-                child: RaisedButton(
-                  shape: const StadiumBorder(),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(shape: const StadiumBorder()),
                   child: Text('${ (position < 0.0) ? "▼" : "▲" } Jump to now'),
                   onPressed: _recenter,
                 ),
