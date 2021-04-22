@@ -175,7 +175,6 @@ class AttachImageDialog extends StatelessWidget {
               return AnimatedSize(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.fastOutSlowIn,
-                vsync: vsync,
                 child: SizedBox(
                   width: 500.0,
                   child: ListView(

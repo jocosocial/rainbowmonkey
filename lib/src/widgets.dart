@@ -340,7 +340,6 @@ class _ProgressDialogState<T> extends State<ProgressDialog<T>> with SingleTicker
       child: AnimatedSize(
         duration: const Duration(milliseconds: 150),
         curve: Curves.fastOutSlowIn,
-        vsync: this,
         child: IntrinsicWidth(
           child: IntrinsicHeight(
             child: Padding(
