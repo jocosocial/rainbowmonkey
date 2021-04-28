@@ -130,7 +130,7 @@ class _DeckPlanViewState extends State<DeckPlanView> with SingleTickerProviderSt
                   min: kMinDeck.toDouble(),
                   max: kMaxDeck.toDouble(),
                   level: _currentLevel,
-                  color: Theme.of(context).accentColor,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
                 child: DefaultTextStyle(
                   style: Theme.of(context).textTheme.button,
