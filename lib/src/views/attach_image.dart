@@ -44,7 +44,9 @@ class AttachImageButton extends StatelessWidget {
                 color: Theme.of(context).colorScheme.secondary,
               ),
               padding: const EdgeInsets.all(4.0),
-              child: Text('${images.length}', style: Theme.of(context).accentTextTheme.caption),
+              child: Text('${images.length}', style: Theme.of(context).textTheme.caption.copyWith(
+                color: Theme.of(context).colorScheme.onSecondary,
+              )),
             ),
           ),
         ],
