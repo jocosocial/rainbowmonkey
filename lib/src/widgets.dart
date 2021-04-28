@@ -1879,13 +1879,14 @@ class ModeratorBorder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color accentColor = Theme.of(context).colorScheme.secondary;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.fastOutSlowIn,
       decoration: BoxDecoration(
         border: Border.all(
           width: isModerating ? 12.0 : 0,
-          color: isModerating ? Theme.of(context).accentColor : Theme.of(context).accentColor.withOpacity(0.0),
+          color: isModerating ? accentColor : accentColor.withOpacity(0.0),
         ),
       ),
       child: child,

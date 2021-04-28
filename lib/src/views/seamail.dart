@@ -575,7 +575,7 @@ class _StartSeamailViewState extends State<StartSeamailView> {
                             shape: const StadiumBorder(
                               side: BorderSide(),
                             ),
-                            color: Theme.of(context).accentColor,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                           height: 76.0,
                           child: ClipPath(

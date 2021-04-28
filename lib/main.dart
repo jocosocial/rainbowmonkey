@@ -246,7 +246,6 @@ class CruiseMonkeyHome extends StatelessWidget {
       brightness: brightness,
       primarySwatch: Colors.blue,
       primaryColor: Colors.blue[900],
-      accentColor: accent,
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(),
       ),
@@ -269,6 +268,13 @@ class CruiseMonkeyHome extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(2.0)),
           ),
         ),
+      ),
+    );
+    // The color scheme's secondary color serves the same purpose as the
+    // theme's accentColor used to.
+    result = result.copyWith(
+      colorScheme: result.colorScheme.copyWith(
+        secondary: accent,
       ),
     );
     if (brightness == Brightness.dark) {
@@ -356,7 +362,7 @@ class CruiseMonkeyHome extends StatelessWidget {
                                 color: const Color(0x10FFFFFF),
                                 border: Border(
                                   top: BorderSide(
-                                    color: theme.accentColor,
+                                    color: theme.colorScheme.secondary,
                                     width: 10.0,
                                   ),
                                 ),

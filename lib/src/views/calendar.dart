@@ -397,7 +397,7 @@ class TimeSlice extends StatelessWidget {
             checked: isFavorite,
             child: IconButton(
               icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-              color: favoriteOverride ? theme.accentColor : null,
+              color: favoriteOverride ? theme.colorScheme.secondary : null,
               tooltip: isFavorite ? 'Unmark this event.' : 'Mark this event as interesting.',
               onPressed: isLoggedIn ? () {
                 onFavorite(!isFavorite);
@@ -482,10 +482,10 @@ class DayHeaderRow extends StatelessWidget {
     final int dayNumber = headerDay.day;
     final ThemeData theme = Theme.of(context);
     return StatusBarBackground(
-      brightness: theme.accentColorBrightness,
+      brightness: ThemeData.estimateBrightnessForColor(theme.colorScheme.secondary),
       child: Material(
-        color: theme.accentColor,
-        textStyle: theme.accentTextTheme.subtitle1,
+        color: theme.colorScheme.secondary,
+        textStyle: theme.textTheme.subtitle1.copyWith(color: theme.colorScheme.onSecondary),
         child: Container(
           padding: const EdgeInsets.all(12.0),
           child: Text('$dayOfWeek $monthName $dayNumber'),
