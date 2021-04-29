@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:cruisemonkey/src/json.dart';
+
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('Json', (WidgetTester tester) async {

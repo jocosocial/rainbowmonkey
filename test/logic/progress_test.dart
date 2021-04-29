@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:cruisemonkey/src/progress.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('ProgressValue - comparison', (WidgetTester tester) async {

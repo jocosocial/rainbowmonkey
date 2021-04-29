@@ -1,15 +1,15 @@
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
-
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
 import 'package:cruisemonkey/src/models/calendar.dart';
+import 'package:cruisemonkey/src/models/reactions.dart';
 import 'package:cruisemonkey/src/models/server_status.dart';
 import 'package:cruisemonkey/src/models/server_text.dart';
-import 'package:cruisemonkey/src/models/reactions.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
+
+import 'package:flutter/foundation.dart';
 
 @immutable
 class LoggingTwitarrConfiguration extends TwitarrConfiguration {

@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/photo_manager.dart';
@@ -10,6 +8,9 @@ import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/views/profile_editor.dart';
 import 'package:cruisemonkey/src/widgets.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../loggers.dart';
 import '../mocks.dart';
