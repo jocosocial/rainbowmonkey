@@ -1,20 +1,20 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:platform/platform.dart';
-
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/notifications.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
 import 'package:cruisemonkey/src/network/rest.dart';
-import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/network/settings.dart';
+import 'package:cruisemonkey/src/network/twitarr.dart';
 import 'package:cruisemonkey/src/views/settings.dart';
 import 'package:cruisemonkey/src/widgets.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:platform/platform.dart';
 
 import '../loggers.dart';
 import '../mocks.dart';

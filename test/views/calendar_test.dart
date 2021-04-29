@@ -1,7 +1,3 @@
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:cruisemonkey/main.dart';
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
@@ -11,6 +7,10 @@ import 'package:cruisemonkey/src/models/string.dart';
 import 'package:cruisemonkey/src/progress.dart';
 import 'package:cruisemonkey/src/views/calendar.dart';
 import 'package:cruisemonkey/src/widgets.dart';
+
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../loggers.dart';
 import '../mocks.dart';

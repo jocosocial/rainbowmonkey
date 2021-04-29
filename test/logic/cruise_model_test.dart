@@ -1,10 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:cruisemonkey/src/logic/cruise.dart';
-import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/logic/seamail.dart';
+import 'package:cruisemonkey/src/logic/store.dart';
 import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/models/user.dart';
+
+import 'package:flutter_test/flutter_test.dart';
 
 import '../loggers.dart';
 import '../mocks.dart';
