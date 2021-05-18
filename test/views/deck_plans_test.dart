@@ -4,7 +4,6 @@ import 'package:cruisemonkey/src/models/errors.dart';
 import 'package:cruisemonkey/src/views/deck_plans.dart';
 import 'package:cruisemonkey/src/widgets.dart';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

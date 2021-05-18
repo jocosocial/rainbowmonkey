@@ -10,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 import 'logic/cruise.dart';
 import 'logic/photo_manager.dart';

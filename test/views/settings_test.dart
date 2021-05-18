@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cruisemonkey/src/logic/cruise.dart';
 import 'package:cruisemonkey/src/logic/notifications.dart';
 import 'package:cruisemonkey/src/logic/store.dart';
