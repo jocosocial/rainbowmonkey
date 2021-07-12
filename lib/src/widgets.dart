@@ -1731,7 +1731,7 @@ class PhotoImage extends StatelessWidget {
                                   curve: Curves.fastOutSlowIn,
                                   child: AppBar(
                                     backgroundColor: Colors.transparent,
-                                    brightness: Brightness.dark,
+                                    systemOverlayStyle: SystemUiOverlayStyle.light,
                                     iconTheme: const IconThemeData(color: Colors.white),
                                     actions: <Widget>[
                                       IconButton(
