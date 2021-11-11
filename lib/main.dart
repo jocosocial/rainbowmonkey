@@ -273,15 +273,6 @@ class CruiseMonkeyHome extends StatelessWidget {
         secondary: accent,
       ),
     );
-    if (brightness == Brightness.dark) {
-      // workaround for https://github.com/flutter/flutter/issues/49984
-      result = result.copyWith(
-        chipTheme: result.chipTheme.copyWith(
-          secondarySelectedColor: result.primaryColor,
-          secondaryLabelStyle: result.chipTheme.secondaryLabelStyle.copyWith(color: Colors.white),
-        ),
-      );
-    }
     return result;
   }
 
