@@ -127,17 +127,15 @@ class Notifications {
       category: 'msg',
       importance: Importance.High,
       priority: Priority.High,
-      style: AndroidNotificationStyle.Messaging,
       styleInformation: MessagingStyleInformation(
-        Person(name: 'You'),
+        const Person(name: 'You'),
         conversationTitle: subject,
         messages: <Message>[
           Message(
             message.toString(),
             timestamp,
             Person(
-              icon: await _fetchAvatar(user.username, twitarr, store),
-              iconSource: IconSource.FilePath,
+              icon: BitmapFilePathAndroidIcon(await _fetchAvatar(user.username, twitarr, store)),
               name: '$user',
             ),
           ),
@@ -150,7 +148,7 @@ class Notifications {
       autoCancel: true,
       channelShowBadge: true,
     );
-    final IOSNotificationDetails iOS = IOSNotificationDetails();
+    const IOSNotificationDetails iOS = IOSNotificationDetails();
     await _plugin.show(
       _notificationId(threadId, messageId),
       subject,
@@ -168,7 +166,6 @@ class Notifications {
       'Events',
       'JocoCruise event notifications, for events you have favorited.',
       category: 'event',
-      style: AndroidNotificationStyle.BigText,
       styleInformation: BigTextStyleInformation(
         '$from-$to $location\n$description',
         contentTitle: name,
@@ -181,7 +178,7 @@ class Notifications {
       channelShowBadge: false,
       timeoutAfter: duration.inMilliseconds,
     );
-    final IOSNotificationDetails iOS = IOSNotificationDetails();
+    const IOSNotificationDetails iOS = IOSNotificationDetails();
     await _plugin.show(
       _eventId(eventId),
       name,
