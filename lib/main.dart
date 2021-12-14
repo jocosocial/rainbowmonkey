@@ -238,7 +238,7 @@ class CruiseMonkeyHome extends StatelessWidget {
 
   @protected
   ThemeData makeTheme(Brightness brightness, Color accent) {
-    ThemeData result = ThemeData(
+    final ThemeData result = ThemeData(
       brightness: brightness,
       primarySwatch: Colors.blue,
       primaryColor: Colors.blue[900],
@@ -268,12 +268,11 @@ class CruiseMonkeyHome extends StatelessWidget {
     );
     // The color scheme's secondary color serves the same purpose as the
     // theme's accentColor used to.
-    result = result.copyWith(
+    return result.copyWith(
       colorScheme: result.colorScheme.copyWith(
         secondary: accent,
       ),
     );
-    return result;
   }
 
   @override
